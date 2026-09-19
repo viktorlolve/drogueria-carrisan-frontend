@@ -234,7 +234,7 @@ function Home() {
           tamano="mediano"
           posicionTexto="arriba"
           titulo="Tu línea de farmacia completa, en un solo lugar"
-          subtitulo="Desde inyectables hasta presentaciones de venta libre"
+          subtitulo="Desde antibióticos hasta presentación de venta libre"
           textoCta="Ver línea farmacia"
           estiloCta="enlace"
           link="/farmacia"
