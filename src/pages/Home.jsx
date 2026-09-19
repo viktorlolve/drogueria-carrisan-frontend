@@ -199,9 +199,6 @@ function Home() {
 
       {/* ── Vitrina: carruseles fijos + ads ── */}
       <div className="home__vitrina">
-        {/* ── Barra de confianza (tras el hero): prueba social de la droguería ── */}
-        <TrustBar />
-
         {/* ── Explorá por categoría (colocado justo tras el hero) ── */}
         <CategoriasCarrusel />
 
@@ -270,6 +267,10 @@ function Home() {
           link="/ayuda"
         />
       </section>
+
+      {/* ── Barra de confianza (tras los bloques promocionales):
+        habla de la empresa — entregas, pagos, registro y verificación ── */}
+      <TrustBar />
 
       <SeccionesCarrusel
           titulo="Rollbacks y más"
