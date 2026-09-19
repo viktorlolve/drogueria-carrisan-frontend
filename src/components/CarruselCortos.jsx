@@ -407,6 +407,17 @@ function CarruselCortos() {
                     <img src={video.thumb} alt={video.titulo} className="cc-slide__thumb" loading="lazy" />
                   )}
                   <span className="cc-slide__titulo">{video.titulo}</span>
+                  {video.producto && (
+                    <a
+                      href={video.producto.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="cc-shorts__producto"
+                    >
+                      <span className="cc-shorts__producto-label">Ver producto</span>
+                      <span className="cc-shorts__producto-nombre">{video.producto.nombre}</span>
+                    </a>
+                  )}
                 </div>
               ))
             )}
