@@ -1,10 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/axios'
 import HeroCarrusel from '../components/HeroCarrusel'
 import HomeCarrusel from '../components/HomeCarrusel'
-import MiniPromoCard from '../components/MiniPromoCard'
 import LaboratoriosCarrusel from '../components/LaboratoriosCarrusel'
 import CategoriasCarrusel from '../components/CategoriasCarrusel'
 import SeccionesCarrusel from '../components/SeccionesCarrusel'
@@ -18,32 +16,15 @@ import BottomNav from '../components/BottomNav'
 import CookieConsent from '../components/CookieConsent'
 import { agruparEspecifico } from '../utils/agruparEspecifico'
 import { ADS } from '../config/adsImagenes'
+import { ADS_ROTATIVO_TEMPORADA } from '../config/adsRotativoTemporada'
 import BloquePromocional from '../components/BloquePromocional'
 import SeccionPromocional from '../components/SeccionPromocional'
 import NoticiasTeaser from '../components/NoticiasTeaser'
-import TrustBar from '../components/TrustBar'
 import './Home.css'
 
 // ── Constantes ──────────────────────────────────────────────────
 const PRODUCTOS_POR_CARGA = 12
 const MAX_CARGAS = 3
-
-// Configuración de las secciones dinámicas que se cargan al scrollear.
-// Cada entrada del array = una "carga" (etapa) del infinite scroll.
-const SECCIONES_DINAMICAS = [
-  [
-    { titulo: 'Nuevos para ti', verTodoTo: '/catalogo' },
-    { titulo: 'Explorá el catálogo', verTodoTo: '/catalogo' },
-  ],
-  [
-    { titulo: 'Más populares', verTodoTo: '/catalogo' },
-    { titulo: 'Descubrí más', verTodoTo: '/catalogo' },
-  ],
-  [
-    { titulo: 'Elegidos para tu farmacia', verTodoTo: '/catalogo' },
-    { titulo: 'Últimas unidades', verTodoTo: '/catalogo' },
-  ],
-]
 
 // ── Imágenes de los banners hero (Supabase Storage, mismo patrón que Landing) ──
 const BASE_URL = 'https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages'
@@ -100,6 +81,7 @@ function Home() {
   const [secciones, setSecciones] = useState([])
   const [seccionesRollback2, setSeccionesRollback2] = useState([])
   const [seccionesLab, setSeccionesLab] = useState([])
+  const [categoriasParaScroll, setCategoriasParaScroll] = useState([])
   const [cargandoVitrina, setCargandoVitrina] = useState(true)
 
   // Estado del infinite scroll
@@ -142,36 +124,63 @@ function Home() {
           .slice(0, 2)
           .map(([lab, items]) => ({ lab, productos: items.slice(0, 9) }))
         setSeccionesLab(seccionesLabTop)
+
+        // Categorías reales para las rondas del infinite scroll (en vez de
+        // cortes genéricos del catálogo). Necesita al menos 6 productos
+        // para llenar una sección completa; toma hasta 6 categorías
+        // (3 rondas × 2 secciones).
+        const gruposCategoria = activos.reduce((acc, p) => {
+          if (!p.categoria) return acc
+          acc[p.categoria] = acc[p.categoria] || []
+          acc[p.categoria].push(p)
+          return acc
+        }, {})
+        const categoriasTop = Object.entries(gruposCategoria)
+          .filter(([, items]) => items.length >= 6)
+          .sort((a, b) => b[1].length - a[1].length)
+          .slice(0, 6)
+          .map(([categoria, items]) => ({ categoria, productos: items }))
+        setCategoriasParaScroll(categoriasTop)
       })
       .catch((err) => console.error(err))
       .finally(() => setCargandoVitrina(false))
   }, [])
 
   // ── Infinite scroll (carga por etapas mientras se scrollea) ──
+  // Cada ronda usa 2 categorías reales del catálogo (ver categoriasParaScroll).
+  // Si no hay suficientes categorías con stock, cae a un corte genérico del
+  // catálogo restante como respaldo, para que el infinite scroll nunca se
+  // quede sin contenido.
   const cargarMas = useCallback(() => {
     if (cargasRef.current >= MAX_CARGAS) return
     setCargandoMas(true)
 
     setTimeout(() => {
       const cargaIdx = cargasRef.current
-      const inicio = PRODUCTOS_POR_CARGA * (cargaIdx + 1)
-      const fin = inicio + PRODUCTOS_POR_CARGA
-      const nuevosProductos = todosProductos.slice(inicio, fin)
+      const grupo = categoriasParaScroll.slice(cargaIdx * 2, cargaIdx * 2 + 2)
 
-      const configs = SECCIONES_DINAMICAS[cargaIdx] || []
-      const nuevasSecciones = configs.map((cfg, i) => ({
-        id: `dinamica-${cargaIdx}-${i}`,
-        titulo: cfg.titulo,
-        productos: nuevosProductos.slice(i * 6, (i + 1) * 6),
-        verTodoTo: cfg.verTodoTo,
-      }))
+      const nuevasSecciones = grupo.length > 0
+        ? grupo.map((g, i) => ({
+            id: `dinamica-${cargaIdx}-${i}`,
+            titulo: g.categoria,
+            productos: g.productos.slice(0, 12),
+            verTodoTo: `/catalogo?categoria=${encodeURIComponent(g.categoria)}`,
+          }))
+        : (() => {
+            const inicio = PRODUCTOS_POR_CARGA * (cargaIdx + 1)
+            const nuevosProductos = todosProductos.slice(inicio, inicio + PRODUCTOS_POR_CARGA)
+            return [
+              { id: `dinamica-${cargaIdx}-0`, titulo: 'Explorá el catálogo', productos: nuevosProductos.slice(0, 6), verTodoTo: '/catalogo' },
+              { id: `dinamica-${cargaIdx}-1`, titulo: 'Más del catálogo', productos: nuevosProductos.slice(6, 12), verTodoTo: '/catalogo' },
+            ]
+          })()
 
       setSeccionesDinamicas((prev) => [...prev, ...nuevasSecciones])
       cargasRef.current += 1
       setCargasRestantes(MAX_CARGAS - cargasRef.current)
       setCargandoMas(false)
     }, 200)
-  }, [todosProductos])
+  }, [todosProductos, categoriasParaScroll])
 
   useEffect(() => {
     if (cargasRestantes <= 0 || cargandoMas) return
@@ -215,8 +224,9 @@ function Home() {
           Orden de lectura (desktop, según grid-template-areas "a b b d" / "a c e d"):
             A → línea hospitalaria   B → línea farmacia   D → presupuesto/cotizaciones B2B
             C + E → vademécum + registro sanitario (confianza, en el "valle" entre A y D)
-          Los 5 bloques tienen imagen propia (vervademecum.png / verpresupuesto.png
-          en `crsnimages`); ningún bloque queda en modo placeholder. */}
+          C y D sin `imagen`: el mensaje cambió de lo que mostraba la foto original
+          (medicamentos / repartidor), así que caen en modo placeholder hasta tener
+          artes que representen vademécum y presupuesto de verdad. */}
       <section className="home__bloques-promocionales">
         <BloquePromocional
           imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/quirofano.png"
@@ -229,20 +239,20 @@ function Home() {
           link="/hospitalaria"
         />
         <BloquePromocional
-          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/medicamentos.png"
+          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ampollas.png"
           className="home__bloque-b"
           tamano="mediano"
           posicionTexto="arriba"
           titulo="Tu línea de farmacia completa, en un solo lugar"
-          subtitulo="Desde antibióticos hasta presentación de venta libre"
+          subtitulo="Desde inyectables hasta presentaciones de venta libre"
           textoCta="Ver línea farmacia"
           estiloCta="enlace"
           link="/farmacia"
         />
         <BloquePromocional
-          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/vervademecum.png"
           className="home__bloque-c"
           tamano="pequeno"
+          variante="nuevo"
           titulo="Vademécum clínico al alcance"
           textoCta="Buscar molécula"
           link="/vademecum"
@@ -258,19 +268,16 @@ function Home() {
           link="/registro-inhrr"
         />
         <BloquePromocional
-          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/verpresupuesto.png"
           className="home__bloque-d"
           tamano="grande"
           posicionTexto="arriba"
+          variante="default"
           titulo="Presupuestos institucionales, sin llamadas ni esperas"
           textoCta="Solicitar presupuesto"
           link="/presupuesto"
         />
       </section>
 
-      {/* ── Barra de confianza (tras los bloques promocionales):
-        habla de la empresa — entregas, pagos, registro y verificación ── */}
-      <TrustBar />
 
       <SeccionesCarrusel
           titulo="Rollbacks y más"
@@ -281,16 +288,19 @@ function Home() {
         {/* ── Explorá por laboratorio (logos dinámicos, top labs) ── */}
         <LaboratoriosCarrusel />
 
-        {/* ── Sección promocional: imagen + carrusel (imagen a la izquierda) ── */}
+        {/* ── Sección promocional: imagen + carrusel (imagen a la izquierda) ──
+          Sigue al laboratorio destacado #1 (labSuperior) — continúa la narrativa
+          de "Explorá por laboratorio" con un deep-dive real, en vez de repetir
+          el mensaje de los bloques bento de arriba. */}
       <SeccionPromocional
         imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/quirofano.png"
-        alt="Productos hospitalarios"
-        titulo="Insumos quirúrgicos para cada procedimiento"
-        subtitulo="Equipamiento completo para tu clínica"
-        badgeTexto="Desde 20% off"
-        textoCta="Comprar ahora"
-        linkCta="/hospitalaria"
-        linkImagen="/hospitalaria"
+        alt={labSuperior ? `Productos ${labSuperior.lab}` : 'Selección destacada'}
+        titulo={labSuperior ? `Lo mejor de ${labSuperior.lab}` : 'Selección destacada para tu clínica'}
+        subtitulo="Laboratorio aliado con mayor variedad en tu catálogo"
+        badgeTexto="Laboratorio destacado"
+        textoCta="Ver catálogo completo"
+        linkCta={labSuperior ? `/catalogo?laboratorio=${encodeURIComponent(labSuperior.lab)}` : '/catalogo'}
+        linkImagen={labSuperior ? `/catalogo?laboratorio=${encodeURIComponent(labSuperior.lab)}` : '/catalogo'}
         productos={labSuperior ? labSuperior.productos : ofertas}
         tasaVes={tasa}
         tituloCarrusel={labSuperior ? `Productos ${labSuperior.lab}` : 'Más vendidos'}
@@ -298,15 +308,17 @@ function Home() {
         cargando={cargandoVitrina}
       />
 
-        {/* ── Sección promocional invertida: imagen a la derecha ── */}
+        {/* ── Sección promocional invertida: imagen a la derecha ──
+          Laboratorio destacado #2 (labInferior). */}
         <SeccionPromocional
           invertido
           imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ampollas.png"
-          alt="Inyectables"
-          titulo="Inyectables con cadena de frío garantizada"
-          textoCta="Conocer más"
-          linkCta="/ayuda"
-          linkImagen="/ayuda"
+          alt={labInferior ? `Productos ${labInferior.lab}` : 'Recomendados para ti'}
+          titulo={labInferior ? `Descubrí ${labInferior.lab}` : 'Recomendados para tu farmacia'}
+          subtitulo="Otro laboratorio aliado con gran variedad"
+          textoCta="Ver catálogo completo"
+          linkCta={labInferior ? `/catalogo?laboratorio=${encodeURIComponent(labInferior.lab)}` : '/catalogo'}
+          linkImagen={labInferior ? `/catalogo?laboratorio=${encodeURIComponent(labInferior.lab)}` : '/catalogo'}
           productos={labInferior ? labInferior.productos : productosIniciales}
           tasaVes={tasa}
           tituloCarrusel={labInferior ? `Productos ${labInferior.lab}` : 'Recomendados para ti'}
@@ -315,15 +327,7 @@ function Home() {
         />
 
 
-        <AdRotativo
-          ads={ADS.map((ad) => ({
-            imagen: ad.imagen,
-            link: ad.link,
-            alt: ad.alt,
-            titulo: ad.titulo,
-            subtitulo: ad.subtitulo,
-          }))}
-        />
+        <AdRotativo ads={ADS_ROTATIVO_TEMPORADA} />
 
         <SeccionesCarrusel
           titulo="Más rollbacks"
@@ -351,9 +355,10 @@ function Home() {
         <NoticiasTeaser />
 
         {/* ── Secciones dinámicas (cargadas por infinite scroll) ──
-          Cada ronda del infinite scroll trae 2 secciones (ver SECCIONES_DINAMICAS).
-          Entre ambas se intercala UN momento editorial (no producto), alternando
-          formato por ronda para que no se sienta un shelf repetitivo. ── */}
+          Cada ronda del infinite scroll trae 2 categorías reales del catálogo
+          (ver categoriasParaScroll / cargarMas). Entre ambas se intercala UN
+          momento editorial (no producto), alternando formato por ronda para
+          que no se sienta un shelf repetitivo. ── */}
         {seccionesDinamicas.map((seccion, idx) => {
           const rondaIdx = Math.floor(idx / 2)
           const esMitadDeRonda = idx % 2 === 1
@@ -384,29 +389,13 @@ function Home() {
                   </div>
                 )
               )}
-
-              {/* Ronda final: grilla 2x2/4-col (rompe la monotonía del shelf) */}
-              {rondaIdx === 2 ? (
-                <section className="home__grilla">
-                  <div className="home__grilla-header">
-                    <h2>{seccion.titulo}</h2>
-                    <Link to={seccion.verTodoTo}>Ver todo</Link>
-                  </div>
-                  <div className="home__grilla-grid">
-                    {seccion.productos.slice(0, 4).map((producto) => (
-                      <MiniPromoCard key={producto.id} producto={producto} />
-                    ))}
-                  </div>
-                </section>
-              ) : (
-                <HomeCarrusel
-                  titulo={seccion.titulo}
-                  productos={seccion.productos}
-                  tasaVes={tasa}
-                  verTodoTo={seccion.verTodoTo}
-                  cargando={false}
-                />
-              )}
+              <HomeCarrusel
+                titulo={seccion.titulo}
+                productos={seccion.productos}
+                tasaVes={tasa}
+                verTodoTo={seccion.verTodoTo}
+                cargando={false}
+              />
             </div>
           )
         })}

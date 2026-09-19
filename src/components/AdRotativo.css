@@ -100,3 +100,53 @@
     aspect-ratio: 21 / 5;
   }
 }
+
+/* Placeholder (campaña sin arte subida todavía) — mismo patrón de color
+   que AdBanner/BloquePromocional/AdCard */
+.ad-rotativo__placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 24px;
+  background: linear-gradient(135deg, #f0f4ff 0%, #e8f4f0 100%);
+}
+
+.ad-rotativo__placeholder--oferta {
+  background: linear-gradient(135deg, #fff1f1 0%, #ffe8e8 100%);
+}
+
+.ad-rotativo__placeholder--nuevo {
+  background: linear-gradient(135deg, #e8f8f5 0%, #d1f5ef 100%);
+}
+
+.ad-rotativo__textos {
+  max-width: 420px;
+}
+
+.ad-rotativo__titulo {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #1A1A3A;
+  margin: 0 0 4px;
+}
+
+.ad-rotativo__subtitulo {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  color: rgba(20, 24, 42, 0.6);
+  margin: 0;
+}
+
+@media (min-width: 769px) {
+  .ad-rotativo__titulo {
+    font-size: 1.4rem;
+  }
+
+  .ad-rotativo__subtitulo {
+    font-size: 0.95rem;
+  }
+}

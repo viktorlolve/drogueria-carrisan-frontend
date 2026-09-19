@@ -7,7 +7,11 @@ import './AdRotativo.css'
 // solo sin código extra) en orden aleatorio, como haría una red de ads real.
 //
 // Props:
-//   ads       — array de { imagen, link, alt } (requerido, al menos 1)
+//   ads       — array de items (requerido, al menos 1). Cada item:
+//                 { imagen, link, alt } → slide con imagen real
+//                 { titulo, subtitulo, variante, link } (sin `imagen`) → slide
+//                   en modo placeholder, mismo patrón que AdBanner/BloquePromocional,
+//                   para maquetar la campaña antes de tener el arte final.
 //   intervalo — ms entre cada rotación (default 6000)
 //   dots      — mostrar puntitos indicadores debajo del banner (default true)
 
@@ -24,7 +28,6 @@ function AdRotativo({ ads = [], intervalo = 6000, dots = true }) {
   const [orden] = useState(() => barajar(ads))
   const [indice, setIndice] = useState(0)
   const [pausado, setPausado] = useState(false)
-  const [rotos, setRotos] = useState(() => ads.map(() => false))
   const timerRef = useRef(null)
 
   useEffect(() => {
@@ -39,16 +42,6 @@ function AdRotativo({ ads = [], intervalo = 6000, dots = true }) {
 
   const mostrarDots = dots && orden.length > 1
 
-  // Si una creatividad no carga (URL rota o campaña sin subir), se marca —
-  // así mostramos un placeholder en vez de un icono de imagen rota.
-  const marcarRoto = (i) => {
-    setRotos((prev) => {
-      const copia = [...prev]
-      copia[i] = true
-      return copia
-    })
-  }
-
   return (
     <div
       className={`ad-rotativo ${mostrarDots ? 'ad-rotativo--dots' : ''}`}
@@ -58,26 +51,26 @@ function AdRotativo({ ads = [], intervalo = 6000, dots = true }) {
       {orden.map((item, i) => {
         const activo = i === indice
         const clase = `ad-rotativo__slide ${activo ? 'ad-rotativo__slide--activo' : ''}`
-        const contenido = rotos[i] ? (
-          <div className="ad-rotativo__placeholder" aria-hidden="true">
-            <span className="ad-rotativo__placeholder-icono">🏷️</span>
-            <p className="ad-rotativo__placeholder-texto">
-              {item.titulo || 'Próximamente'}
-            </p>
-          </div>
-        ) : (
+
+        const contenido = item.imagen ? (
           <img
             src={item.imagen}
             alt={item.alt || ''}
             className="ad-rotativo__img"
             loading={i === 0 ? 'eager' : 'lazy'}
-            onError={() => marcarRoto(i)}
           />
+        ) : (
+          <div className={`ad-rotativo__placeholder ad-rotativo__placeholder--${item.variante || 'default'}`}>
+            <div className="ad-rotativo__textos">
+              <h3 className="ad-rotativo__titulo">{item.titulo || 'Próximamente'}</h3>
+              {item.subtitulo && <p className="ad-rotativo__subtitulo">{item.subtitulo}</p>}
+            </div>
+          </div>
         )
 
         return item.link ? (
           <Link
-            key={`${item.imagen}-${i}`}
+            key={`${item.imagen || item.titulo}-${i}`}
             to={item.link}
             className={clase}
             aria-hidden={!activo}
@@ -86,7 +79,7 @@ function AdRotativo({ ads = [], intervalo = 6000, dots = true }) {
             {contenido}
           </Link>
         ) : (
-          <div key={`${item.imagen}-${i}`} className={clase} aria-hidden={!activo}>
+          <div key={`${item.imagen || item.titulo}-${i}`} className={clase} aria-hidden={!activo}>
             {contenido}
           </div>
         )

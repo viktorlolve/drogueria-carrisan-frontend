@@ -5,6 +5,11 @@
 // campaña termina, solo actualizás el `imagen` de su objeto (o borrás el
 // objeto entero) en este archivo — sin tocar Home.jsx.
 //
+// `etiqueta` — mismo sistema de badge que las ads de /noticias:
+//   'Promocionado' → producto/sección propia de Droguería Carrisán
+//   'Patrocinado'  → contenido pagado por un tercero (laboratorio, etc.)
+// Se elige con un simple cambio de texto acá, sin tocar el componente.
+//
 // Imágenes: bucket `crsnimages` de Supabase Storage, carpeta /ads/.
 // Nombre de archivo = el que uses al subir (ej. ads/nuevos.png).
 // El URL sale solo del BASE_IMG + la ruta que coloques en `imagen`.
@@ -22,6 +27,7 @@ export const ADS = [
     titulo: 'Nuevos productos',
     subtitulo: 'Descubrí lo último que llegó',
     variante: 'nuevo',
+    etiqueta: 'Promocionado',
     link: '/catalogo',
   },
   {
@@ -32,6 +38,7 @@ export const ADS = [
     titulo: 'Ofertas relámpago',
     subtitulo: 'No te quedes con el tuyo',
     variante: 'oferta',
+    etiqueta: 'Promocionado',
     link: '/catalogo',
   },
 ]
