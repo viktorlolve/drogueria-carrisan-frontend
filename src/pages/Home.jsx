@@ -215,9 +215,8 @@ function Home() {
           Orden de lectura (desktop, según grid-template-areas "a b b d" / "a c e d"):
             A → línea hospitalaria   B → línea farmacia   D → presupuesto/cotizaciones B2B
             C + E → vademécum + registro sanitario (confianza, en el "valle" entre A y D)
-          C y D sin `imagen`: el mensaje cambió de lo que mostraba la foto original
-          (medicamentos / repartidor), así que caen en modo placeholder hasta tener
-          artes que representen vademécum y presupuesto de verdad. */}
+          Los 5 bloques tienen imagen propia (vervademecum.png / verpresupuesto.png
+          en `crsnimages`); ningún bloque queda en modo placeholder. */}
       <section className="home__bloques-promocionales">
         <BloquePromocional
           imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/quirofano.png"
@@ -241,9 +240,9 @@ function Home() {
           link="/farmacia"
         />
         <BloquePromocional
+          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/vervademecum.png"
           className="home__bloque-c"
           tamano="pequeno"
-          variante="nuevo"
           titulo="Vademécum clínico al alcance"
           textoCta="Buscar molécula"
           link="/vademecum"
@@ -259,10 +258,10 @@ function Home() {
           link="/registro-inhrr"
         />
         <BloquePromocional
+          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/verpresupuesto.png"
           className="home__bloque-d"
           tamano="grande"
           posicionTexto="arriba"
-          variante="default"
           titulo="Presupuestos institucionales, sin llamadas ni esperas"
           textoCta="Solicitar presupuesto"
           link="/presupuesto"
