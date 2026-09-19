@@ -229,7 +229,7 @@ function Home() {
           link="/hospitalaria"
         />
         <BloquePromocional
-          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ampollas.png"
+          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/medicamentos.png"
           className="home__bloque-b"
           tamano="mediano"
           posicionTexto="arriba"
