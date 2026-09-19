@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { X, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Play, Volume2, VolumeX } from 'lucide-react'
+import { X, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Play, Volume2, VolumeX, Loader2 } from 'lucide-react'
 import api from '../api/axios'
 import './CarruselCortos.css'
 
@@ -118,6 +118,10 @@ function CarruselCortos() {
   const [abierto, setAbierto] = useState(false)
   const [idx, setIdx] = useState(0)
   const [conSonido, setConSonido] = useState(false)
+  const [fuentes, setFuentes] = useState([])
+  const [feedVideos, setFeedVideos] = useState([])
+  const [fuenteActual, setFuenteActual] = useState(null)
+  const [feedCargando, setFeedCargando] = useState(false)
   const scrollerRef = useRef(null)
   const filaRef = useRef(null)
   const jugadorRef = useRef(null)
@@ -131,6 +135,7 @@ function CarruselCortos() {
         if (!activo) return
         const lista = res.data?.videos
         setVideos(Array.isArray(lista) ? lista : [])
+        setFuentes(Array.isArray(res.data?.fuentes) ? res.data.fuentes : [])
         setHayError(false)
       })
       .catch(() => {
@@ -198,19 +203,47 @@ function CarruselCortos() {
     )
     slides.forEach((s) => obs.observe(s))
     return () => obs.disconnect()
-  }, [abierto, videos])
+  }, [abierto, feedVideos])
 
   if (cargando) return null
   if (hayError || videos.length === 0) return null
 
+  const cargarFeed = async (canalId) => {
+    const fuente = fuentes.find((f) => f.canal_id === canalId) || { canal_id: canalId, nombre: canalId }
+    setFeedCargando(true)
+    setFuenteActual(fuente)
+    try {
+      const res = await api.get('/shorts', { params: { fuente: canalId } })
+      const listaFeed = res.data?.videos
+      setFeedVideos(Array.isArray(listaFeed) ? listaFeed : [])
+      setIdx(0)
+      scrollerRef.current?.scrollTo({ top: 0 })
+    } catch {
+      setFeedVideos([])
+    } finally {
+      setFeedCargando(false)
+    }
+  }
   const abrir = (i) => {
-    setIdx(i)
+    const v = videos[i]
+    if (!v) return
+    setIdx(0)
     setAbierto(true)
+    cargarFeed(v.canal_id)
   }
   const cerrar = () => setAbierto(false)
   const irA = (i) => {
-    if (i < 0 || i >= videos.length) return
+    if (i < 0 || i >= feedVideos.length) return
     scrollerRef.current?.children[i]?.scrollIntoView({ behavior: 'smooth' })
+  }
+  const siguienteFeed = () => {
+    if (idx < feedVideos.length - 1) {
+      irA(idx + 1)
+      return
+    }
+    const positivo = fuentes.findIndex((f) => f.canal_id === fuenteActual?.canal_id) + 1
+    const prox = fuentes[positivo]
+    if (prox) cargarFeed(prox.canal_id)
   }
   const scrollFila = (direccion) => {
     filaRef.current?.scrollBy({ left: direccion * 380, behavior: 'smooth' })
@@ -297,7 +330,11 @@ function CarruselCortos() {
             <span className="cc-modal__sonido-label">{conSonido ? 'Silenciar' : 'Activar sonido'}</span>
           </button>
 
-          {videos.length > 1 && (
+          {fuenteActual && fuenteActual.nombre && (
+            <span className="cc-modal__fuente">{fuenteActual.nombre}</span>
+          )}
+
+          {feedVideos.length > 1 && (
             <>
               <button
                 type="button"
@@ -311,8 +348,8 @@ function CarruselCortos() {
               <button
                 type="button"
                 className="cc-modal__nav cc-modal__nav--abajo"
-                onClick={() => irA(idx + 1)}
-                disabled={idx === videos.length - 1}
+                onClick={siguienteFeed}
+                disabled={false}
                 aria-label="Siguiente"
               >
                 <ChevronDown size={26} />
@@ -321,16 +358,22 @@ function CarruselCortos() {
           )}
 
           <div className="cc-modal__scroller" ref={scrollerRef}>
-            {videos.map((video, i) => (
-              <div key={video.id} className={`cc-slide${i === idx ? ' cc-slide--activo' : ''}`}>
-                {i === idx ? (
-                  <ShortsPlayer videoId={video.id} conSonido={conSonido} jugadorRef={jugadorRef} />
-                ) : (
-                  <img src={video.thumb} alt={video.titulo} className="cc-slide__thumb" loading="lazy" />
-                )}
-                <span className="cc-slide__titulo">{video.titulo}</span>
+            {feedCargando ? (
+              <div className="cc-slide cc-slide--spinner">
+                <Loader2 size={32} className="cc-spinner" />
               </div>
-            ))}
+            ) : (
+              feedVideos.map((video, i) => (
+                <div key={`${video.canal_id}-${video.id}`} className={`cc-slide${i === idx ? ' cc-slide--activo' : ''}`}>
+                  {i === idx ? (
+                    <ShortsPlayer videoId={video.id} conSonido={conSonido} jugadorRef={jugadorRef} />
+                  ) : (
+                    <img src={video.thumb} alt={video.titulo} className="cc-slide__thumb" loading="lazy" />
+                  )}
+                  <span className="cc-slide__titulo">{video.titulo}</span>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}

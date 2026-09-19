@@ -330,6 +330,40 @@
   bottom: 24px;
 }
 
+.cc-modal__fuente {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  max-width: 60%;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cc-slide--spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+}
+
+.cc-spinner {
+  animation: cc-girar 0.9s linear infinite;
+}
+
+@keyframes cc-girar {
+  to { transform: rotate(360deg); }
+}
+
 /* ---------- Tablet / Desktop ---------- */
 @media (min-width: 768px) {
   .cc {
@@ -375,6 +409,12 @@
 
   .cc-modal__sonido:hover {
     background: rgba(255, 255, 255, 0.32);
+  }
+
+  .cc-modal__fuente {
+    left: auto;
+    right: 68px;
+    transform: none;
   }
 }
 
