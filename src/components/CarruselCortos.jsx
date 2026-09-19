@@ -31,11 +31,16 @@ function cargaApiYT() {
 function ShortsPlayer({ videoId, conSonido, enPausa, jugadorRef }) {
   const contenedorRef = useRef(null)
   const conSonidoRef = useRef(false)
+  const enPausaRef = useRef(false)
   const videoIdRef = useRef(videoId)
 
   useEffect(() => {
     conSonidoRef.current = conSonido
   }, [conSonido])
+
+  useEffect(() => {
+    enPausaRef.current = enPausa
+  }, [enPausa])
 
   useEffect(() => {
     videoIdRef.current = videoId
@@ -69,7 +74,8 @@ function ShortsPlayer({ videoId, conSonido, enPausa, jugadorRef }) {
             j.setVolume(100)
             if (conSonidoRef.current) j.unMute()
             else j.mute()
-            j.playVideo()
+            if (enPausaRef.current) j.pauseVideo()
+            else j.playVideo()
           },
         },
       })
