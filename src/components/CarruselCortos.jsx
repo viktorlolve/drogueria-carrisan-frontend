@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { X, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Play, Volume2, VolumeX, Loader2 } from 'lucide-react'
+import { X, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Play, Volume2, VolumeX, Loader2, MessageCircle, Link2, Pause } from 'lucide-react'
 import api from '../api/axios'
 import './CarruselCortos.css'
 
@@ -28,7 +28,7 @@ function cargaApiYT() {
 
 // Player vía YouTube IFrame API: el sonido se cambia con mute()/unMute()
 // SIN recargar el video (un <iframe> con src distinto lo reinicia).
-function ShortsPlayer({ videoId, conSonido, jugadorRef }) {
+function ShortsPlayer({ videoId, conSonido, enPausa, jugadorRef }) {
   const contenedorRef = useRef(null)
   const conSonidoRef = useRef(false)
   const videoIdRef = useRef(videoId)
@@ -92,6 +92,13 @@ function ShortsPlayer({ videoId, conSonido, jugadorRef }) {
     else j.mute()
   }, [conSonido, jugadorRef])
 
+  useEffect(() => {
+    const j = jugadorRef.current
+    if (!j || !j.getPlayerState) return
+    if (enPausa) j.pauseVideo()
+    else j.playVideo()
+  }, [enPausa, jugadorRef])
+
   return <div className="cc-slide__video" ref={contenedorRef} />
 }
 
@@ -118,6 +125,7 @@ function CarruselCortos() {
   const [abierto, setAbierto] = useState(false)
   const [idx, setIdx] = useState(0)
   const [conSonido, setConSonido] = useState(false)
+  const [enPausa, setEnPausa] = useState(false)
   const [fuentes, setFuentes] = useState([])
   const [feedVideos, setFeedVideos] = useState([])
   const [fuenteActual, setFuenteActual] = useState(null)
@@ -258,6 +266,22 @@ function CarruselCortos() {
     }
     setConSonido((s) => !s)
   }
+  const alternarPausa = () => {
+    const j = jugadorRef.current
+    if (j && !enPausa) j.pauseVideo()
+    else if (j) j.playVideo()
+    setEnPausa((p) => !p)
+  }
+  const compartirWhatsApp = () => {
+    const v = feedVideos[idx]
+    if (!v) return
+    window.open(`https://wa.me/?text=${encodeURIComponent(`${v.titulo}\n${v.url}`)}`, '_blank', 'noopener')
+  }
+  const copiarEnlace = async () => {
+    const v = feedVideos[idx]
+    if (!v) return
+    navigator.clipboard?.writeText(v.url)
+  }
 
   return (
     <section className="cc">
@@ -330,6 +354,18 @@ function CarruselCortos() {
             <span className="cc-modal__sonido-label">{conSonido ? 'Silenciar' : 'Activar sonido'}</span>
           </button>
 
+          <div className="cc-shorts__acciones">
+            <button type="button" className="cc-shorts__accion" onClick={compartirWhatsApp} aria-label="Compartir por WhatsApp">
+              <MessageCircle size={20} />
+            </button>
+            <button type="button" className="cc-shorts__accion" onClick={copiarEnlace} aria-label="Copiar enlace">
+              <Link2 size={20} />
+            </button>
+            <button type="button" className="cc-shorts__accion" onClick={alternarPausa} aria-label={enPausa ? 'Reanudar' : 'Pausar'}>
+              {enPausa ? <Play size={20} /> : <Pause size={20} />}
+            </button>
+          </div>
+
           {fuenteActual && fuenteActual.nombre && (
             <span className="cc-modal__fuente">{fuenteActual.nombre}</span>
           )}
@@ -366,7 +402,7 @@ function CarruselCortos() {
               feedVideos.map((video, i) => (
                 <div key={`${video.canal_id}-${video.id}`} className={`cc-slide${i === idx ? ' cc-slide--activo' : ''}`}>
                   {i === idx ? (
-                    <ShortsPlayer videoId={video.id} conSonido={conSonido} jugadorRef={jugadorRef} />
+                    <ShortsPlayer videoId={video.id} conSonido={conSonido} enPausa={enPausa} jugadorRef={jugadorRef} />
                   ) : (
                     <img src={video.thumb} alt={video.titulo} className="cc-slide__thumb" loading="lazy" />
                   )}

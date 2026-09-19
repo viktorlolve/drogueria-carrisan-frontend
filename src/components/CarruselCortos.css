@@ -301,6 +301,43 @@
   display: none;
 }
 
+.cc-shorts__acciones {
+  position: fixed;
+  right: 16px;
+  bottom: 70px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cc-shorts__accion {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.cc-shorts__accion:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+@media (min-width: 768px) {
+  .cc-shorts__acciones {
+    right: auto;
+    left: 28px;
+    bottom: auto;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}
+
 .cc-modal__nav {
   position: fixed;
   left: 50%;
@@ -450,5 +487,13 @@
   .cc-slide__video,
   .cc-slide__thumb {
     max-width: 400px;
+  }
+
+  /* Ruling 3: acciones del visor a la DRECHA (el lado izquierdo es de las flechas .cc-modal__nav) */
+  .cc-shorts__acciones {
+    left: auto;
+    right: 28px;
+    top: 50%;
+    transform: translateY(-50%);
   }
 }
