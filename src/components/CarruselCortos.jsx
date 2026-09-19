@@ -95,6 +95,19 @@ function ShortsPlayer({ videoId, conSonido, jugadorRef }) {
   return <div className="cc-slide__video" ref={contenedorRef} />
 }
 
+function MiniaturaMovimiento({ video, activo }) {
+  if (!activo) return null
+  return (
+    <iframe
+      src={`https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&mute=1&controls=0&loop=1&playlist=${video.id}&playsinline=1&iv_load_policy=3&rel=0&modestbranding=1`}
+      title={video.titulo}
+      className="cc__preview-frame"
+      allow="autoplay; encrypted-media; picture-in-picture"
+      loading="lazy"
+    />
+  )
+}
+
 const BANNER_TITULO = 'Tu dosis diaria de contenido'
 const BANNER_SUBTITULO = 'Consejos, novedades y curiosidades del sector farmacéutico'
 
@@ -108,6 +121,7 @@ function CarruselCortos() {
   const scrollerRef = useRef(null)
   const filaRef = useRef(null)
   const jugadorRef = useRef(null)
+  const [activos, setActivos] = useState(new Set())
 
   useEffect(() => {
     let activo = true
@@ -129,6 +143,29 @@ function CarruselCortos() {
       activo = false
     }
   }, [])
+
+  useEffect(() => {
+    const fila = filaRef.current
+    if (!fila || videos.length === 0) return undefined
+    const targets = Array.from(fila.querySelectorAll('.cc__preview'))
+    const obs = new IntersectionObserver(
+      (entries) => {
+        setActivos((prev) => {
+          const next = new Set(prev)
+          for (const e of entries) {
+            const id = e.target.getAttribute('data-video-id')
+            if (!id) continue
+            if (e.isIntersecting) next.add(id)
+            else next.delete(id)
+          }
+          return next
+        })
+      },
+      { root: fila, threshold: 0.55 }
+    )
+    targets.forEach((t) => obs.observe(t))
+    return () => obs.disconnect()
+  }, [videos])
 
   useEffect(() => {
     if (!abierto) return undefined
@@ -221,10 +258,12 @@ function CarruselCortos() {
                 key={video.id}
                 type="button"
                 className="cc__preview"
+                data-video-id={video.id}
                 onClick={() => abrir(i)}
                 aria-label={`Reproducir ${video.titulo}`}
               >
                 <img src={video.thumb} alt={video.titulo} className="cc__preview-img" loading="lazy" />
+                <MiniaturaMovimiento video={video} activo={activos.has(video.id)} />
                 <span className="cc__preview-play"><Play size={20} /></span>
                 <span className="cc__preview-titulo">{video.titulo}</span>
               </button>

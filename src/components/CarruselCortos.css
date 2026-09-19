@@ -84,6 +84,16 @@
   object-fit: cover;
 }
 
+.cc__preview-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  object-fit: cover;
+  pointer-events: none;
+}
+
 .cc__preview-play {
   position: absolute;
   top: 50%;
