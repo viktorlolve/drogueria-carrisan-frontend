@@ -42,6 +42,8 @@ function Catalogo() {
 const [moleculaActiva, setMoleculaActiva] = useState(moleculaParam)
   const [lineaActiva, setLineaActiva] = useState(lineaParam)
   const [laboratoriosDisponibles, setLaboratoriosDisponibles] = useState([])
+  const [laboratoriosTop, setLaboratoriosTop] = useState([])
+  const [labsVisibles, setLabsVisibles] = useState(20)
   const [formasDisponibles, setFormasDisponibles] = useState([])
   const [categoriasDisponibles, setCategoriasDisponibles] = useState([])
 
@@ -104,6 +106,7 @@ useEffect(() => {
       .get('/products/metadata', { params: { disponibles: 'true' } })
       .then((res) => {
         setLaboratoriosDisponibles(res.data.laboratorios || [])
+        setLaboratoriosTop(res.data.laboratoriosTop || [])
         setFormasDisponibles(res.data.formas || [])
         setCategoriasDisponibles(res.data.categorias || [])
       })
@@ -364,18 +367,26 @@ useEffect(() => {
               </button>
               {seccionesAbiertas.laboratorio && (
                 <div className="filtro-content">
-                  {laboratoriosDisponibles.length === 0 && (
+                  {laboratoriosTop.length === 0 && (
                     <p className="filtro-vacio">Sin datos aún</p>
                   )}
-                  {laboratoriosDisponibles.map((lab) => (
+                  {laboratoriosTop.slice(0, labsVisibles).map((lab) => (
                     <button
-                      key={lab}
-                      className={`filtro-pill ${laboratoriosActivos.includes(lab) ? 'active' : ''}`}
-                      onClick={() => toggleEnArray(lab, laboratoriosActivos, setLaboratoriosActivos)}
+                      key={lab.nombre}
+                      className={`filtro-pill ${laboratoriosActivos.includes(lab.nombre) ? 'active' : ''}`}
+                      onClick={() => toggleEnArray(lab.nombre, laboratoriosActivos, setLaboratoriosActivos)}
                     >
-                      {lab}
+                      {lab.nombre} <span className="filtro-pill__count">{lab.total}</span>
                     </button>
                   ))}
+                  {labsVisibles < laboratoriosTop.length && (
+                    <button
+                      className="filtro-ver-mas"
+                      onClick={() => setLabsVisibles((v) => v + 20)}
+                    >
+                      Cargar más ({laboratoriosTop.length - labsVisibles} restantes)
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -635,21 +646,29 @@ useEffect(() => {
                 </button>
                 {seccionesAbiertas.laboratorio && (
                   <div className="cfm-seccion__contenido">
-                    {laboratoriosDisponibles.length === 0 && (
+                    {laboratoriosTop.length === 0 && (
                       <p className="cfm-seccion__vacio">Sin datos aún</p>
                     )}
                     <div className="cfm-chips">
-                      {laboratoriosDisponibles.map((lab) => (
+                      {laboratoriosTop.slice(0, labsVisibles).map((lab) => (
                         <button
-                          key={lab}
+                          key={lab.nombre}
                           type="button"
-                          className={`cfm-chip ${laboratoriosActivos.includes(lab) ? 'cfm-chip--activo' : ''}`}
-                          onClick={() => toggleEnArray(lab, laboratoriosActivos, setLaboratoriosActivos)}
+                          className={`cfm-chip ${laboratoriosActivos.includes(lab.nombre) ? 'cfm-chip--activo' : ''}`}
+                          onClick={() => toggleEnArray(lab.nombre, laboratoriosActivos, setLaboratoriosActivos)}
                         >
-                          {lab}
+                          {lab.nombre} <span className="cfm-chip__count">{lab.total}</span>
                         </button>
                       ))}
                     </div>
+                    {labsVisibles < laboratoriosTop.length && (
+                      <button
+                        className="cfm-ver-mas"
+                        onClick={() => setLabsVisibles((v) => v + 20)}
+                      >
+                        Cargar más ({laboratoriosTop.length - labsVisibles} restantes)
+                      </button>
+                    )}
                   </div>
                 )}
               </section>

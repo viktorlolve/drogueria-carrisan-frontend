@@ -21,6 +21,10 @@ import './SeccionPromocional.css'
 //   verTodoTo  — Link del "Ver todo" del carrusel
 //   tituloCarrusel — Título del carrusel (default: ver todo)
 //   invertido  — true: imagen a la derecha / carrusel a la izquierda
+//   soloImagen — true: la sección se convierte en un banner de imagen puro
+//                 (full-width, sin overlay, sin texto y sin carrusel). El
+//                 texto ya viene horneado en la imagen. Usa `linkCta` para
+//                 hacer toda la imagen clicable.
 
 const ITEMS_POR_PAGINA = 3
 
@@ -79,6 +83,7 @@ function SeccionPromocional({
   tituloCarrusel = 'Recomendados',
   invertido = false,
   cargando = false,
+  soloImagen = false,
 }) {
   const filaRef = useRef(null)
 
@@ -90,6 +95,26 @@ function SeccionPromocional({
     const gap = 12
     const avance = cardWidth * ITEMS_POR_PAGINA + gap * ITEMS_POR_PAGINA
     fila.scrollBy({ left: direccion * avance, behavior: 'smooth' })
+  }
+
+  if (soloImagen) {
+    if (!imagen) return null
+
+    const banner = (
+      <img src={imagen} alt={alt} className="seccion-promo__banner" loading="lazy" />
+    )
+
+    return (
+      <section className="seccion-promo seccion-promo--solo-imagen">
+        {linkCta ? (
+          <Link to={linkCta} className="seccion-promo__banner-link" aria-label={alt || 'Promoción'}>
+            {banner}
+          </Link>
+        ) : (
+          banner
+        )}
+      </section>
+    )
   }
 
   if (!cargando && (!productos || productos.length === 0)) return null

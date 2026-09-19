@@ -5,13 +5,12 @@
 // campaña termina, solo actualizás el `imagen` de su objeto (o borrás el
 // objeto entero) en este archivo — sin tocar Home.jsx.
 //
-// `etiqueta` — mismo sistema de badge que las ads de /noticias:
-//   'Promocionado' → producto/sección propia de Droguería Carrisán
-//   'Patrocinado'  → contenido pagado por un tercero (laboratorio, etc.)
-// Se elige con un simple cambio de texto acá, sin tocar el componente.
+// Modo actual: tarjeta de imagen PURO (sin overlay). El arte ya trae el
+// texto/botón horneado en la imagen (GIF o estático), así que no se pasa
+// `overlay` ni `titulo`/`subtitulo` — `AdCard` renderiza solo la imagen.
 //
 // Imágenes: bucket `crsnimages` de Supabase Storage, carpeta /ads/.
-// Nombre de archivo = el que uses al subir (ej. ads/nuevos.png).
+// Nombre de archivo = el que uses al subir (ej. ads/atamel.gif).
 // El URL sale solo del BASE_IMG + la ruta que coloques en `imagen`.
 //
 // Cada objeto del array se pasa como props a <AdCard {...ad} />.
@@ -20,25 +19,15 @@ const BASE_IMG = 'https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/pub
 
 export const ADS = [
   {
-    id: 'nuevos',
-    imagen: `${BASE_IMG}/ads/nuevos.png`,
-    overlay: true,
-    alt: 'Nuevos productos',
-    titulo: 'Nuevos productos',
-    subtitulo: 'Descubrí lo último que llegó',
-    variante: 'nuevo',
-    etiqueta: 'Promocionado',
+    id: 'atamel',
+    imagen: `${BASE_IMG}/ads/atamel.gif`,
+    alt: 'Atamel',
     link: '/catalogo',
   },
   {
-    id: 'ofertas',
-    imagen: `${BASE_IMG}/ads/ofertas.png`,
-    overlay: true,
-    alt: 'Ofertas relámpago',
-    titulo: 'Ofertas relámpago',
-    subtitulo: 'No te quedes con el tuyo',
-    variante: 'oferta',
-    etiqueta: 'Promocionado',
+    id: 'festalcalox',
+    imagen: `${BASE_IMG}/ads/festalcalox.gif`,
+    alt: 'Festal y Calox',
     link: '/catalogo',
   },
 ]

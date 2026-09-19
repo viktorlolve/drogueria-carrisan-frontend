@@ -223,6 +223,34 @@
   border-color: #1B4B8F;
 }
 
+.filtro-pill__count {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  margin-left: 4px;
+}
+
+.filtro-pill.active .filtro-pill__count {
+  opacity: 0.8;
+}
+
+.filtro-ver-mas {
+  background: none;
+  border: 1px dashed #74767c;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  color: #74767c;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  text-align: center;
+}
+
+.filtro-ver-mas:hover {
+  border-color: #1B4B8F;
+  color: #1B4B8F;
+}
+
 .filtro-accordion-btn {
   width: 100%;
   display: flex;
@@ -799,6 +827,37 @@
 
   .cfm-chip:active {
     transform: scale(0.97);
+  }
+
+  .cfm-chip__count {
+    font-size: 0.75rem;
+    opacity: 0.5;
+    margin-left: 4px;
+  }
+
+  .cfm-chip--activo .cfm-chip__count {
+    opacity: 0.8;
+  }
+
+  .cfm-ver-mas {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-top: 8px;
+    background: none;
+    border: 1.5px dashed #D7DBE3;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #74767c;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s ease;
+  }
+
+  .cfm-ver-mas:active {
+    border-color: #1B4B8F;
+    color: #1B4B8F;
   }
 
   /* Input de principio activo */

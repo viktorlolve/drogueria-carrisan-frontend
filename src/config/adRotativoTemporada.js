@@ -14,27 +14,21 @@ const BASE_IMG = 'https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/pub
 
 export const ADS_ROTATIVO_TEMPORADA = [
   {
-    id: 'temporada-ofertas',
-    // imagen: `${BASE_IMG}/ads/temporada/ofertas.gif`,
-    variante: 'oferta',
-    titulo: 'Ofertas de la semana',
-    subtitulo: 'Precios especiales por tiempo limitado',
+    id: 'temporada-quetiapina',
+    imagen: `${BASE_IMG}/ads/quetiapina.png`,
+    alt: 'Quetiapina',
     link: '/catalogo',
   },
   {
-    id: 'temporada-nuevos-ingresos',
-    // imagen: `${BASE_IMG}/ads/temporada/nuevos-ingresos.gif`,
-    variante: 'nuevo',
-    titulo: 'Nuevos ingresos esta semana',
-    subtitulo: 'Lo último que llegó a nuestro catálogo',
+    id: 'temporada-riniflu',
+    imagen: `${BASE_IMG}/ads/riniflu.png`,
+    alt: 'Riniflu',
     link: '/catalogo',
   },
   {
-    id: 'temporada-fecha-especial',
-    // imagen: `${BASE_IMG}/ads/temporada/fecha-especial.gif`,
-    variante: 'default',
-    titulo: 'Promoción especial',
-    subtitulo: 'Aprovechá antes de que termine',
+    id: 'temporada-femenino',
+    imagen: `${BASE_IMG}/ads/femenino.jpg`,
+    alt: 'Línea femenino',
     link: '/catalogo',
   },
 ]

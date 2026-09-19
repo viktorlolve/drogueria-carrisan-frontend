@@ -30,7 +30,6 @@
     "a c"
     "d e";
   gap: 12px;
-  padding: 0 20px;
 }
 
 .home__bloque-a { grid-area: a; }

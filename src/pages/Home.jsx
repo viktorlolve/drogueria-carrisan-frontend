@@ -16,7 +16,7 @@ import BottomNav from '../components/BottomNav'
 import CookieConsent from '../components/CookieConsent'
 import { agruparEspecifico } from '../utils/agruparEspecifico'
 import { ADS } from '../config/adsImagenes'
-import { ADS_ROTATIVO_TEMPORADA } from '../config/adsRotativoTemporada'
+import { ADS_ROTATIVO_TEMPORADA } from '../config/adRotativoTemporada'
 import BloquePromocional from '../components/BloquePromocional'
 import SeccionPromocional from '../components/SeccionPromocional'
 import NoticiasTeaser from '../components/NoticiasTeaser'
@@ -80,7 +80,6 @@ function Home() {
   const [todosProductos, setTodosProductos] = useState([])
   const [secciones, setSecciones] = useState([])
   const [seccionesRollback2, setSeccionesRollback2] = useState([])
-  const [seccionesLab, setSeccionesLab] = useState([])
   const [categoriasParaScroll, setCategoriasParaScroll] = useState([])
   const [cargandoVitrina, setCargandoVitrina] = useState(true)
 
@@ -90,8 +89,6 @@ function Home() {
   const [seccionesDinamicas, setSeccionesDinamicas] = useState([])
 
   const productosIniciales = todosProductos.slice(0, PRODUCTOS_POR_CARGA)
-  const labSuperior = seccionesLab[0]
-  const labInferior = seccionesLab[1]
 
   // ── Carga inicial ───────────────────────────────────────────
   useEffect(() => {
@@ -111,19 +108,6 @@ function Home() {
         setSecciones(rollback1)
         const idsRollback1 = new Set(rollback1.flatMap((s) => s.productos.map((p) => p.id)))
         setSeccionesRollback2(agruparEspecifico(activos.filter((p) => !idsRollback1.has(p.id)), 6, 4))
-
-        const gruposLab = activos.reduce((acc, p) => {
-          if (!p.laboratorio) return acc
-          acc[p.laboratorio] = acc[p.laboratorio] || []
-          acc[p.laboratorio].push(p)
-          return acc
-        }, {})
-        const seccionesLabTop = Object.entries(gruposLab)
-          .filter(([, items]) => items.length >= 2)
-          .sort((a, b) => b[1].length - a[1].length)
-          .slice(0, 2)
-          .map(([lab, items]) => ({ lab, productos: items.slice(0, 9) }))
-        setSeccionesLab(seccionesLabTop)
 
         // Categorías reales para las rondas del infinite scroll (en vez de
         // cortes genéricos del catálogo). Necesita al menos 6 productos
@@ -272,8 +256,8 @@ function Home() {
           tamano="grande"
           posicionTexto="arriba"
           variante="default"
-          titulo="Presupuestos institucionales, sin llamadas ni esperas"
-          textoCta="Solicitar presupuesto"
+          titulo="Sin llamadas ni esperas"
+          textoCta="Generar presupuesto"
           link="/presupuesto"
         />
       </section>
@@ -288,42 +272,21 @@ function Home() {
         {/* ── Explorá por laboratorio (logos dinámicos, top labs) ── */}
         <LaboratoriosCarrusel />
 
-        {/* ── Sección promocional: imagen + carrusel (imagen a la izquierda) ──
-          Sigue al laboratorio destacado #1 (labSuperior) — continúa la narrativa
-          de "Explorá por laboratorio" con un deep-dive real, en vez de repetir
-          el mensaje de los bloques bento de arriba. */}
+        {/* ── Sección promocional: solo imagen (banner de campaña, sin texto
+          ni carrusel — el mensaje ya viene en la imagen) ── */}
       <SeccionPromocional
-        imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/quirofano.png"
-        alt={labSuperior ? `Productos ${labSuperior.lab}` : 'Selección destacada'}
-        titulo={labSuperior ? `Lo mejor de ${labSuperior.lab}` : 'Selección destacada para tu clínica'}
-        subtitulo="Laboratorio aliado con mayor variedad en tu catálogo"
-        badgeTexto="Laboratorio destacado"
-        textoCta="Ver catálogo completo"
-        linkCta={labSuperior ? `/catalogo?laboratorio=${encodeURIComponent(labSuperior.lab)}` : '/catalogo'}
-        linkImagen={labSuperior ? `/catalogo?laboratorio=${encodeURIComponent(labSuperior.lab)}` : '/catalogo'}
-        productos={labSuperior ? labSuperior.productos : ofertas}
-        tasaVes={tasa}
-        tituloCarrusel={labSuperior ? `Productos ${labSuperior.lab}` : 'Más vendidos'}
-        verTodoTo={labSuperior ? `/catalogo?laboratorio=${encodeURIComponent(labSuperior.lab)}` : '/catalogo'}
-        cargando={cargandoVitrina}
+        soloImagen
+        imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ads/caloxpromo.jpg"
+        alt="Promoción Calox"
+        linkCta="/catalogo"
       />
 
-        {/* ── Sección promocional invertida: imagen a la derecha ──
-          Laboratorio destacado #2 (labInferior). */}
+        {/* ── Sección promocional invertida: solo imagen (banner de campaña) ── */}
         <SeccionPromocional
-          invertido
-          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ampollas.png"
-          alt={labInferior ? `Productos ${labInferior.lab}` : 'Recomendados para ti'}
-          titulo={labInferior ? `Descubrí ${labInferior.lab}` : 'Recomendados para tu farmacia'}
-          subtitulo="Otro laboratorio aliado con gran variedad"
-          textoCta="Ver catálogo completo"
-          linkCta={labInferior ? `/catalogo?laboratorio=${encodeURIComponent(labInferior.lab)}` : '/catalogo'}
-          linkImagen={labInferior ? `/catalogo?laboratorio=${encodeURIComponent(labInferior.lab)}` : '/catalogo'}
-          productos={labInferior ? labInferior.productos : productosIniciales}
-          tasaVes={tasa}
-          tituloCarrusel={labInferior ? `Productos ${labInferior.lab}` : 'Recomendados para ti'}
-          verTodoTo={labInferior ? `/catalogo?laboratorio=${encodeURIComponent(labInferior.lab)}` : '/catalogo'}
-          cargando={cargandoVitrina}
+          soloImagen
+          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ads/letipromo.jpg"
+          alt="Promoción Leti"
+          linkCta="/catalogo"
         />
 
 

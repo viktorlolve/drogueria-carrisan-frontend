@@ -109,7 +109,18 @@ function ShortsPlayer({ videoId, conSonido, enPausa, jugadorRef }) {
 }
 
 function MiniaturaMovimiento({ video, activo }) {
-  if (!activo) return null
+  const [congelada, setCongelada] = useState(false)
+
+  useEffect(() => {
+    if (!activo) {
+      setCongelada(false)
+      return undefined
+    }
+    const t = setTimeout(() => setCongelada(true), 3000)
+    return () => clearTimeout(t)
+  }, [activo, video.id])
+
+  if (!activo || congelada) return null
   return (
     <iframe
       src={`https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&mute=1&controls=0&loop=1&playlist=${video.id}&playsinline=1&iv_load_policy=3&rel=0&modestbranding=1`}
@@ -120,9 +131,6 @@ function MiniaturaMovimiento({ video, activo }) {
     />
   )
 }
-
-const BANNER_TITULO = 'Tu dosis diaria de contenido'
-const BANNER_SUBTITULO = 'Consejos, novedades y curiosidades del sector farmacéutico'
 
 function CarruselCortos() {
   const [videos, setVideos] = useState([])
@@ -166,24 +174,42 @@ function CarruselCortos() {
   useEffect(() => {
     const fila = filaRef.current
     if (!fila || videos.length === 0) return undefined
-    const targets = Array.from(fila.querySelectorAll('.cc__preview'))
+    const target = (el) => el.getAttribute('data-video-id')
+    const limpiar = () => setActivos(new Set())
+    const recalcular = () => {
+      const centro = fila.getBoundingClientRect().left + fila.offsetWidth / 2
+      const cercanos = Array.from(fila.querySelectorAll('.cc__preview'))
+        .map((el) => {
+          const caja = el.getBoundingClientRect()
+          return { id: target(el), dist: Math.abs(caja.left + caja.width / 2 - centro) }
+        })
+        .filter((x) => x.id)
+        .sort((a, b) => a.dist - b.dist)
+        .slice(0, 3)
+      setActivos(new Set(cercanos.map((x) => x.id)))
+    }
     const obs = new IntersectionObserver(
       (entries) => {
-        setActivos((prev) => {
-          const next = new Set(prev)
-          for (const e of entries) {
-            const id = e.target.getAttribute('data-video-id')
-            if (!id) continue
-            if (e.isIntersecting) next.add(id)
-            else next.delete(id)
-          }
-          return next
-        })
+        if (entries.some((e) => e.isIntersecting)) recalcular()
       },
-      { root: fila, threshold: 0.55 }
+      { root: fila, threshold: 0 }
     )
+    const targets = Array.from(fila.querySelectorAll('.cc__preview'))
     targets.forEach((t) => obs.observe(t))
-    return () => obs.disconnect()
+    recalcular()
+    const onScroll = () => {
+      window.clearTimeout(schedRef.current)
+      schedRef.current = window.setTimeout(recalcular, 80)
+    }
+    fila.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      obs.disconnect()
+      fila.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      window.clearTimeout(schedRef.current)
+      limpiar()
+    }
   }, [videos])
 
   useEffect(() => {
@@ -327,7 +353,9 @@ function CarruselCortos() {
               >
                 <img src={video.thumb} alt={video.titulo} className="cc__preview-img" loading="lazy" />
                 <MiniaturaMovimiento video={video} activo={activos.has(video.id)} />
-                <span className="cc__preview-play"><Play size={20} /></span>
+                {!activos.has(video.id) && (
+                  <span className="cc__preview-play"><Play size={20} /></span>
+                )}
                 <span className="cc__preview-titulo">{video.titulo}</span>
               </button>
             ))}
