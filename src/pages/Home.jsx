@@ -211,10 +211,13 @@ function Home() {
           cargando={cargandoVitrina}
         />
 
-        {/* ── Bloques promocionales: grid tipo bento, imagen + texto/CTA superpuestos ──
-          Sin `imagen` todavía → cada bloque cae en modo placeholder (mismo patrón que
-          AdBanner/AdCard). Cuando tengas las artes, agrega `imagen`/`imagenMovil` a
-          cada BloquePromocional con la URL real. */}
+        {/* ── Bloques promocionales: grid tipo bento, pensado como 5 "pilares de marca" ──
+          Orden de lectura (desktop, según grid-template-areas "a b b d" / "a c e d"):
+            A → línea hospitalaria   B → línea farmacia   D → presupuesto/cotizaciones B2B
+            C + E → vademécum + registro sanitario (confianza, en el "valle" entre A y D)
+          C y D sin `imagen`: el mensaje cambió de lo que mostraba la foto original
+          (medicamentos / repartidor), así que caen en modo placeholder hasta tener
+          artes que representen vademécum y presupuesto de verdad. */}
       <section className="home__bloques-promocionales">
         <BloquePromocional
           imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/quirofano.png"
@@ -231,40 +234,38 @@ function Home() {
           className="home__bloque-b"
           tamano="mediano"
           posicionTexto="arriba"
-          titulo="Inyectables con cadena de frío garantizada"
-          textoCta="Conocer más"
+          titulo="Tu línea de farmacia completa, en un solo lugar"
+          subtitulo="Desde inyectables hasta presentaciones de venta libre"
+          textoCta="Ver línea farmacia"
           estiloCta="enlace"
-          link="/ayuda"
+          link="/farmacia"
         />
         <BloquePromocional
-          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/medicamentos.png"
           className="home__bloque-c"
           tamano="pequeno"
-          variante="oferta"
-          titulo="Encuentra cualquier presentación"
-          textoCta="Linea Farmacia"
-          link="/farmacia"
+          variante="nuevo"
+          titulo="Vademécum clínico al alcance"
+          textoCta="Buscar molécula"
+          link="/vademecum"
         />
         <BloquePromocional
           imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ampolla.jpg"
           className="home__bloque-e"
           tamano="pequeno"
-          variante="nuevo"
-          titulo="Cada lote, verificado antes de enviarse"
-          textoCta="Explorar"
+          variante="oferta"
+          titulo="Cada producto con registro sanitario verificado"
+          textoCta="Ver registro"
           estiloCta="enlace"
-          link="/ayuda"
+          link="/registro-inhrr"
         />
         <BloquePromocional
-          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/repartidor.jpg"
           className="home__bloque-d"
           tamano="grande"
           posicionTexto="arriba"
-          titulo="Entregas rápidas y programadas, sin filas ni esperas"
-          subtitulo="Recibe tus pedidos donde estés"
-          textoCta="Conocer más"
-          estiloCta="enlace"
-          link="/ayuda"
+          variante="default"
+          titulo="Presupuestos institucionales, sin llamadas ni esperas"
+          textoCta="Solicitar presupuesto"
+          link="/presupuesto"
         />
       </section>
 
