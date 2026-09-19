@@ -19,14 +19,14 @@ const BASE_IMG = 'https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/pub
 
 export const ADS = [
   {
-    id: 'atamel',
-    imagen: `${BASE_IMG}/ads/atamel.gif`,
-    alt: 'Atamel',
+    id: 'letisanpromo',
+    imagen: `${BASE_IMG}/ads/letisanpromo.webp`,
+    alt: 'Letisan',
     link: '/catalogo',
   },
   {
     id: 'festalcalox',
-    imagen: `${BASE_IMG}/ads/festalcalox.gif`,
+    imagen: `${BASE_IMG}/ads/festalcalox.webp`,
     alt: 'Festal y Calox',
     link: '/catalogo',
   },
