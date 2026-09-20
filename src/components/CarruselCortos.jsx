@@ -87,10 +87,29 @@ function ShortsPlayer({ videoId, conSonido, enPausa, jugadorRef }) {
 
     return () => {
       activo = false
-      if (jugadorRef.current) {
-        jugadorRef.current.destroy()
-        jugadorRef.current = null
+      const jugador = jugadorRef.current
+      jugadorRef.current = null
+      // React 19 reconcilia el <div contenedor> y lo desmonta; si ademas
+      // llamamos destroy() (que hace removeChild(iframe) por dentro) en el
+      // mismo tick, YouTube intenta quitar un nodo que React ya desmonto ->
+      // "Failed to execute 'removeChild': The node to be removed is not a
+      // child of this node". Se difiere al proximo tick y se verifica que el
+      // iframe siga conectado antes de destruirlo.
+      if (jugador && typeof jugador.destroy === 'function') {
+        const aplazarDestruccion = () => {
+          const iframe = typeof jugador.getIframe === 'function' ? jugador.getIframe() : null
+          if (iframe && iframe.isConnected) {
+            try {
+              jugador.destroy()
+            } catch {
+              // ya fue removido por React; no reintentar
+            }
+          }
+        }
+        const t = window.setTimeout(aplazarDestruccion, 0)
+        return () => window.clearTimeout(t)
       }
+      return undefined
     }
   }, [videoId, jugadorRef])
 

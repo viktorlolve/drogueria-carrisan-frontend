@@ -28,7 +28,7 @@ function AdCard({
   } else if (imagen) {
     contenido = (
       <picture>
-        <img src={imagen} alt={alt} className="ad-card__img" loading="lazy" />
+        <img src={imagen} alt={alt} className="ad-card__img ad-card__img--puro" loading="lazy" />
       </picture>
     )
   } else {

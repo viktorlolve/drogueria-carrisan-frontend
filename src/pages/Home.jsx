@@ -6,7 +6,6 @@ import HomeCarrusel from '../components/HomeCarrusel'
 import LaboratoriosCarrusel from '../components/LaboratoriosCarrusel'
 import CategoriasCarrusel from '../components/CategoriasCarrusel'
 import SeccionesCarrusel from '../components/SeccionesCarrusel'
-import AdBanner from '../components/AdBanner'
 import AdRotativo from '../components/AdRotativo'
 import AdCard from '../components/AdCard'
 import CarruselCortos from '../components/CarruselCortos'
@@ -74,13 +73,19 @@ function Home() {
 
   const sentinelRef = useRef(null)
   const cargasRef = useRef(0)
+  const cargandoMasRef = useRef(false)
+  const sentinelEnVistaRef = useRef(false)
+  const timeoutRef = useRef(null)
 
   const [tasa, setTasa] = useState(null)
   const [ofertas, setOfertas] = useState([])
   const [todosProductos, setTodosProductos] = useState([])
   const [secciones, setSecciones] = useState([])
   const [seccionesRollback2, setSeccionesRollback2] = useState([])
+  const [seccionesLab, setSeccionesLab] = useState([])
   const [categoriasParaScroll, setCategoriasParaScroll] = useState([])
+  const [categoriasTienda, setCategoriasTienda] = useState([])
+  const [laboratoriosTienda, setLaboratoriosTienda] = useState([])
   const [cargandoVitrina, setCargandoVitrina] = useState(true)
 
   // Estado del infinite scroll
@@ -89,6 +94,8 @@ function Home() {
   const [seccionesDinamicas, setSeccionesDinamicas] = useState([])
 
   const productosIniciales = todosProductos.slice(0, PRODUCTOS_POR_CARGA)
+  const labSuperior = seccionesLab[0]
+  const labInferior = seccionesLab[1]
 
   // ── Carga inicial ───────────────────────────────────────────
   useEffect(() => {
@@ -108,6 +115,22 @@ function Home() {
         setSecciones(rollback1)
         const idsRollback1 = new Set(rollback1.flatMap((s) => s.productos.map((p) => p.id)))
         setSeccionesRollback2(agruparEspecifico(activos.filter((p) => !idsRollback1.has(p.id)), 6, 4))
+
+        // Top 2 laboratorios para las secciones promocionales: panel de
+        // campaña (solo imagen) + carrusel de "Productos {lab}". Requiere al
+        // menos 2 productos por laboratorio para llenar el carrusel.
+        const gruposLab = activos.reduce((acc, p) => {
+          if (!p.laboratorio) return acc
+          acc[p.laboratorio] = acc[p.laboratorio] || []
+          acc[p.laboratorio].push(p)
+          return acc
+        }, {})
+        const seccionesLabTop = Object.entries(gruposLab)
+          .filter(([, items]) => items.length >= 2)
+          .sort((a, b) => b[1].length - a[1].length)
+          .slice(0, 2)
+          .map(([lab, items]) => ({ lab, productos: items.slice(0, 9) }))
+        setSeccionesLab(seccionesLabTop)
 
         // Categorías reales para las rondas del infinite scroll (en vez de
         // cortes genéricos del catálogo). Necesita al menos 6 productos
@@ -208,9 +231,7 @@ function Home() {
           Orden de lectura (desktop, según grid-template-areas "a b b d" / "a c e d"):
             A → línea hospitalaria   B → línea farmacia   D → presupuesto/cotizaciones B2B
             C + E → vademécum + registro sanitario (confianza, en el "valle" entre A y D)
-          C y D sin `imagen`: el mensaje cambió de lo que mostraba la foto original
-          (medicamentos / repartidor), así que caen en modo placeholder hasta tener
-          artes que representen vademécum y presupuesto de verdad. */}
+          Los 5 bloques tienen imagen propia; ninguno cae en modo placeholder. */}
       <section className="home__bloques-promocionales">
         <BloquePromocional
           imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/quirofano.png"
@@ -234,9 +255,9 @@ function Home() {
           link="/farmacia"
         />
         <BloquePromocional
+          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/vervademecum.png"
           className="home__bloque-c"
           tamano="pequeno"
-          variante="nuevo"
           titulo="Vademécum clínico al alcance"
           textoCta="Buscar molécula"
           link="/vademecum"
@@ -252,10 +273,10 @@ function Home() {
           link="/registro-inhrr"
         />
         <BloquePromocional
+          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/verpresupuesto.png"
           className="home__bloque-d"
           tamano="grande"
           posicionTexto="arriba"
-          variante="default"
           titulo="Sin llamadas ni esperas"
           textoCta="Generar presupuesto"
           link="/presupuesto"
@@ -272,21 +293,31 @@ function Home() {
         {/* ── Explorá por laboratorio (logos dinámicos, top labs) ── */}
         <LaboratoriosCarrusel />
 
-        {/* ── Sección promocional: solo imagen (banner de campaña, sin texto
-          ni carrusel — el mensaje ya viene en la imagen) ── */}
-      <SeccionPromocional
-        soloImagen
-        imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ads/caloxpromo.jpg"
-        alt="Promoción Calox"
-        linkCta="/catalogo"
-      />
-
-        {/* ── Sección promocional invertida: solo imagen (banner de campaña) ── */}
+        {/* ── Sección promocional: panel de campaña (solo imagen, sin texto)
+          + carrusel del laboratorio destacado #1 (labSuperior) ── */}
         <SeccionPromocional
-          soloImagen
+          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ads/caloxpromo.jpg"
+          alt={labSuperior ? `Productos ${labSuperior.lab}` : 'Selección destacada'}
+          linkImagen={labSuperior ? `/catalogo?laboratorio=${encodeURIComponent(labSuperior.lab)}` : '/catalogo'}
+          productos={labSuperior ? labSuperior.productos : ofertas}
+          tasaVes={tasa}
+          tituloCarrusel={labSuperior ? `Productos ${labSuperior.lab}` : 'Más vendidos'}
+          verTodoTo={labSuperior ? `/catalogo?laboratorio=${encodeURIComponent(labSuperior.lab)}` : '/catalogo'}
+          cargando={cargandoVitrina}
+        />
+
+        {/* ── Sección promocional invertida: panel de campaña (solo imagen)
+          + carrusel del laboratorio destacado #2 (labInferior) ── */}
+        <SeccionPromocional
+          invertido
           imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ads/letipromo.jpg"
-          alt="Promoción Leti"
-          linkCta="/catalogo"
+          alt={labInferior ? `Productos ${labInferior.lab}` : 'Recomendados para ti'}
+          linkImagen={labInferior ? `/catalogo?laboratorio=${encodeURIComponent(labInferior.lab)}` : '/catalogo'}
+          productos={labInferior ? labInferior.productos : productosIniciales}
+          tasaVes={tasa}
+          tituloCarrusel={labInferior ? `Productos ${labInferior.lab}` : 'Recomendados para ti'}
+          verTodoTo={labInferior ? `/catalogo?laboratorio=${encodeURIComponent(labInferior.lab)}` : '/catalogo'}
+          cargando={cargandoVitrina}
         />
 
 
@@ -319,49 +350,18 @@ function Home() {
 
         {/* ── Secciones dinámicas (cargadas por infinite scroll) ──
           Cada ronda del infinite scroll trae 2 categorías reales del catálogo
-          (ver categoriasParaScroll / cargarMas). Entre ambas se intercala UN
-          momento editorial (no producto), alternando formato por ronda para
-          que no se sienta un shelf repetitivo. ── */}
-        {seccionesDinamicas.map((seccion, idx) => {
-          const rondaIdx = Math.floor(idx / 2)
-          const esMitadDeRonda = idx % 2 === 1
-
-          return (
-            <div key={seccion.id} className="home__bloque-dinamico">
-              {esMitadDeRonda && (
-                rondaIdx % 2 === 0 ? (
-                  <AdBanner
-                    titulo="Promoción exclusiva"
-                    subtitulo="Solo por tiempo limitado"
-                    variante="nuevo"
-                    link="/catalogo"
-                  />
-                ) : (
-                  <div className="home__ads-pair">
-                    <AdCard
-                      titulo="Te puede interesar"
-                      subtitulo="Productos que otros compran"
-                      link="/catalogo"
-                    />
-                    <AdCard
-                      titulo="Ofertas del día"
-                      subtitulo="Precios que no vas a encontrar mañana"
-                      variante="oferta"
-                      link="/catalogo"
-                    />
-                  </div>
-                )
-              )}
-              <HomeCarrusel
-                titulo={seccion.titulo}
-                productos={seccion.productos}
-                tasaVes={tasa}
-                verTodoTo={seccion.verTodoTo}
-                cargando={false}
-              />
-            </div>
-          )
-        })}
+          (ver categoriasParaScroll / cargarMas). ── */}
+        {seccionesDinamicas.map((seccion) => (
+          <div key={seccion.id} className="home__bloque-dinamico">
+            <HomeCarrusel
+              titulo={seccion.titulo}
+              productos={seccion.productos}
+              tasaVes={tasa}
+              verTodoTo={seccion.verTodoTo}
+              cargando={false}
+            />
+          </div>
+        ))}
 
         {/* ── Sentinel para infinite scroll ── */}
         {cargasRestantes > 0 && (

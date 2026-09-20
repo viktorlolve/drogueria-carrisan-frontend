@@ -213,3 +213,13 @@
   color: #1A1A3A;
   background: #F59E0B;
 }
+
+/* Imagen pura (banner/campaña): se muestra completa con su proporción real,
+   sin recorte forzado a 4/3 — declarado al final para ganarle al media
+   query de desktop que mete aspect-ratio 3/2. */
+.ad-card__img--puro {
+  aspect-ratio: auto;
+  height: auto;
+  object-fit: fill;
+  border-radius: 14px;
+}

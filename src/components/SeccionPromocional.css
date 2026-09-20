@@ -105,24 +105,6 @@
   background: #EFF4FB;
 }
 
-/* ---------- Modo solo imagen: banner promocional puro ---------- */
-.seccion-promo--solo-imagen {
-  display: block;
-  border: none;
-  background: transparent;
-}
-
-.seccion-promo__banner-link {
-  display: block;
-  line-height: 0;
-}
-
-.seccion-promo__banner {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
 /* ---------- Carrusel ---------- */
 .seccion-promo__carrusel-wrap {
   width: 100%;
