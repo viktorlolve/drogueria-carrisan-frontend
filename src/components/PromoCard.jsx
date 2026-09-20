@@ -53,6 +53,7 @@ function PromoCard({ producto, tasaVes }) {
 
   const tieneDescuento = producto.precio_original_usd != null && producto.descuento_activo
   const etiquetaDescuento = tieneDescuento ? obtenerEtiquetaDescuento(producto.descuento_activo) : null
+  const sinPrecio = producto.precio_usd == null || Number(producto.precio_usd) <= 0
 
   const itemEnCarrito = cartItems.find(i => i.producto.id === producto.id)
   const cantidad = itemEnCarrito?.cantidad || 0
@@ -121,7 +122,14 @@ function PromoCard({ producto, tasaVes }) {
         />
       </div>
 
-      {(mostrarContador || cantidad > 0) ? (
+      {sinPrecio ? (
+        <button
+          className="promocard__btn-consultar"
+          onClick={(e) => { e.stopPropagation(); navigate(`/producto/${producto.id}`) }}
+        >
+          Consultar
+        </button>
+      ) : (mostrarContador || cantidad > 0) ? (
         <div className="promocard__contador" onClick={(e) => e.stopPropagation()}>
           <button className="promocard__contador-btn" onClick={handleRestar} aria-label="Quitar uno">−</button>
           <span className="promocard__contador-cantidad">{cantidad}</span>

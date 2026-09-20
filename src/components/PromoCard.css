@@ -127,6 +127,28 @@
   transform: scale(0.97);
 }
 
+/* Botón: consultar precio (producto sin precio asignado, igual que ProductCard) */
+.promocard__btn-consultar {
+  border: 1px solid #1B4B8F;
+  border-radius: 999px;
+  background: #FFFFFF;
+  color: #1B4B8F;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 8px 18px;
+  cursor: pointer;
+  margin-bottom: 10px;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.promocard__btn-consultar:hover {
+  background: #EEF2FF;
+}
+
+.promocard__btn-consultar:active {
+  transform: scale(0.97);
+}
+
 /* Contador (− N +) */
 .promocard__contador {
   display: flex;

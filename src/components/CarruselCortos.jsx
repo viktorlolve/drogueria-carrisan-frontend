@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { X, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Play, Volume2, VolumeX, Loader2, MessageCircle, Link2, Pause } from 'lucide-react'
 import api from '../api/axios'
 import './CarruselCortos.css'
@@ -130,19 +130,18 @@ function ShortsPlayer({ videoId, conSonido, enPausa, jugadorRef }) {
   return <div className="cc-slide__video" ref={contenedorRef} />
 }
 
-function MiniaturaMovimiento({ video, activo }) {
-  const [congelada, setCongelada] = useState(false)
-
+// Preview con movimiento: solo muestra el iframe mientras es el preview
+// "activo" (más cercano al centro). Tras 3 segundos se "congela" (avisa al
+// padre con `alCongelar`) para no mantener autoplay constante de decenas de
+// videos; el padre decide si sigue mostrando el icono de play.
+function MiniaturaMovimiento({ video, activo, congelado, alCongelar }) {
   useEffect(() => {
-    if (!activo) {
-      setCongelada(false)
-      return undefined
-    }
-    const t = setTimeout(() => setCongelada(true), 3000)
+    if (!activo || congelado) return undefined
+    const t = setTimeout(() => alCongelar(video.id), 3000)
     return () => clearTimeout(t)
-  }, [activo, video.id])
+  }, [activo, congelado, video.id, alCongelar])
 
-  if (!activo || congelada) return null
+  if (!activo || congelado) return null
   return (
     <iframe
       src={`https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&mute=1&controls=0&loop=1&playlist=${video.id}&playsinline=1&iv_load_policy=3&rel=0&modestbranding=1`}
@@ -170,7 +169,18 @@ function CarruselCortos() {
   const filaRef = useRef(null)
   const jugadorRef = useRef(null)
   const schedRef = useRef(null)
+  const feedReqRef = useRef(0)
   const [activos, setActivos] = useState(new Set())
+  const [congeladas, setCongeladas] = useState(new Set())
+
+  const congelar = useCallback((id) => {
+    setCongeladas((prev) => {
+      if (prev.has(id)) return prev
+      const sig = new Set(prev)
+      sig.add(id)
+      return sig
+    })
+  }, [])
 
   useEffect(() => {
     let activo = true
@@ -198,7 +208,10 @@ function CarruselCortos() {
     const fila = filaRef.current
     if (!fila || videos.length === 0) return undefined
     const target = (el) => el.getAttribute('data-video-id')
-    const limpiar = () => setActivos(new Set())
+    const limpiar = () => {
+      setActivos(new Set())
+      setCongeladas(new Set())
+    }
     const recalcular = () => {
       const centro = fila.getBoundingClientRect().left + fila.offsetWidth / 2
       const cercanos = Array.from(fila.querySelectorAll('.cc__preview'))
@@ -208,8 +221,13 @@ function CarruselCortos() {
         })
         .filter((x) => x.id)
         .sort((a, b) => a.dist - b.dist)
-        .slice(0, 3)
-      setActivos(new Set(cercanos.map((x) => x.id)))
+        .slice(0, 1)
+      const nuevosActivos = new Set(cercanos.map((x) => x.id))
+      setActivos(nuevosActivos)
+      setCongeladas((prev) => {
+        if (prev.size === 0) return prev
+        return new Set([...prev].filter((id) => nuevosActivos.has(id)))
+      })
     }
     const obs = new IntersectionObserver(
       (entries) => {
@@ -272,19 +290,22 @@ function CarruselCortos() {
   if (hayError || videos.length === 0) return null
 
   const cargarFeed = async (canalId) => {
+    const reqActual = ++feedReqRef.current
     const fuente = fuentes.find((f) => f.canal_id === canalId) || { canal_id: canalId, nombre: canalId }
     setFeedCargando(true)
     setFuenteActual(fuente)
     try {
       const res = await api.get('/shorts', { params: { fuente: canalId } })
+      if (reqActual !== feedReqRef.current) return
       const listaFeed = res.data?.videos
       setFeedVideos(Array.isArray(listaFeed) ? listaFeed : [])
       setIdx(0)
       scrollerRef.current?.scrollTo({ top: 0 })
     } catch {
+      if (reqActual !== feedReqRef.current) return
       setFeedVideos([])
     } finally {
-      setFeedCargando(false)
+      if (reqActual === feedReqRef.current) setFeedCargando(false)
     }
   }
   const abrir = (i) => {
@@ -296,10 +317,11 @@ function CarruselCortos() {
   }
   const cerrar = () => setAbierto(false)
   const irA = (i) => {
-    if (i < 0 || i >= feedVideos.length) return
+    if (feedCargando || i < 0 || i >= feedVideos.length) return
     scrollerRef.current?.children[i]?.scrollIntoView({ behavior: 'smooth' })
   }
   const siguienteFeed = () => {
+    if (feedCargando) return
     if (idx < feedVideos.length - 1) {
       irA(idx + 1)
       return
@@ -338,6 +360,12 @@ function CarruselCortos() {
     navigator.clipboard?.writeText(v.url)
   }
 
+  // Desde el que está abierto: en el último video de la última fuente el
+  // botón "siguiente" no tiene a dónde ir → se deshabilita.
+  const posicionFuente = fuentes.findIndex((f) => f.canal_id === fuenteActual?.canal_id)
+  const haySiguienteFuente = posicionFuente !== -1 && posicionFuente < fuentes.length - 1
+  const deshabilitarBajar = !haySiguienteFuente && idx >= feedVideos.length - 1
+
   return (
     <section className="cc">
       {/* Mini banner solo móvil */}
@@ -366,21 +394,33 @@ function CarruselCortos() {
 
           <div className="cc__fila" ref={filaRef}>
             {videos.map((video, i) => (
-              <button
+              <div
                 key={video.id}
-                type="button"
+                role="button"
+                tabIndex={0}
                 className="cc__preview"
                 data-video-id={video.id}
                 onClick={() => abrir(i)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    abrir(i)
+                  }
+                }}
                 aria-label={`Reproducir ${video.titulo}`}
               >
                 <img src={video.thumb} alt={video.titulo} className="cc__preview-img" loading="lazy" />
-                <MiniaturaMovimiento video={video} activo={activos.has(video.id)} />
-                {!activos.has(video.id) && (
+                <MiniaturaMovimiento
+                  video={video}
+                  activo={activos.has(video.id)}
+                  congelado={congeladas.has(video.id)}
+                  alCongelar={congelar}
+                />
+                {(!activos.has(video.id) || congeladas.has(video.id)) && (
                   <span className="cc__preview-play"><Play size={20} /></span>
                 )}
                 <span className="cc__preview-titulo">{video.titulo}</span>
-              </button>
+              </div>
             ))}
           </div>
 
@@ -442,7 +482,7 @@ function CarruselCortos() {
                 type="button"
                 className="cc-modal__nav cc-modal__nav--abajo"
                 onClick={siguienteFeed}
-                disabled={false}
+                disabled={feedCargando || deshabilitarBajar}
                 aria-label="Siguiente"
               >
                 <ChevronDown size={26} />

@@ -104,6 +104,16 @@ function Home() {
       .then((res) => setTasa(res.data.usd_a_ves))
       .catch((err) => console.error(err))
 
+    // Metadata de categorías/laboratorios (una sola vez, para no duplicar
+    // el fetch que CategoriasCarrusel y LaboratoriosCarrusel hacen aparte).
+    api
+      .get('/products/metadata')
+      .then((res) => {
+        setCategoriasTienda(Array.isArray(res.data?.categorias) ? res.data.categorias : [])
+        setLaboratoriosTienda(Array.isArray(res.data?.laboratoriosTop) ? res.data.laboratoriosTop : [])
+      })
+      .catch((err) => console.error(err))
+
     api
       .get('/products')
       .then((res) => {
@@ -160,9 +170,14 @@ function Home() {
   // quede sin contenido.
   const cargarMas = useCallback(() => {
     if (cargasRef.current >= MAX_CARGAS) return
+    // Si aún no llegó la carga inicial, no "quemar" rondas: el sentinel ni
+    // siquiera está montado mientras cargandoVitrina, y si la carga falló no
+    // hay nada que cargar.
+    if (categoriasParaScroll.length === 0 && (todosProductos || []).length === 0) return
+    cargandoMasRef.current = true
     setCargandoMas(true)
 
-    setTimeout(() => {
+    timeoutRef.current = setTimeout(() => {
       const cargaIdx = cargasRef.current
       const grupo = categoriasParaScroll.slice(cargaIdx * 2, cargaIdx * 2 + 2)
 
@@ -185,24 +200,40 @@ function Home() {
       setSeccionesDinamicas((prev) => [...prev, ...nuevasSecciones])
       cargasRef.current += 1
       setCargasRestantes(MAX_CARGAS - cargasRef.current)
+      cargandoMasRef.current = false
       setCargandoMas(false)
     }, 200)
   }, [todosProductos, categoriasParaScroll])
 
+  // ── Infinite scroll (carga por etapas mientras se scrollea) ──
+  // El observer solo dispara cuando el sentinel ENTRÓ a la zona visible (en
+  // un evento de intersección real), no sobre cada reconexión del observer.
+  // Con el guard de "ya visto" (sentinelEnVistaRef) se evita que las rondas
+  // se encadenen solas sin que el usuario scrollee.
   useEffect(() => {
-    if (cargasRestantes <= 0 || cargandoMas) return
+    if (cargasRestantes <= 0) return
     const sentinel = sentinelRef.current
     if (!sentinel) return
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) cargarMas()
+        const entrante = entries[0]
+        if (!entrante.isIntersecting) {
+          sentinelEnVistaRef.current = false
+          return
+        }
+        if (sentinelEnVistaRef.current || cargandoMasRef.current) return
+        sentinelEnVistaRef.current = true
+        cargarMas()
       },
       { rootMargin: '200px' }
     )
     observer.observe(sentinel)
     return () => observer.disconnect()
-  }, [cargasRestantes, cargandoMas, cargarMas])
+  }, [cargasRestantes, cargarMas])
+
+  // Limpia el setTimeout pendiente de cargarMas si la página se desmonta.
+  useEffect(() => () => clearTimeout(timeoutRef.current), [])
 
   // ── Render ──────────────────────────────────────────────────
   return (
@@ -216,7 +247,7 @@ function Home() {
       {/* ── Vitrina: carruseles fijos + ads ── */}
       <div className="home__vitrina">
         {/* ── Explorá por categoría (colocado justo tras el hero) ── */}
-        <CategoriasCarrusel />
+        <CategoriasCarrusel categorias={categoriasTienda.length ? categoriasTienda : undefined} />
 
         <HomeCarrusel
           titulo="Ofertas destacadas"
@@ -291,7 +322,7 @@ function Home() {
         />
 
         {/* ── Explorá por laboratorio (logos dinámicos, top labs) ── */}
-        <LaboratoriosCarrusel />
+        <LaboratoriosCarrusel laboratoriosTop={laboratoriosTienda.length ? laboratoriosTienda : undefined} />
 
         {/* ── Sección promocional: panel de campaña (solo imagen, sin texto)
           + carrusel del laboratorio destacado #1 (labSuperior) ── */}
@@ -337,8 +368,8 @@ function Home() {
           verTodoTo="/catalogo"
           cargando={cargandoVitrina}
         />
-        
-<div className="home__ads-pair">
+
+        <div className="home__ads-pair">
           {ADS.map((ad) => (
             <AdCard key={ad.id} {...ad} />
           ))}
@@ -364,7 +395,7 @@ function Home() {
         ))}
 
         {/* ── Sentinel para infinite scroll ── */}
-        {cargasRestantes > 0 && (
+        {cargasRestantes > 0 && !cargandoVitrina && (
           <div ref={sentinelRef} className="home__sentinel" />
         )}
         {cargandoMas && <InfiniteScrollLoader />}
