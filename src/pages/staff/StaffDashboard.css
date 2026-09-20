@@ -357,3 +357,186 @@
     padding: 32px 22px;
   }
 }
+
+/* -----------------------------------------------------------------
+   Jornada enfocada (Variante 3c) — un solo departamento
+   ----------------------------------------------------------------- */
+.sd-hero--foco {
+  padding: 30px clamp(20px, 5vw, 40px);
+}
+
+.sd-hero--foco .sd-hero__eyebrow {
+  color: #a9f3e6;
+}
+
+.sd-campana {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1.5px solid var(--sd-border);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--sd-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sd-campana:hover {
+  border-color: var(--sd-card-color, #1B4B8F);
+  color: var(--sd-card-color, #1B4B8F);
+}
+
+.sd-campana__icono {
+  display: block;
+}
+
+.sd-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #DC2626;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+}
+
+/* -----------------------------------------------------------------
+   Jornada enfocada — panel de trabajo (3c)
+   ----------------------------------------------------------------- */
+.sd-foco {
+  --sd-foco-color: var(--sd-card-color, #1B4B8F);
+  --sd-foco-color-soft: var(--sd-card-color-soft, rgba(27, 75, 143, 0.1));
+}
+
+.sd-foco__cab {
+  max-width: 720px;
+}
+
+.sd-eyebrow {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sd-foco-color);
+}
+
+.sd-foco__titulo {
+  margin: 0;
+  font-size: clamp(22px, 3.4vw, 30px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--sd-text);
+}
+
+.sd-foco__desc {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--sd-text-muted);
+}
+
+.sd-foco__grid {
+  display: grid;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+@media (min-width: 640px) {
+  .sd-foco__grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+}
+
+.sd-foco__btn {
+  --sd-card-color: var(--sd-foco-color);
+  --sd-card-color-soft: var(--sd-foco-color-soft);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--sd-surface);
+  border: 1.5px solid var(--sd-border);
+  border-radius: 16px;
+  padding: 16px 18px;
+  text-decoration: none;
+  color: var(--sd-text);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.sd-foco__btn:hover {
+  transform: translateY(-3px);
+  border-color: var(--sd-card-color);
+  box-shadow: 0 14px 28px -14px rgba(15, 23, 42, 0.16);
+}
+
+.sd-foco__btn-ico {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  background: var(--sd-card-color-soft);
+  color: var(--sd-card-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sd-foco__btn-tx {
+  flex: 1;
+  min-width: 0;
+}
+
+.sd-foco__btn-tit {
+  display: block;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--sd-text);
+}
+
+.sd-foco__btn-desc {
+  display: block;
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--sd-text-muted);
+}
+
+.sd-foco__btn-arr {
+  flex: none;
+  color: var(--sd-card-color);
+  opacity: 0;
+  transform: translateX(-5px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.sd-foco__btn:hover .sd-foco__btn-arr {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.sd-foco__volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 22px;
+  border: 0;
+  background: transparent;
+  color: var(--sd-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.sd-foco__volver:hover {
+  color: var(--sd-foco-color);
+}

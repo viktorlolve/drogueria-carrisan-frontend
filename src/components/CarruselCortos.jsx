@@ -3,6 +3,9 @@ import { X, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Play, Volume2, Vo
 import api from '../api/axios'
 import './CarruselCortos.css'
 
+const BANNER_TITULO = 'Tu dosis diaria de contenido'
+const BANNER_SUBTITULO = 'Consejos, novedades y curiosidades del sector farmacéutico'
+
 let promesaApiYT = null
 
 function cargaApiYT() {
@@ -147,6 +150,7 @@ function CarruselCortos() {
   const scrollerRef = useRef(null)
   const filaRef = useRef(null)
   const jugadorRef = useRef(null)
+  const schedRef = useRef(null)
   const [activos, setActivos] = useState(new Set())
 
   useEffect(() => {

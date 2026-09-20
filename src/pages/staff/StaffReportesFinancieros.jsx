@@ -66,7 +66,7 @@ export default function StaffReportesFinancieros() {
   const [desde, setDesde] = useState(primerDiaDelMes)
   const [hasta, setHasta] = useState(hoy)
   const [datos, setDatos] = useState(null)
-  const [cargando, setCargando] = useState(false)
+  const [cargando, setCargando] = useState(true)
 
   // Calcular fechas reales desde anioMes
   const fechasDesdeMes = () => {
@@ -78,24 +78,23 @@ export default function StaffReportesFinancieros() {
     return `${anioMes}-${diasEnMes(anioMes)}`
   }
 
-  const fetchResumen = async () => {
-    const params = modoPeriodo === 'mes'
-      ? { desde: fechasDesdeMes(), hasta: fechasHastaMes() }
-      : { desde, hasta }
-    try {
-      setCargando(true)
-      const res = await staffApi.get('/staff/reportes/resumen', { params })
-      setDatos(res.data)
-    } catch (e) {
-      console.error('Error cargando reportes financieros:', e)
-    } finally {
-      setCargando(false)
-    }
-  }
-
   useEffect(() => {
-    fetchResumen()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    let activo = true
+    const cargar = async () => {
+      const params = modoPeriodo === 'mes'
+        ? { desde: fechasDesdeMes(), hasta: fechasHastaMes() }
+        : { desde, hasta }
+      try {
+        const res = await staffApi.get('/staff/reportes/resumen', { params })
+        if (activo) setDatos(res.data)
+      } catch (e) {
+        if (activo) console.error('Error cargando reportes financieros:', e)
+      } finally {
+        if (activo) setCargando(false)
+      }
+    }
+    cargar()
+    return () => { activo = false }
   }, [modoPeriodo, anioMes, desde, hasta])
 
   const paramsActuales = modoPeriodo === 'mes'
