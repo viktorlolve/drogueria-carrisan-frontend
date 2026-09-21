@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { ProductoImagen } from './icons/ProductoImagen'
 import './MiniPromoCard.css'
 
 function formatUSD(valor) {
@@ -48,8 +49,8 @@ function MiniPromoCard({ producto }) {
       </div>
 
       <div className="minipromocard__media">
-        <img
-          src={producto.foto_url || '/placeholder.png'}
+        <ProductoImagen
+          src={producto.foto_url}
           alt={producto.nombre_comercial}
           className="minipromocard__image"
           loading="lazy"

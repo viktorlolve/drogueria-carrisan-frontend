@@ -7,6 +7,7 @@ import { useEnvio } from '../context/EnvioContext'
 import logoBlanco from '../assets/minilogo blanco sin fondo.png'
 import api from '../api/axios'
 import BuscadorMovil from './BuscadorMovil'
+import { ProductoImagen } from './icons/ProductoImagen'
 import './Navbar.css'
 
 const RUTAS_SIN_NAVBAR = ['/login', '/registro', '/registro/invita', '/recuperar', '/registro/institucional', '/registro/profesional', '/registro/honorifico', '/mantenimiento']
@@ -438,8 +439,8 @@ function Navbar() {
                     className="suggestion-item"
                     onClick={() => handleSugerenciaClick(producto)}
                   >
-                    <img
-                      src={producto.foto_url || '/placeholder.png'}
+                    <ProductoImagen
+                      src={producto.foto_url}
                       alt=""
                       className="suggestion-item__img"
                     />

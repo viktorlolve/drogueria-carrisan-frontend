@@ -1,4 +1,5 @@
 import { useCart } from '../context/CartContext'
+import { ProductoImagen } from './icons/ProductoImagen'
 
 function CartSummary({ tasaVes }) {
   const { items, removeItem, updateCantidad, total } = useCart()
@@ -11,8 +12,8 @@ function CartSummary({ tasaVes }) {
     <div className="cart-summary">
       {items.map((item) => (
         <div key={item.producto.id} className="cart-item">
-          <img
-            src={item.producto.foto_url || '/placeholder.png'}
+          <ProductoImagen
+            src={item.producto.foto_url}
             alt={item.producto.nombre}
             width="50"
           />

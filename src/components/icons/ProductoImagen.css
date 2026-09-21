@@ -1,0 +1,30 @@
+/* src/components/icons/ProductoImagen.css
+   Estilos del fallback de imagen cuando un producto NO tiene foto_url.
+   Para cambiar la apariencia del ícono: edita el SVG en ProductoImagen.jsx
+   y estos estilos — sin cargar ningún placeholder.png. */
+
+.placeholder-icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9aa7b8;          /* gris-azulado neutro de marca */
+  background: #eef2f7;     /* fondo suave */
+}
+
+/* Presupuesto: estos dos contextos estilizan la etiqueta img del item
+   (selectores de etiqueta, no de clase), así que el placeholder (div)
+   necesita su mismo tamaño aquí. */
+.pres-buscador__item .placeholder-icono {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: var(--pres-bg, #fff);
+}
+.pres-borrador__item .placeholder-icono {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: var(--pres-bg, #fff);
+}

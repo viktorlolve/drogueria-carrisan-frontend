@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import HomeCarrusel from '../components/HomeCarrusel'
 import { agruparPorLinea } from '../utils/agruparPorLinea'
 import BottomNav from '../components/BottomNav'
+import { ProductoImagen } from '../components/icons/ProductoImagen'
 import SECCIONES_FICHA from '../config/seccionesFicha'
 import './ProductoDetalle.css'
 
@@ -296,8 +297,8 @@ function ProductoDetalle() {
       <div className="pd-hero">
         <div className="pd-gallery">
           <div className="pd-gallery__main">
-            <img
-              src={galeria[imagenActiva] || '/placeholder.png'}
+            <ProductoImagen
+              src={galeria[imagenActiva] || null}
               alt={producto.nombre_comercial}
               className="pd-gallery__img"
             />

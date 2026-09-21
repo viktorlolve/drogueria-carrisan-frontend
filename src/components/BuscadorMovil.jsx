@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api/axios'
 import './BuscadorMovil.css'
-import { IconoFlecha } from './icons/IconoFlecha';
+import { IconoFlecha } from './icons/IconoFlecha'
+import { ProductoImagen } from './icons/ProductoImagen'
 
 const STORAGE_KEY = 'carrisan_busquedas_recientes'
 const MAX_RECIENTES = 8
@@ -238,8 +239,8 @@ function BuscadorMovil({ onClose, queryInicial = '' }) {
                     className="buscador-movil__sugerencia"
                     onClick={() => irAProducto(producto)}
                   >
-                    <img
-                      src={producto.foto_url || '/placeholder.png'}
+                    <ProductoImagen
+                      src={producto.foto_url}
                       alt={producto.nombre_comercial}
                       className="buscador-movil__sugerencia-img"
                     />

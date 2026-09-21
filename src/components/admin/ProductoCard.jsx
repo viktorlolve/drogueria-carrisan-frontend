@@ -5,6 +5,7 @@ import { useCart } from '../../context/CartContext'
 import { useAuth } from '../../context/AuthContext'
 import { useFavoritos } from '../../context/FavoritosContext'
 import AgregarAItemsModal from '../AgregarAItemsModal'
+import { ProductoImagen } from '../icons/ProductoImagen'
 import './ProductoCard.css'
 
 function formatUSD(valor) {
@@ -160,8 +161,8 @@ function ProductCard({ producto, tasaVes, variante = 'vertical' }) {
               <Heart size={16} fill={favorito ? 'currentColor' : 'none'} strokeWidth={2} />
             </button>
 
-            <img
-              src={producto.foto_url || '/placeholder.png'}
+            <ProductoImagen
+              src={producto.foto_url}
               alt={producto.nombre_comercial}
               className="pcard__image"
               loading="lazy"
@@ -264,8 +265,8 @@ function ProductCard({ producto, tasaVes, variante = 'vertical' }) {
             <Heart size={16} fill={favorito ? 'currentColor' : 'none'} strokeWidth={2} />
           </button>
 
-          <img
-            src={producto.foto_url || '/placeholder.png'}
+          <ProductoImagen
+            src={producto.foto_url}
             alt={producto.nombre_comercial}
             className="pcard__image"
             loading="lazy"

@@ -6,6 +6,7 @@ import api from '../api/axios'
 import { useCart } from '../context/CartContext'
 import LayoutPaginaPrincipal from '../components/paginas-principales/Layoutpaginaprincipal'
 import { NAV_UNIFICADO } from '../components/paginas-principales/NavUnificado'
+import { ProductoImagen } from '../components/icons/ProductoImagen'
 import './Presupuesto.css'
 
 function formatUSD(valor) {
@@ -229,7 +230,7 @@ function PresupuestoModal({ presupuestoId, onClose, onRecotizado }) {
                 />
               )}
 
-              <img src={item.foto_url || '/placeholder.png'} alt={item.nombre_comercial} className="pres-modal__item-img" />
+              <ProductoImagen src={item.foto_url} alt={item.nombre_comercial} className="pres-modal__item-img" />
 
               <div className="pres-modal__item-info">
                 <p className="pres-modal__item-nombre">{item.nombre_comercial}</p>
@@ -414,7 +415,7 @@ function Presupuesto() {
               ) : (
                 sugerencias.map((p) => (
                   <button key={p.id} type="button" className="pres-buscador__item" onClick={() => agregarAlBorrador(p)}>
-                    <img src={p.foto_url || '/placeholder.png'} alt={p.nombre_comercial} />
+                    <ProductoImagen src={p.foto_url} alt={p.nombre_comercial} />
                     <span className="pres-buscador__nombre">{p.nombre_comercial}</span>
                     <span className="pres-buscador__precio">${formatUSD(p.precio_usd)}</span>
                     <Plus size={16} />
@@ -430,7 +431,7 @@ function Presupuesto() {
             <h2>Tu listado</h2>
             {borrador.map((i) => (
               <div key={i.producto.id} className="pres-borrador__item">
-                <img src={i.producto.foto_url || '/placeholder.png'} alt={i.producto.nombre_comercial} />
+                <ProductoImagen src={i.producto.foto_url} alt={i.producto.nombre_comercial} />
                 <div className="pres-borrador__info">
                   <p className="pres-borrador__nombre">{i.producto.nombre_comercial}</p>
                   <p className="pres-borrador__precio">${formatUSD(i.producto.precio_usd)} c/u</p>

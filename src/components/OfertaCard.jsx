@@ -4,6 +4,7 @@ import { Plus, Check } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 import { getEstadoProducto } from '../utils/productoEstado'
+import { ProductoImagen } from './icons/ProductoImagen'
 import './OfertaCard.css'
  
 
@@ -33,8 +34,8 @@ function OfertaCard({ producto, tasaVes }) {
   return (
     <div className="oferta-card" onClick={() => navigate(`/producto/${producto.id}`)}>
       <div className="oferta-card__imagen-wrap">
-        <img
-          src={producto.foto_url || '/placeholder.png'}
+        <ProductoImagen
+          src={producto.foto_url}
           alt={producto.nombre_comercial}
           className="oferta-card__imagen"
           loading="lazy"

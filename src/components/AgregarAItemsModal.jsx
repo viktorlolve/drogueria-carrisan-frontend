@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import api from '../api/axios'
+import { ProductoImagen } from './icons/ProductoImagen'
 
 function AgregarAItemsModal({ producto, onClose }) {
   const [listas, setListas] = useState([])
@@ -100,8 +101,8 @@ function AgregarAItemsModal({ producto, onClose }) {
 
         {/* Producto */}
         <div style={{ display: 'flex', gap: '12px', padding: '12px', background: '#f9f9f9', borderRadius: '8px', marginBottom: '20px' }}>
-          <img
-            src={producto.foto_url || '/placeholder.png'}
+          <ProductoImagen
+            src={producto.foto_url}
             alt={producto.nombre_comercial}
             style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '6px' }}
           />

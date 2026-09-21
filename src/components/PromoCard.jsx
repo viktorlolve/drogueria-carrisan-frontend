@@ -4,6 +4,7 @@ import { Heart } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { useFavoritos } from '../context/FavoritosContext'
+import { ProductoImagen } from './icons/ProductoImagen'
 import './PromoCard.css'
 
 function PrecioSuperIndice({ valor }) {
@@ -114,8 +115,8 @@ function PromoCard({ producto, tasaVes }) {
         >
           <Heart size={18} fill={favorito ? 'currentColor' : 'none'} strokeWidth={2} />
         </button>
-        <img
-          src={producto.foto_url || '/placeholder.png'}
+        <ProductoImagen
+          src={producto.foto_url}
           alt={producto.nombre_comercial}
           className="promocard__image"
           loading="lazy"

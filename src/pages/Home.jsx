@@ -327,7 +327,7 @@ function Home() {
         {/* ── Sección promocional: panel de campaña (solo imagen, sin texto)
           + carrusel del laboratorio destacado #1 (labSuperior) ── */}
         <SeccionPromocional
-          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ads/letipromo.jpg"
+          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ads/letipromo2.jpg"
           alt={labSuperior ? `Productos ${labSuperior.lab}` : 'Selección destacada'}
           linkImagen={labSuperior ? `/catalogo?laboratorio=${encodeURIComponent(labSuperior.lab)}` : '/catalogo'}
           productos={labSuperior ? labSuperior.productos : ofertas}
@@ -341,7 +341,7 @@ function Home() {
           + carrusel del laboratorio destacado #2 (labInferior) ── */}
         <SeccionPromocional
           invertido
-          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ads/caloxpromo.jpg"
+          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ads/caloxpromo2.jpg"
           alt={labInferior ? `Productos ${labInferior.lab}` : 'Recomendados para ti'}
           linkImagen={labInferior ? `/catalogo?laboratorio=${encodeURIComponent(labInferior.lab)}` : '/catalogo'}
           productos={labInferior ? labInferior.productos : productosIniciales}
