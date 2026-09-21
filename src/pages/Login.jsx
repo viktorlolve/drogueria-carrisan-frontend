@@ -78,7 +78,15 @@ function Login() {
   }
 
   return (
-    <div className="auth-page">
+    <div className="auth-page auth-page--login">
+      {/* Fondo de marca: brillos difuminados + marca de agua (decorativo) */}
+      <div className="auth-backdrop" aria-hidden="true">
+        <span className="auth-backdrop__glow auth-backdrop__glow--1" />
+        <span className="auth-backdrop__glow auth-backdrop__glow--2" />
+        <span className="auth-backdrop__glow auth-backdrop__glow--3" />
+        <img src={logo} alt="" className="auth-backdrop__watermark" />
+      </div>
+
       <main className="auth-container">
         <Link to="/" className="auth-logo">
           <img src={logo} alt="Logo" className="logologin" />

@@ -20,9 +20,8 @@ import logoBlanco from '../../assets/minilogo blanco sin fondo.png'
 import hero from '../../assets/hero.png'
 
 /* Paleta de marca */
-const AZUL_OSCURO = '#1B4B8F'
 const TEAL = '#12A594'
-const AZUL_PRINCIPAL = '#0052DC'
+const VERDE_STAFF = '#0D9373'
 const GRIS_OSCURO = '#232B45'
 
 /* Puntos destacados del panel de branding (desktop) */
@@ -59,15 +58,60 @@ function StaffLogin() {
   }
 
   return (
-    <Flex minH="100dvh" w="100%">
+    <Flex
+      minH="100dvh"
+      w="100%"
+      position="relative"
+      overflow="hidden"
+      bgGradient="to-br"
+      gradientFrom="#0A6E5C"
+      gradientTo="#12A594"
+    >
+      {/* Glow decorativos del fondo teal (detrás de todo) */}
+      <Box
+        aria-hidden="true"
+        position="absolute"
+        top="-160px"
+        right="-120px"
+        w="460px"
+        h="460px"
+        rounded="full"
+        bg="whiteAlpha.200"
+        filter="blur(90px)"
+        pointerEvents="none"
+      />
+      <Box
+        aria-hidden="true"
+        position="absolute"
+        bottom="-180px"
+        left="-140px"
+        w="520px"
+        h="520px"
+        rounded="full"
+        bg="blackAlpha.300"
+        filter="blur(100px)"
+        pointerEvents="none"
+      />
+      <Box
+        aria-hidden="true"
+        position="absolute"
+        top="38%"
+        left="28%"
+        w="380px"
+        h="380px"
+        rounded="full"
+        bg="teal.200"
+        opacity="0.18"
+        filter="blur(100px)"
+        pointerEvents="none"
+      />
+
       {/* ---------- Panel de branding — solo desktop (lg+) ---------- */}
       <Box
         display={{ base: 'none', lg: 'flex' }}
         flex="1"
         flexDirection="column"
-        bgGradient="to-br"
-        gradientFrom={AZUL_OSCURO}
-        gradientTo={TEAL}
+        bg="transparent"
         color="white"
         px={{ lg: 14, xl: 20 }}
         py={{ lg: 10, xl: 14 }}
@@ -164,7 +208,7 @@ function StaffLogin() {
         </Text>
       </Box>
 
-      {/* ---------- Panel del formulario (móvil: fondo degradado; desktop: claro) ---------- */}
+      {/* ---------- Panel del formulario (fondo teal de la página a través) ---------- */}
       <Flex
         flex="1"
         position="relative"
@@ -172,10 +216,7 @@ function StaffLogin() {
         justify="center"
         p={{ base: 4, md: 8 }}
         minH="100dvh"
-        bg={{
-          base: 'linear-gradient(160deg, #1B4B8F 0%, #14407A 52%, #12A594 100%)',
-          lg: '#F2F5FA',
-        }}
+        bg="transparent"
         overflow="hidden"
       >
         {/* Glows decorativos sobre el fondo */}
@@ -209,15 +250,16 @@ function StaffLogin() {
         <Card.Root
           w="100%"
           maxW="md"
-          bg="white"
-          rounded="2xl"
+          bg="rgba(255, 255, 255, 0.82)"
+          style={{ backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}
+          rounded="3xl"
           position="relative"
           boxShadow={{
-            base: '0 24px 48px rgba(2, 12, 32, 0.30)',
-            md: '0 20px 50px rgba(35, 43, 69, 0.10)',
+            base: '0 24px 48px rgba(2, 12, 32, 0.35)',
+            md: '0 24px 56px rgba(4, 62, 50, 0.38)',
           }}
-          border={{ lg: '1px solid' }}
-          borderColor={{ lg: 'gray.100' }}
+          border="1px solid"
+          borderColor="whiteAlpha.500"
         >
           <Card.Body p={{ base: 6, md: 8 }} display="flex" flexDirection="column" gap={5}>
             {/* Logo (se mantiene el enlace original) */}
@@ -303,7 +345,7 @@ function StaffLogin() {
                     required
                     bg="white"
                     borderColor="gray.200"
-                    _focus={{ borderColor: AZUL_PRINCIPAL, boxShadow: `0 0 0 1px ${AZUL_PRINCIPAL}` }}
+                    _focus={{ borderColor: VERDE_STAFF, boxShadow: `0 0 0 1px ${VERDE_STAFF}` }}
                   />
                 </Field.Root>
 
@@ -327,7 +369,7 @@ function StaffLogin() {
                     required
                     bg="white"
                     borderColor="gray.200"
-                    _focus={{ borderColor: AZUL_PRINCIPAL, boxShadow: `0 0 0 1px ${AZUL_PRINCIPAL}` }}
+                    _focus={{ borderColor: VERDE_STAFF, boxShadow: `0 0 0 1px ${VERDE_STAFF}` }}
                   />
                 </Field.Root>
 
@@ -336,11 +378,15 @@ function StaffLogin() {
                   w="100%"
                   size="lg"
                   mt={1}
-                  bg={AZUL_PRINCIPAL}
+                  bgGradient="linear-gradient(135deg, #0D9373 0%, #12A594 100%)"
                   color="white"
                   fontWeight="700"
-                  _hover={{ bg: '#0041B0' }}
-                  _active={{ bg: '#003A9E' }}
+                  _hover={{
+                    bgGradient: 'linear-gradient(135deg, #0C8268 0%, #0FA688 100%)',
+                  }}
+                  _active={{
+                    bgGradient: 'linear-gradient(135deg, #0B6F5B 0%, #0D9373 100%)',
+                  }}
                   loading={cargando}
                   loadingText="Ingresando..."
                 >
@@ -353,7 +399,7 @@ function StaffLogin() {
             <Separator borderColor="gray.100" />
             <Box textAlign="center" fontSize="sm" color="gray.500">
               ¿No tenés acceso?{' '}
-              <Link to="/staff/registro" style={{ color: AZUL_PRINCIPAL, fontWeight: 600 }}>
+              <Link to="/staff/registro" style={{ color: TEAL, fontWeight: 600 }}>
                 Registrate con tu código
               </Link>
             </Box>
