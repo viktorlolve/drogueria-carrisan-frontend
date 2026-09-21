@@ -93,12 +93,12 @@ function Footer() {
 
       {/* Barra legal */}
       <div className="footer-base">
-        <span>© {anioActual} Droguería Carrisán, C.A. Todos los derechos reservados.</span>
         <div className="footer-base__links">
           <Link to="/terminos">Términos</Link>
           <Link to="/privacidad">Privacidad</Link>
           <Link to="/ayuda">Ayuda</Link>
         </div>
+        <span>© {anioActual} Droguería Carrisán, C.A. Todos los derechos reservados.</span>
       </div>
     </footer>
   )

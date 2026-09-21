@@ -102,10 +102,11 @@
   border-top: 1px solid rgba(255, 255, 255, 0.15);
   padding: 18px 24px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
   font-size: 0.78rem;
   color: #C7D4EE;
 }
@@ -134,10 +135,5 @@
 
   .footer-marca {
     max-width: none;
-  }
-
-  .footer-base {
-    justify-content: center;
-    text-align: center;
   }
 }
