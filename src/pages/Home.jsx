@@ -327,7 +327,7 @@ function Home() {
         {/* ── Sección promocional: panel de campaña (solo imagen, sin texto)
           + carrusel del laboratorio destacado #1 (labSuperior) ── */}
         <SeccionPromocional
-          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ads/letipromo2.jpg"
+          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ads/letipromo.jpg"
           alt={labSuperior ? `Productos ${labSuperior.lab}` : 'Selección destacada'}
           linkImagen={labSuperior ? `/catalogo?laboratorio=${encodeURIComponent(labSuperior.lab)}` : '/catalogo'}
           productos={labSuperior ? labSuperior.productos : ofertas}

@@ -15,19 +15,19 @@ const BASE_IMG = 'https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/pub
 export const ADS_ROTATIVO_TEMPORADA = [
   {
     id: 'temporada-quetiapina',
-    imagen: `${BASE_IMG}/ads/quetiapina.png`,
+    imagen: `${BASE_IMG}/ads/quetiapina.jpg`,
     alt: 'Quetiapina',
     link: '/catalogo',
   },
   {
     id: 'temporada-riniflu',
-    imagen: `${BASE_IMG}/ads/riniflu.png`,
+    imagen: `${BASE_IMG}/ads/riniflu.jpg`,
     alt: 'Riniflu',
     link: '/catalogo',
   },
   {
     id: 'temporada-femenino',
-    imagen: `${BASE_IMG}/ads/femenino.jpg`,
+    imagen: `${BASE_IMG}/ads/genesa.jpg`,
     alt: 'Línea femenino',
     link: '/catalogo',
   },

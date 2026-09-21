@@ -57,7 +57,7 @@ function Footer() {
         {/* Bloque de marca + contacto */}
         <div className="footer-marca">
           <img src={logoBlanco} alt="Droguería Carrisán" className="footer-logo" />
-          <p className="footer-tagline">La plataforma digital de abastecimiento farmacéutico y hospitalario para clínicas, farmacias, centros quirúrgicos y medicos cirujanos.</p>
+          <p className="footer-tagline">La plataforma digital de abastecimiento farmacéutico y hospitalario para clínicas, farmacias y centros quirúrgicos.</p>
           <ul className="footer-contacto">
             <li>
               <span className="footer-contacto__icon" aria-hidden="true">✉</span>
