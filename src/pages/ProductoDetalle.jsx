@@ -95,10 +95,10 @@ function ProductoDetalle() {
   const [agregado, setAgregado] = useState(false)
   const [carruseles, setCarruseles] = useState([])
   const [imagenActiva, setImagenActiva] = useState(0)
-  const [tabActiva, setTabActiva] = useState('descripcion')
+  const [tabActiva, setTabActiva] = useState('ficha')
   const [fichasClinicas, setFichasClinicas] = useState({})
   const [cargandoFichas, setCargandoFichas] = useState(false)
-  const [moleculaAbierta, setMoleculaAbierta] = useState(null)
+  const [seccionAbierta, setSeccionAbierta] = useState('')
   const [suscripcion, setSuscripcion] = useState(null)
   const [procesandoToggle, setProcesandoToggle] = useState(false)
 
@@ -115,9 +115,9 @@ function ProductoDetalle() {
 
   useEffect(() => {
     setImagenActiva(0)
-    setTabActiva('descripcion')
+    setTabActiva('ficha')
     setAgregado(false)
-    setMoleculaAbierta(null)
+    setSeccionAbierta('')
     window.scrollTo(0, 0)
   }, [id])
 
@@ -158,8 +158,7 @@ function ProductoDetalle() {
         d.via_administracion || d.efectos_secundarios || d.precauciones ||
         d.presentacion || d.registro_sanitario
       )
-      const tieneComposicion = m && m.length > 0
-      setTabActiva(tieneFichaTecnica ? 'ficha' : tieneComposicion ? 'composicion' : 'descripcion')
+      setTabActiva(tieneFichaTecnica ? 'ficha' : 'fichaclinica')
 
       const fichasPromise = (m && m.length > 0) ? (async () => {
         setCargandoFichas(true)
@@ -283,6 +282,21 @@ function ProductoDetalle() {
     detalles.presentacion || detalles.registro_sanitario
   )
   const tieneComposicion = moleculas.length > 0
+
+  const categoriasClinicas = SECCIONES_FICHA
+    .map(({ clave, etiqueta, icono }) => {
+      const entradas = moleculas
+        .map((m) => {
+          const ref = m.moleculas_referencias
+          const molId = ref?.id
+          const ficha = molId ? fichasClinicas[molId]?.ficha_tecnica : null
+          const texto = ficha?.[clave]
+          return texto ? { id: molId || 'anon', nombre: ref?.nombre || 'Molécula', texto } : null
+        })
+        .filter(Boolean)
+      return { clave, etiqueta, icono, entradas }
+    })
+    .filter((c) => c.entradas.length > 0)
 
   return (
     <div className="pd-page">
@@ -502,16 +516,9 @@ function ProductoDetalle() {
         </div>
       </div>
 
-      <div className="pd-tabs">
-        <div className="pd-tabs__nav" role="tablist">
-          <button
-            role="tab"
-            className={`pd-tabs__btn ${tabActiva === 'descripcion' ? 'active' : ''}`}
-            onClick={() => setTabActiva('descripcion')}
-            aria-selected={tabActiva === 'descripcion'}
-          >
-            Descripcion
-          </button>
+      {(tieneFichaTecnica || tieneComposicion) && (
+        <div className="pd-tabs">
+          <div className="pd-tabs__nav" role="tablist">
           {tieneFichaTecnica && (
             <button
               role="tab"
@@ -520,16 +527,6 @@ function ProductoDetalle() {
               aria-selected={tabActiva === 'ficha'}
             >
               Ficha tecnica
-            </button>
-          )}
-          {tieneComposicion && (
-            <button
-              role="tab"
-              className={`pd-tabs__btn ${tabActiva === 'composicion' ? 'active' : ''}`}
-              onClick={() => setTabActiva('composicion')}
-              aria-selected={tabActiva === 'composicion'}
-            >
-              Composicion
             </button>
           )}
           {tieneComposicion && (
@@ -545,46 +542,6 @@ function ProductoDetalle() {
         </div>
 
         <div className="pd-tabs__panel" role="tabpanel">
-          {tabActiva === 'descripcion' && (
-            <div className="pd-desc-grid">
-              {producto.laboratorio && (
-                <div className="pd-desc-card">
-                  <span className="pd-desc-card__label">Laboratorio</span>
-                  <span className="pd-desc-card__value">{producto.laboratorio}</span>
-                </div>
-              )}
-              {producto.forma && (
-                <div className="pd-desc-card">
-                  <span className="pd-desc-card__label">Forma farmaceutica</span>
-                  <span className="pd-desc-card__value">{producto.forma}</span>
-                </div>
-              )}
-              {producto.linea && (
-                <div className="pd-desc-card">
-                  <span className="pd-desc-card__label">Linea</span>
-                  <span className="pd-desc-card__value">{producto.linea}</span>
-                </div>
-              )}
-              {producto.pais_origen && (
-                <div className="pd-desc-card">
-                  <span className="pd-desc-card__label">Pais de origen</span>
-                  <span className="pd-desc-card__value">{producto.pais_origen}</span>
-                </div>
-              )}
-              <div className="pd-desc-card">
-                <span className="pd-desc-card__label">Disponibilidad</span>
-                <span className={`pd-desc-card__value ${producto.disponible ? 'available' : 'unavailable'}`}>
-                  {producto.disponible ? 'Disponible' : 'Agotado'}
-                </span>
-              </div>
-              {producto.descripcion && (
-                <div className="pd-desc-full">
-                  <p>{producto.descripcion}</p>
-                </div>
-              )}
-            </div>
-          )}
-
           {tabActiva === 'ficha' && detalles && (
             <table className="pd-specs-table">
               <tbody>
@@ -625,87 +582,38 @@ function ProductoDetalle() {
             </table>
           )}
 
-          {tabActiva === 'composicion' && (
-            <div className="pd-composition">
-              {moleculas.map((m, i) => {
-                const ref = m.moleculas_referencias
-                return (
-                  <div key={ref?.id || i} className="pd-composition__item">
-                    {ref && ref.id ? (
-                      <Link className="pd-composition__name pd-composition__name--link" to={`/vademecum/${ref.id}`}>
-                        {ref.nombre}
-                      </Link>
-                    ) : (
-                      <span className="pd-composition__name">{ref?.nombre || 'Molecula'}</span>
-                    )}
-                    {m.concentracion && (
-                      <span className="pd-composition__dose">
-                        {m.concentracion} {m.unidad_concentracion}
-                      </span>
-                    )}
-                  </div>
-                )
-              })}
-              <p className="pd-composition__disclaimer">
-                * Consulta siempre con un profesional de la salud antes de usar cualquier medicamento.
-              </p>
-            </div>
-          )}
-
           {tabActiva === 'fichaclinica' && (
             <div className="pd-clinical">
               {cargandoFichas && <span className="pd-clinical__loading">Cargando fichas clinicas...</span>}
 
-              {!cargandoFichas && Object.keys(fichasClinicas).length > 0 ? (
+              {!cargandoFichas && categoriasClinicas.length > 0 ? (
                 <div className="pd-clinical__list">
-                  {moleculas.map((m, i) => {
-                    const ref = m.moleculas_referencias
-                    const molId = ref?.id
-                    const ficha = fichasClinicas[molId]
-                    const abierta = moleculaAbierta === molId
+                  {categoriasClinicas.map(({ clave, etiqueta, icono, entradas }) => {
+                    const abierta = seccionAbierta === clave
                     return (
-                      <div key={molId || i} className={`pd-clinical__item ${abierta ? 'open' : ''}`}>
+                      <div key={clave} className={`pd-clinical__item ${abierta ? 'open' : ''}`}>
                         <div className="pd-clinical__row">
                           <button
                             type="button"
                             className="pd-clinical__toggle"
-                            onClick={() => setMoleculaAbierta(abierta ? null : molId)}
+                            onClick={() => setSeccionAbierta(abierta ? '' : clave)}
                             aria-expanded={abierta}
                           >
-                            <span className="pd-clinical__name">{ref?.nombre || 'Molecula'}</span>
-                            {m.concentracion && (
-                              <span className="pd-clinical__dose">
-                                {m.concentracion} {m.unidad_concentracion}
-                              </span>
-                            )}
+                            <span className="pd-clinical__icono">{icono}</span>
+                            <span className="pd-clinical__name">{etiqueta}</span>
                             <span className={`pd-clinical__chevron ${abierta ? 'open' : ''}`}>&#9662;</span>
                           </button>
-                          {molId && (
-                            <Link className="pd-clinical__link" to={`/vademecum/${molId}`}>
-                              Ver en Vademecum
-                            </Link>
-                          )}
                         </div>
                         {abierta && (
                           <div className="pd-clinical__body">
-                            {!ficha?.ficha_tecnica ? (
-                              <p className="pd-clinical__empty">
-                                Ficha en revision - aun no disponible para esta molecula.
-                              </p>
-                            ) : (
-                              SECCIONES_FICHA.map(({ clave, etiqueta, icono }) => {
-                                const texto = ficha.ficha_tecnica[clave]
-                                if (!texto) return null
-                                return (
-                                  <div key={clave} className="pd-clinical__section">
-                                    <h4 className="pd-clinical__section-title">
-                                      {icono} {etiqueta}
-                                    </h4>
-                                    <p className="pd-clinical__section-text">{texto}</p>
-                                  </div>
-                                )
-                              })
-                            )}
+                            {entradas.map((e, i) => (
+                              <div key={`${e.id}-${i}`} className="pd-clinical__section">
+                                {entradas.length > 1 && (
+                                  <h4 className="pd-clinical__section-title">{e.nombre}</h4>
+                                )}
+                                <p className="pd-clinical__section-text">{e.texto}</p>
+                              </div>
+                            ))}
                           </div>
                         )}
                       </div>
@@ -726,6 +634,7 @@ function ProductoDetalle() {
           )}
         </div>
       </div>
+      )}
 
       {carruseles.length > 0 && (
         <div className="pd-related">
