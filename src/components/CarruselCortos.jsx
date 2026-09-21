@@ -135,42 +135,32 @@ function ShortsPlayer({ videoId, conSonido, enPausa, jugadorRef }) {
   return <div className="cc-slide__video" ref={contenedorRef} />
 }
 
-// Preview con movimiento: solo muestra el iframe mientras es el preview
-// "activo" (más cercano al centro). Tras 3 segundos se "congela" (avisa al
-// padre con `alCongelar`) para no mantener autoplay constante de decenas de
-// videos; el padre decide si sigue mostrando el icono de play.
+// Preview con movimiento: clip propio (mudo, corto) autoalojado en Supabase
+// Storage — ya NO es un iframe de YouTube, así que no hay overhead del
+// reproductor de un tercero por cada tarjeta. Solo se monta mientras es el
+// preview "activo" (más cercano al centro) y hay un preview_url disponible
+// (el pipeline de GitHub Actions puede no haberlo generado todavía; en ese
+// caso simplemente no hay movimiento y se queda la miniatura estática).
+// Tras 6 segundos se "congela" (avisa al padre con `alCongelar`) para no
+// mantener decenas de videos reproduciendo a la vez.
 function MiniaturaMovimiento({ video, activo, congelado, alCongelar }) {
-  const [lista, setLista] = useState(false)
-  const [intento, setIntento] = useState(0)
-
   useEffect(() => {
     if (!activo || congelado) return undefined
-    // El dueño pidió que la preview se vea de verdad: 6 s (antes 3) antes de
-    // congelar, para que el usuario alcance a percibir el movimiento.
     const t = setTimeout(() => alCongelar(video.id), 6000)
     return () => clearTimeout(t)
   }, [activo, congelado, video.id, alCongelar])
 
-  // Loop de carga: YouTube a veces trae el iframe (fetch OK) pero el autoplay
-  // no arranca (autoplay bloqueado/lazy que no disparó) -> frame en blanco y el
-  // usuario "no ve la previsualización". Watchdog de 1.2 s: si onLoad no marca
-  // `lista`, forzamos un remontaje con key distinta (reintenta el fetch) hasta
-  // 3 intentos.
-  useEffect(() => {
-    if (!activo || congelado || lista || intento >= 3) return undefined
-    const t = setTimeout(() => setIntento((v) => v + 1), 1200)
-    return () => clearTimeout(t)
-  }, [activo, congelado, lista, intento])
-
-  if (!activo || congelado) return null
+  if (!video.preview_url || !activo || congelado) return null
   return (
-    <iframe
-      key={`${video.id}-${intento}`}
-      src={`https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&mute=1&controls=0&loop=1&playlist=${video.id}&playsinline=1&iv_load_policy=3&rel=0&modestbranding=1`}
-      title={video.titulo}
+    <video
+      key={video.id}
+      src={video.preview_url}
       className="cc__preview-frame"
-      allow="autoplay; encrypted-media; picture-in-picture"
-      onLoad={() => setLista(true)}
+      autoPlay
+      muted
+      loop
+      playsInline
+      preload="none"
     />
   )
 }
@@ -438,7 +428,7 @@ function CarruselCortos() {
                   congelado={congeladas.has(video.id)}
                   alCongelar={congelar}
                 />
-                {(!activos.has(video.id) || congeladas.has(video.id)) && (
+                {(!activos.has(video.id) || congeladas.has(video.id) || !video.preview_url) && (
                   <span className="cc__preview-play"><Play size={20} /></span>
                 )}
                 <span className="cc__preview-titulo">{video.titulo}</span>
