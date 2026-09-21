@@ -54,9 +54,21 @@ function ShortsPlayer({ videoId, conSonido, enPausa, jugadorRef }) {
     const contenedor = contenedorRef.current
     if (!contenedor) return undefined
 
+    // El API de YouTube REEMPLAZA con su <iframe> el nodo que se le pasa: si
+    // ese nodo lo renderizo React (el <div> del wrapper), React pierde el
+    // rastro y al desmontar el slide lanza "removeChild: the node to be
+    // removed is not a child of this node". Se crea un <div> "host" por
+    // imperativo (React no lo trackea) dentro del wrapper y se le pasa ESE a
+    // YT.Player: YouTube reemplaza el host por el iframe, y React solo
+    // desmonta el wrapper, que sigue siendo suyo.
+    const host = document.createElement('div')
+    host.style.width = '100%'
+    host.style.height = '100%'
+    contenedor.appendChild(host)
+
     cargaApiYT().then(() => {
       if (!activo || !window.YT?.Player) return
-      const jugador = new window.YT.Player(contenedor, {
+      const jugador = new window.YT.Player(host, {
         videoId: videoIdRef.current,
         width: '100%',
         height: '100%',
@@ -89,26 +101,19 @@ function ShortsPlayer({ videoId, conSonido, enPausa, jugadorRef }) {
       activo = false
       const jugador = jugadorRef.current
       jugadorRef.current = null
-      // React 19 reconcilia el <div contenedor> y lo desmonta; si ademas
-      // llamamos destroy() (que hace removeChild(iframe) por dentro) en el
-      // mismo tick, YouTube intenta quitar un nodo que React ya desmonto ->
-      // "Failed to execute 'removeChild': The node to be removed is not a
-      // child of this node". Se difiere al proximo tick y se verifica que el
-      // iframe siga conectado antes de destruirlo.
       if (jugador && typeof jugador.destroy === 'function') {
-        const aplazarDestruccion = () => {
-          const iframe = typeof jugador.getIframe === 'function' ? jugador.getIframe() : null
-          if (iframe && iframe.isConnected) {
-            try {
-              jugador.destroy()
-            } catch {
-              // ya fue removido por React; no reintentar
-            }
-          }
+        try {
+          // El iframe puede ya estar desmontado (React removio el wrapper
+          // completo en el commit); destroy() lanza en ese caso.
+          jugador.destroy()
+        } catch {
+          // ya fue removido junto con el wrapper; no reintentar
         }
-        const t = window.setTimeout(aplazarDestruccion, 0)
-        return () => window.clearTimeout(t)
       }
+      // Deja el wrapper limpio de nodos imperativos (host/iframe) para que un
+      // remontaje (cambio de slide o StrictMode mount->unmount->mount en dev)
+      // no acumule iframes huerfanos.
+      contenedor.replaceChildren()
       return undefined
     }
   }, [videoId, jugadorRef])

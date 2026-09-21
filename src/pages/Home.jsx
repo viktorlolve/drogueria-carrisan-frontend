@@ -275,12 +275,12 @@ function Home() {
           link="/hospitalaria"
         />
         <BloquePromocional
-          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ampollas.png"
+          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/medicamentos.png"
           className="home__bloque-b"
           tamano="mediano"
           posicionTexto="arriba"
           titulo="Tu línea de farmacia completa, en un solo lugar"
-          subtitulo="Desde inyectables hasta presentaciones de venta libre"
+          subtitulo="Todo el catálogo de medicamentos para consumo masivo"
           textoCta="Ver línea farmacia"
           estiloCta="enlace"
           link="/farmacia"
@@ -327,7 +327,7 @@ function Home() {
         {/* ── Sección promocional: panel de campaña (solo imagen, sin texto)
           + carrusel del laboratorio destacado #1 (labSuperior) ── */}
         <SeccionPromocional
-          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ads/caloxpromo.jpg"
+          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ads/letipromo.jpg"
           alt={labSuperior ? `Productos ${labSuperior.lab}` : 'Selección destacada'}
           linkImagen={labSuperior ? `/catalogo?laboratorio=${encodeURIComponent(labSuperior.lab)}` : '/catalogo'}
           productos={labSuperior ? labSuperior.productos : ofertas}
@@ -341,7 +341,7 @@ function Home() {
           + carrusel del laboratorio destacado #2 (labInferior) ── */}
         <SeccionPromocional
           invertido
-          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ads/letipromo.jpg"
+          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ads/caloxpromo.jpg"
           alt={labInferior ? `Productos ${labInferior.lab}` : 'Recomendados para ti'}
           linkImagen={labInferior ? `/catalogo?laboratorio=${encodeURIComponent(labInferior.lab)}` : '/catalogo'}
           productos={labInferior ? labInferior.productos : productosIniciales}
