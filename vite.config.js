@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import { VitePWA } from 'vite-plugin-pwa'
+import { fileURLToPath, URL } from 'node:url'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -53,6 +54,10 @@ export default defineConfig({
   build: {
     chunkSizeWarningLimit: 1000, // 1 MB — alerta si una página ruta crece demasiado
     rollupOptions: {
+      input: {
+        main: fileURLToPath(new URL('./index.html', import.meta.url)),
+        staff: fileURLToPath(new URL('./staff.html', import.meta.url)),
+      },
       output: {
         manualChunks(id) {
           if (!id.includes('node_modules')) return

@@ -15,6 +15,28 @@ L.Icon.Default.mergeOptions({
 const CENTRO_DEFECTO = { lat: 10.1620, lng: -67.9944 };
 const ZOOM_DEFECTO = 13;
 
+const parsearDireccion = (data) => {
+  const a = data.address || {};
+  const calle = a.road || a.pedestrian || a.footway || '';
+  const sector = a.suburb || a.neighbourhood || a.quarter || '';
+  const ciudad = a.city || a.town || a.village || a.municipality || '';
+  const estado = a.state || '';
+  const resumen =
+    [calle, sector, ciudad, estado].filter(Boolean).join(', ') ||
+    data.display_name ||
+    'Ubicación sin nombre de calle disponible';
+  return { calle, sector, ciudad, estado, resumen, raw: data.display_name || '' };
+};
+
+const reverseGeocodeNominatim = async (lat, lng) => {
+  const res = await fetch(
+    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
+    { headers: { 'Accept-Language': 'es' } }
+  );
+  if (!res.ok) throw new Error('nominatim-fail');
+  return parsearDireccion(await res.json());
+};
+
 /**
  * MapaPicker
  * Selector de dirección sobre un mapa Leaflet, con geocodificación inversa
@@ -40,28 +62,6 @@ export default function MapaPicker({ apiKey, initialPosition, onSelect }) {
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
   const [sugerencias, setSugerencias] = useState([]);
-
-  const parsearDireccion = (data) => {
-    const a = data.address || {};
-    const calle = a.road || a.pedestrian || a.footway || '';
-    const sector = a.suburb || a.neighbourhood || a.quarter || '';
-    const ciudad = a.city || a.town || a.village || a.municipality || '';
-    const estado = a.state || '';
-    const resumen =
-      [calle, sector, ciudad, estado].filter(Boolean).join(', ') ||
-      data.display_name ||
-      'Ubicación sin nombre de calle disponible';
-    return { calle, sector, ciudad, estado, resumen, raw: data.display_name || '' };
-  };
-
-  const reverseGeocodeNominatim = async (lat, lng) => {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
-      { headers: { 'Accept-Language': 'es' } }
-    );
-    if (!res.ok) throw new Error('nominatim-fail');
-    return parsearDireccion(await res.json());
-  };
 
   // --- Geocodificación inversa: coordenadas -> dirección ---
   const reverseGeocode = useCallback(async (lat, lng) => {

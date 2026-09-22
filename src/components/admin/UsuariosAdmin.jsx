@@ -214,8 +214,6 @@ function UsuariosAdmin() {
     return resultado
   }, [usuarios, busqueda, filtroEtiqueta, filtroEstado])
 
-  useEffect(() => { setPaginaActual(1) }, [busqueda, filtroEtiqueta, filtroEstado])
-
   const totalPaginas = Math.max(1, Math.ceil(usuariosFiltrados.length / ITEMS_POR_PAGINA))
   const usuariosPaginados = usuariosFiltrados.slice(
     (paginaActual - 1) * ITEMS_POR_PAGINA,
@@ -294,12 +292,12 @@ function UsuariosAdmin() {
           <Input
             placeholder="Buscar por nombre, email, RIF o teléfono..."
             value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
+            onChange={(e) => { setBusqueda(e.target.value); setPaginaActual(1) }}
             borderRadius="lg"
           />
         </InputGroup>
 
-        <Box as="select" value={filtroEtiqueta} onChange={(e) => setFiltroEtiqueta(e.target.value)}
+        <Box as="select" value={filtroEtiqueta} onChange={(e) => { setFiltroEtiqueta(e.target.value); setPaginaActual(1) }}
           maxW="200px" borderRadius="lg" border="1px solid" borderColor="gray.200" px={3} py={2} fontSize="sm" bg="white">
           <option value="todos">Todas las etiquetas</option>
           {etiquetasDisponibles.map((etq) => (
@@ -307,7 +305,7 @@ function UsuariosAdmin() {
           ))}
         </Box>
 
-        <Box as="select" value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}
+        <Box as="select" value={filtroEstado} onChange={(e) => { setFiltroEstado(e.target.value); setPaginaActual(1) }}
           maxW="180px" borderRadius="lg" border="1px solid" borderColor="gray.200" px={3} py={2} fontSize="sm" bg="white">
           <option value="todos">Todos los estados</option>
           <option value="activo">Activos</option>

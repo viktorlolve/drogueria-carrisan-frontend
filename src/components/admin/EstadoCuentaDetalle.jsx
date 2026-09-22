@@ -82,18 +82,42 @@ function EstadoCuentaDetalle({ clienteId, isOpen, onClose }) {
   const pagoModal = useDisclosure()
   const ordenModal = useDisclosure()
 
-  useEffect(() => {
-    if (isOpen && clienteId) {
-      cargarDetalle()
+  const [prevOpen, setPrevOpen] = useState(isOpen)
+  if (isOpen !== prevOpen) {
+    setPrevOpen(isOpen)
+    if (isOpen) {
+      setCargando(true)
     } else {
       setDatos(null)
+    }
+  }
+
+  useEffect(() => {
+    if (!isOpen || !clienteId) return
+    let activo = true
+    api.get(`/clientes/${clienteId}/estado-cuenta`)
+      .then(({ data }) => {
+        if (!activo) return
+        setError('')
+        setDatos(data)
+      })
+      .catch((err) => {
+        if (!activo) return
+        setError('No se pudo cargar el detalle del cliente')
+        console.error(err)
+      })
+      .finally(() => {
+        if (activo) setCargando(false)
+      })
+    return () => {
+      activo = false
     }
   }, [isOpen, clienteId])
 
   async function cargarDetalle() {
+    setCargando(true)
+    setError('')
     try {
-      setCargando(true)
-      setError('')
       const { data } = await api.get(`/clientes/${clienteId}/estado-cuenta`)
       setDatos(data)
     } catch (err) {

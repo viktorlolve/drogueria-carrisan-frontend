@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   Dialog,
   Portal,
@@ -30,16 +30,18 @@ function NuevoPagoModal({ clienteId, facturas, isOpen, onClose, onCreado }) {
   const [seleccionadas, setSeleccionadas] = useState([])
   const [guardando, setGuardando] = useState(false)
 
-  const facturasPendientes = (facturas || []).filter((f) => f.estado !== 'pagada')
-
-  useEffect(() => {
+  const [prevOpen, setPrevOpen] = useState(isOpen)
+  if (isOpen !== prevOpen) {
+    setPrevOpen(isOpen)
     if (isOpen) {
       setMonto('')
       setTipo('abono')
       setDetalle('')
       setSeleccionadas([])
     }
-  }, [isOpen])
+  }
+
+  const facturasPendientes = (facturas || []).filter((f) => f.estado !== 'pagada')
 
   function toggleFactura(id) {
     const idStr = String(id)

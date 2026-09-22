@@ -81,7 +81,6 @@ function OrdenDetalle() {
   const [pidiendoDeNuevo, setPidiendoDeNuevo] = useState(false)
 
   useEffect(() => {
-    setCargando(true)
     api
       .get(`/orders/${id}`)
       .then(({ data }) => {

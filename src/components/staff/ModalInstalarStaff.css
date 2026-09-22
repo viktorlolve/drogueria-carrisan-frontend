@@ -1,0 +1,165 @@
+/* =================================================================
+   MODAL INSTALAR STAFF — diseño del panel interno (tema #1B4B8F)
+   ================================================================= */
+
+.sim-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  animation: sim-fade 0.2s ease;
+}
+
+.sim-card {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  padding: 26px 24px 20px;
+  box-shadow: 0 24px 60px -18px rgba(15, 23, 42, 0.5);
+  animation: sim-subir 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.sim-cerrar {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.sim-cerrar:hover {
+  background: rgba(15, 23, 42, 0.06);
+  color: #0f172a;
+}
+
+.sim-icono {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #1B4B8F, #2563EB);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 22px -8px rgba(27, 75, 143, 0.6);
+  margin-bottom: 16px;
+}
+
+.sim-titulo {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+
+.sim-sub {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #64748b;
+}
+
+.sim-pasos {
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sim-paso {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+}
+
+.sim-paso-numero {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(27, 75, 143, 0.1);
+  color: #1B4B8F;
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+.sim-paso-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sim-paso-texto strong {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.sim-paso-texto span {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: #64748b;
+}
+
+.sim-btn {
+  margin-top: 22px;
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  background: linear-gradient(120deg, #1B4B8F, #2563EB);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.15s ease;
+}
+
+.sim-btn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.sim-btn:active {
+  transform: translateY(0);
+}
+
+@keyframes sim-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sim-subir {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 480px) {
+  .sim-card {
+    padding: 22px 18px 18px;
+  }
+}

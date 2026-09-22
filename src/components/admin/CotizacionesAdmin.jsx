@@ -210,20 +210,21 @@ function CotizacionesAdmin() {
   const [seleccionada, setSeleccionada] = useState(null)
 
   useEffect(() => {
-    cargar()
-  }, [])
-
-  async function cargar() {
-    setCargando(true)
-    try {
-      const { data } = await api.get('/cotizaciones')
-      setCotizaciones(Array.isArray(data) ? data : [])
-    } catch (err) {
-      console.error('Error al cargar cotizaciones', err)
-    } finally {
-      setCargando(false)
+    let activo = true
+    api.get('/cotizaciones')
+      .then(({ data }) => {
+        if (activo) setCotizaciones(Array.isArray(data) ? data : [])
+      })
+      .catch((err) => {
+        console.error('Error al cargar cotizaciones', err)
+      })
+      .finally(() => {
+        if (activo) setCargando(false)
+      })
+    return () => {
+      activo = false
     }
-  }
+  }, [])
 
   async function handleResponder(id, payload) {
     const { data } = await api.patch(`/cotizaciones/${id}/responder`, payload)

@@ -1,5 +1,5 @@
 // frontend/src/context/EnvioContext.jsx
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from './AuthContext';
 import api from '../api/axios';
 
@@ -36,7 +36,7 @@ export function EnvioProvider({ children }) {
   const costoEnvioActual = getCostoDelivery(direccionSeleccionada?.ciudad);
 
   // Opciones de envío
-  const opcionesEnvio = [
+  const opcionesEnvio = useMemo(() => [
     {
       id: 'retiro',
       label: 'Retiro en Depósito',
@@ -72,7 +72,7 @@ export function EnvioProvider({ children }) {
       requiereAgencia: true,
       tipoDireccion: 'envio_nacional'
     }
-  ];
+  ], [costoEnvioActual]);
 
   const opcionActual = opcionesEnvio.find(op => op.id === tipoEnvio);
 

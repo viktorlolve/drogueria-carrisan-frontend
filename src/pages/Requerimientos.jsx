@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import api from '../api/axios'
 import { useCart } from '../context/CartContext'
@@ -161,13 +161,7 @@ function Requerimientos() {
   const [mostrarForm, setMostrarForm] = useState(Boolean(productoInicial))
   const { items, addItem } = useCart()
 
-  useEffect(() => {
-    cargar()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  async function cargar() {
-    setCargando(true)
+  const cargar = useCallback(async () => {
     try {
       const { data } = await api.get('/requerimientos/mios')
       setRequerimientos(data)
@@ -176,7 +170,14 @@ function Requerimientos() {
     } finally {
       setCargando(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    async function iniciar() {
+      await cargar()
+    }
+    iniciar()
+  }, [cargar])
 
   function handleEnviado() {
     setMostrarForm(false)

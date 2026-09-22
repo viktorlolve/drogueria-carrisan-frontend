@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Search, Plus, Minus, X, ShoppingCart, FileDown, RefreshCw, ArrowUp, ArrowDown,
 } from 'lucide-react'
@@ -50,13 +50,7 @@ function PresupuestoModal({ presupuestoId, onClose, onRecotizado }) {
   const [recotizando, setRecotizando] = useState(false)
   const { addItem } = useCart()
 
-  useEffect(() => {
-    cargar()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [presupuestoId])
-
-  async function cargar() {
-    setCargando(true)
+  const cargar = useCallback(async () => {
     try {
       const { data } = await api.get(`/presupuestos/${presupuestoId}`)
       setDetalle(data)
@@ -67,7 +61,14 @@ function PresupuestoModal({ presupuestoId, onClose, onRecotizado }) {
     } finally {
       setCargando(false)
     }
-  }
+  }, [presupuestoId])
+
+  useEffect(() => {
+    async function iniciar() {
+      await cargar()
+    }
+    iniciar()
+  }, [cargar])
 
   function toggleSeleccion(itemId) {
     setSeleccionados((prev) => {
@@ -316,11 +317,10 @@ function Presupuesto() {
 
   useEffect(() => {
     if (query.trim().length < 1) {
-      setSugerencias([])
       return
     }
-    setBuscando(true)
     const debounce = setTimeout(async () => {
+      setBuscando(true)
       try {
         const { data } = await api.get(`/products?search=${encodeURIComponent(query.trim())}&limit=8`)
         setSugerencias(data)
@@ -332,6 +332,8 @@ function Presupuesto() {
     }, 250)
     return () => clearTimeout(debounce)
   }, [query])
+
+  const sugerenciasVisibles = query.trim().length < 1 ? [] : sugerencias
 
   async function cargarHistorial() {
     setCargandoHistorial(true)
@@ -410,10 +412,10 @@ function Presupuesto() {
             <div className="pres-buscador__resultados">
               {buscando ? (
                 <div className="pres-buscador__mensaje">Buscando...</div>
-              ) : sugerencias.length === 0 ? (
+              ) : sugerenciasVisibles.length === 0 ? (
                 <div className="pres-buscador__mensaje">Sin resultados para "{query}"</div>
               ) : (
-                sugerencias.map((p) => (
+                sugerenciasVisibles.map((p) => (
                   <button key={p.id} type="button" className="pres-buscador__item" onClick={() => agregarAlBorrador(p)}>
                     <ProductoImagen src={p.foto_url} alt={p.nombre_comercial} />
                     <span className="pres-buscador__nombre">{p.nombre_comercial}</span>

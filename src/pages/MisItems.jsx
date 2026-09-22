@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useSearchParams } from 'react-router-dom'
 import api from '../api/axios'
@@ -261,11 +261,10 @@ function BuscadorProducto({ onSeleccionar }) {
 
   useEffect(() => {
     if (query.trim().length < 1) {
-      setResultados([])
       return
     }
-    setBuscando(true)
     const debounce = setTimeout(async () => {
+      setBuscando(true)
       try {
         const { data } = await api.get(`/products?search=${encodeURIComponent(query.trim())}&limit=8`)
         setResultados(data.slice(0, 8))
@@ -277,6 +276,8 @@ function BuscadorProducto({ onSeleccionar }) {
     }, 250)
     return () => clearTimeout(debounce)
   }, [query])
+
+  const resultadosVisibles = query.trim().length < 1 ? [] : resultados
 
   return (
     <div className="buscador-producto">
@@ -293,13 +294,13 @@ function BuscadorProducto({ onSeleccionar }) {
 
       {buscando && <p className="buscador-producto__estado">Buscando…</p>}
 
-      {!buscando && query.trim().length > 0 && resultados.length === 0 && (
+      {!buscando && query.trim().length > 0 && resultadosVisibles.length === 0 && (
         <p className="buscador-producto__estado">No se encontraron productos para "{query}".</p>
       )}
 
-      {resultados.length > 0 && (
+      {resultadosVisibles.length > 0 && (
         <ul className="buscador-producto__resultados">
-          {resultados.map((producto) => (
+          {resultadosVisibles.map((producto) => (
             <li key={producto.id}>
               <button
                 type="button"
@@ -345,7 +346,7 @@ function TabMisItems({ mostrarCrear, setMostrarCrear, tasaVes }) {
   const [vista, setVista] = useState('grid') // 'grid' | 'lista'
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false)
 
-  async function cargarListas() {
+  const cargarListas = useCallback(async () => {
     try {
       const { data } = await api.get('/lists')
       setListas(data)
@@ -354,11 +355,14 @@ function TabMisItems({ mostrarCrear, setMostrarCrear, tasaVes }) {
     } finally {
       setCargandoListas(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
-    cargarListas()
-  }, [])
+    async function iniciar() {
+      await cargarListas()
+    }
+    iniciar()
+  }, [cargarListas])
 
   async function crearLista(nombre) {
     if (!nombre.trim()) return
@@ -633,7 +637,7 @@ function TabComprarDeNuevo({ tasaVes }) {
   const [vista, setVista] = useState('grid') // 'grid' | 'lista'
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false)
 
-  async function cargarRecompras() {
+  const cargarRecompras = useCallback(async () => {
     try {
       const { data: ordenes } = await api.get('/orders')
 
@@ -682,11 +686,14 @@ function TabComprarDeNuevo({ tasaVes }) {
     } finally {
       setCargando(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
-    cargarRecompras()
-  }, [])
+    async function iniciar() {
+      await cargarRecompras()
+    }
+    iniciar()
+  }, [cargarRecompras])
 
   function cantidadEnCarrito(productoId) {
     const linea = cartItems.find((i) => i.producto.id === productoId)

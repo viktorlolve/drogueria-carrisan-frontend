@@ -177,10 +177,7 @@ export default function DescuentoForm({
   }, [alcance])
 
   useEffect(() => {
-    if (alcanceBloqueado || alcance !== 'producto' || !busquedaProducto.trim()) {
-      setResultadosProducto([])
-      return
-    }
+    if (alcanceBloqueado || alcance !== 'producto' || !busquedaProducto.trim()) return
     const timeout = setTimeout(() => {
       api.get(`/products?search=${encodeURIComponent(busquedaProducto)}`)
         .then(res => setResultadosProducto(res.data.slice(0, 8)))
@@ -189,13 +186,9 @@ export default function DescuentoForm({
     return () => clearTimeout(timeout)
   }, [busquedaProducto, alcance, alcanceBloqueado])
 
-  // Si estamos editando y ya cargó la lista de marcas, resolvemos la etiqueta
-  useEffect(() => {
-    if (marcaId && !marcaLabel) {
-      const m = marcas.find(m => m.id == marcaId)
-      if (m) setMarcaLabel(m.nombre)
-    }
-  }, [marcas, marcaId, marcaLabel])
+  const resultadosProductoVisibles =
+    !alcanceBloqueado && alcance === 'producto' && busquedaProducto.trim() ? resultadosProducto : []
+  const marcaLabelFinal = marcaLabel || marcas.find(m => String(m.id) === String(marcaId))?.nombre || ''
 
   function seleccionarProducto(p) {
     setProductoId(p.id)
@@ -372,9 +365,9 @@ export default function DescuentoForm({
                         onChange={e => setBusquedaProducto(e.target.value)}
                         className={errores.producto ? 'error' : ''}
                       />
-                      {resultadosProducto.length > 0 && (
+                      {resultadosProductoVisibles.length > 0 && (
                         <ul className="resultados-busqueda">
-                          {resultadosProducto.map(p => (
+                          {resultadosProductoVisibles.map(p => (
                             <li key={p.id} onClick={() => seleccionarProducto(p)}>
                               <span className="rb-icon">📦</span>
                               <div className="rb-info">
@@ -397,7 +390,7 @@ export default function DescuentoForm({
                   <SelectorBuscador
                     opciones={marcas.map(m => ({ valor: m.id, etiqueta: m.nombre }))}
                     valorSeleccionado={marcaId}
-                    etiquetaSeleccionada={marcaLabel}
+                    etiquetaSeleccionada={marcaLabelFinal}
                     onSeleccionar={(valor, etiqueta) => {
                       setMarcaId(valor)
                       setMarcaLabel(etiqueta)
@@ -589,7 +582,7 @@ export default function DescuentoForm({
                   <span>Aplica a:</span>
                   <strong>
                     {alcance === 'producto' ? productoLabel :
-                     alcance === 'marca' ? marcaLabel || '—' :
+                     alcance === 'marca' ? marcaLabelFinal || '—' :
                      alcanceValor || '—'}
                   </strong>
                 </div>

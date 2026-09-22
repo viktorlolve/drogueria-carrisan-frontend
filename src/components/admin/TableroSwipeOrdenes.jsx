@@ -46,20 +46,20 @@ function formatUSD(valor) {
 
 function TarjetaOrdenSwipe({ orden, estadoColores, onCambiarEstado, onAbrir }) {
   const [dx, setDx] = useState(0)
-  const arrastrando = useRef(false)
+  const [arrastrando, setArrastrando] = useState(false)
   const inicioX = useRef(0)
 
   const estadoSiguiente = siguienteDe(orden, orden.estado)
   const estadoAnterior = anteriorDe(orden, orden.estado)
 
   function handlePointerDown(e) {
-    arrastrando.current = true
+    setArrastrando(true)
     inicioX.current = e.clientX
     e.currentTarget.setPointerCapture(e.pointerId)
   }
 
   function handlePointerMove(e) {
-    if (!arrastrando.current) return
+    if (!arrastrando) return
     let delta = e.clientX - inicioX.current
     if (delta > 0 && !estadoSiguiente) delta = 0
     if (delta < 0 && !estadoAnterior) delta = 0
@@ -67,8 +67,8 @@ function TarjetaOrdenSwipe({ orden, estadoColores, onCambiarEstado, onAbrir }) {
   }
 
   function handlePointerUp() {
-    if (!arrastrando.current) return
-    arrastrando.current = false
+    if (!arrastrando) return
+    setArrastrando(false)
     if (dx > UMBRAL_SWIPE && estadoSiguiente) onCambiarEstado(orden.id, estadoSiguiente)
     else if (dx < -UMBRAL_SWIPE && estadoAnterior) onCambiarEstado(orden.id, estadoAnterior)
     setDx(0)
@@ -91,7 +91,7 @@ function TarjetaOrdenSwipe({ orden, estadoColores, onCambiarEstado, onAbrir }) {
         className="swipe-tarjeta"
         style={{
           transform: `translateX(${dx}px)`,
-          transition: arrastrando.current ? 'none' : 'transform 0.2s ease',
+          transition: arrastrando ? 'none' : 'transform 0.2s ease',
         }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}

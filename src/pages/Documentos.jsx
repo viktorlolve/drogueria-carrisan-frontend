@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import api from '../api/axios'
 import LayoutPaginaPrincipal from '../components/paginas-principales/Layoutpaginaprincipal'
 import { NAV_UNIFICADO } from '../components/paginas-principales/NavUnificado'
@@ -39,14 +39,15 @@ function formatoCorto({ dias, horas, minutos }) {
 
 // Cronómetro simple y discreto: solo días/horas/minutos, se refresca cada minuto.
 function Cronometro({ hasta, texto }) {
-  const [ahora, setAhora] = useState(Date.now())
+  const [ahora, setAhora] = useState(null)
 
   useEffect(() => {
+    const primero = setTimeout(() => setAhora(Date.now()), 0)
     const id = setInterval(() => setAhora(Date.now()), 60000)
-    return () => clearInterval(id)
+    return () => { clearTimeout(primero); clearInterval(id) }
   }, [])
 
-  const restante = hasta - ahora
+  const restante = hasta - (ahora ?? hasta)
   if (restante <= 0) return null
 
   return (
@@ -61,15 +62,16 @@ function Cronometro({ hasta, texto }) {
 // que devuelve GET /documentos/mios (ya viene ordenada por fecha_solicitud
 // descendente, así que la primera que encontremos es la última).
 function useEstadoRif(solicitudes, solicitarRif) {
-  const [, forzarTick] = useState(0)
+  const [ahora, setAhora] = useState(null)
 
   useEffect(() => {
-    const id = setInterval(() => forzarTick((n) => n + 1), 60000)
-    return () => clearInterval(id)
+    const primero = setTimeout(() => setAhora(Date.now()), 0)
+    const id = setInterval(() => setAhora(Date.now()), 60000)
+    return () => { clearTimeout(primero); clearInterval(id) }
   }, [])
 
   const ultima = solicitudes.find((s) => s.tipo_documento === 'rif' && s.es_automatica)
-  const ahora = Date.now()
+  const t = ahora ?? 0
 
   let estado = 'disponible'
   let expiraEn = null
@@ -82,7 +84,7 @@ function useEstadoRif(solicitudes, solicitarRif) {
       expiraEn = new Date(ultima.fecha_expiracion).getTime()
     } else if (ultima.fecha_expiracion) {
       habilitaEn = new Date(ultima.fecha_expiracion).getTime() + RIF_ENFRIAMIENTO_MS
-      if (ahora < habilitaEn) estado = 'enfriamiento'
+      if (t < habilitaEn) estado = 'enfriamiento'
     }
   }
 
@@ -286,13 +288,9 @@ function Documentos() {
   const [solicitudes, setSolicitudes] = useState([])
   const [cargando, setCargando] = useState(true)
   const [enviando, setEnviando] = useState(false)
+  const [ahora, setAhora] = useState(null)
 
-  useEffect(() => {
-    cargar()
-  }, [])
-
-  async function cargar() {
-    setCargando(true)
+  const cargar = useCallback(async () => {
     try {
       const { data } = await api.get('/documentos/mios')
       setSolicitudes(data)
@@ -301,7 +299,20 @@ function Documentos() {
     } finally {
       setCargando(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    async function iniciar() {
+      await cargar()
+    }
+    iniciar()
+  }, [cargar])
+
+  useEffect(() => {
+    const primero = setTimeout(() => setAhora(Date.now()), 0)
+    const id = setInterval(() => setAhora(Date.now()), 60000)
+    return () => { clearTimeout(primero); clearInterval(id) }
+  }, [])
 
   async function handleSolicitar(tipo_documento, descripcion) {
     setEnviando(true)
@@ -341,12 +352,12 @@ function Documentos() {
   // consideran limpiadas de la vista. El borrado real en la base de datos
   // necesita un job en el backend — avísame si quieres que lo armemos.
   const solicitudesRecientes = useMemo(() => {
-    const limite = Date.now() - NOVENTA_DIAS_MS
+    const limite = (ahora ?? 0) - NOVENTA_DIAS_MS
     return solicitudes.filter((s) => {
       const fecha = obtenerFechaCreacion(s)
       return !fecha || fecha.getTime() >= limite
     })
-  }, [solicitudes])
+  }, [solicitudes, ahora])
 
   return (
     <LayoutPaginaPrincipal activo="documentos" titulo="Documentos" nav={NAV_UNIFICADO}>

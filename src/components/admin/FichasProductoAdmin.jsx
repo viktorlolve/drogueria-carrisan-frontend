@@ -9,10 +9,7 @@ function FichasProductoAdmin() {
   const [productoSeleccionado, setProductoSeleccionado] = useState(null)
 
   useEffect(() => {
-    if (!busqueda.trim()) {
-      setProductos([])
-      return
-    }
+    if (!busqueda.trim()) return
     const timeout = setTimeout(async () => {
       try {
         setCargando(true)
@@ -27,6 +24,8 @@ function FichasProductoAdmin() {
     }, 350)
     return () => clearTimeout(timeout)
   }, [busqueda])
+
+  const productosVisibles = busqueda.trim() ? productos : []
 
   if (productoSeleccionado) {
     return (
@@ -60,7 +59,7 @@ function FichasProductoAdmin() {
         </div>
       ) : !busqueda.trim() ? (
         <div className="mol-empty-state">Busca un producto para editar su ficha técnica.</div>
-      ) : productos.length === 0 ? (
+      ) : productosVisibles.length === 0 ? (
         <div className="mol-empty-state">No se encontraron productos con ese nombre.</div>
       ) : (
         <div className="mol-table-container">
@@ -74,7 +73,7 @@ function FichasProductoAdmin() {
               </tr>
             </thead>
             <tbody>
-              {productos.map((p) => (
+              {productosVisibles.map((p) => (
                 <tr key={p.id}>
                   <td><strong>{p.nombre_comercial}</strong></td>
                   <td>{p.marcas?.nombre || '-'}</td>
@@ -120,50 +119,50 @@ function FichaProductoEditor({ producto, onVolver }) {
   const [imagenesTexto, setImagenesTexto] = useState('')
 
   useEffect(() => {
-    cargarTodo()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    let activo = true
+    Promise.allSettled([
+      api.get(`/moleculas/productos/${producto.id}/detalles`),
+      api.get(`/moleculas/productos/${producto.id}/moleculas`),
+    ])
+      .then(([resDetalles, resMoleculas]) => {
+        if (!activo) return
+        if (resDetalles.status === 'fulfilled') {
+          setExisteFicha(true)
+          setForm({
+            indicaciones: resDetalles.value.data.indicaciones || '',
+            contraindicaciones: resDetalles.value.data.contraindicaciones || '',
+            dosis_recomendada: resDetalles.value.data.dosis_recomendada || '',
+            via_administracion: resDetalles.value.data.via_administracion || '',
+            efectos_secundarios: resDetalles.value.data.efectos_secundarios || '',
+            precauciones: resDetalles.value.data.precauciones || '',
+            codigo_atc_producto: resDetalles.value.data.codigo_atc_producto || '',
+            titular_registro: resDetalles.value.data.titular_registro || '',
+            registro_sanitario: resDetalles.value.data.registro_sanitario || '',
+            presentacion: resDetalles.value.data.presentacion || '',
+            unidades_por_presentacion: resDetalles.value.data.unidades_por_presentacion || '',
+            condiciones_almacenamiento: resDetalles.value.data.condiciones_almacenamiento || '',
+          })
+          setImagenesTexto((resDetalles.value.data.imagen_secundaria_urls || []).join(', '))
+        } else {
+          setExisteFicha(false)
+        }
 
-  async function cargarTodo() {
-    setCargando(true)
-    setError('')
-    try {
-      const [resDetalles, resMoleculas] = await Promise.allSettled([
-        api.get(`/moleculas/productos/${producto.id}/detalles`),
-        api.get(`/moleculas/productos/${producto.id}/moleculas`),
-      ])
-
-      if (resDetalles.status === 'fulfilled') {
-        setExisteFicha(true)
-        setForm({
-          indicaciones: resDetalles.value.data.indicaciones || '',
-          contraindicaciones: resDetalles.value.data.contraindicaciones || '',
-          dosis_recomendada: resDetalles.value.data.dosis_recomendada || '',
-          via_administracion: resDetalles.value.data.via_administracion || '',
-          efectos_secundarios: resDetalles.value.data.efectos_secundarios || '',
-          precauciones: resDetalles.value.data.precauciones || '',
-          codigo_atc_producto: resDetalles.value.data.codigo_atc_producto || '',
-          titular_registro: resDetalles.value.data.titular_registro || '',
-          registro_sanitario: resDetalles.value.data.registro_sanitario || '',
-          presentacion: resDetalles.value.data.presentacion || '',
-          unidades_por_presentacion: resDetalles.value.data.unidades_por_presentacion || '',
-          condiciones_almacenamiento: resDetalles.value.data.condiciones_almacenamiento || '',
-        })
-        setImagenesTexto((resDetalles.value.data.imagen_secundaria_urls || []).join(', '))
-      } else {
-        setExisteFicha(false)
-      }
-
-      if (resMoleculas.status === 'fulfilled') {
-        setMoleculas(resMoleculas.value.data)
-      }
-    } catch (err) {
-      console.error(err)
-      setError('Error al cargar la ficha del producto')
-    } finally {
-      setCargando(false)
+        if (resMoleculas.status === 'fulfilled') {
+          setMoleculas(resMoleculas.value.data)
+        }
+      })
+      .catch((err) => {
+        if (!activo) return
+        console.error(err)
+        setError('Error al cargar la ficha del producto')
+      })
+      .finally(() => {
+        if (activo) setCargando(false)
+      })
+    return () => {
+      activo = false
     }
-  }
+  }, [producto.id])
 
   function handleChange(campo, valor) {
     setForm((f) => ({ ...f, [campo]: valor }))
@@ -383,10 +382,7 @@ function AsociarMoleculaForm({ productoId, onClose, onGuardado }) {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!busqueda.trim() || moleculaId) {
-      setResultados([])
-      return
-    }
+    if (!busqueda.trim() || moleculaId) return
     const timeout = setTimeout(async () => {
       try {
         const res = await api.get('/moleculas/moleculas', { params: { search: busqueda } })
@@ -397,6 +393,8 @@ function AsociarMoleculaForm({ productoId, onClose, onGuardado }) {
     }, 300)
     return () => clearTimeout(timeout)
   }, [busqueda, moleculaId])
+
+  const resultadosVisibles = !busqueda.trim() || moleculaId ? [] : resultados
 
   function seleccionar(m) {
     setMoleculaId(m.id)
@@ -443,16 +441,16 @@ function AsociarMoleculaForm({ productoId, onClose, onGuardado }) {
               }}
               placeholder="Buscar molécula..."
             />
-            {resultados.length > 0 && (
+            {resultadosVisibles.length > 0 && (
               <div className="mol-autocomplete-list">
-                {resultados.map((m) => (
+                {resultadosVisibles.map((m) => (
                   <button type="button" key={m.id} className="mol-autocomplete-item" onClick={() => seleccionar(m)}>
                     {m.nombre}
                   </button>
                 ))}
               </div>
             )}
-            {nombreSeleccionado && !resultados.length && (
+            {nombreSeleccionado && !resultadosVisibles.length && (
               <span style={{ fontSize: '0.8rem', color: '#059669' }}>✓ {nombreSeleccionado} seleccionada</span>
             )}
           </div>

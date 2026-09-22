@@ -20,7 +20,6 @@ function DeliveryAdmin() {
 
   const cargarDatos = useCallback(async () => {
     try {
-      setCargando(true)
       const [resTarifas, resPendientes] = await Promise.all([
         api.get('/delivery-tarifas'),
         api.get('/orders/delivery-pendientes'),
@@ -37,7 +36,30 @@ function DeliveryAdmin() {
     }
   }, [])
 
-  useEffect(() => { cargarDatos() }, [cargarDatos])
+  useEffect(() => {
+    let activo = true
+    Promise.all([
+      api.get('/delivery-tarifas'),
+      api.get('/orders/delivery-pendientes'),
+    ])
+      .then(([resTarifas, resPendientes]) => {
+        if (!activo) return
+        setTarifas(Array.isArray(resTarifas.data) ? resTarifas.data : [])
+        setPendientes(resPendientes.data.pendientes || [])
+        setEnviadosRecientes(resPendientes.data.enviadosRecientes || [])
+        setError('')
+      })
+      .catch((err) => {
+        console.error(err)
+        if (activo) setError('Error cargando datos de delivery')
+      })
+      .finally(() => {
+        if (activo) setCargando(false)
+      })
+    return () => {
+      activo = false
+    }
+  }, [])
 
   // Auto-refresh cada 30s
   useEffect(() => {

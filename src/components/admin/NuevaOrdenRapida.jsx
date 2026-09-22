@@ -31,48 +31,50 @@ function NuevaOrdenRapida() {
 
   const [queryProducto, setQueryProducto] = useState('')
   const [sugerencias, setSugerencias] = useState([])
-  const [buscando, setBuscando] = useState(false)
+  const [queryBuscada, setQueryBuscada] = useState('')
 
   const [filas, setFilas] = useState([])
   const [formaPago, setFormaPago] = useState('contado')
   const [creando, setCreando] = useState(false)
 
   useEffect(() => {
-    cargarUsuarios()
-  }, [])
-
-  async function cargarUsuarios() {
-    setCargandoUsuarios(true)
-    try {
-      const { data } = await api.get('/users')
-      setUsuarios(data)
-    } catch (err) {
-      console.error('Error al cargar clientes', err)
-      toaster.create({ title: 'No se pudieron cargar los clientes', type: 'error' })
-    } finally {
-      setCargandoUsuarios(false)
+    let activo = true
+    api.get('/users')
+      .then(({ data }) => {
+        if (activo) setUsuarios(data)
+      })
+      .catch((err) => {
+        if (!activo) return
+        console.error('Error al cargar clientes', err)
+        toaster.create({ title: 'No se pudieron cargar los clientes', type: 'error' })
+      })
+      .finally(() => {
+        if (activo) setCargandoUsuarios(false)
+      })
+    return () => {
+      activo = false
     }
-  }
+  }, [])
 
   useEffect(() => {
     if (!cliente) return
-    if (queryProducto.trim().length < 1) {
-      setSugerencias([])
-      return
-    }
-    setBuscando(true)
+    const q = queryProducto.trim()
+    if (q.length < 1) return
     const debounce = setTimeout(async () => {
       try {
-        const { data } = await api.get('/products', { params: { search: queryProducto.trim() } })
+        const { data } = await api.get('/products', { params: { search: q } })
         setSugerencias(data.slice(0, 8))
+        setQueryBuscada(q)
       } catch (err) {
         console.error('Error buscando productos', err)
-      } finally {
-        setBuscando(false)
+        setQueryBuscada(q)
       }
     }, 250)
     return () => clearTimeout(debounce)
   }, [queryProducto, cliente])
+
+  const sugerenciasVisibles = queryProducto.trim().length >= 1 ? sugerencias : []
+  const buscando = queryProducto.trim().length >= 1 && queryBuscada !== queryProducto.trim()
 
   function agregarProducto(producto) {
     setFilas((prev) => {
@@ -194,10 +196,10 @@ function NuevaOrdenRapida() {
               <div className="nor-buscador__resultados">
                 {buscando ? (
                   <div className="nor-mensaje">Buscando...</div>
-                ) : sugerencias.length === 0 ? (
+                ) : sugerenciasVisibles.length === 0 ? (
                   <div className="nor-mensaje">Sin resultados para "{queryProducto}"</div>
                 ) : (
-                  sugerencias.map((p) => (
+                  sugerenciasVisibles.map((p) => (
                     <button key={p.id} type="button" className="nor-buscador__item" onClick={() => agregarProducto(p)}>
                       <span className="nor-buscador__nombre">{p.nombre_comercial}</span>
                       <span className="nor-buscador__precio">${formatUSD(p.precio_usd)}</span>

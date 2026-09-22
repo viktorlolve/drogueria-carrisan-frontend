@@ -164,10 +164,6 @@ export default function DescuentosAdmin() {
     paginaActual * ITEMS_POR_PAGINA
   )
 
-  useEffect(() => {
-    setPaginaActual(1)
-  }, [filtroEstado, filtroAlcance, busqueda])
-
   // Estadísticas
   const stats = useMemo(() => {
     return {
@@ -240,14 +236,14 @@ export default function DescuentosAdmin() {
               type="text"
               placeholder="Buscar descuentos..."
               value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
+              onChange={(e) => { setBusqueda(e.target.value); setPaginaActual(1) }}
               className="search-input"
             />
           </div>
 
           <select 
             value={filtroEstado} 
-            onChange={(e) => setFiltroEstado(e.target.value)}
+            onChange={(e) => { setFiltroEstado(e.target.value); setPaginaActual(1) }}
             className="filter-select"
           >
             <option value="todos">Todos los estados</option>
@@ -258,7 +254,7 @@ export default function DescuentosAdmin() {
 
           <select 
             value={filtroAlcance} 
-            onChange={(e) => setFiltroAlcance(e.target.value)}
+            onChange={(e) => { setFiltroAlcance(e.target.value); setPaginaActual(1) }}
             className="filter-select"
           >
             <option value="todos">Todos los alcances</option>

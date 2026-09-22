@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Download } from 'lucide-react'
-import ModalInstalarIphone from '../ModalInstalarIphone'
+import ModalInstalarStaff from './ModalInstalarStaff'
 
 // ---------------------------------------------------------------
 // Botón "Instalar app" discreto (icon-only) para el StaffDashboard.
@@ -71,7 +71,7 @@ function BotonInstalarStaff() {
       </button>
 
       {modalAbierto && (
-        <ModalInstalarIphone onClose={() => setModalAbierto(false)} />
+        <ModalInstalarStaff onClose={() => setModalAbierto(false)} />
       )}
     </>
   )

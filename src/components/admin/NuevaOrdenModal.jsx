@@ -57,45 +57,47 @@ function NuevaOrdenModal({ usuarioId, nombreUsuario, isOpen, onClose, onCreada }
   const inputProductoRef = useRef(null)
   const debounceRef = useRef(null)
 
-  useEffect(() => {
-    if (!isOpen) return
-    setFilas([])
-    setCostoEnvio('')
-    setFormaPago('contado')
-    setQueryProducto('')
-    setResultadosProductos([])
-    setQueryCliente('')
-
-    if (usuarioId) {
-      setCliente({ id: usuarioId, nombre: nombreUsuario })
-    } else {
-      setCliente(null)
-      cargarUsuarios()
-    }
-  }, [isOpen, usuarioId, nombreUsuario])
-
-  async function cargarUsuarios() {
-    try {
-      setCargandoUsuarios(true)
-      const { data } = await api.get('/users')
-      setUsuarios(data)
-    } catch (err) {
-      console.error(err)
-      toaster.create({ title: 'No se pudieron cargar los clientes', type: 'error' })
-    } finally {
-      setCargandoUsuarios(false)
+  const [prevOpen, setPrevOpen] = useState(isOpen)
+  if (isOpen !== prevOpen) {
+    setPrevOpen(isOpen)
+    if (isOpen) {
+      setFilas([])
+      setCostoEnvio('')
+      setFormaPago('contado')
+      setQueryProducto('')
+      setResultadosProductos([])
+      setQueryCliente('')
+      setCliente(usuarioId ? { id: usuarioId, nombre: nombreUsuario } : null)
+      if (!usuarioId) setCargandoUsuarios(true)
     }
   }
+
+  useEffect(() => {
+    if (!isOpen || usuarioId) return
+    let activo = true
+    api.get('/users')
+      .then(({ data }) => {
+        if (activo) setUsuarios(data)
+      })
+      .catch((err) => {
+        if (!activo) return
+        console.error(err)
+        toaster.create({ title: 'No se pudieron cargar los clientes', type: 'error' })
+      })
+      .finally(() => {
+        if (activo) setCargandoUsuarios(false)
+      })
+    return () => {
+      activo = false
+    }
+  }, [isOpen, usuarioId])
 
   // Búsqueda de productos con debounce — dispara la API mientras se escribe
   useEffect(() => {
     if (!cliente) return
     if (debounceRef.current) clearTimeout(debounceRef.current)
 
-    if (!queryProducto.trim()) {
-      setResultadosProductos([])
-      return
-    }
+    if (!queryProducto.trim()) return
 
     debounceRef.current = setTimeout(async () => {
       try {
@@ -113,6 +115,8 @@ function NuevaOrdenModal({ usuarioId, nombreUsuario, isOpen, onClose, onCreada }
 
     return () => clearTimeout(debounceRef.current)
   }, [queryProducto, cliente])
+
+  const resultadosProductosVisibles = queryProducto.trim() ? resultadosProductos : []
 
   function agregarProducto(producto) {
     setFilas((prev) => {
@@ -296,13 +300,13 @@ function NuevaOrdenModal({ usuarioId, nombreUsuario, isOpen, onClose, onCreada }
                       </Flex>
 
                       {/* Panel de resultados */}
-                      {mostrarResultados && queryProducto && resultadosProductos.length > 0 && (
+                      {mostrarResultados && queryProducto && resultadosProductosVisibles.length > 0 && (
                         <Box
                           position="absolute" top="calc(100% + 4px)" left={0} right={0}
                           bg="white" border="1px solid" borderColor="gray.200" borderRadius="lg"
                           boxShadow="lg" maxH="260px" overflowY="auto" zIndex={20}
                         >
-                          {resultadosProductos.map((p, i) => (
+                          {resultadosProductosVisibles.map((p, i) => (
                             <Flex
                               key={p.id}
                               align="center" justify="space-between" px={3} py={2.5}
@@ -321,7 +325,7 @@ function NuevaOrdenModal({ usuarioId, nombreUsuario, isOpen, onClose, onCreada }
                           ))}
                         </Box>
                       )}
-                      {mostrarResultados && queryProducto && !buscandoProductos && resultadosProductos.length === 0 && (
+                      {mostrarResultados && queryProducto && !buscandoProductos && resultadosProductosVisibles.length === 0 && (
                         <Box position="absolute" top="calc(100% + 4px)" left={0} right={0} bg="white" border="1px solid" borderColor="gray.200" borderRadius="lg" boxShadow="lg" p={3} zIndex={20}>
                           <Text fontSize="sm" color="gray.400">Sin productos que coincidan</Text>
                         </Box>

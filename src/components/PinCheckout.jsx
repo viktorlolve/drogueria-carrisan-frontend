@@ -26,9 +26,16 @@ const LARGO_PIN = 4
 function InputPin({ onCompleto, deshabilitado, resetKey }) {
   const [digitos, setDigitos] = useState(Array(LARGO_PIN).fill(''))
   const refs = useRef([])
+  const [prevResetKey, setPrevResetKey] = useState(resetKey)
+
+  // Ajuste de estado en fase de render: al incrementar resetKey (PIN
+  // incorrecto o cambio de usuario) se limpian los dígitos.
+  if (resetKey !== prevResetKey) {
+    setPrevResetKey(resetKey)
+    setDigitos(Array(LARGO_PIN).fill(''))
+  }
 
   useEffect(() => {
-    setDigitos(Array(LARGO_PIN).fill(''))
     refs.current[0]?.focus()
   }, [resetKey])
 

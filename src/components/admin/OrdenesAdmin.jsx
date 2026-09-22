@@ -185,10 +185,6 @@ function OrdenesAdmin() {
     paginaActual * ITEMS_POR_PAGINA
   )
 
-  useEffect(() => {
-    setPaginaActual(1)
-  }, [busqueda, filtroEstado, filtroFecha])
-
   function toggleOrden(campo) {
     if (ordenarPor === campo) {
       setOrdenDireccion(prev => prev === 'asc' ? 'desc' : 'asc')
@@ -284,14 +280,14 @@ function OrdenesAdmin() {
               type="text"
               placeholder="Buscar por ID, cliente o email..."
               value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
+              onChange={(e) => { setBusqueda(e.target.value); setPaginaActual(1) }}
               className="search-input"
             />
           </div>
 
           <select
             value={filtroEstado}
-            onChange={(e) => setFiltroEstado(e.target.value)}
+            onChange={(e) => { setFiltroEstado(e.target.value); setPaginaActual(1) }}
             className="filter-select"
           >
             <option value="todos">Todos los estados</option>
@@ -304,7 +300,7 @@ function OrdenesAdmin() {
 
           <select
             value={filtroFecha}
-            onChange={(e) => setFiltroFecha(e.target.value)}
+            onChange={(e) => { setFiltroFecha(e.target.value); setPaginaActual(1) }}
             className="filter-select"
           >
             <option value="todas">Todas las fechas</option>

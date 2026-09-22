@@ -67,12 +67,9 @@ function BuscadorMovil({ onClose, queryInicial = '' }) {
   }, [])
 
   useEffect(() => {
-    if (query.trim().length < 1) {
-      setSugerencias([])
-      return
-    }
-    setCargando(true)
+    if (query.trim().length < 1) return
     const debounce = setTimeout(async () => {
+      setCargando(true)
       try {
         const { data } = await api.get(`/products?search=${encodeURIComponent(query.trim())}&limit=8`)
         setSugerencias(data.slice(0, 8))
@@ -124,6 +121,7 @@ function BuscadorMovil({ onClose, queryInicial = '' }) {
   }
 
   const mostrandoResultados = query.trim().length > 0
+  const sugerenciasVisibles = query.trim().length < 1 ? [] : sugerencias
 
   return (
     <div className="buscador-movil" role="dialog" aria-modal="true">
@@ -223,7 +221,7 @@ function BuscadorMovil({ onClose, queryInicial = '' }) {
           <div className="buscador-movil__resultados">
             {cargando ? (
               <div className="buscador-movil__cargando">Buscando...</div>
-            ) : sugerencias.length === 0 ? (
+            ) : sugerenciasVisibles.length === 0 ? (
               <div className="buscador-movil__sin-resultados">
                 <p>Sin coincidencias para "{query}"</p>
                 <button type="button" className="buscador-movil__ver-todo" onClick={() => irACatalogo(query)}>
@@ -232,7 +230,7 @@ function BuscadorMovil({ onClose, queryInicial = '' }) {
               </div>
             ) : (
               <>
-                {sugerencias.map((producto) => (
+                {sugerenciasVisibles.map((producto) => (
                   <button
                     key={producto.id}
                     type="button"

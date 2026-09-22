@@ -14,6 +14,17 @@ export default function BannerOnboarding() {
   const [deferredPrompt, setDeferredPrompt] = useState(null)
   const { soportado, suscrito, permiso, pidiendoPermiso, activar } = usePush()
 
+  // Ajuste de estado en fase de render (patrón oficial de React): cuando el
+  // permiso de notificaciones pasa a 'default' tras la detección asíncrona
+  // del hook, el banner se vuelve visible.
+  const [permisoPrev, setPermisoPrev] = useState(permiso)
+  if (permiso !== permisoPrev) {
+    setPermisoPrev(permiso)
+    if (!yaInstalado() && safeGetItem(STORAGE_KEYDismiss) !== '1' && permiso === 'default' && soportado) {
+      setVisible(true)
+    }
+  }
+
   useEffect(() => {
     if (yaInstalado() || safeGetItem(STORAGE_KEYDismiss) === '1') return
 
@@ -24,10 +35,6 @@ export default function BannerOnboarding() {
     }
 
     window.addEventListener('beforeinstallprompt', onBeforeInstall)
-
-    if (permiso === 'default' && soportado) {
-      setVisible(true)
-    }
 
     return () => window.removeEventListener('beforeinstallprompt', onBeforeInstall)
   }, [permiso, soportado])

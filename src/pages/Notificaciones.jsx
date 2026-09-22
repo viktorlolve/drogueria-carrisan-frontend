@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Accordion,
@@ -117,11 +117,7 @@ function Notificaciones() {
   const [silenciadas, setSilenciadas] = useState(leerSilenciadas)
   const navigate = useNavigate()
 
-  useEffect(() => {
-    cargarNotificaciones()
-  }, [])
-
-  async function cargarNotificaciones() {
+  const cargarNotificaciones = useCallback(async () => {
     try {
       const { data } = await api.get('/notifications')
       setNotificaciones(data)
@@ -131,7 +127,14 @@ function Notificaciones() {
     } finally {
       setCargando(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    async function iniciar() {
+      await cargarNotificaciones()
+    }
+    iniciar()
+  }, [cargarNotificaciones])
 
   async function marcarLeida(id) {
     try {

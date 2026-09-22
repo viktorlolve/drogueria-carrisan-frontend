@@ -204,23 +204,9 @@ function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // useEffect para resetear estados cuando se cierran los menús
-  useEffect(() => {
-    if (!showDeptosMenu) {
-      setDeptoActivo(null)
-    }
-    if (!showServiciosMenu) {
-      setServicioActivo(null)
-    }
-  }, [showDeptosMenu, showServiciosMenu])
-
   // useEffect para buscar sugerencias con debounce
   useEffect(() => {
-    if (busqueda.length < 1) {
-      setSugerencias([])
-      setMostrarSugerencias(false)
-      return
-    }
+    if (busqueda.length < 1) return
 
     // Si el término llegó por sync de URL (navegación al catálogo con ?search=),
     // no disparar el fetch de sugerencias: eso reabriría el dropdown sin que el
@@ -250,30 +236,30 @@ function Navbar() {
     }
   }, [busqueda])
 
+  // Sincronizar el término de búsqueda con la URL (navegación con ?search=).
+  // Los setState se difieren en un microtask para no setear de forma síncrona
+  // dentro del effect; el flag evita que el effect de debounce dispare el
+  // fetch de sugerencias para un término que no se está tecleando.
   useEffect(() => {
     const terminoUrl = new URLSearchParams(location.search).get('search') || ''
-    if (terminoUrl !== busqueda) {
-      busquedaUrlSyncRef.current = true
-      busquedaEnviadaRef.current = true
-      if (debounceRef.current) clearTimeout(debounceRef.current)
+    busquedaUrlSyncRef.current = true
+    busquedaEnviadaRef.current = true
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    Promise.resolve().then(() => {
       setSugerencias([])
       setMostrarSugerencias(false)
       setBusqueda(terminoUrl)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    })
   }, [location.search])
 
   // Cargar direcciones guardadas del usuario al montar
   useEffect(() => {
     if (user && tipoEnvio && tipoEnvio !== 'retiro') cargarDirecciones(tipoEnvio)
-  }, [user, tipoEnvio])
+  }, [user, tipoEnvio, cargarDirecciones])
 
   // Cargar notificaciones no leídas
   useEffect(() => {
-    if (!user) {
-      setNotificacionesNoLeidas(0)
-      return
-    }
+    if (!user) return
     api
       .get('/notifications/unread-count')
       .then(({ data }) => setNotificacionesNoLeidas(data.count || 0))
@@ -431,7 +417,7 @@ function Navbar() {
               </button>
             </form>
 
-            {mostrarSugerencias && sugerencias.length > 0 && (
+            {mostrarSugerencias && busqueda.length > 0 && sugerencias.length > 0 && (
               <div className="search-suggestions">
                 {sugerencias.map((producto) => (
                   <button

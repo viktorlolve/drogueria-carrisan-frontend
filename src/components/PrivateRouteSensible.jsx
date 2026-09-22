@@ -21,10 +21,7 @@ function PrivateRouteSensible({ children, adminOnly = false }) {
   const [valido, setValido] = useState(false)
 
   useEffect(() => {
-    if (loading || !user) {
-      setVerificando(false)
-      return
-    }
+    if (loading || !user) return
 
     let cancelado = false
     api.get('/auth/verify')
@@ -35,12 +32,16 @@ function PrivateRouteSensible({ children, adminOnly = false }) {
     return () => { cancelado = true }
   }, [loading, user])
 
-  if (loading || verificando) {
+  if (loading) {
     return <p>Verificando sesión...</p>
   }
 
   if (!user) {
     return <Navigate to="/login" replace />
+  }
+
+  if (verificando) {
+    return <p>Verificando sesión...</p>
   }
 
   if (adminOnly && !user.es_admin) {

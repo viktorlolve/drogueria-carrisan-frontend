@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../api/axios'
 import { useCart } from '../context/CartContext'
@@ -84,12 +84,7 @@ function Cotizaciones() {
   const [cargando, setCargando] = useState(true)
   const { items, addItemCotizado } = useCart()
 
-  useEffect(() => {
-    cargar()
-  }, [])
-
-  async function cargar() {
-    setCargando(true)
+  const cargar = useCallback(async () => {
     try {
       const { data } = await api.get('/cotizaciones/mias')
       setCotizaciones(data)
@@ -98,7 +93,14 @@ function Cotizaciones() {
     } finally {
       setCargando(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    async function iniciar() {
+      await cargar()
+    }
+    iniciar()
+  }, [cargar])
 
   function handleAgregar(cotizacion) {
     addItemCotizado(cotizacion.producto, cotizacion)

@@ -11,9 +11,37 @@ function ClienteDetalle({ clienteId, onVolver }) {
   const [mostrarPagoForm, setMostrarPagoForm] = useState(false)
   const [facturaEnEdicion, setFacturaEnEdicion] = useState(null)
 
-  useEffect(() => {
-    cargarDetalle()
+useEffect(() => {
+    let activo = true
+    api.get(`/clientes/estado-cuenta/${clienteId}`)
+      .then(({ data }) => {
+        if (activo) setDatos(data)
+      })
+      .catch((err) => {
+        if (activo) {
+          console.error(err)
+          setError('No se pudo cargar el detalle del cliente')
+        }
+      })
+      .finally(() => {
+        if (activo) setCargando(false)
+      })
+    return () => {
+      activo = false
+    }
   }, [clienteId])
+
+async function cargarDetalle() {
+    try {
+      const { data } = await api.get(`/clientes/estado-cuenta/${clienteId}`)
+      setDatos(data)
+    } catch (err) {
+      setError('No se pudo cargar el detalle del cliente')
+      console.error(err)
+    } finally {
+      setCargando(false)
+    }
+  }
 
 async function handleEliminarPago(pagoId) {
   const confirmado = window.confirm('┬┐Seguro que quer├®s eliminar este pago? Las facturas que hab├¡a saldado volver├ín a estado pendiente.')
@@ -26,18 +54,6 @@ async function handleEliminarPago(pagoId) {
     alert(err.response?.data?.message || 'No se pudo eliminar el pago')
   }
 }
-
-  async function cargarDetalle() {
-    try {
-      const { data } = await api.get(`/clientes/estado-cuenta/${clienteId}`)
-      setDatos(data)
-    } catch (err) {
-      setError('No se pudo cargar el detalle del cliente')
-      console.error(err)
-    } finally {
-      setCargando(false)
-    }
-  }
 
   function abrirNuevaFactura() {
   setFacturaEnEdicion(null)

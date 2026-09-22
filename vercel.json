@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/staff/:path*", "destination": "/staff.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

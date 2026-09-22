@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import { getEstadoConfig, normalizarEstado } from '../config/estadosOrden'
 import './OrdenDetalleModal.css'
 
@@ -21,13 +21,19 @@ function OrdenDetalleModal({ orden, onClose, onCambiarEstado, estados, estadoCol
   const [cantidadesEditadas, setCantidadesEditadas] = useState({})
   const [guardandoItems, setGuardandoItems] = useState(false)
 
-  const itemsOrden = orden?.items || orden?.ordenes_items || orden?.productos || []
+  const itemsOrden = useMemo(
+    () => orden?.items || orden?.ordenes_items || orden?.productos || [],
+    [orden]
+  )
 
-  useEffect(() => {
-    // Al cambiar de orden (o al cancelar edición) resetea el borrador.
+  // Ajuste de estado en fase de render: al cambiar de orden (o al abrir el
+  // modal con otra orden) se resetea el borrador de edición.
+  const [prevOrdenId, setPrevOrdenId] = useState(orden?.id)
+  if (orden?.id !== prevOrdenId) {
+    setPrevOrdenId(orden?.id)
     setEditandoItems(false)
     setCantidadesEditadas({})
-  }, [orden?.id])
+  }
 
   function iniciarEdicion() {
     const inicial = {}

@@ -24,11 +24,6 @@ function GestionDirecciones() {
   const [mensaje, setMensaje] = useState('');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    cargarDirecciones('delivery');
-    cargarDirecciones('envio_nacional');
-  }, []);
-
   const cargarDirecciones = async (tipo) => {
     try {
       const { data } = await api.get(`/direcciones?tipo=${tipo}`);
@@ -43,6 +38,15 @@ function GestionDirecciones() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // Carga inicial: se difiere en un microtask para no setear estado de forma
+    // síncrona dentro del effect.
+    Promise.resolve().then(() => {
+      cargarDirecciones('delivery');
+      cargarDirecciones('envio_nacional');
+    });
+  }, []);
 
   const direccionesActuales = tabActiva === 'delivery' ? direccionesDelivery : direccionesNacional;
 

@@ -191,10 +191,7 @@ function MoleculaForm({ molecula, onClose, onGuardado }) {
 
   // Autocompletado simple de nivel 5 ATC por código o nombre
   useEffect(() => {
-    if (!atcBusqueda || atcId) {
-      setAtcResultados([])
-      return
-    }
+    if (!atcBusqueda || atcId) return
     const timeout = setTimeout(async () => {
       try {
         const res = await api.get('/moleculas/atc-clasificaciones', { params: { nivel: 5 } })
@@ -210,6 +207,8 @@ function MoleculaForm({ molecula, onClose, onGuardado }) {
     }, 300)
     return () => clearTimeout(timeout)
   }, [atcBusqueda, atcId])
+
+  const atcResultadosVisibles = !atcBusqueda || atcId ? [] : atcResultados
 
   function seleccionarAtc(nodo) {
     setAtcId(nodo.id)
@@ -310,9 +309,9 @@ function MoleculaForm({ molecula, onClose, onGuardado }) {
                 Quitar clasificación
               </button>
             )}
-            {atcResultados.length > 0 && (
+            {atcResultadosVisibles.length > 0 && (
               <div className="mol-autocomplete-list">
-                {atcResultados.map((nodo) => (
+                {atcResultadosVisibles.map((nodo) => (
                   <button
                     type="button"
                     key={nodo.id}

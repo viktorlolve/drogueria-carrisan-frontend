@@ -1,13 +1,18 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 function BuscadorFiltro({ marcas, onFiltrar }) {
   const [busqueda, setBusqueda] = useState('')
   const [marcaId, setMarcaId] = useState('')
+  const onFiltrarRef = useRef(onFiltrar)
+
+  useEffect(() => {
+    onFiltrarRef.current = onFiltrar
+  })
 
   // Debounce: esperamos 500ms después de la última tecla antes de disparar el filtro
   useEffect(() => {
     const timer = setTimeout(() => {
-      onFiltrar({ search: busqueda, marca_id: marcaId })
+      onFiltrarRef.current({ search: busqueda, marca_id: marcaId })
     }, 500)
 
     // Cleanup: si el usuario tipea de nuevo antes de los 500ms,

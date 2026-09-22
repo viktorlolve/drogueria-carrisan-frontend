@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import SelectorEstadoCiudad from '../components/registro/SelectorEstadoCiudad'
 import SubidaArchivoDrive from '../components/registro/SubidaArchivoDrive'
@@ -72,14 +72,15 @@ function RegistroProfesional() {
     setForm((prev) => ({ ...prev, [campo]: valor }))
   }
 
-  useEffect(() => {
-    const opcionesTitulo = TITULOS_POR_DEFECTO[form.profesion]
+  function cambiarProfesion(valor) {
+    const opcionesTitulo = TITULOS_POR_DEFECTO[valor]
     setForm((prev) => ({
       ...prev,
+      profesion: valor,
       titulo: opcionesTitulo ? opcionesTitulo[0] : '',
       especialidad: ''
     }))
-  }, [form.profesion])
+  }
 
   function avanzarPaso() {
     setDireccionPaso('adelante')
@@ -262,7 +263,7 @@ function RegistroProfesional() {
                 <select
                   id="profesion"
                   value={form.profesion}
-                  onChange={(e) => actualizarCampo('profesion', e.target.value)}
+                  onChange={(e) => cambiarProfesion(e.target.value)}
                   className={errores.profesion ? 'registro-input--error' : ''}
                   aria-invalid={!!errores.profesion}
                   aria-describedby={errores.profesion ? 'profesion-error' : undefined}

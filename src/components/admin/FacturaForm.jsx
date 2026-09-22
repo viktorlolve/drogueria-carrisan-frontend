@@ -17,32 +17,30 @@ function FacturaForm({ clienteId, factura, onClose, onGuardado }) {
   const [errores, setErrores] = useState({})
 
   useEffect(() => {
-    if (!esEdicion) {
-      cargarOrdenesSinFacturar()
+    if (esEdicion) return
+    let activo = true
+    api.get(`/facturas/sin-facturar/${clienteId}`)
+      .then(({ data }) => {
+        if (activo) setOrdenesDisponibles(data)
+      })
+      .catch((err) => {
+        if (!activo) return
+        setError('No se pudieron cargar las órdenes del cliente')
+        console.error(err)
+      })
+      .finally(() => {
+        if (activo) setCargando(false)
+      })
+    return () => {
+      activo = false
     }
-  }, [])
+  }, [clienteId, esEdicion])
 
-  async function cargarOrdenesSinFacturar() {
-    try {
-      const { data } = await api.get(`/facturas/sin-facturar/${clienteId}`)
-      setOrdenesDisponibles(data)
-    } catch (err) {
-      setError('No se pudieron cargar las órdenes del cliente')
-      console.error(err)
-    } finally {
-      setCargando(false)
-    }
-  }
+  const sumaOrdenes = ordenesDisponibles
+    .filter((o) => ordenesSeleccionadas.includes(o.id))
+    .reduce((acc, o) => acc + Number(o.total_usd), 0)
 
-  useEffect(() => {
-    if (montoEditadoManualmente) return
-
-    const suma = ordenesDisponibles
-      .filter((o) => ordenesSeleccionadas.includes(o.id))
-      .reduce((acc, o) => acc + Number(o.total_usd), 0)
-
-    setMontoFacturado(suma.toFixed(2))
-  }, [ordenesSeleccionadas, ordenesDisponibles, montoEditadoManualmente])
+  const montoVisible = !montoEditadoManualmente && !esEdicion ? sumaOrdenes.toFixed(2) : montoFacturado
 
   function toggleOrden(ordenId) {
     setOrdenesSeleccionadas((prev) =>
@@ -133,10 +131,7 @@ function FacturaForm({ clienteId, factura, onClose, onGuardado }) {
                     <div className="checklist-header">
                       <span>{ordenesSeleccionadas.length} seleccionadas</span>
                       <span className="checklist-total">
-                        Total: ${ordenesDisponibles
-                          .filter(o => ordenesSeleccionadas.includes(o.id))
-                          .reduce((sum, o) => sum + Number(o.total_usd), 0)
-                          .toFixed(2)}
+                        Total: ${sumaOrdenes.toFixed(2)}
                       </span>
                     </div>
                     {ordenesDisponibles.map((orden) => (
@@ -168,7 +163,7 @@ function FacturaForm({ clienteId, factura, onClose, onGuardado }) {
                   type="number"
                   step="0.01"
                   min="0"
-                  value={montoFacturado}
+                  value={montoVisible}
                   onChange={handleMontoChange}
                   className={errores.monto ? 'error' : ''}
                   placeholder="0.00"

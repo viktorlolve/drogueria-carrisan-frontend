@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import api from '../api/axios'
 import { useCart } from '../context/CartContext'
@@ -109,8 +109,7 @@ function ListaDetalle() {
   const [moviendo, setMoviendo] = useState(false)
   const [toast, setToast] = useState('')
 
-  async function cargarDatos() {
-    setCargando(true)
+  const cargarDatos = useCallback(async () => {
     try {
       const respuestaItems = await api.get(`/lists/${id}/items`)
       const respuestaListas = await api.get('/lists')
@@ -123,12 +122,14 @@ function ListaDetalle() {
     } finally {
       setCargando(false)
     }
-  }
+  }, [id])
 
   useEffect(() => {
-    cargarDatos()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id])
+    async function iniciar() {
+      await cargarDatos()
+    }
+    iniciar()
+  }, [cargarDatos])
 
   async function quitarItem(productoId) {
     try {
@@ -182,11 +183,9 @@ function ListaDetalle() {
     itemsFiltrados.forEach((item) => addItem(item.productos, 1))
   }
 
-  const itemsFiltrados = useMemo(() => {
-    if (!busqueda.trim()) return items
-    const termino = busqueda.trim().toLowerCase()
-    return items.filter((item) => item.productos?.nombre_comercial?.toLowerCase().includes(termino))
-  }, [items, busqueda])
+  const itemsFiltrados = !busqueda.trim()
+    ? items
+    : items.filter((item) => item.productos?.nombre_comercial?.toLowerCase().includes(busqueda.trim().toLowerCase()))
 
   const otrasListas = todasLasListas.filter((l) => l.id !== Number(id))
 

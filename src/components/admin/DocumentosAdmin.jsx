@@ -149,20 +149,21 @@ function DocumentosAdmin() {
   const [seleccionada, setSeleccionada] = useState(null)
 
   useEffect(() => {
-    cargar()
-  }, [])
-
-  async function cargar() {
-    setCargando(true)
-    try {
-      const { data } = await api.get('/documentos')
-      setSolicitudes(Array.isArray(data) ? data : [])
-    } catch (err) {
-      console.error('Error al cargar documentos', err)
-    } finally {
-      setCargando(false)
+    let activo = true
+    api.get('/documentos')
+      .then(({ data }) => {
+        if (activo) setSolicitudes(Array.isArray(data) ? data : [])
+      })
+      .catch((err) => {
+        console.error('Error al cargar documentos', err)
+      })
+      .finally(() => {
+        if (activo) setCargando(false)
+      })
+    return () => {
+      activo = false
     }
-  }
+  }, [])
 
   async function handleAprobar(id, payload) {
     const { data } = await api.patch(`/documentos/${id}/aprobar`, payload)

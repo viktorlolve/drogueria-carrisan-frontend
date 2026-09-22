@@ -26,7 +26,26 @@ function PagosAdmin() {
   const [procesando, setProcesando] = useState(false)
 
   useEffect(() => {
-    cargarReportes()
+    let activo = true
+    api.get('/reportes-pago', {
+      params: filtroEstado !== 'todos' ? { estado: filtroEstado } : {},
+    })
+      .then(({ data }) => {
+        if (!activo) return
+        setReportes(data)
+        setError('')
+      })
+      .catch((err) => {
+        if (!activo) return
+        setError('No se pudo cargar la cola de pagos')
+        console.error(err)
+      })
+      .finally(() => {
+        if (activo) setCargando(false)
+      })
+    return () => {
+      activo = false
+    }
   }, [filtroEstado])
 
   async function cargarReportes() {
@@ -137,7 +156,7 @@ function PagosAdmin() {
         <div className="toolbar-filtros">
           <select
             value={filtroEstado}
-            onChange={(e) => setFiltroEstado(e.target.value)}
+            onChange={(e) => { setFiltroEstado(e.target.value); setCargando(true) }}
             className="filter-select"
           >
             <option value="pendiente_verificacion">⏳ Pendientes de verificar</option>

@@ -19,7 +19,7 @@ function estaInstalado() {
 }
 
 export default function InstalarAppBtn() {
-  const [visible, setVisible] = useState(false)
+  const [visible, setVisible] = useState(() => !estaInstalado() && !window.beforeinstallprompt)
   const [deferredPrompt, setDeferredPrompt] = useState(null)
   const [modalAbierto, setModalAbierto] = useState(false)
 
@@ -33,12 +33,6 @@ export default function InstalarAppBtn() {
     }
 
     window.addEventListener('beforeinstallprompt', onBeforeInstall)
-
-    // En iOS u otros donde no hay beforeinstallprompt, mostrar el botón
-    // para abrir el modal informativo
-    if (!window.beforeinstallprompt) {
-      setVisible(true)
-    }
 
     return () => window.removeEventListener('beforeinstallprompt', onBeforeInstall)
   }, [])

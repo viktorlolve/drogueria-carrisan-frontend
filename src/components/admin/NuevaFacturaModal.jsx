@@ -33,28 +33,37 @@ function NuevaFacturaModal({ clienteId, isOpen, onClose, onCreada }) {
   const [nota, setNota] = useState('')
   const [guardando, setGuardando] = useState(false)
 
-  useEffect(() => {
-    if (isOpen && clienteId) {
-      cargarOrdenesSinFacturar()
+  const [prevOpen, setPrevOpen] = useState(isOpen)
+  if (isOpen !== prevOpen) {
+    setPrevOpen(isOpen)
+    if (isOpen) {
       setSeleccionadas([])
       setNumeroFactura('')
       setMontoManual('')
       setNota('')
-    }
-  }, [isOpen, clienteId])
-
-  async function cargarOrdenesSinFacturar() {
-    try {
       setCargando(true)
-      const { data } = await api.get(`/facturas/sin-facturar/${clienteId}`)
-      setOrdenes(data)
-    } catch (err) {
-      console.error(err)
-      toaster.create({ title: 'No se pudieron cargar las órdenes sin facturar', type: 'error' })
-    } finally {
-      setCargando(false)
     }
   }
+
+  useEffect(() => {
+    if (!isOpen || !clienteId) return
+    let activo = true
+    api.get(`/facturas/sin-facturar/${clienteId}`)
+      .then(({ data }) => {
+        if (activo) setOrdenes(data)
+      })
+      .catch((err) => {
+        if (!activo) return
+        console.error(err)
+        toaster.create({ title: 'No se pudieron cargar las órdenes sin facturar', type: 'error' })
+      })
+      .finally(() => {
+        if (activo) setCargando(false)
+      })
+    return () => {
+      activo = false
+    }
+  }, [isOpen, clienteId])
 
   function toggleOrden(id) {
     const idStr = String(id)

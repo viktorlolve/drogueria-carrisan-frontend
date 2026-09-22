@@ -90,12 +90,8 @@ function FilaItem({ item, valores, onChange, soloLectura }) {
 }
 
 function ModalRequerimiento({ requerimiento, onClose, onResponder }) {
-  const [valores, setValores] = useState({})
-  const [enviando, setEnviando] = useState(false)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    if (!requerimiento) return
+  const [valores, setValores] = useState(() => {
+    if (!requerimiento) return {}
     const iniciales = {}
     requerimiento.requerimiento_items.forEach((item) => {
       iniciales[item.id] = {
@@ -104,9 +100,10 @@ function ModalRequerimiento({ requerimiento, onClose, onResponder }) {
         rechazado: false,
       }
     })
-    setValores(iniciales)
-    setError('')
-  }, [requerimiento])
+    return iniciales
+  })
+  const [enviando, setEnviando] = useState(false)
+  const [error, setError] = useState('')
 
   if (!requerimiento) return null
 
@@ -211,20 +208,21 @@ function RequerimientosAdmin() {
   const [seleccionado, setSeleccionado] = useState(null)
 
   useEffect(() => {
-    cargar()
-  }, [])
-
-  async function cargar() {
-    setCargando(true)
-    try {
-      const { data } = await api.get('/requerimientos')
-      setRequerimientos(Array.isArray(data) ? data : [])
-    } catch (err) {
-      console.error('Error al cargar requerimientos', err)
-    } finally {
-      setCargando(false)
+    let activo = true
+    api.get('/requerimientos')
+      .then(({ data }) => {
+        if (activo) setRequerimientos(Array.isArray(data) ? data : [])
+      })
+      .catch((err) => {
+        console.error('Error al cargar requerimientos', err)
+      })
+      .finally(() => {
+        if (activo) setCargando(false)
+      })
+    return () => {
+      activo = false
     }
-  }
+  }, [])
 
   async function handleResponder(id, payload) {
     const { data } = await api.patch(`/requerimientos/${id}/responder`, payload)
@@ -278,6 +276,7 @@ function RequerimientosAdmin() {
       </div>
 
       <ModalRequerimiento
+        key={seleccionado?.id || 'cerrado'}
         requerimiento={seleccionado}
         onClose={() => setSeleccionado(null)}
         onResponder={handleResponder}

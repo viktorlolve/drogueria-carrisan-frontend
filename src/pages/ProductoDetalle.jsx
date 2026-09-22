@@ -107,6 +107,21 @@ function ProductoDetalle() {
 
   const sinPrecio = producto ? (producto.precio_usd == null || Number(producto.precio_usd) <= 0) : false
 
+  // Al cambiar de producto, reseteamos los estados locales derivados del id
+  // (imagen, tab, agregado, sección, resultados de la carga anterior).
+  const [prevId, setPrevId] = useState(id)
+  if (prevId !== id) {
+    setPrevId(id)
+    setCargando(true)
+    setCarruseles([])
+    setSuscripcion(null)
+    setError('')
+    setImagenActiva(0)
+    setTabActiva('ficha')
+    setAgregado(false)
+    setSeccionAbierta('')
+  }
+
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current)
@@ -114,10 +129,6 @@ function ProductoDetalle() {
   }, [])
 
   useEffect(() => {
-    setImagenActiva(0)
-    setTabActiva('ficha')
-    setAgregado(false)
-    setSeccionAbierta('')
     window.scrollTo(0, 0)
   }, [id])
 
@@ -135,11 +146,6 @@ function ProductoDetalle() {
     if (controllerRef.current) controllerRef.current.abort()
     const controller = new AbortController()
     controllerRef.current = controller
-
-    setCargando(true)
-    setCarruseles([])
-    setSuscripcion(null)
-    setError('')
 
     try {
       const [resCompleto, resTasa] = await Promise.all([
@@ -200,7 +206,10 @@ function ProductoDetalle() {
   }, [id])
 
   useEffect(() => {
-    cargarProducto()
+    async function iniciar() {
+      await cargarProducto()
+    }
+    iniciar()
   }, [cargarProducto])
 
   function handleAgregar() {

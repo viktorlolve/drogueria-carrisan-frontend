@@ -109,10 +109,7 @@ function BottomNav() {
   const [notificacionesNoLeidas, setNotificacionesNoLeidas] = useState(0)
 
   useEffect(() => {
-    if (!user) {
-      setNotificacionesNoLeidas(0)
-      return
-    }
+    if (!user) return
 
     let cancelado = false
 
@@ -161,7 +158,7 @@ function BottomNav() {
 
       {/* Campanita flotante — no ocupa espacio en el grid, así el dock
           se mantiene 2 + FAB + 2 siempre */}
-      <BottomNavCampanaFlotante noLeidas={notificacionesNoLeidas} />
+      <BottomNavCampanaFlotante noLeidas={user ? notificacionesNoLeidas : 0} />
     </nav>
   )
 }

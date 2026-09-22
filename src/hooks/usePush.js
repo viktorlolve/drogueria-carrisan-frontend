@@ -31,17 +31,13 @@ function esperarServiceWorker(timeout = 5000) {
  */
 export function usePush() {
   const soportado = 'serviceWorker' in navigator && 'PushManager' in window && PUSH_ENABLED
-  const [suscrito, setSuscrito] = useState(null)
-  const [permiso, setPermiso] = useState(null)
+  const [suscrito, setSuscrito] = useState(() => (soportado ? null : false))
+  const [permiso, setPermiso] = useState(() => (soportado ? null : Notification?.permission || 'default'))
   const [pidiendoPermiso, setPidiendoPermiso] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!soportado) {
-      setSuscrito(false)
-      setPermiso(Notification?.permission || 'default')
-      return
-    }
+    if (!soportado) return
 
     let cancelled = false
 

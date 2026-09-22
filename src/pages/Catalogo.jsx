@@ -41,7 +41,6 @@ function Catalogo() {
   const [moleculaInput, setMoleculaInput] = useState(moleculaParam)
 const [moleculaActiva, setMoleculaActiva] = useState(moleculaParam)
   const [lineaActiva, setLineaActiva] = useState(lineaParam)
-  const [laboratoriosDisponibles, setLaboratoriosDisponibles] = useState([])
   const [laboratoriosTop, setLaboratoriosTop] = useState([])
   const [labsVisibles, setLabsVisibles] = useState(20)
   const [formasDisponibles, setFormasDisponibles] = useState([])
@@ -105,7 +104,6 @@ useEffect(() => {
     api
       .get('/products/metadata', { params: { disponibles: 'true' } })
       .then((res) => {
-        setLaboratoriosDisponibles(res.data.laboratorios || [])
         setLaboratoriosTop(res.data.laboratoriosTop || [])
         setFormasDisponibles(res.data.formas || [])
         setCategoriasDisponibles(res.data.categorias || [])
