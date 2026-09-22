@@ -30,4 +30,15 @@ export const ADS = [
     alt: 'Festal y Calox',
     link: '/catalogo',
   },
+  {
+    id: 'tercer-ad',
+    // Tercer ad SOLO tablet/desktop (móvil sigue mostrando 2 y NO lo carga —
+    // Home.jsx lo filtra con useEsMobile antes de renderizar).
+    // TODO(dueño): colocar acá el GIF cuando lo subas a /ads/ del bucket
+    // crsnimages. Mientras `imagen` esté vacío, la card muestra un placeholder.
+    imagen: '',
+    alt: 'Anuncio de la semana',
+    link: '/catalogo',
+    soloTabletDesktop: true,
+  },
 ]

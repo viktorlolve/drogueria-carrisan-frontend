@@ -5,7 +5,7 @@
 // del txt de prompt (data/prompts_banners_gpt.txt) cambia, esta debe cambiar igual.
 //
 // La BD guarda `productos.laboratorio` con el nombre completo y su variante legal
-// (ej. "MEGALABS S.A.", "LABORATORIOS LETI, S.A.V."). Cada clave de este mapa es
+// (ej. "MEGALABS S.A.", "LABORATORIOS LETI S.A.V."). Cada clave de este mapa es
 // un TOKEN que se busca DENTRO del nombre normalizado del laboratorio para decidir
 // qué logo mostrar y qué etiqueta corta usar. Si un laboratorio no coincide con
 // ninguna clave, la tarjeta cae en el ícono de fallback (FlaskConical).
@@ -63,14 +63,14 @@ export function logoParaLaboratorio(laboratorio) {
 
 // Nombre corto para mostrar bajo la tarjeta del carrusel.
 // Nunca toca la BD: es SOLO presentación. Si hay logo usa su etiqueta;
-// si no, limpia el registro BD para display ("LABORATORIOS LETI, S.A.V." →
-// "LETI", "LABORATORIO LA SANTE, C.A." → "LA SANTE").
+// si no, limpia el registro BD para display ("LABORATORIOS LETI S.A.V." →
+// "LETI", "LABORATORIO LA SANTE C.A." → "LA SANTE").
 export function nombreVisible(laboratorio) {
   const match = logoParaLaboratorio(laboratorio)
   if (match) return match.nombre
   const limpio = String(laboratorio || '')
     .replace(/^lab(?:\.|oratorio|oratorios)\s+/i, '')
-    .replace(/\s*,\s*(?:C\.A\.|S\.A\.|S\.A\.V\.|S\.A\.I\.C\.|S\.A\.C\.I\.|L\.T\.D\.|Ltd\.?|LLC|Suc\.?)\s*$/i, '')
+    .replace(/\s*,?\s*(?:C\.A\.|S\.A\.|S\.A\.V\.|S\.A\.I\.C\.|S\.A\.C\.I\.|L\.T\.D\.|Ltd\.?|LLC|Suc\.?)\s*$/i, '')
     .trim()
   return limpio || String(laboratorio || '')
 }

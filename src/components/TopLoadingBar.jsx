@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
 import { Box } from '@chakra-ui/react'
 import { useLocation } from 'react-router-dom'
 import { useLoadingBar } from '../context/LoadingBarContext'
 
 function TopLoadingBar() {
-  const { isLoading } = useLoadingBar()
+  const { isLoading, notifyNavigation } = useLoadingBar()
   const [navHeight, setNavHeight] = useState(0)
   const location = useLocation()
 
@@ -12,13 +12,24 @@ function TopLoadingBar() {
   const excludedRoutes = ['/login', '/registro']
   const shouldShowLoadingBar = !excludedRoutes.includes(location.pathname)
 
+  // Cada navegación enciende la barra: indica que la página (lazy/Suspense
+  // + requests) está cargando. Las peticiones en vuelo la extienden hasta
+  // que la página termina de cargar por completo.
   useEffect(() => {
+    notifyNavigation()
+  }, [location.pathname, notifyNavigation])
+
+  useLayoutEffect(() => {
     // Desktop = fila principal + barra secundaria; móvil/tablet solo la principal.
     // Re-medir en cada cambio de ruta porque el navbar aparece/desaparece
     // (login, registro, staff) y las alturas difieren por breakpoint.
+    // Sin navbar (staff, login, etc.) la barra queda pegada arriba (offset 0).
     function medirNavbar() {
       const main = document.querySelector('.navbar__main')
-      if (!main) return
+      if (!main) {
+        setNavHeight(0)
+        return
+      }
       const secondary = document.querySelector('.navbar__secondary')
       setNavHeight(main.offsetHeight + (secondary ? secondary.offsetHeight : 0))
     }

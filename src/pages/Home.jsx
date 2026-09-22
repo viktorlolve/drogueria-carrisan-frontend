@@ -10,6 +10,7 @@ import AdRotativo from '../components/AdRotativo'
 import AdCard from '../components/AdCard'
 import CarruselCortos from '../components/CarruselCortos'
 import InfiniteScrollLoader from '../components/InfiniteScrollLoader'
+import { useEsMobile } from '../hooks/useEsMobile'
 import Footer from '../components/Footer'
 import BottomNav from '../components/BottomNav'
 import CookieConsent from '../components/CookieConsent'
@@ -23,7 +24,6 @@ import './Home.css'
 
 // ── Constantes ──────────────────────────────────────────────────
 const PRODUCTOS_POR_CARGA = 12
-const MAX_CARGAS = 3
 
 // ── Imágenes de los banners hero (Supabase Storage, mismo patrón que Landing) ──
 const BASE_URL = 'https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages'
@@ -67,15 +67,37 @@ const HERO_SLIDES = [
   },
 ]
 
+// Cargas del scroll infinito. Cada entrada es UNA ronda = carrusel simple de
+// la categoría + promo (mitad imagen / mitad carrusel) con los productos de esa
+// categoría filtrados por laboratorio (coincidencia parcial, `ilike %...%`).
+// `categoria` es el slug de `categorias_tienda` (lo resuelve el backend vía
+// producto_categorias). Para agregar una carga nueva, sumá una entrada acá.
+const CARGAS_INFINITO = [
+  {
+    titulo: 'Analgésicos',
+    categoria: 'analgesicos',
+    promo: {
+      imagen: `${BASE_URL}/ads/dol.jpg`,
+      alt: 'Analgésicos Calox',
+      laboratorio: 'CALOX',
+      tituloCarrusel: 'Productos Calox',
+    },
+  },
+]
+
+const MAX_CARGAS = CARGAS_INFINITO.length
+
 // ── Componente ──────────────────────────────────────────────────
 function Home() {
   const { user } = useAuth()
+
+  const esMobile = useEsMobile()
 
   const sentinelRef = useRef(null)
   const cargasRef = useRef(0)
   const cargandoMasRef = useRef(false)
   const sentinelEnVistaRef = useRef(false)
-  const timeoutRef = useRef(null)
+  const cachéCategoriasRef = useRef(new Map())
 
   const [tasa, setTasa] = useState(null)
   const [ofertas, setOfertas] = useState([])
@@ -83,7 +105,6 @@ function Home() {
   const [secciones, setSecciones] = useState([])
   const [seccionesRollback2, setSeccionesRollback2] = useState([])
   const [seccionesLab, setSeccionesLab] = useState([])
-  const [categoriasParaScroll, setCategoriasParaScroll] = useState([])
   const [categoriasTienda, setCategoriasTienda] = useState([])
   const [laboratoriosTienda, setLaboratoriosTienda] = useState([])
   const [cargandoVitrina, setCargandoVitrina] = useState(true)
@@ -142,68 +163,89 @@ function Home() {
           .map(([lab, items]) => ({ lab, productos: items.slice(0, 9) }))
         setSeccionesLab(seccionesLabTop)
 
-        // Categorías reales para las rondas del infinite scroll (en vez de
-        // cortes genéricos del catálogo). Necesita al menos 6 productos
-        // para llenar una sección completa; toma hasta 6 categorías
-        // (3 rondas × 2 secciones).
-        const gruposCategoria = activos.reduce((acc, p) => {
-          if (!p.categoria) return acc
-          acc[p.categoria] = acc[p.categoria] || []
-          acc[p.categoria].push(p)
-          return acc
-        }, {})
-        const categoriasTop = Object.entries(gruposCategoria)
-          .filter(([, items]) => items.length >= 6)
-          .sort((a, b) => b[1].length - a[1].length)
-          .slice(0, 6)
-          .map(([categoria, items]) => ({ categoria, productos: items }))
-        setCategoriasParaScroll(categoriasTop)
-      })
+        })
       .catch((err) => console.error(err))
       .finally(() => setCargandoVitrina(false))
   }, [])
 
   // ── Infinite scroll (carga por etapas mientras se scrollea) ──
-  // Cada ronda usa 2 categorías reales del catálogo (ver categoriasParaScroll).
-  // Si no hay suficientes categorías con stock, cae a un corte genérico del
-  // catálogo restante como respaldo, para que el infinite scroll nunca se
-  // quede sin contenido.
+  // Cada ronda = UNA entrada de CARGAS_INFINITO: carrusel simple de la
+  // categoría + promo (mitad imagen / mitad carrusel) con los productos de esa
+  // categoría filtrados por laboratorio (coincidencia parcial).
   const cargarMas = useCallback(() => {
     if (cargasRef.current >= MAX_CARGAS) return
-    // Si aún no llegó la carga inicial, no "quemar" rondas: el sentinel ni
-    // siquiera está montado mientras cargandoVitrina, y si la carga falló no
-    // hay nada que cargar.
-    if (categoriasParaScroll.length === 0 && (todosProductos || []).length === 0) return
     cargandoMasRef.current = true
     setCargandoMas(true)
 
-    timeoutRef.current = setTimeout(() => {
-      const cargaIdx = cargasRef.current
-      const grupo = categoriasParaScroll.slice(cargaIdx * 2, cargaIdx * 2 + 2)
+    const cargaIdx = cargasRef.current
+    const carga = CARGAS_INFINITO[cargaIdx]
+    if (!carga) {
+      cargandoMasRef.current = false
+      setCargandoMas(false)
+      return
+    }
 
-      const nuevasSecciones = grupo.length > 0
-        ? grupo.map((g, i) => ({
-            id: `dinamica-${cargaIdx}-${i}`,
-            titulo: g.categoria,
-            productos: g.productos.slice(0, 12),
-            verTodoTo: `/catalogo?categoria=${encodeURIComponent(g.categoria)}`,
-          }))
-        : (() => {
-            const inicio = PRODUCTOS_POR_CARGA * (cargaIdx + 1)
-            const nuevosProductos = todosProductos.slice(inicio, inicio + PRODUCTOS_POR_CARGA)
-            return [
-              { id: `dinamica-${cargaIdx}-0`, titulo: 'Explorá el catálogo', productos: nuevosProductos.slice(0, 6), verTodoTo: '/catalogo' },
-              { id: `dinamica-${cargaIdx}-1`, titulo: 'Más del catálogo', productos: nuevosProductos.slice(6, 12), verTodoTo: '/catalogo' },
-            ]
-          })()
+    const resolver = (data) => {
+      const lista = Array.isArray(data) ? data : (data.productos || [])
+      const activos = lista.filter((p) => p.activo)
+      if (activos.length === 0) {
+        cargandoMasRef.current = false
+        setCargandoMas(false)
+        return
+      }
 
-      setSeccionesDinamicas((prev) => [...prev, ...nuevasSecciones])
+      const verTodoCategoria = `/catalogo?categoria=${encodeURIComponent(carga.categoria)}`
+      const labPromo = carga.promo?.laboratorio
+      const productosPromo = labPromo
+        ? activos
+            .filter((p) => p.laboratorio && p.laboratorio.toUpperCase().includes(labPromo.toUpperCase()))
+            .slice(0, 12)
+        : []
+      const verTodoPromo = labPromo
+        ? `${verTodoCategoria}&laboratorio=${encodeURIComponent(labPromo)}`
+        : verTodoCategoria
+
+      setSeccionesDinamicas((prev) => [
+        ...prev,
+        {
+          id: `dinamica-${cargaIdx}`,
+          titulo: carga.titulo,
+          productos: activos.slice(0, 12),
+          verTodoTo: verTodoCategoria,
+          promo: {
+            imagen: carga.promo?.imagen,
+            alt: carga.promo?.alt || '',
+            linkImagen: verTodoPromo,
+            tituloCarrusel: carga.promo?.tituloCarrusel || 'Productos destacados',
+            verTodoTo: verTodoPromo,
+            productos: productosPromo,
+          },
+        },
+      ])
       cargasRef.current += 1
       setCargasRestantes(MAX_CARGAS - cargasRef.current)
       cargandoMasRef.current = false
       setCargandoMas(false)
-    }, 200)
-  }, [todosProductos, categoriasParaScroll])
+    }
+
+    const cacheado = cachéCategoriasRef.current.get(carga.categoria)
+    if (cacheado) {
+      resolver(cacheado)
+      return
+    }
+
+    api
+      .get('/products', { params: { categoria: carga.categoria } })
+      .then((res) => {
+        cachéCategoriasRef.current.set(carga.categoria, res.data)
+        resolver(res.data)
+      })
+      .catch((err) => {
+        console.error(err)
+        cargandoMasRef.current = false
+        setCargandoMas(false)
+      })
+  }, [])
 
   // ── Infinite scroll (carga por etapas mientras se scrollea) ──
   // El observer solo dispara cuando el sentinel ENTRÓ a la zona visible (en
@@ -231,9 +273,6 @@ function Home() {
     observer.observe(sentinel)
     return () => observer.disconnect()
   }, [cargasRestantes, cargarMas])
-
-  // Limpia el setTimeout pendiente de cargarMas si la página se desmonta.
-  useEffect(() => () => clearTimeout(timeoutRef.current), [])
 
   // ── Render ──────────────────────────────────────────────────
   return (
@@ -370,7 +409,7 @@ function Home() {
         />
 
         <div className="home__ads-pair">
-          {ADS.map((ad) => (
+          {ADS.filter((ad) => !esMobile || !ad.soloTabletDesktop).map((ad) => (
             <AdCard key={ad.id} {...ad} />
           ))}
         </div>
@@ -380,8 +419,9 @@ function Home() {
         <NoticiasTeaser />
 
         {/* ── Secciones dinámicas (cargadas por infinite scroll) ──
-          Cada ronda del infinite scroll trae 2 categorías reales del catálogo
-          (ver categoriasParaScroll / cargarMas). ── */}
+          Cada ronda = carrusel simple de una categoría + promo (mitad
+          imagen / mitad carrusel) de esa misma categoría (ver CARGAS_INFINITO
+          / cargarMas). ── */}
         {seccionesDinamicas.map((seccion) => (
           <div key={seccion.id} className="home__bloque-dinamico">
             <HomeCarrusel
@@ -391,6 +431,18 @@ function Home() {
               verTodoTo={seccion.verTodoTo}
               cargando={false}
             />
+            {seccion.promo && (
+              <SeccionPromocional
+                imagen={seccion.promo.imagen}
+                alt={seccion.promo.alt}
+                linkImagen={seccion.promo.linkImagen}
+                productos={seccion.promo.productos}
+                tasaVes={tasa}
+                tituloCarrusel={seccion.promo.tituloCarrusel}
+                verTodoTo={seccion.promo.verTodoTo}
+                cargando={false}
+              />
+            )}
           </div>
         ))}
 
