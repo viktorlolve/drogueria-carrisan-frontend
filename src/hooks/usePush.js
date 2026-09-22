@@ -12,6 +12,12 @@ function convertirClaveVapid(claveBase64) {
 const VAPID_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY
 const PUSH_ENABLED = !!VAPID_KEY
 
+// iOS (Safari/Chrome) no expone la API de notificaciones fuera de un PWA
+// instalado: `Notification` es un global NO declarado y `Notification?.x` lanza
+// ReferenceError igual (el optional chaining no protege identificadores
+// no declarados). Siempre se resuelve vía typeof para leer bajo el nombre.
+const API_NOTIFICACIONES = typeof Notification !== 'undefined' ? Notification : null
+
 if (!PUSH_ENABLED) {
   console.error('🚨  VITE_VAPID_PUBLIC_KEY no está definida. Las notificaciones push están deshabilitadas.')
 }
@@ -32,7 +38,7 @@ function esperarServiceWorker(timeout = 5000) {
 export function usePush() {
   const soportado = 'serviceWorker' in navigator && 'PushManager' in window && PUSH_ENABLED
   const [suscrito, setSuscrito] = useState(() => (soportado ? null : false))
-  const [permiso, setPermiso] = useState(() => (soportado ? null : Notification?.permission || 'default'))
+  const [permiso, setPermiso] = useState(() => (soportado ? null : API_NOTIFICACIONES?.permission || 'default'))
   const [pidiendoPermiso, setPidiendoPermiso] = useState(false)
   const [error, setError] = useState('')
 
@@ -47,7 +53,7 @@ export function usePush() {
         const sub = await reg.pushManager.getSubscription()
         if (!cancelled) {
           setSuscrito(!!sub)
-          setPermiso(Notification.permission)
+          setPermiso(API_NOTIFICACIONES?.permission || 'default')
         }
       } catch {
         if (!cancelled) {
@@ -72,7 +78,7 @@ export function usePush() {
 
     try {
       const registro = await esperarServiceWorker(5000)
-      const permisoActual = await Notification.requestPermission()
+      const permisoActual = API_NOTIFICACIONES ? await API_NOTIFICACIONES.requestPermission() : 'denied'
 
       if (permisoActual !== 'granted') {
         setPermiso(permisoActual)
