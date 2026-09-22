@@ -34,10 +34,9 @@ export const ADS = [
     id: 'tercer-ad',
     // Tercer ad SOLO tablet/desktop (móvil sigue mostrando 2 y NO lo carga —
     // Home.jsx lo filtra con useEsMobile antes de renderizar).
-    // TODO(dueño): colocar acá el GIF cuando lo subas a /ads/ del bucket
-    // crsnimages. Mientras `imagen` esté vacío, la card muestra un placeholder.
-    imagen: '',
-    alt: 'Anuncio de la semana',
+    // Mientras `imagen` esté vacío, la card muestra un placeholder.
+    imagen: `${BASE_IMG}/ads/cofastane.webp`,
+    alt: 'Cofastane',
     link: '/catalogo',
     soloTabletDesktop: true,
   },
