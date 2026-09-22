@@ -1606,3 +1606,26 @@
   text-decoration: underline;
 }
 
+/* ---------- Footer del login: ajuste SOLO móvil ---------- */
+/* En desktop el footer no se toca. En móvil se quita el padding
+   inferior para que el contenido del login respire y el enlace de
+   acceso al personal baja solo, separado del resto con un divisor. */
+@media (max-width: 600px) {
+  .auth-page--login .auth-footer {
+    padding: 16px 20px 0;
+  }
+
+  .auth-page--login .auth-footer-links {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 16px;
+  }
+
+  .auth-page--login .auth-footer-links .auth-footer-staff-link {
+    flex-basis: 100%;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #ECEDF1;
+  }
+}
+

@@ -1,14 +1,20 @@
 // Campañas de temporada del AdRotativo (banner full-width, después de
 // Laboratorios). SÍ rota solo cada pocos segundos en orden aleatorio.
-// Cada ad tiene DOS formatos: banner panorámico para desktop (21:9) y una
-// versión más cuadrada para móvil (4:3). Editá las URLs directo en este
-// archivo cuando cambie una campaña — no hace falta tocar AdRotativo.jsx.
+// Cada ad tiene DOS formatos: uno para desktop (imagenDesktop) y otro para
+// móvil (imagenMovil). No hay cuadro ni recorte — la imagen carga sola con su
+// tamaño natural (ocio: ancho completo, alto libre). Editá las URLs directo
+// en este archivo cuando cambie una campaña — no hace falta tocar el
+// componente.
 //
 // Formato por ad:
-//   imagenDesktop — arte panorámico (desktop, 21:9). Ej. 1400×600
-//   imagenMovil   — arte cuadrado/apaisado para móvil (4:3). Ej. 900×675
+//   imagenDesktop — arte del banner para desktop
+//   imagenMovil   — arte del banner para móvil
 //   link          — destino del click
 //   alt           — texto alternativo
+//
+// Tip: para que el banner no "salte" de alto al rotar, subí todas las ads de
+// un mismo formato con la MISMA proporción (ej. todas las de desktop 1200×300)
+// aunque el contenido cambie.
 //
 // Sin `imagenDesktop`/`imagenMovil` → el slide cae en modo placeholder
 // (titulo/subtitulo/variante) hasta que subas el arte final.

@@ -1,21 +1,18 @@
-/* ── AdRotativo: banner full-width que rota entre varias ads ──
-   Sin sombras ni overlay: la imagen se ve directa (object-fit: cover).
-   Móvil → ratio 4:3 (más cuadrado); Desktop → 21:9 (banner panorámico). */
+/* ── AdRotativo: banner que rota entre varias ads ──
+   Sin cuadro ni ratio fijo: la imagen carga sola con su tamaño natural
+   (width 100%, alto libre). Tomá el ancho del contenedor y el alto lo pone
+   el arte subido — por eso conviene que todas las ads de un mismo formato
+   compartan proporción para que el banner no "salte" al rotar.
+   Móvil y desktop usan visualizadores distintos (imagen propia por ad). */
 .ad-rotativo {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 3;
-  border-radius: 14px;
-  overflow: hidden;
   margin: 6px 0 10px;
-  background: linear-gradient(135deg, #f0f4ff 0%, #e8f4f0 100%);
 }
 
 /* Dos visualizadores sincronizados: móvil y desktop. El CSS muestra uno
    según el breakpoint (mismo índice activo del componente). */
 .ad-rotativo__vista {
-  position: absolute;
-  inset: 0;
   display: none;
 }
 
@@ -24,31 +21,28 @@
 }
 
 .ad-rotativo__slide {
-  width: 100%;
-  height: 100%;
   display: block;
 }
 
 .ad-rotativo__img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
   display: block;
 }
 
 /* Placeholder unificado: aparece si la creatividad no carga (URL rota o
    campaña sin arte definitivo todavía) */
 .ad-rotativo__placeholder {
-  position: absolute;
-  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  min-height: 120px;
   background: linear-gradient(135deg, #f0f4ff 0%, #e8f4f0 100%);
   text-align: center;
-  padding: 0 24px;
+  padding: 24px;
+  border-radius: 14px;
 }
 
 .ad-rotativo__placeholder--oferta {
@@ -93,24 +87,20 @@
   height: 6px;
   border-radius: 50%;
   border: none;
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(0, 0, 0, 0.25);
   cursor: pointer;
   padding: 0;
   transition: background 0.3s, width 0.3s;
 }
 
 .ad-rotativo__dot--activo {
-  background: #fff;
+  background: rgba(0, 0, 0, 0.6);
   width: 16px;
   border-radius: 3px;
 }
 
 /* Desktop: visualizador panorámico y se oculta el móvil */
 @media (min-width: 769px) {
-  .ad-rotativo {
-    aspect-ratio: 21 / 9;
-  }
-
   .ad-rotativo__vista--movil {
     display: none;
   }

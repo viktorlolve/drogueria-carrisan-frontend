@@ -1,5 +1,5 @@
 // StaffClientes.jsx
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
@@ -23,15 +23,7 @@ function StaffClientes({ departamento = 'comercial', activo = 'clientes', titulo
   const [etiquetas, setEtiquetas] = useState([])
   const debounceRef = useRef(null)
 
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      cargar(1)
-    }, 300)
-    return () => clearTimeout(debounceRef.current)
-  }, [buscar, tipo, etiqueta])
-
-  async function cargar(pag) {
+  const cargar = useCallback(async (pag) => {
     setCargando(true)
     try {
       const params = { pagina: pag, por_pagina: 20 }

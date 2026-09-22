@@ -1,0 +1,75 @@
+.tlb {
+  position: fixed;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  z-index: 1001;
+  overflow: hidden;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 2px 8px rgba(0, 82, 220, 0.35);
+}
+
+/* Gradiente aurora en colores de marca (cubre todo el ancho) */
+.tlb__fill {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+    90deg,
+    #0052dc 0%,
+    #12a594 30%,
+    #ffc220 60%,
+    #12a594 85%,
+    #0052dc 100%
+  );
+  background-size: 300% 100%;
+  animation: tlbAurora 3.2s ease-in-out infinite;
+}
+
+/* Destello que recorre la barra cada ciclo */
+.tlb__sheen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 45%;
+  background-image: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 255, 255, 0.75),
+    transparent
+  );
+  animation: tlbSheen 1.6s ease-in-out infinite;
+}
+
+@keyframes tlbAurora {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes tlbSheen {
+  0% {
+    transform: translateX(-120%);
+  }
+  60%,
+  100% {
+    transform: translateX(245%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tlb__fill,
+  .tlb__sheen {
+    animation: none;
+  }
+  .tlb__sheen {
+    opacity: 0;
+  }
+}
