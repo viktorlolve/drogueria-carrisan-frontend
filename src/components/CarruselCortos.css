@@ -113,6 +113,13 @@
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.45);
   color: #fff;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.cc__preview:hover .cc__preview-play,
+.cc__preview:focus-visible .cc__preview-play {
+  opacity: 1;
 }
 
 .cc__preview-titulo {

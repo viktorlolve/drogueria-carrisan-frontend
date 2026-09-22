@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { X, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Play, Volume2, VolumeX, Loader2, MessageCircle, Link2, Pause } from 'lucide-react'
 import api from '../api/axios'
 import './CarruselCortos.css'
@@ -137,20 +137,15 @@ function ShortsPlayer({ videoId, conSonido, enPausa, jugadorRef }) {
 
 // Preview con movimiento: clip propio (mudo, corto) autoalojado en Supabase
 // Storage — ya NO es un iframe de YouTube, así que no hay overhead del
-// reproductor de un tercero por cada tarjeta. Solo se monta mientras es el
-// preview "activo" (más cercano al centro) y hay un preview_url disponible
-// (el pipeline de GitHub Actions puede no haberlo generado todavía; en ese
-// caso simplemente no hay movimiento y se queda la miniatura estática).
-// Tras 6 segundos se "congela" (avisa al padre con `alCongelar`) para no
-// mantener decenas de videos reproduciendo a la vez.
-function MiniaturaMovimiento({ video, activo, congelado, alCongelar }) {
-  useEffect(() => {
-    if (!activo || congelado) return undefined
-    const t = setTimeout(() => alCongelar(video.id), 6000)
-    return () => clearTimeout(t)
-  }, [activo, congelado, video.id, alCongelar])
-
-  if (!video.preview_url || !activo || congelado) return null
+// reproductor de un tercero por cada tarjeta. Se monta mientras la tarjeta
+// está visible en la fila (no solo la central) y hay un preview_url
+// disponible (el pipeline de GitHub Actions puede no haberlo generado
+// todavía; en ese caso simplemente no hay movimiento y se queda la miniatura
+// estática). Como es mudo y de BUCLE la tasa de reproducción es mínima: un
+// clip de ~4s por tarjeta repetido en loop, y se desmonta al salir del
+// viewport horizontal de la fila (nunca reproducen todas a la vez).
+function MiniaturaMovimiento({ video, activo }) {
+  if (!video.preview_url || !activo) return null
   return (
     <video
       key={video.id}
@@ -183,16 +178,6 @@ function CarruselCortos() {
   const schedRef = useRef(null)
   const feedReqRef = useRef(0)
   const [activos, setActivos] = useState(new Set())
-  const [congeladas, setCongeladas] = useState(new Set())
-
-  const congelar = useCallback((id) => {
-    setCongeladas((prev) => {
-      if (prev.has(id)) return prev
-      const sig = new Set(prev)
-      sig.add(id)
-      return sig
-    })
-  }, [])
 
   useEffect(() => {
     let activo = true
@@ -222,24 +207,23 @@ function CarruselCortos() {
     const target = (el) => el.getAttribute('data-video-id')
     const limpiar = () => {
       setActivos(new Set())
-      setCongeladas(new Set())
     }
     const recalcular = () => {
-      const centro = fila.getBoundingClientRect().left + fila.offsetWidth / 2
-      const cercanos = Array.from(fila.querySelectorAll('.cc__preview'))
-        .map((el) => {
-          const caja = el.getBoundingClientRect()
-          return { id: target(el), dist: Math.abs(caja.left + caja.width / 2 - centro) }
-        })
-        .filter((x) => x.id)
-        .sort((a, b) => a.dist - b.dist)
-        .slice(0, 1)
-      const nuevosActivos = new Set(cercanos.map((x) => x.id))
-      setActivos(nuevosActivos)
-      setCongeladas((prev) => {
-        if (prev.size === 0) return prev
-        return new Set([...prev].filter((id) => nuevosActivos.has(id)))
+      // Cualquier tarjeta que intersecte el viewport horizontal de la fila
+      // queda "activa": su preview se monta y reproduce en bucle. Las que
+      // están fuera (desplazadas) se desmontan, así nunca hay decenas de
+      // videos a la vez.
+      const izqFila = fila.getBoundingClientRect().left
+      const derFila = izqFila + fila.offsetWidth
+      const visibles = new Set()
+      Array.from(fila.querySelectorAll('.cc__preview')).forEach((el) => {
+        const caja = el.getBoundingClientRect()
+        if (caja.right > izqFila && caja.left < derFila) {
+          const id = target(el)
+          if (id) visibles.add(id)
+        }
       })
+      setActivos(visibles)
     }
     const obs = new IntersectionObserver(
       (entries) => {
@@ -422,15 +406,8 @@ function CarruselCortos() {
                 aria-label={`Reproducir ${video.titulo}`}
               >
                 <img src={video.thumb} alt={video.titulo} className="cc__preview-img" loading="lazy" />
-                <MiniaturaMovimiento
-                  video={video}
-                  activo={activos.has(video.id)}
-                  congelado={congeladas.has(video.id)}
-                  alCongelar={congelar}
-                />
-                {(!activos.has(video.id) || congeladas.has(video.id) || !video.preview_url) && (
-                  <span className="cc__preview-play"><Play size={20} /></span>
-                )}
+                <MiniaturaMovimiento video={video} activo={activos.has(video.id)} />
+                <span className="cc__preview-play"><Play size={20} /></span>
                 <span className="cc__preview-titulo">{video.titulo}</span>
               </div>
             ))}

@@ -31,18 +31,28 @@ function StaffClientes({ departamento = 'comercial', activo = 'clientes', titulo
       if (tipo) params.tipo = tipo
       if (etiqueta) params.etiqueta = etiqueta
 
-const { data } = await staffApi.get('/staff/clientes', { params })
-        setClientes(data?.clientes || [])
-        setTotal(data?.total || 0)
-        setPagina(data?.pagina || 1)
-        setTotalPaginas(data?.total_paginas || 1)
-        setEtiquetas(data?.etiquetas || [])
+      const { data } = await staffApi.get('/staff/clientes', { params })
+      setClientes(data?.clientes || [])
+      setTotal(data?.total || 0)
+      setPagina(data?.pagina || 1)
+      setTotalPaginas(data?.total_paginas || 1)
+      setEtiquetas(data?.etiquetas || [])
     } catch {
       setClientes([])
     } finally {
       setCargando(false)
     }
-  }
+  }, [buscar, tipo, etiqueta])
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      cargar(1)
+    }, 350)
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [buscar, tipo, etiqueta, cargar])
 
   return (
     <LayoutDepartamento departamento={departamento} activo={activo} titulo={titulo}>
