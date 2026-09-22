@@ -1,33 +1,39 @@
 // Campañas de temporada del AdRotativo (banner full-width, después de
-// Laboratorios). A diferencia de `adsImagenes.js` (2 ads fijas del bloque
-// antes de los shorts), esto SÍ rota solo cada pocos segundos — pensado
-// para ofertas puntuales, nuevos ingresos o fechas especiales que cambian
-// seguido. Actualizá este archivo cuando una campaña termine o empiece
-// una nueva; no hace falta tocar Home.jsx.
+// Laboratorios). SÍ rota solo cada pocos segundos en orden aleatorio.
+// Cada ad tiene DOS formatos: banner panorámico para desktop (21:9) y una
+// versión más cuadrada para móvil (4:3). Editá las URLs directo en este
+// archivo cuando cambie una campaña — no hace falta tocar AdRotativo.jsx.
 //
-// Sin `imagen` todavía → cada slide cae en modo placeholder (con
-// titulo/subtitulo/variante) hasta que subas el arte o GIF final.
-// Cuando lo tengas, agregá `imagen` (y opcionalmente `alt`) al objeto —
-// título/subtítulo dejan de mostrarse automáticamente.
+// Formato por ad:
+//   imagenDesktop — arte panorámico (desktop, 21:9). Ej. 1400×600
+//   imagenMovil   — arte cuadrado/apaisado para móvil (4:3). Ej. 900×675
+//   link          — destino del click
+//   alt           — texto alternativo
+//
+// Sin `imagenDesktop`/`imagenMovil` → el slide cae en modo placeholder
+// (titulo/subtitulo/variante) hasta que subas el arte final.
 
 const BASE_IMG = 'https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages'
 
 export const ADS_ROTATIVO_TEMPORADA = [
   {
     id: 'temporada-quetiapina',
-    imagen: `${BASE_IMG}/ads/quetiapina.jpg`,
+    imagenDesktop: `${BASE_IMG}/ads/quetiapina.jpg`,
+    imagenMovil: `${BASE_IMG}/ads/quetiapina.jpg`,
     alt: 'Quetiapina',
     link: '/catalogo',
   },
   {
     id: 'temporada-riniflu',
-    imagen: `${BASE_IMG}/ads/riniflu.jpg`,
+    imagenDesktop: `${BASE_IMG}/ads/riniflu.jpg`,
+    imagenMovil: `${BASE_IMG}/ads/riniflu.jpg`,
     alt: 'Riniflu',
     link: '/catalogo',
   },
   {
     id: 'temporada-femenino',
-    imagen: `${BASE_IMG}/ads/genesa.jpg`,
+    imagenDesktop: `${BASE_IMG}/ads/genesa.jpg`,
+    imagenMovil: `${BASE_IMG}/ads/genesa.jpg`,
     alt: 'Línea femenino',
     link: '/catalogo',
   },

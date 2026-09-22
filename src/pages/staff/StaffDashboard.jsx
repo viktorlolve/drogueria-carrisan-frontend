@@ -4,6 +4,7 @@ import { LogOut, ShieldCheck, ArrowRight, Landmark } from 'lucide-react'
 import { useStaffAuth } from '../../context/StaffAuthContext'
 import staffApi from '../../api/staffAxios'
 import { DEPARTAMENTOS, MODULOS, ROLES_BRIDGE_ADMIN } from '../../components/staff/NavStaff'
+import BotonInstalarStaff from '../../components/staff/BotonInstalarStaff'
 import { safeSetItem } from '../../utils/safeStorage'
 import './StaffDashboard.css'
 
@@ -76,7 +77,6 @@ function StaffDashboard() {
         <header className="sd-topbar">
           <div className="sd-brand">
             <span className="sd-brand__logo"><Landmark size={20} /></span>
-            <span className="sd-brand__nombre">Drogueria Carrisan</span>
           </div>
           <div className="sd-usuario">
             <span className="sd-usuario__avatar">{iniciales}</span>
@@ -84,6 +84,7 @@ function StaffDashboard() {
               <p className="sd-usuario__nombre">{staff?.nombre || 'Staff'}</p>
               <p className="sd-usuario__rol">{rol}</p>
             </div>
+            <BotonInstalarStaff />
             {campana}
             {puedeBridge && (
               <button
@@ -165,7 +166,6 @@ function StaffDashboard() {
       <header className="sd-topbar">
         <div className="sd-brand">
           <span className="sd-brand__logo"><Landmark size={20} /></span>
-          <span className="sd-brand__nombre">Drogueria Carrisan</span>
         </div>
         <div className="sd-usuario">
           <span className="sd-usuario__avatar">{iniciales}</span>
@@ -173,6 +173,7 @@ function StaffDashboard() {
             <p className="sd-usuario__nombre">{staff?.nombre || 'Staff'}</p>
             <p className="sd-usuario__rol">{rol}</p>
           </div>
+          <BotonInstalarStaff />
           {campana}
           {puedeBridge && (
             <button

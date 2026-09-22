@@ -62,12 +62,6 @@
   justify-content: center;
 }
 
-.sd-brand__nombre {
-  font-size: 16px;
-  font-weight: 800;
-  color: #1B4B8F;
-}
-
 .sd-usuario {
   display: flex;
   align-items: center;
@@ -391,6 +385,28 @@
 
 .sd-campana__icono {
   display: block;
+}
+
+.sd-instalar {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1.5px dashed var(--sd-border);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--sd-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sd-instalar:hover {
+  border-color: #1B4B8F;
+  border-style: solid;
+  color: #1B4B8F;
+  background: rgba(27, 75, 143, 0.04);
 }
 
 .sd-badge {

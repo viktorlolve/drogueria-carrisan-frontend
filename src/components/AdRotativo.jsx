@@ -2,18 +2,24 @@ import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import './AdRotativo.css'
 
-// Banner de ads rotativo, full-width — mismo tratamiento visual que AdBanner,
-// pero cicla entre varias creatividades (imagen o GIF, el GIF se reproduce
-// solo sin código extra) en orden aleatorio, como haría una red de ads real.
+// Banner de ads rotativo, full-width — cicla entre varias creatividades en
+// orden aleatorio. Un mismo ad se muestra con dos artes distintos según el
+// dispositivo (formato banner panorámico en desktop, más cuadrado en móvil);
+// el CSS muestra uno u otro visualizador según el breakpoint.
 //
 // Props:
 //   ads       — array de items (requerido, al menos 1). Cada item:
-//                 { imagen, link, alt } → slide con imagen real
-//                 { titulo, subtitulo, variante, link } (sin `imagen`) → slide
-//                   en modo placeholder, mismo patrón que AdBanner/BloquePromocional,
-//                   para maquetar la campaña antes de tener el arte final.
+//                 { id, imagenDesktop, imagenMovil, link, alt } → slide con
+//                   imagen real por vista (la url de cada formato se edita en
+//                   src/config/adRotativoTemporada.js)
+//                 { titulo, subtitulo, variante, link } (sin imágenes) → slide
+//                   en modo placeholder, para maquetar antes de tener el arte.
 //   intervalo — ms entre cada rotación (default 6000)
 //   dots      — mostrar puntitos indicadores debajo del banner (default true)
+//
+// Sin transición: la imagen se ve directa y solo se reemplaza en cada
+// rotación. object-fit: cover en ambas vistas para que el arte siempre llene
+// el contenedor sin dejar ver el fondo.
 
 function barajar(array) {
   const copia = [...array]
@@ -41,6 +47,33 @@ function AdRotativo({ ads = [], intervalo = 6000, dots = true }) {
   if (orden.length === 0) return null
 
   const mostrarDots = dots && orden.length > 1
+  const item = orden[indice]
+
+  const renderSlide = (imagen) => {
+    const contenido = imagen ? (
+      <img
+        src={imagen}
+        alt={item.alt || ''}
+        className="ad-rotativo__img"
+        loading="lazy"
+      />
+    ) : (
+      <div className={`ad-rotativo__placeholder ad-rotativo__placeholder--${item.variante || 'default'}`}>
+        <div className="ad-rotativo__textos">
+          <h3 className="ad-rotativo__titulo">{item.titulo || 'Próximamente'}</h3>
+          {item.subtitulo && <p className="ad-rotativo__subtitulo">{item.subtitulo}</p>}
+        </div>
+      </div>
+    )
+
+    return item.link ? (
+      <Link to={item.link} className="ad-rotativo__slide" tabIndex={0}>
+        {contenido}
+      </Link>
+    ) : (
+      <div className="ad-rotativo__slide">{contenido}</div>
+    )
+  }
 
   return (
     <div
@@ -48,42 +81,12 @@ function AdRotativo({ ads = [], intervalo = 6000, dots = true }) {
       onMouseEnter={() => setPausado(true)}
       onMouseLeave={() => setPausado(false)}
     >
-      {orden.map((item, i) => {
-        const activo = i === indice
-        const clase = `ad-rotativo__slide ${activo ? 'ad-rotativo__slide--activo' : ''}`
-
-        const contenido = item.imagen ? (
-          <img
-            src={item.imagen}
-            alt={item.alt || ''}
-            className="ad-rotativo__img"
-            loading={i === 0 ? 'eager' : 'lazy'}
-          />
-        ) : (
-          <div className={`ad-rotativo__placeholder ad-rotativo__placeholder--${item.variante || 'default'}`}>
-            <div className="ad-rotativo__textos">
-              <h3 className="ad-rotativo__titulo">{item.titulo || 'Próximamente'}</h3>
-              {item.subtitulo && <p className="ad-rotativo__subtitulo">{item.subtitulo}</p>}
-            </div>
-          </div>
-        )
-
-        return item.link ? (
-          <Link
-            key={`${item.imagen || item.titulo}-${i}`}
-            to={item.link}
-            className={clase}
-            aria-hidden={!activo}
-            tabIndex={activo ? 0 : -1}
-          >
-            {contenido}
-          </Link>
-        ) : (
-          <div key={`${item.imagen || item.titulo}-${i}`} className={clase} aria-hidden={!activo}>
-            {contenido}
-          </div>
-        )
-      })}
+      <div className="ad-rotativo__vista ad-rotativo__vista--movil">
+        {renderSlide(item.imagenMovil)}
+      </div>
+      <div className="ad-rotativo__vista ad-rotativo__vista--desktop">
+        {renderSlide(item.imagenDesktop)}
+      </div>
 
       {mostrarDots && (
         <div className="ad-rotativo__dots">

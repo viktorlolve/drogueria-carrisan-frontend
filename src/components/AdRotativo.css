@@ -1,48 +1,43 @@
-/* ── AdRotativo: banner full-width que rota entre varias ads con fade ── */
+/* ── AdRotativo: banner full-width que rota entre varias ads ──
+   Sin sombras ni overlay: la imagen se ve directa (object-fit: cover).
+   Móvil → ratio 4:3 (más cuadrado); Desktop → 21:9 (banner panorámico). */
 .ad-rotativo {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 6;
+  aspect-ratio: 4 / 3;
   border-radius: 14px;
   overflow: hidden;
   margin: 6px 0 10px;
   background: linear-gradient(135deg, #f0f4ff 0%, #e8f4f0 100%);
 }
 
-.ad-rotativo--dots::after {
-  content: '';
+/* Dos visualizadores sincronizados: móvil y desktop. El CSS muestra uno
+   según el breakpoint (mismo índice activo del componente). */
+.ad-rotativo__vista {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 44px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.28), transparent);
-  pointer-events: none;
-  z-index: 1;
+  inset: 0;
+  display: none;
+}
+
+.ad-rotativo__vista--movil {
+  display: block;
 }
 
 .ad-rotativo__slide {
-  position: absolute;
-  inset: 0;
+  width: 100%;
+  height: 100%;
   display: block;
-  opacity: 0;
-  transition: opacity 0.6s ease;
-  pointer-events: none;
-}
-
-.ad-rotativo__slide--activo {
-  opacity: 1;
-  pointer-events: auto;
 }
 
 .ad-rotativo__img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   display: block;
 }
 
-/* Placeholder unificado: aparece si la creatividad no carga (URL rota) */
+/* Placeholder unificado: aparece si la creatividad no carga (URL rota o
+   campaña sin arte definitivo todavía) */
 .ad-rotativo__placeholder {
   position: absolute;
   inset: 0;
@@ -52,66 +47,8 @@
   justify-content: center;
   gap: 8px;
   background: linear-gradient(135deg, #f0f4ff 0%, #e8f4f0 100%);
-}
-
-.ad-rotativo__placeholder-icono {
-  font-size: 1.6rem;
-  line-height: 1;
-}
-
-.ad-rotativo__placeholder-texto {
-  margin: 0;
-  font-family: var(--font-heading, 'Manrope', sans-serif);
-  font-weight: 700;
-  font-size: 1rem;
-  color: var(--brand-navy, #1A1A3A);
-}
-
-.ad-rotativo__dots {
-  position: absolute;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 6px;
-  z-index: 2;
-}
-
-.ad-rotativo__dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(255, 255, 255, 0.55);
-  cursor: pointer;
-  padding: 0;
-  transition: background 0.3s, width 0.3s;
-}
-
-.ad-rotativo__dot--activo {
-  background: #fff;
-  width: 16px;
-  border-radius: 3px;
-}
-
-/* Desktop: banner más panorámico, igual que el resto de los banners del home */
-@media (min-width: 769px) {
-  .ad-rotativo {
-    aspect-ratio: 21 / 5;
-  }
-}
-
-/* Placeholder (campaña sin arte subida todavía) — mismo patrón de color
-   que AdBanner/BloquePromocional/AdCard */
-.ad-rotativo__placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   text-align: center;
   padding: 0 24px;
-  background: linear-gradient(135deg, #f0f4ff 0%, #e8f4f0 100%);
 }
 
 .ad-rotativo__placeholder--oferta {
@@ -141,7 +78,47 @@
   margin: 0;
 }
 
+.ad-rotativo__dots {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 2;
+}
+
+.ad-rotativo__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.3s, width 0.3s;
+}
+
+.ad-rotativo__dot--activo {
+  background: #fff;
+  width: 16px;
+  border-radius: 3px;
+}
+
+/* Desktop: visualizador panorámico y se oculta el móvil */
 @media (min-width: 769px) {
+  .ad-rotativo {
+    aspect-ratio: 21 / 9;
+  }
+
+  .ad-rotativo__vista--movil {
+    display: none;
+  }
+
+  .ad-rotativo__vista--desktop {
+    display: block;
+  }
+
   .ad-rotativo__titulo {
     font-size: 1.4rem;
   }

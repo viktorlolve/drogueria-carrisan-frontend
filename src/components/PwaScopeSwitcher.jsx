@@ -22,6 +22,12 @@ function PwaScopeSwitcher() {
       appleIcon.setAttribute('href', esStaff ? '/staff-icon-512x512.png' : '/apple-touch-icon.png')
     }
 
+    const favicon = document.querySelector('link[rel="icon"]')
+    if (favicon) {
+      favicon.setAttribute('href', esStaff ? '/staff-icon-192x192.png' : '/favicon.svg')
+      favicon.setAttribute('type', esStaff ? 'image/png' : 'image/svg+xml')
+    }
+
     document.title = esStaff ? 'Carrisán Staff' : 'Drogueria Carrisan, C.A.'
   }, [location.pathname])
 
