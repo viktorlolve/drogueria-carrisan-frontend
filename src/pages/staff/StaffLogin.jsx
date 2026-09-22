@@ -16,8 +16,6 @@ import {
 import { ShieldCheck, ClipboardCheck, Truck, Lock } from 'lucide-react'
 import { useStaffAuth } from '../../context/StaffAuthContext'
 import logo from '../../assets/minilogo color sin fondo.png'
-import logoBlanco from '../../assets/minilogo blanco sin fondo.png'
-import hero from '../../assets/hero.png'
 
 /* Paleta de marca */
 const TEAL = '#12A594'
@@ -58,87 +56,62 @@ function StaffLogin() {
   }
 
   return (
-    <Flex
-      minH="100dvh"
-      w="100%"
-      position="relative"
-      overflow="hidden"
-      bgGradient="to-br"
-      gradientFrom="#0A6E5C"
-      gradientTo="#12A594"
-    >
-      {/* Glow decorativos del fondo teal (detrás de todo) */}
-      <Box
-        aria-hidden="true"
-        position="absolute"
-        top="-160px"
-        right="-120px"
-        w="460px"
-        h="460px"
-        rounded="full"
-        bg="whiteAlpha.200"
-        filter="blur(90px)"
-        pointerEvents="none"
-      />
-      <Box
-        aria-hidden="true"
-        position="absolute"
-        bottom="-180px"
-        left="-140px"
-        w="520px"
-        h="520px"
-        rounded="full"
-        bg="blackAlpha.300"
-        filter="blur(100px)"
-        pointerEvents="none"
-      />
-      <Box
-        aria-hidden="true"
-        position="absolute"
-        top="38%"
-        left="28%"
-        w="380px"
-        h="380px"
-        rounded="full"
-        bg="teal.200"
-        opacity="0.18"
-        filter="blur(100px)"
-        pointerEvents="none"
-      />
-
+    <Flex minH="100dvh" w="100%" bg="#FBFAF7">
       {/* ---------- Panel de branding — solo desktop (lg+) ---------- */}
       <Box
         display={{ base: 'none', lg: 'flex' }}
-        flex="1"
+        flex="0 0 44%"
+        maxW="560px"
         flexDirection="column"
-        bg="transparent"
+        justifyContent="space-between"
+        bg="linear-gradient(165deg, #0A3A30 0%, #12A594 100%)"
         color="white"
-        px={{ lg: 14, xl: 20 }}
-        py={{ lg: 10, xl: 14 }}
+        px={{ lg: 12, xl: 16 }}
+        py={{ lg: 12, xl: 14 }}
         position="relative"
-        overflowY="auto"
+        overflow="hidden"
       >
-        {/* Glow decorativo */}
+        {/* Glows decorativos — sutiles, dos como máximo */}
         <Box
           aria-hidden="true"
           position="absolute"
-          top="-120px"
-          right="-120px"
-          w="380px"
-          h="380px"
+          top="-140px"
+          right="-160px"
+          w="420px"
+          h="420px"
           rounded="full"
-          bg="whiteAlpha.200"
-          filter="blur(80px)"
+          bg="whiteAlpha.150"
+          filter="blur(90px)"
+          pointerEvents="none"
+        />
+        <Box
+          aria-hidden="true"
+          position="absolute"
+          bottom="-160px"
+          left="-120px"
+          w="360px"
+          h="360px"
+          rounded="full"
+          bg="blackAlpha.300"
+          filter="blur(90px)"
           pointerEvents="none"
         />
 
         {/* Marca */}
-        <Flex align="center" gap={3}>
-          <Box bg="whiteAlpha.200" p={2} rounded="xl" lineHeight="0">
-            <img src={logoBlanco} alt="Drogueria Carrisan" style={{ height: 34 }} />
-          </Box>
+        <Flex align="center" gap={3} position="relative" zIndex={1}>
+          <Flex
+            align="center"
+            justify="center"
+            w="44px"
+            h="44px"
+            bg="white"
+            rounded="xl"
+            flexShrink={0}
+          >
+            <img src={logo} alt="Drogueria Carrisan" style={{ height: 24 }} />
+          </Flex>
           <Box>
-            <Text fontWeight="800" fontSize="lg" lineHeight="1.1">
+            <Text fontWeight="800" fontSize="md" lineHeight="1.15">
               Drogueria Carrisan
             </Text>
             <Text fontSize="xs" color="whiteAlpha.700">
@@ -147,18 +120,18 @@ function StaffLogin() {
           </Box>
         </Flex>
 
-        {/* Mensaje + features + imagen */}
-        <Box flex="1" maxW="460px" my={{ lg: 8, xl: 10 }}>
+        {/* Mensaje + features + gráfico abstracto */}
+        <Box position="relative" zIndex={1} maxW="400px">
           <Text
             fontSize="xs"
             fontWeight="700"
-            letterSpacing="2px"
+            letterSpacing="1.5px"
             textTransform="uppercase"
             color="whiteAlpha.700"
           >
             Panel B2B farmacéutico
           </Text>
-          <Heading as="h2" size="2xl" fontWeight="800" mt={3} lineHeight="1.15">
+          <Heading as="h2" size="2xl" fontWeight="800" mt={3} lineHeight="1.18" letterSpacing="-0.5px">
             Tu jornada de trabajo, en un solo lugar
           </Heading>
           <Text mt={3} fontSize="sm" color="whiteAlpha.800">
@@ -166,7 +139,16 @@ function StaffLogin() {
             plataforma segura.
           </Text>
 
-          <Stack mt={6} gap={2.5}>
+          {/* Gráfico abstracto: cola de despacho */}
+          <Flex mt={7} gap={2.5} align="flex-end" h="72px">
+            <Box flex="1" h="46%" rounded="lg" bg="whiteAlpha.150" />
+            <Box flex="1" h="72%" rounded="lg" bg="whiteAlpha.250" />
+            <Box flex="1" h="100%" rounded="lg" bg="white" opacity={0.92} />
+            <Box flex="1" h="64%" rounded="lg" bg="whiteAlpha.250" />
+            <Box flex="1" h="38%" rounded="lg" bg="whiteAlpha.150" />
+          </Flex>
+
+          <Stack mt={7} gap={2.5}>
             {PANEL_FEATURES.map(({ icon: Icono, texto }) => (
               <Flex key={texto} align="center" gap={2.5} color="whiteAlpha.900">
                 <Box
@@ -183,86 +165,26 @@ function StaffLogin() {
               </Flex>
             ))}
           </Stack>
-
-          <Box
-            mt={8}
-            rounded="2xl"
-            overflow="hidden"
-            border="1px solid"
-            borderColor="whiteAlpha.300"
-            shadow="dark-lg"
-          >
-            {/* IMAGEN: hero.png como foto decorativa del sector farmacéutico.
-                Si querés otra, reemplazá la importación o la ruta src={hero}. */}
-            <img
-              src={hero}
-              alt=""
-              aria-hidden="true"
-              style={{ width: '100%', height: 210, objectFit: 'cover', display: 'block' }}
-            />
-          </Box>
         </Box>
 
-        <Text fontSize="xs" color="whiteAlpha.600">
+        <Text fontSize="xs" color="whiteAlpha.600" position="relative" zIndex={1}>
           © 2026 Drogueria Carrisan · Valencia, Venezuela
         </Text>
       </Box>
 
-      {/* ---------- Panel del formulario (fondo teal de la página a través) ---------- */}
-      <Flex
-        flex="1"
-        position="relative"
-        align="center"
-        justify="center"
-        p={{ base: 4, md: 8 }}
-        minH="100dvh"
-        bg="transparent"
-        overflow="hidden"
-      >
-        {/* Glows decorativos sobre el fondo */}
-        <Box
-          aria-hidden="true"
-          position="absolute"
-          top="-100px"
-          right="-100px"
-          w="300px"
-          h="300px"
-          rounded="full"
-          bg="whiteAlpha.200"
-          filter="blur(70px)"
-          pointerEvents="none"
-          display={{ lg: 'none' }}
-        />
-        <Box
-          aria-hidden="true"
-          position="absolute"
-          bottom="-140px"
-          left="-140px"
-          w="360px"
-          h="360px"
-          rounded="full"
-          bg="teal.200"
-          opacity="0.25"
-          filter="blur(90px)"
-          pointerEvents="none"
-        />
-
+      {/* ---------- Panel del formulario (fondo blanco sobrio) ---------- */}
+      <Flex flex="1" align="center" justify="center" p={{ base: 5, md: 8 }} minH="100dvh">
         <Card.Root
           w="100%"
           maxW="md"
-          bg="rgba(255, 255, 255, 0.82)"
-          style={{ backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}
-          rounded="3xl"
-          position="relative"
-          boxShadow={{
-            base: '0 24px 48px rgba(2, 12, 32, 0.35)',
-            md: '0 24px 56px rgba(4, 62, 50, 0.38)',
-          }}
+          bg="white"
+          rounded="2xl"
           border="1px solid"
-          borderColor="whiteAlpha.500"
+          borderColor="gray.200"
+          boxShadow="0 8px 28px rgba(15, 23, 42, 0.06)"
         >
           <Card.Body p={{ base: 6, md: 8 }} display="flex" flexDirection="column" gap={5}>
-            {/* Logo (se mantiene el enlace original) */}
+            {/* Logo */}
             <Flex justify="center">
               <Link to="/staff/login" aria-label="Ir al panel del personal">
                 <img
