@@ -363,10 +363,7 @@ export function ModalCrearPresupuesto({ clienteId, onClose, onCreado }) {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (clienteId || queryCliente.trim().length < 2) {
-      setResultadosClientes([])
-      return
-    }
+    if (clienteId || queryCliente.trim().length < 2) return
     const t = setTimeout(async () => {
       setBuscandoClientes(true)
       try {
@@ -379,7 +376,7 @@ export function ModalCrearPresupuesto({ clienteId, onClose, onCreado }) {
   }, [queryCliente, clienteId])
 
   useEffect(() => {
-    if (query.trim().length < 1) { setResultados([]); return }
+    if (query.trim().length < 1) return
     const t = setTimeout(async () => {
       setBuscando(true)
       try {
@@ -390,6 +387,9 @@ export function ModalCrearPresupuesto({ clienteId, onClose, onCreado }) {
     }, 250)
     return () => clearTimeout(t)
   }, [query])
+
+  const clientesVisibles = clienteId || queryCliente.trim().length < 2 ? [] : resultadosClientes
+  const productosVisibles = query.trim().length < 1 ? [] : resultados
 
   function seleccionarCliente(c) {
     setCliente(c)
@@ -443,7 +443,7 @@ export function ModalCrearPresupuesto({ clienteId, onClose, onCreado }) {
             </div>
             {buscandoClientes && <p style={{ fontSize: '0.85rem', color: '#6b7280' }}>Buscando...</p>}
             <div>
-              {resultadosClientes.slice(0, 6).map((c) => (
+              {clientesVisibles.slice(0, 6).map((c) => (
                 <div key={c.id} className="sc-modal-item">
                   <div className="sc-modal-item-info">
                     <div className="sc-modal-item-nombre">{c.nombre}</div>
@@ -472,7 +472,7 @@ export function ModalCrearPresupuesto({ clienteId, onClose, onCreado }) {
               <input type="text" placeholder="Buscar producto..." value={query} onChange={(e) => setQuery(e.target.value)} autoFocus />
             </div>
             {buscando && <p style={{ fontSize: '0.85rem', color: '#6b7280' }}>Buscando...</p>}
-            {resultados.map((p) => (
+            {productosVisibles.map((p) => (
               <div key={p.id} className="sc-modal-item">
                 <div className="sc-modal-item-info">
                   <div className="sc-modal-item-nombre">{p.nombre_comercial}</div>

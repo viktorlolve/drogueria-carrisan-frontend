@@ -24,11 +24,10 @@ function StaffOrdenesPorCancelar() {
   const [procesando, setProcesando] = useState(null)
 
   async function cargar() {
-    setCargando(true)
-    setError('')
     try {
       const { data } = await staffApi.get('/staff/contabilidad/ordenes-procesando')
       setOrdenes(data)
+      setError('')
     } catch (err) {
       setError(err.response?.data?.error || 'No se pudieron cargar las órdenes por cancelar')
     } finally {
@@ -37,7 +36,12 @@ function StaffOrdenesPorCancelar() {
   }
 
   useEffect(() => {
-    cargar()
+    let activo = true
+    staffApi.get('/staff/contabilidad/ordenes-procesando')
+      .then(({ data }) => { if (activo) { setOrdenes(data); setError('') } })
+      .catch((err) => { if (activo) setError(err.response?.data?.error || 'No se pudieron cargar las órdenes por cancelar') })
+      .finally(() => { if (activo) setCargando(false) })
+    return () => { activo = false }
   }, [])
 
   async function cancelar(orden) {

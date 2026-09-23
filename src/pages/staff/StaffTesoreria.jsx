@@ -1,5 +1,5 @@
 // StaffTesoreria.jsx
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import StaffTabs from '../../components/staff/StaffTabs'
 import staffApi from '../../api/staffAxios'
@@ -58,11 +58,10 @@ export default function StaffTesoreria() {
     fecha: hoy(),
     tercero: '',
   })
-  const [cargando, setCargando] = useState(false)
+  const [cargando, setCargando] = useState(true)
 
-  const cargarResumen = async () => {
+  const cargarResumen = useCallback(async () => {
     try {
-      setCargando(true)
       const [resumenRes, movRes] = await Promise.all([
         staffApi.get('/staff/tesoreria/resumen', { params: { desde, hasta } }),
         staffApi.get('/staff/tesoreria/movimientos', { params: { desde, hasta } }),
@@ -74,11 +73,24 @@ export default function StaffTesoreria() {
     } finally {
       setCargando(false)
     }
-  }
+  }, [desde, hasta])
 
   useEffect(() => {
-    cargarResumen()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    let activo = true
+    Promise.all([
+      staffApi.get('/staff/tesoreria/resumen', { params: { desde, hasta } }),
+      staffApi.get('/staff/tesoreria/movimientos', { params: { desde, hasta } }),
+    ])
+      .then(([resumenRes, movRes]) => {
+        if (!activo) return
+        setResumen(resumenRes.data)
+        setMovimientos(movRes.data)
+      })
+      .catch((e) => {
+        if (activo) console.error('Error cargando tesorería:', e)
+      })
+      .finally(() => { if (activo) setCargando(false) })
+    return () => { activo = false }
   }, [desde, hasta])
 
   const categoriasForm = form.tipo === 'salida_interna' ? CATEGORIAS_SALIDA_INTERNA : CATEGORIAS_EGRESO

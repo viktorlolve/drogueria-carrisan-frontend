@@ -1,5 +1,5 @@
 // StaffReportesFinancieros.jsx
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import StaffTabs from '../../components/staff/StaffTabs'
 import staffApi from '../../api/staffAxios'
@@ -69,20 +69,18 @@ export default function StaffReportesFinancieros() {
   const [cargando, setCargando] = useState(true)
 
   // Calcular fechas reales desde anioMes
-  const fechasDesdeMes = () => {
+  const fechasDesdeMes = useMemo(() => {
     const [y, m] = anioMes.split('-').map(Number)
     const d = new Date(y, m - 1, 1)
     return d.toISOString().slice(0, 10)
-  }
-  const fechasHastaMes = () => {
-    return `${anioMes}-${diasEnMes(anioMes)}`
-  }
+  }, [anioMes])
+  const fechasHastaMes = useMemo(() => `${anioMes}-${diasEnMes(anioMes)}`, [anioMes])
 
   useEffect(() => {
     let activo = true
     const cargar = async () => {
       const params = modoPeriodo === 'mes'
-        ? { desde: fechasDesdeMes(), hasta: fechasHastaMes() }
+        ? { desde: fechasDesdeMes, hasta: fechasHastaMes }
         : { desde, hasta }
       try {
         const res = await staffApi.get('/staff/reportes/resumen', { params })
@@ -95,10 +93,10 @@ export default function StaffReportesFinancieros() {
     }
     cargar()
     return () => { activo = false }
-  }, [modoPeriodo, anioMes, desde, hasta])
+  }, [modoPeriodo, anioMes, desde, hasta, fechasDesdeMes, fechasHastaMes])
 
   const paramsActuales = modoPeriodo === 'mes'
-    ? { desde: fechasDesdeMes(), hasta: fechasHastaMes() }
+    ? { desde: fechasDesdeMes, hasta: fechasHastaMes }
     : { desde, hasta }
 
   const exportarPDF = async () => {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import StaffTabs from '../../components/staff/StaffTabs'
@@ -95,14 +95,14 @@ function StaffPedidos() {
     return () => { activo = false }
   }, [])
 
-  async function cargarCompletadas() {
+  const cargarCompletadas = useCallback(async () => {
     try {
       const { data } = await staffApi.get('/staff/logistica/completadas', { params: { desde: new Date(Date.now() - 30 * 86400000).toISOString() } })
       setCompletadas(data.ordenes || [])
     } catch (err) {
       setError(err.response?.data?.error || 'No se pudo cargar las completadas')
     }
-  }
+  }, [])
 
   const contadores = {
     revisar: revisar.length,
@@ -515,7 +515,7 @@ function TabIncidencias({ ordenes, onRecargar }) {
 function TabCompletadas({ ordenes, onCargar }) {
   useEffect(() => {
     if (ordenes.length === 0) onCargar()
-  }, [])
+  }, [onCargar, ordenes.length])
 
   if (ordenes.length === 0) return <p>Sin completadas en los últimos 30 días.</p>
 

@@ -33,11 +33,10 @@ function ListaDocumentos({ tipos, mostrarAnuladas }) {
   const [anulando, setAnulando] = useState(null)
 
   async function cargar() {
-    setCargando(true)
-    setError('')
     try {
       const { data } = await staffApi.get('/staff/contabilidad/facturas')
       setDocs(data || [])
+      setError('')
     } catch (err) {
       setError(err.response?.data?.error || 'No se pudieron cargar los documentos')
     } finally {
@@ -46,7 +45,12 @@ function ListaDocumentos({ tipos, mostrarAnuladas }) {
   }
 
   useEffect(() => {
-    cargar()
+    let activo = true
+    staffApi.get('/staff/contabilidad/facturas')
+      .then(({ data }) => { if (activo) { setDocs(data || []); setError('') } })
+      .catch((err) => { if (activo) setError(err.response?.data?.error || 'No se pudieron cargar los documentos') })
+      .finally(() => { if (activo) setCargando(false) })
+    return () => { activo = false }
   }, [])
 
   async function anular(doc) {

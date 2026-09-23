@@ -50,7 +50,6 @@ function TabCobros() {
   const [guardando, setGuardando] = useState(false)
 
   async function cargarPagos() {
-    setCargando(true)
     try {
       const { data } = await staffApi.get('/staff/contabilidad/pagos')
       setPagos(data)
@@ -82,7 +81,12 @@ function TabCobros() {
   }
 
   useEffect(() => {
-    cargarPagos()
+    let activo = true
+    staffApi.get('/staff/contabilidad/pagos')
+      .then(({ data }) => { if (activo) setPagos(data) })
+      .catch((err) => { if (activo) setError(err.response?.data?.error || 'No se pudieron cargar los pagos') })
+      .finally(() => { if (activo) setCargando(false) })
+    return () => { activo = false }
   }, [])
 
   return (
@@ -174,7 +178,6 @@ function TabPorVerificar() {
   const [procesando, setProcesando] = useState(false)
 
   async function cargarReportes() {
-    setCargando(true)
     try {
       const { data } = await staffApi.get('/staff/contabilidad/reportes-pago', {
         params: { estado: 'pendiente_verificacion' },
@@ -188,7 +191,14 @@ function TabPorVerificar() {
   }
 
   useEffect(() => {
-    cargarReportes()
+    let activo = true
+    staffApi.get('/staff/contabilidad/reportes-pago', {
+      params: { estado: 'pendiente_verificacion' },
+    })
+      .then(({ data }) => { if (activo) setReportes(data) })
+      .catch((err) => { if (activo) setError(err.response?.data?.error || 'No se pudieron cargar los reportes') })
+      .finally(() => { if (activo) setCargando(false) })
+    return () => { activo = false }
   }, [])
 
   function abrirVerificar(r) { setReporteAbierto(r); setAccion('verificar') }
@@ -326,7 +336,6 @@ function TabLinea() {
   const [guardando, setGuardando] = useState(false)
 
   async function cargar() {
-    setCargando(true)
     try {
       const { data } = await staffApi.get('/staff/credito/linea/clientes')
       setClientes(data)
@@ -338,7 +347,12 @@ function TabLinea() {
   }
 
   useEffect(() => {
-    cargar()
+    let activo = true
+    staffApi.get('/staff/credito/linea/clientes')
+      .then(({ data }) => { if (activo) setClientes(data) })
+      .catch((err) => { if (activo) setError(err.response?.data?.error || 'No se pudieron cargar los clientes') })
+      .finally(() => { if (activo) setCargando(false) })
+    return () => { activo = false }
   }, [])
 
   const filtrados = clientes.filter((c) => {
@@ -508,7 +522,6 @@ function StaffCredito() {
 
   // Cargar aging
   const cargarAging = useCallback(async () => {
-    setCargando(true)
     try {
       const { data } = await staffApi.get('/staff/credito/aging')
       setAging(data)
@@ -542,9 +555,16 @@ function StaffCredito() {
   }, [])
 
   useEffect(() => {
-    cargarAging()
-    cargarNotas()
-  }, [cargarAging, cargarNotas])
+    let activo = true
+    staffApi.get('/staff/credito/aging')
+      .then(({ data }) => { if (activo) setAging(data) })
+      .catch((err) => { if (activo) setError(err.response?.data?.error || 'Error al cargar datos') })
+      .finally(() => { if (activo) setCargando(false) })
+    staffApi.get('/staff/credito/notas')
+      .then(({ data }) => { if (activo) setNotas(data) })
+      .catch((err) => { if (activo) setError(err.response?.data?.error || 'Error al cargar notas') })
+    return () => { activo = false }
+  }, [])
 
   // Crear nota
   async function crearNota(e) {

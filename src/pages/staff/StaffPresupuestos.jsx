@@ -26,11 +26,17 @@ function ModalPresupuestoDetalle({ presupuesto, onClose, onRecotizar, onGenerarP
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    if (!presupuesto) { setDetalle(null); return }
-    let vivo = true
+  const [prevPresupuestoId, setPrevPresupuestoId] = useState(presupuesto?.id)
+  if (presupuesto?.id !== prevPresupuestoId) {
+    setPrevPresupuestoId(presupuesto?.id)
+    setDetalle(null)
     setCargando(true)
     setError('')
+  }
+
+  useEffect(() => {
+    if (!presupuesto) return
+    let vivo = true
     staffApi.get(`/staff/presupuestos/${presupuesto.id}`)
       .then(({ data }) => { if (vivo) setDetalle(data) })
       .catch((err) => { if (vivo) setError(err.response?.data?.error || 'Error al cargar detalle') })
@@ -119,7 +125,6 @@ function StaffPresupuestos({ departamento = 'comercial', activo = 'presupuestos'
 
   useEffect(() => {
     let vivo = true
-    setCargando(true)
     staffApi.get('/staff/presupuestos', { params: { estado: estado || undefined, pagina } })
       .then(({ data }) => {
         if (!vivo) return

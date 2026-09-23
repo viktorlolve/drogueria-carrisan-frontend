@@ -49,10 +49,7 @@ export default function TabEmitir() {
   // Búsqueda de clientes (backend: GET /staff/clientes?buscar=)
   useEffect(() => {
     if (debounceCliente.current) clearTimeout(debounceCliente.current)
-    if (queryCliente.trim().length < 2) {
-      setResultadosClientes([])
-      return
-    }
+    if (queryCliente.trim().length < 2) return
     debounceCliente.current = setTimeout(async () => {
       setBuscandoClientes(true)
       try {
@@ -80,21 +77,17 @@ export default function TabEmitir() {
       .catch(() => {})
 
     if (tipo === 'factura' || tipo === 'recibo_cobro') {
-      setSeleccionadas([])
       if (cliente) {
         staffApi
           .get(`/staff/contabilidad/clientes/${cliente.id}/sin-facturar`, { params: { solo_pagadas: 1 } })
           .then(({ data }) => { if (activo) setOrdenes(data || []) })
           .catch(() => { if (activo) setOrdenes([]) })
-      } else {
-        setOrdenes([])
       }
       staffApi
         .get('/prices')
         .then(({ data }) => { if (activo) setTasa(data) })
         .catch(() => { if (activo) setTasa(null) })
     } else {
-      setTasa(null)
       if (cliente) {
         staffApi
           .get('/staff/contabilidad/facturas')
@@ -105,18 +98,19 @@ export default function TabEmitir() {
             )
           })
           .catch(() => { if (activo) setFacturasCliente([]) })
-      } else {
-        setFacturasCliente([])
       }
     }
 
     return () => { activo = false }
   }, [tipo, cliente])
 
+  const clientesVisibles = queryCliente.trim().length < 2 ? [] : resultadosClientes
+
   function seleccionarCliente(c) {
     setCliente(c)
     setQueryCliente('')
     setResultadosClientes([])
+    setSeleccionadas([])
   }
 
   function toggleOrden(ordenId) {
@@ -126,10 +120,13 @@ export default function TabEmitir() {
   }
 
   const esReflejo = tipo === 'factura' || tipo === 'recibo_cobro'
-  const totalUSD = ordenes
+  const ordenesVisibles = cliente && esReflejo ? ordenes : []
+  const tasaVisibles = esReflejo ? tasa : null
+  const facturasVisibles = cliente && !esReflejo ? facturasCliente : []
+  const totalUSD = ordenesVisibles
     .filter((o) => seleccionadas.includes(o.id))
     .reduce((sum, o) => sum + Number(o.total_usd), 0)
-  const bolivares = tasa && esReflejo ? totalUSD * Number(tasa.usd_a_ves) : null
+  const bolivares = tasaVisibles ? totalUSD * Number(tasaVisibles.usd_a_ves) : null
 
   async function emitir() {
     setError('')
@@ -177,7 +174,7 @@ export default function TabEmitir() {
             key={t.id}
             type="button"
             className={`stf-btn ${tipo === t.id ? 'stf-btn--primary' : ''}`}
-            onClick={() => setTipo(t.id)}
+            onClick={() => { setTipo(t.id); setSeleccionadas([]) }}
           >
             {t.texto}
           </button>
@@ -199,12 +196,12 @@ export default function TabEmitir() {
           </div>
 
           {buscandoClientes && <p className="so-aviso">Buscando...</p>}
-          {!buscandoClientes && queryCliente.trim().length >= 2 && resultadosClientes.length === 0 && (
+          {!buscandoClientes && queryCliente.trim().length >= 2 && clientesVisibles.length === 0 && (
             <p className="so-aviso">Sin clientes que coincidan</p>
           )}
 
           <div className="so-lista">
-            {resultadosClientes.map((c) => (
+            {clientesVisibles.map((c) => (
               <button key={c.id} type="button" className="so-item" onClick={() => seleccionarCliente(c)}>
                 <span className="so-avatar">{(c.nombre?.trim()?.[0] || 'C').toUpperCase()}</span>
                 <span className="so-item-info">
@@ -241,7 +238,7 @@ export default function TabEmitir() {
           {esReflejo ? (
             <>
               <h3 className="stf-subtitulo">Ordenes pagadas facturables</h3>
-              {ordenes.length === 0 ? (
+              {ordenesVisibles.length === 0 ? (
                 <p className="so-aviso">Este cliente no tiene órdenes pagadas pendientes de facturar.</p>
               ) : (
                 <div className="stf-tabla-wrap">
@@ -255,7 +252,7 @@ export default function TabEmitir() {
                       </tr>
                     </thead>
                     <tbody>
-                      {ordenes.map((o) => (
+                      {ordenesVisibles.map((o) => (
                         <tr key={o.id}>
                           <td>
                             <input
@@ -276,7 +273,7 @@ export default function TabEmitir() {
 
               <p className="stf-subtitulo">
                 Total: ${formatUSD(totalUSD)}
-                {tasa && `  ·  Bs ${formatUSD(bolivares)} (tasa ${Number(tasa.usd_a_ves).toFixed(4)})`}
+                {tasaVisibles && `  ·  Bs ${formatUSD(bolivares)} (tasa ${Number(tasaVisibles.usd_a_ves).toFixed(4)})`}
               </p>
             </>
           ) : (
@@ -298,7 +295,7 @@ export default function TabEmitir() {
                   onChange={(e) => setFacturaRef(e.target.value)}
                 >
                   <option value="">Sin factura de referencia</option>
-                  {facturasCliente.map((f) => (
+                  {facturasVisibles.map((f) => (
                     <option key={f.id} value={f.id}>
                       #{f.numero_factura} · ${formatUSD(f.monto_facturado)}
                     </option>

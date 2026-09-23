@@ -58,10 +58,7 @@ function StaffOrdenes() {
   useEffect(() => {
     if (debounceCliente.current) clearTimeout(debounceCliente.current)
 
-    if (queryCliente.trim().length < 2) {
-      setResultadosClientes([])
-      return
-    }
+    if (queryCliente.trim().length < 2) return
 
     debounceCliente.current = setTimeout(async () => {
       setBuscandoClientes(true)
@@ -83,11 +80,7 @@ function StaffOrdenes() {
 
   // Direcciones del cliente elegido (solo si es delivery)
   useEffect(() => {
-    if (!cliente || tipoEnvio !== 'delivery') {
-      setDirecciones([])
-      setDireccionId('')
-      return
-    }
+    if (!cliente || tipoEnvio !== 'delivery') return
     let activo = true
     staffApi
       .get(`/staff/clientes/${cliente.id}/direcciones`)
@@ -110,10 +103,7 @@ function StaffOrdenes() {
   useEffect(() => {
     if (debounceProducto.current) clearTimeout(debounceProducto.current)
 
-    if (queryProducto.trim().length < 1) {
-      setResultadosProductos([])
-      return
-    }
+    if (queryProducto.trim().length < 1) return
 
     debounceProducto.current = setTimeout(async () => {
       setBuscandoProductos(true)
@@ -133,11 +123,23 @@ function StaffOrdenes() {
     return () => clearTimeout(debounceProducto.current)
   }, [queryProducto])
 
+  const clientesVisibles = queryCliente.trim().length < 2 ? [] : resultadosClientes
+  const productosVisibles = queryProducto.trim().length < 1 ? [] : resultadosProductos
+
   function seleccionarCliente(c) {
     setCliente(c)
     setQueryCliente('')
     setResultadosClientes([])
+    setDirecciones([])
     setDireccionId('')
+  }
+
+  function cambiarTipoEnvio(id) {
+    setTipoEnvio(id)
+    if (id !== 'delivery') {
+      setDirecciones([])
+      setDireccionId('')
+    }
   }
 
   function agregarProducto(producto) {
@@ -213,6 +215,7 @@ function StaffOrdenes() {
     setFilas([])
     setCliente(null)
     setTipoEnvio('retiro')
+    setDirecciones([])
     setDireccionId('')
     setAgenciaEnvio('')
   }
@@ -239,12 +242,12 @@ function StaffOrdenes() {
           </div>
 
           {buscandoClientes && <p className="so-aviso">Buscando...</p>}
-          {!buscandoClientes && queryCliente.trim().length >= 2 && resultadosClientes.length === 0 && (
+          {!buscandoClientes && queryCliente.trim().length >= 2 && clientesVisibles.length === 0 && (
             <p className="so-aviso">Sin clientes que coincidan</p>
           )}
 
           <div className="so-lista">
-            {resultadosClientes.map((c) => (
+            {clientesVisibles.map((c) => (
               <button key={c.id} type="button" className="so-item" onClick={() => seleccionarCliente(c)}>
                 <span className="so-avatar">{(c.nombre?.trim()?.[0] || 'C').toUpperCase()}</span>
                 <span className="so-item-info">
@@ -259,7 +262,7 @@ function StaffOrdenes() {
         <>
           <div className="so-cliente-activo">
             <span>Cliente: <strong>{cliente.nombre || cliente.email}</strong></span>
-            <button type="button" onClick={() => { setCliente(null); setFilas([]); setDireccionId('') }}>Cambiar</button>
+            <button type="button" onClick={() => { setCliente(null); setFilas([]); setDirecciones([]); setDireccionId('') }}>Cambiar</button>
           </div>
 
           <div className="so-step">
@@ -270,7 +273,7 @@ function StaffOrdenes() {
                   key={t.id}
                   type="button"
                   className={`so-tipo so-tipo--${tipoEnvio === t.id ? 'activo' : ''}`}
-                  onClick={() => setTipoEnvio(t.id)}
+                  onClick={() => cambiarTipoEnvio(t.id)}
                 >
                   {t.label}
                 </button>
@@ -321,12 +324,12 @@ function StaffOrdenes() {
             </div>
 
             {buscandoProductos && <p className="so-aviso">Buscando...</p>}
-            {!buscandoProductos && queryProducto.trim() && resultadosProductos.length === 0 && (
+            {!buscandoProductos && queryProducto.trim() && productosVisibles.length === 0 && (
               <p className="so-aviso">Sin resultados para "{queryProducto}"</p>
             )}
 
             <div className="so-lista">
-              {resultadosProductos.map((p) => (
+              {productosVisibles.map((p) => (
                 <button key={p.id} type="button" className="so-item" onClick={() => agregarProducto(p)}>
                   <span className="so-item-info">
                     <span className="so-item-nombre">{p.nombre_comercial}</span>
