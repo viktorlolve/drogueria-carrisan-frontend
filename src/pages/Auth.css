@@ -1629,3 +1629,276 @@
   }
 }
 
+/* ============================================================
+   Registro Institucional — onboarding tipo checklist (SaaS moderno)
+   Sin panel lateral: ancho central, barra de progreso grande arriba,
+   tarjetas de documento con estado en vivo. Todo con prefijo
+   .reginst- para no afectar Profesional/Honorífico (que siguen
+   usando el <Stepper> compartido y las clases .registro-* genéricas).
+   ============================================================ */
+
+.reginst-page {
+  background: #FBFAF7;
+}
+
+.reginst-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 0;
+}
+
+.reginst-topbar-link {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  color: #0052DC;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.reginst-topbar-link:hover {
+  text-decoration: underline;
+}
+
+.reginst-main {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 4rem;
+  width: 100%;
+}
+
+.reginst-head {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.reginst-head h1 {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 1.6rem;
+  color: #232B45;
+  margin: 0 0 6px;
+}
+
+.reginst-head p {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.92rem;
+  color: #6B7280;
+  margin: 0;
+}
+
+/* ---------- Barra de progreso grande ---------- */
+.reginst-progreso {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  margin-bottom: 2.25rem;
+}
+
+.reginst-progreso__paso {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  position: relative;
+  max-width: 200px;
+}
+
+.reginst-progreso__linea {
+  position: absolute;
+  top: 17px;
+  left: calc(-50% + 18px);
+  width: calc(100% - 36px);
+  height: 2px;
+  background: #D8DCE5;
+  z-index: 0;
+  transition: background 0.25s ease;
+}
+
+.reginst-progreso__paso:first-child .reginst-progreso__linea {
+  display: none;
+}
+
+.reginst-progreso__circulo {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #D8DCE5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #9AA1AE;
+  z-index: 1;
+  transition: all 0.2s ease;
+}
+
+.reginst-progreso__label {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #9AA1AE;
+  text-align: center;
+  transition: color 0.2s ease;
+}
+
+.reginst-progreso__paso--activo .reginst-progreso__circulo {
+  border-color: #0052DC;
+  color: #0052DC;
+  box-shadow: 0 0 0 4px rgba(0, 82, 220, 0.12);
+}
+
+.reginst-progreso__paso--activo .reginst-progreso__label {
+  color: #0052DC;
+}
+
+.reginst-progreso__paso--completado .reginst-progreso__circulo {
+  background: #0052DC;
+  border-color: #0052DC;
+  color: #fff;
+}
+
+.reginst-progreso__paso--completado .reginst-progreso__label {
+  color: #232B45;
+}
+
+.reginst-progreso__paso--completado .reginst-progreso__linea {
+  background: #0052DC;
+}
+
+/* ---------- Chip resumen persistente (nombre + RIF) ---------- */
+.reginst-resumen-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  background: #EAF1FF;
+  border: 1px solid #CBDBFF;
+  color: #0B3D91;
+  border-radius: 100px;
+  padding: 8px 18px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin: 0 auto 1.5rem;
+  width: fit-content;
+  max-width: 100%;
+  animation: reginstChipIn 0.25s ease-out;
+}
+
+.reginst-resumen-chip__rif {
+  color: #3D6BC7;
+  font-weight: 600;
+}
+
+.reginst-resumen-chip__rif::before {
+  content: '·';
+  margin-right: 10px;
+  color: #9DB6EA;
+}
+
+@keyframes reginstChipIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Card del paso ---------- */
+.reginst-card {
+  background: #fff;
+  border: 1px solid #E7E9EE;
+  border-radius: 20px;
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.06);
+  padding: 2rem;
+}
+
+@media (max-width: 600px) {
+  .reginst-card {
+    padding: 1.25rem;
+  }
+}
+
+.reginst-paso-titulo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.reginst-paso-titulo__icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: #EAF1FF;
+  color: #0052DC;
+  flex-shrink: 0;
+}
+
+.reginst-paso-titulo h2 {
+  font-family: 'Manrope', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #232B45;
+  margin: 0;
+}
+
+.reginst-paso-titulo p {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.82rem;
+  color: #6B7280;
+  margin: 2px 0 0;
+}
+
+/* ---------- Documentos: grid de tarjetas con estado en vivo ---------- */
+.reginst-doc-destacado {
+  margin-bottom: 1.75rem;
+}
+
+.reginst-doc-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .reginst-doc-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Convierte SubidaArchivoDrive en tarjeta con borde reactivo al estado,
+   sin tocar el componente — solo scoped a esta página. */
+.reginst-doc-destacado .subida-archivo,
+.reginst-doc-grid .subida-archivo {
+  border: 1.5px solid #E5E7EB;
+  border-radius: 14px;
+  padding: 14px;
+  background: #fff;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.reginst-doc-destacado .subida-archivo:has(.subida-archivo-requerido),
+.reginst-doc-grid .subida-archivo:has(.subida-archivo-requerido) {
+  border-color: #B9CDF7;
+  background: #F7FAFF;
+}
+
+.reginst-doc-destacado .subida-archivo:has(.subida-archivo-preview--ok),
+.reginst-doc-grid .subida-archivo:has(.subida-archivo-preview--ok) {
+  border-color: #9FE0C8;
+  background: #F3FCF8;
+}
+
+.reginst-doc-grid .subida-archivo-dropzone,
+.reginst-doc-destacado .subida-archivo-dropzone {
+  border-radius: 10px;
+}
+

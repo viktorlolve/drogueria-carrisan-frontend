@@ -8,7 +8,7 @@
 .staff-registro-rol-badge {
   display: inline-block;
   background: #eef4ff;
-  color: #1B4B8F;
+  color: #0D9373;
   font-weight: 600;
   padding: 3px 12px;
   border-radius: 999px;
@@ -19,7 +19,7 @@
 .staff-registro-cambiar {
   background: none;
   border: none;
-  color: #1B4B8F;
+  color: #0D9373;
   font-size: 0.8rem;
   text-decoration: underline;
   cursor: pointer;

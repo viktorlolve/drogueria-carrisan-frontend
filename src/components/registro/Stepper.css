@@ -33,8 +33,8 @@
 }
 
 .stepper__paso--activo .stepper__circulo {
-  border-color: #1B4B8F;
-  background: #1B4B8F;
+  border-color: #0052DC;
+  background: #0052DC;
   color: #fff;
 }
 
@@ -54,7 +54,7 @@
 }
 
 .stepper__paso--activo .stepper__label {
-  color: #1B4B8F;
+  color: #0052DC;
 }
 
 .stepper__paso--completado .stepper__label {
