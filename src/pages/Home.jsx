@@ -87,6 +87,52 @@ const CARGAS_INFINITO = [
 
 const MAX_CARGAS = CARGAS_INFINITO.length
 
+// ── Helpers de vitrina ──────────────────────────────────────────
+// Selección al azar de `n` elementos de una lista (no muta la original).
+function sampleAleatorio(lista, n) {
+  if (!lista || lista.length === 0) return []
+  const arr = [...lista]
+  const m = Math.min(n, arr.length)
+  for (let i = arr.length - 1; i >= arr.length - m; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[arr[i], arr[j]] = [arr[j], arr[i]]
+  }
+  return arr.slice(arr.length - m)
+}
+
+// Merge de un bloque del bento configurado con sus defaults del archivo.
+function bentoDe(vitrina, clase, defaults) {
+  const lista = vitrina.bento?.bloques
+  if (!Array.isArray(lista)) return defaults
+  const match = lista.find((b) => b && b.id === clase)
+  if (!match) return defaults
+  return {
+    ...defaults,
+    ...match,
+    imagen: match.imagen || defaults.imagen,
+    titulo: match.titulo || defaults.titulo,
+    subtitulo: match.subtitulo || defaults.subtitulo,
+    textoCta: match.textoCta || defaults.textoCta,
+    link: match.link || defaults.link,
+  }
+}
+
+// Título de un carrusel fijo con fallback al título actual del archivo.
+function tituloSeccion(vitrina, id, fallback) {
+  const lista = vitrina.carruseles?.secciones
+  if (!Array.isArray(lista)) return fallback
+  const match = lista.find((s) => s && s.id === id)
+  return match && match.titulo ? match.titulo : fallback
+}
+
+// Visibilidad de un carrusel fijo (true por defecto).
+function seccionVisible(vitrina, id, fallback = true) {
+  const lista = vitrina.carruseles?.secciones
+  if (!Array.isArray(lista)) return fallback
+  const match = lista.find((s) => s && s.id === id)
+  return match ? match.visible !== false : fallback
+}
+
 // ── Componente ──────────────────────────────────────────────────
 function Home() {
   const { user } = useAuth()
@@ -109,6 +155,11 @@ function Home() {
   const [laboratoriosTienda, setLaboratoriosTienda] = useState([])
   const [cargandoVitrina, setCargandoVitrina] = useState(true)
 
+  // Config de vitrina (hero, promos, bento, carruseles, cargas). `vitrina`
+  // dispara re-render; `vitrinaRef` es la fuente para cargarMas (solo refs).
+  const [vitrina, setVitrina] = useState({})
+  const vitrinaRef = useRef({})
+
   // Estado del infinite scroll
   const [cargasRestantes, setCargasRestantes] = useState(MAX_CARGAS)
   const [cargandoMas, setCargandoMas] = useState(false)
@@ -117,6 +168,51 @@ function Home() {
   const productosIniciales = todosProductos.slice(0, PRODUCTOS_POR_CARGA)
   const labSuperior = seccionesLab[0]
   const labInferior = seccionesLab[1]
+
+  // ── Bloques del bento (config de vitrina con fallback a los defaults) ──
+  const bloqueA = bentoDe(vitrina, 'home__bloque-a', {
+    imagen: 'https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/quirofano.png',
+    tamano: 'grande',
+    posicionTexto: 'arriba',
+    titulo: 'Insumos quirúrgicos para cada procedimiento',
+    subtitulo: 'Todo el equipamiento que tu quirófano necesita',
+    textoCta: 'Comprar ahora',
+    link: '/hospitalaria',
+  })
+  const bloqueB = bentoDe(vitrina, 'home__bloque-b', {
+    imagen: 'https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/medicamentos.png',
+    tamano: 'mediano',
+    posicionTexto: 'arriba',
+    titulo: 'Tu línea de farmacia completa, en un solo lugar',
+    subtitulo: 'Todo el catálogo de medicamentos para consumo masivo',
+    textoCta: 'Ver línea farmacia',
+    estiloCta: 'enlace',
+    link: '/farmacia',
+  })
+  const bloqueC = bentoDe(vitrina, 'home__bloque-c', {
+    imagen: 'https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/vervademecum.png',
+    tamano: 'pequeno',
+    titulo: 'Vademécum clínico al alcance',
+    textoCta: 'Buscar molécula',
+    link: '/vademecum',
+  })
+  const bloqueE = bentoDe(vitrina, 'home__bloque-e', {
+    imagen: 'https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ampolla.jpg',
+    tamano: 'pequeno',
+    variante: 'oferta',
+    titulo: 'Cada producto con registro sanitario verificado',
+    textoCta: 'Ver registro',
+    estiloCta: 'enlace',
+    link: '/registro-inhrr',
+  })
+  const bloqueD = bentoDe(vitrina, 'home__bloque-d', {
+    imagen: 'https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/verpresupuesto.png',
+    tamano: 'grande',
+    posicionTexto: 'arriba',
+    titulo: 'Sin llamadas ni esperas',
+    textoCta: 'Generar presupuesto',
+    link: '/presupuesto',
+  })
 
   // ── Carga inicial ───────────────────────────────────────────
   useEffect(() => {
@@ -132,6 +228,18 @@ function Home() {
       .then((res) => {
         setCategoriasTienda(Array.isArray(res.data?.categorias) ? res.data.categorias : [])
         setLaboratoriosTienda(Array.isArray(res.data?.laboratoriosTop) ? res.data.laboratoriosTop : [])
+      })
+      .catch((err) => console.error(err))
+
+    // Config de vitrina (hero, promos, cargas…) — se lee en el mount y se
+    // guarda también en un ref para que cargarMas (useCallback sin deps)
+    // pueda consultarla sin depender de re-renders.
+    api
+      .get('/vitrina')
+      .then((res) => {
+        const data = res.data && typeof res.data === 'object' ? res.data : {}
+        vitrinaRef.current = data
+        setVitrina(data)
       })
       .catch((err) => console.error(err))
 
@@ -169,21 +277,31 @@ function Home() {
   }, [])
 
   // ── Infinite scroll (carga por etapas mientras se scrollea) ──
-  // Cada ronda = UNA entrada de CARGAS_INFINITO: carrusel simple de la
-  // categoría + promo (mitad imagen / mitad carrusel) con los productos de esa
-  // categoría filtrados por laboratorio (coincidencia parcial).
+  // Cada ronda = UNA entrada de la config de cargas (CARGAS_INFINITO como
+  // fallback): carrusel simple + promo (mitad imagen / mitad carrusel) con
+  // productos filtrados según el modo de la carga (categoria/laboratorio,
+  // molecula o lista por ids) y seleccionados al azar por ronda.
   const cargarMas = useCallback(() => {
-    if (cargasRef.current >= MAX_CARGAS) return
+    // La config de la vitrina define las cargas (modo/valor) con fallback a
+    // CARGAS_INFINITO cuando no hay config. Solo se leen refs (`vitrinaRef`)
+    // para no meter la config en las deps del useCallback.
+    const cargasConfig = vitrinaRef.current?.cargas?.cargas?.length
+      ? vitrinaRef.current.cargas.cargas
+      : CARGAS_INFINITO
+    const maxCargas = cargasConfig.length
+    if (cargasRef.current >= maxCargas) return
     cargandoMasRef.current = true
     setCargandoMas(true)
 
     const cargaIdx = cargasRef.current
-    const carga = CARGAS_INFINITO[cargaIdx]
+    const carga = cargasConfig[cargaIdx]
     if (!carga) {
       cargandoMasRef.current = false
       setCargandoMas(false)
       return
     }
+
+    const labVal = Array.isArray(carga.valor) ? carga.valor.join(',') : ''
 
     const resolver = (data) => {
       const lista = Array.isArray(data) ? data : (data.productos || [])
@@ -194,12 +312,22 @@ function Home() {
         return
       }
 
-      const verTodoCategoria = `/catalogo?categoria=${encodeURIComponent(carga.categoria)}`
+      const seleccion = sampleAleatorio(activos, PRODUCTOS_POR_CARGA)
+      const verTodoCategoria =
+        carga.modo === 'molecula'
+          ? `/catalogo?molecula=${encodeURIComponent(carga.valor[0])}`
+          : carga.modo === 'lista'
+            ? '/catalogo'
+            : labVal
+              ? `/catalogo?laboratorio=${encodeURIComponent(labVal)}${carga.categoria ? `&categoria=${encodeURIComponent(carga.categoria)}` : ''}`
+              : carga.categoria
+                ? `/catalogo?categoria=${encodeURIComponent(carga.categoria)}`
+                : '/catalogo'
       const labPromo = carga.promo?.laboratorio
       const productosPromo = labPromo
         ? activos
             .filter((p) => p.laboratorio && p.laboratorio.toUpperCase().includes(labPromo.toUpperCase()))
-            .slice(0, 12)
+            .slice(0, PRODUCTOS_POR_CARGA)
         : []
       const verTodoPromo = labPromo
         ? `${verTodoCategoria}&laboratorio=${encodeURIComponent(labPromo)}`
@@ -208,36 +336,50 @@ function Home() {
       setSeccionesDinamicas((prev) => [
         ...prev,
         {
-          id: `dinamica-${cargaIdx}`,
+          id: `dinamica-${cargaIdx}-${Date.now()}`,
           titulo: carga.titulo,
-          productos: activos.slice(0, 12),
+          productos: seleccion,
           verTodoTo: verTodoCategoria,
-          promo: {
-            imagen: carga.promo?.imagen,
-            alt: carga.promo?.alt || '',
-            linkImagen: verTodoPromo,
-            tituloCarrusel: carga.promo?.tituloCarrusel || 'Productos destacados',
-            verTodoTo: verTodoPromo,
-            productos: productosPromo,
-          },
+          promo: carga.promo
+            ? {
+                imagen: carga.promo.imagen,
+                alt: carga.promo.alt || '',
+                linkImagen: verTodoPromo,
+                tituloCarrusel: carga.promo.tituloCarrusel || 'Productos destacados',
+                verTodoTo: verTodoPromo,
+                productos: productosPromo,
+              }
+            : undefined,
         },
       ])
       cargasRef.current += 1
-      setCargasRestantes(MAX_CARGAS - cargasRef.current)
+      setCargasRestantes(maxCargas - cargasRef.current)
       cargandoMasRef.current = false
       setCargandoMas(false)
     }
 
-    const cacheado = cachéCategoriasRef.current.get(carga.categoria)
+    // Clave de caché por modo+valor (el pool se cachea por sesión). Los
+    // params vacíos/undefined se filtran para no mandar `laboratorio=...` de
+    // más cuando la carga no trae valor (fallback a categoría sola).
+    const paramsRaw =
+      carga.modo === 'molecula'
+        ? { molecula: carga.valor[0] }
+        : carga.modo === 'lista'
+          ? { ids: labVal }
+          : { categoria: carga.categoria || undefined, laboratorio: labVal || undefined }
+    const params = Object.fromEntries(Object.entries(paramsRaw).filter(([, v]) => v !== undefined && v !== ''))
+    const claveCarga = `${carga.modo}:${JSON.stringify(params)}`
+
+    const cacheado = cachéCategoriasRef.current.get(claveCarga)
     if (cacheado) {
       resolver(cacheado)
       return
     }
 
     api
-      .get('/products', { params: { categoria: carga.categoria } })
+      .get('/products', { params })
       .then((res) => {
-        cachéCategoriasRef.current.set(carga.categoria, res.data)
+        cachéCategoriasRef.current.set(claveCarga, res.data)
         resolver(res.data)
       })
       .catch((err) => {
@@ -280,7 +422,7 @@ function Home() {
       <div className="home__container">
       {/* ── Hero banner ── */}
       <section className="home__hero">
-        <HeroCarrusel slides={HERO_SLIDES} intervaloMs={5000} />
+        <HeroCarrusel slides={vitrina.hero?.slides?.length ? vitrina.hero.slides : HERO_SLIDES} intervaloMs={5000} />
       </section>
 
       {/* ── Vitrina: carruseles fijos + ads ── */}
@@ -288,14 +430,16 @@ function Home() {
         {/* ── Explorá por categoría (colocado justo tras el hero) ── */}
         <CategoriasCarrusel categorias={categoriasTienda.length ? categoriasTienda : undefined} />
 
-        <HomeCarrusel
-          titulo="Ofertas destacadas"
-          subtitulo="Precios con descuento activo"
-          productos={ofertas}
-          tasaVes={tasa}
-          verTodoTo="/catalogo"
-          cargando={cargandoVitrina}
-        />
+        {seccionVisible(vitrina, 'ofertas') ? (
+          <HomeCarrusel
+            titulo={tituloSeccion(vitrina, 'ofertas', 'Ofertas destacadas')}
+            subtitulo="Precios con descuento activo"
+            productos={ofertas}
+            tasaVes={tasa}
+            verTodoTo="/catalogo"
+            cargando={cargandoVitrina}
+          />
+        ) : null}
 
         {/* ── Bloques promocionales: grid tipo bento, pensado como 5 "pilares de marca" ──
           Orden de lectura (desktop, según grid-template-areas "a b b d" / "a c e d"):
@@ -303,115 +447,95 @@ function Home() {
             C + E → vademécum + registro sanitario (confianza, en el "valle" entre A y D)
           Los 5 bloques tienen imagen propia; ninguno cae en modo placeholder. */}
       <section className="home__bloques-promocionales">
-        <BloquePromocional
-          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/quirofano.png"
-          className="home__bloque-a"
-          tamano="grande"
-          posicionTexto="arriba"
-          titulo="Insumos quirúrgicos para cada procedimiento"
-          subtitulo="Todo el equipamiento que tu quirófano necesita"
-          textoCta="Comprar ahora"
-          link="/hospitalaria"
-        />
-        <BloquePromocional
-          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/medicamentos.png"
-          className="home__bloque-b"
-          tamano="mediano"
-          posicionTexto="arriba"
-          titulo="Tu línea de farmacia completa, en un solo lugar"
-          subtitulo="Todo el catálogo de medicamentos para consumo masivo"
-          textoCta="Ver línea farmacia"
-          estiloCta="enlace"
-          link="/farmacia"
-        />
-        <BloquePromocional
-          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/vervademecum.png"
-          className="home__bloque-c"
-          tamano="pequeno"
-          titulo="Vademécum clínico al alcance"
-          textoCta="Buscar molécula"
-          link="/vademecum"
-        />
-        <BloquePromocional
-          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ampolla.jpg"
-          className="home__bloque-e"
-          tamano="pequeno"
-          variante="oferta"
-          titulo="Cada producto con registro sanitario verificado"
-          textoCta="Ver registro"
-          estiloCta="enlace"
-          link="/registro-inhrr"
-        />
-        <BloquePromocional
-          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/verpresupuesto.png"
-          className="home__bloque-d"
-          tamano="grande"
-          posicionTexto="arriba"
-          titulo="Sin llamadas ni esperas"
-          textoCta="Generar presupuesto"
-          link="/presupuesto"
-        />
+        {(vitrina.bento?.bloques?.some((b) => b.id === 'home__bloque-a' && b.visible === false)) ? null : (
+          <BloquePromocional {...bloqueA} className="home__bloque-a" />
+        )}
+        {(vitrina.bento?.bloques?.some((b) => b.id === 'home__bloque-b' && b.visible === false)) ? null : (
+          <BloquePromocional {...bloqueB} className="home__bloque-b" />
+        )}
+        {(vitrina.bento?.bloques?.some((b) => b.id === 'home__bloque-c' && b.visible === false)) ? null : (
+          <BloquePromocional {...bloqueC} className="home__bloque-c" />
+        )}
+        {(vitrina.bento?.bloques?.some((b) => b.id === 'home__bloque-e' && b.visible === false)) ? null : (
+          <BloquePromocional {...bloqueE} className="home__bloque-e" />
+        )}
+        {(vitrina.bento?.bloques?.some((b) => b.id === 'home__bloque-d' && b.visible === false)) ? null : (
+          <BloquePromocional {...bloqueD} className="home__bloque-d" />
+        )}
       </section>
 
 
-      <SeccionesCarrusel
-          titulo="Rollbacks y más"
-          secciones={secciones}
-          cargando={cargandoVitrina}
-        />
+{seccionVisible(vitrina, 'rollbacks') ? (
+          <SeccionesCarrusel
+            titulo={tituloSeccion(vitrina, 'rollbacks', 'Rollbacks y más')}
+            secciones={secciones}
+            cargando={cargandoVitrina}
+          />
+        ) : null}
 
         {/* ── Explorá por laboratorio (logos dinámicos, top labs) ── */}
         <LaboratoriosCarrusel laboratoriosTop={laboratoriosTienda.length ? laboratoriosTienda : undefined} />
 
         {/* ── Sección promocional: panel de campaña (solo imagen, sin texto)
           + carrusel del laboratorio destacado #1 (labSuperior) ── */}
-        <SeccionPromocional
-          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ads/letipromo.jpg"
-          alt={labSuperior ? `Productos ${labSuperior.lab}` : 'Selección destacada'}
-          linkImagen={labSuperior ? `/catalogo?laboratorio=${encodeURIComponent(labSuperior.lab)}` : '/catalogo'}
-          productos={labSuperior ? labSuperior.productos : ofertas}
-          tasaVes={tasa}
-          tituloCarrusel={labSuperior ? `Productos ${labSuperior.lab}` : 'Más vendidos'}
-          verTodoTo={labSuperior ? `/catalogo?laboratorio=${encodeURIComponent(labSuperior.lab)}` : '/catalogo'}
-          cargando={cargandoVitrina}
-        />
+        {vitrina.promos?.seccion1?.visible === false ? null : (
+          <SeccionPromocional
+            imagen={vitrina.promos?.seccion1?.imagen || 'https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ads/letipromo.jpg'}
+            alt={vitrina.promos?.seccion1?.alt || (labSuperior ? `Productos ${labSuperior.lab}` : 'Selección destacada')}
+            linkImagen={labSuperior ? `/catalogo?laboratorio=${encodeURIComponent(labSuperior.lab)}` : '/catalogo'}
+            productos={labSuperior ? labSuperior.productos : ofertas}
+            tasaVes={tasa}
+            tituloCarrusel={labSuperior ? `Productos ${labSuperior.lab}` : 'Más vendidos'}
+            verTodoTo={labSuperior ? `/catalogo?laboratorio=${encodeURIComponent(labSuperior.lab)}` : '/catalogo'}
+            cargando={cargandoVitrina}
+          />
+        )}
 
         {/* ── Sección promocional invertida: panel de campaña (solo imagen)
           + carrusel del laboratorio destacado #2 (labInferior) ── */}
-        <SeccionPromocional
-          invertido
-          imagen="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ads/caloxpromo2.jpg"
-          alt={labInferior ? `Productos ${labInferior.lab}` : 'Recomendados para ti'}
-          linkImagen={labInferior ? `/catalogo?laboratorio=${encodeURIComponent(labInferior.lab)}` : '/catalogo'}
-          productos={labInferior ? labInferior.productos : productosIniciales}
-          tasaVes={tasa}
-          tituloCarrusel={labInferior ? `Productos ${labInferior.lab}` : 'Recomendados para ti'}
-          verTodoTo={labInferior ? `/catalogo?laboratorio=${encodeURIComponent(labInferior.lab)}` : '/catalogo'}
-          cargando={cargandoVitrina}
-        />
+        {vitrina.promos?.seccion2?.visible === false ? null : (
+          <SeccionPromocional
+            invertido
+            imagen={vitrina.promos?.seccion2?.imagen || 'https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ads/caloxpromo2.jpg'}
+            alt={vitrina.promos?.seccion2?.alt || (labInferior ? `Productos ${labInferior.lab}` : 'Recomendados para ti')}
+            linkImagen={labInferior ? `/catalogo?laboratorio=${encodeURIComponent(labInferior.lab)}` : '/catalogo'}
+            productos={labInferior ? labInferior.productos : productosIniciales}
+            tasaVes={tasa}
+            tituloCarrusel={labInferior ? `Productos ${labInferior.lab}` : 'Recomendados para ti'}
+            verTodoTo={labInferior ? `/catalogo?laboratorio=${encodeURIComponent(labInferior.lab)}` : '/catalogo'}
+            cargando={cargandoVitrina}
+          />
+        )}
 
 
-        <AdRotativo ads={ADS_ROTATIVO_TEMPORADA} />
+        <AdRotativo ads={(vitrina.promos?.rotativo?.length ? vitrina.promos.rotativo : ADS_ROTATIVO_TEMPORADA).filter((ad) => ad.visible !== false)} />
 
-        <SeccionesCarrusel
-          titulo="Más rollbacks"
-          secciones={seccionesRollback2}
-          cargando={cargandoVitrina}
-        />
+        {seccionVisible(vitrina, 'rollbacks2') ? (
+          <SeccionesCarrusel
+            titulo={tituloSeccion(vitrina, 'rollbacks2', 'Más rollbacks')}
+            secciones={seccionesRollback2}
+            cargando={cargandoVitrina}
+          />
+        ) : null}
 
-        <HomeCarrusel
-          titulo="Recomendados para ti"
-          subtitulo="Seleccionados para tu clínica o farmacia"
-          productos={productosIniciales}
-          tasaVes={tasa}
-          verTodoTo="/catalogo"
-          cargando={cargandoVitrina}
-        />
+        {seccionVisible(vitrina, 'recomendados') ? (
+          <HomeCarrusel
+            titulo={tituloSeccion(vitrina, 'recomendados', 'Recomendados para ti')}
+            subtitulo="Seleccionados para tu clínica o farmacia"
+            productos={productosIniciales}
+            tasaVes={tasa}
+            verTodoTo="/catalogo"
+            cargando={cargandoVitrina}
+          />
+        ) : null}
 
         <div className="home__ads-pair">
-          {ADS.filter((ad) => !esMobile || !ad.soloTabletDesktop).map((ad) => (
-            <AdCard key={ad.id} {...ad} />
-          ))}
+          {(vitrina.promos?.adsPar?.length ? vitrina.promos.adsPar : ADS)
+            .filter((ad) => ad.visible !== false)
+            .filter((ad) => !esMobile || !ad.soloTabletDesktop)
+            .map((ad) => (
+              <AdCard key={ad.id} {...ad} />
+            ))}
         </div>
 
         <CarruselCortos />
@@ -419,9 +543,9 @@ function Home() {
         <NoticiasTeaser />
 
         {/* ── Secciones dinámicas (cargadas por infinite scroll) ──
-          Cada ronda = carrusel simple de una categoría + promo (mitad
-          imagen / mitad carrusel) de esa misma categoría (ver CARGAS_INFINITO
-          / cargarMas). ── */}
+          Cada ronda = carrusel simple + promo (mitad imagen / mitad carrusel);
+          el contenido y destino lo define la carga de la vitrina (ver
+          cargarMas). ── */}
         {seccionesDinamicas.map((seccion) => (
           <div key={seccion.id} className="home__bloque-dinamico">
             <HomeCarrusel
