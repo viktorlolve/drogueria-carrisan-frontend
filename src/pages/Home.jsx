@@ -272,7 +272,7 @@ function Home() {
     )
     observer.observe(sentinel)
     return () => observer.disconnect()
-  }, [cargasRestantes, cargarMas])
+  }, [cargasRestantes, cargarMas, cargandoVitrina])
 
   // ── Render ──────────────────────────────────────────────────
   return (
