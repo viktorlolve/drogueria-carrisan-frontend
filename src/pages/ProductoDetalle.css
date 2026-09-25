@@ -63,7 +63,7 @@
    --------------------------------------------------------- */
 .pd-hero {
   display: grid;
-  grid-template-columns: 1fr 340px;
+  grid-template-columns: 1.15fr 0.85fr 320px;
   gap: 40px;
   margin-bottom: 48px;
   align-items: start;
