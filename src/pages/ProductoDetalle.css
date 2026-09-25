@@ -336,39 +336,6 @@
   margin: 2px 0;
 }
 
-/* Quick specs — grid de tarjetas, no lista apilada */
-.pd-info__specs {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  padding-top: 10px;
-  border-top: 1px solid #E2E8F0;
-}
-
-.pd-spec {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
-  padding: 8px 10px;
-}
-
-.pd-spec__label {
-  color: #94A3B8;
-  font-weight: 600;
-  font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.pd-spec__value {
-  color: #1A1A2E;
-  font-weight: 600;
-  font-size: 0.85rem;
-}
-
 /* Composition summary */
 .pd-info__composition {
   padding-top: 10px;

@@ -4,7 +4,7 @@ import {
   Heart, Share2, Check, Stethoscope, Pill, Route, ShieldAlert,
   AlertTriangle, ShieldCheck, Package, Thermometer,
   FileCheck2, Building2, ReceiptText, CreditCard,
-  MapPin, FlaskConical,
+  MapPin, FlaskConical, Layers, Tablet,
 } from 'lucide-react'
 import api from '../api/axios'
 import { useCart } from '../context/CartContext'
@@ -130,7 +130,6 @@ function ProductoDetalle() {
   const timerRef = useRef(null)
   const controllerRef = useRef(null)
   const descRef = useRef(null)
-  const specsRef = useRef(null)
   const tabsRef = useRef(null)
   const resenasRef = useRef(null)
   const infoRef = useRef(null)
@@ -290,7 +289,7 @@ function ProductoDetalle() {
   }
 
   function irAAncla(id) {
-    const refs = { descripcion: descRef, specs: specsRef, ficha: tabsRef, resenas: resenasRef }
+    const refs = { descripcion: descRef, ficha: tabsRef, resenas: resenasRef }
     irASeccion(refs[id])
   }
 
@@ -369,6 +368,7 @@ function ProductoDetalle() {
 
   const fichaTecnicaItems = [
     producto.laboratorio && { etiqueta: 'Laboratorio', Icono: Building2, valor: producto.laboratorio },
+    producto.linea && { etiqueta: 'Línea', Icono: Layers, valor: producto.linea },
     producto.pais_origen && { etiqueta: 'País de origen', Icono: MapPin, valor: producto.pais_origen },
     (principioActivoEnlaces.length > 0 || principioActivo) && {
       etiqueta: 'Principio activo',
@@ -377,6 +377,7 @@ function ProductoDetalle() {
         ? { enlaces: principioActivoEnlaces }
         : { valor: principioActivo }),
     },
+    producto.forma && { etiqueta: 'Forma', Icono: Tablet, valor: producto.forma },
     concentraciones.length > 0 && { etiqueta: 'Concentración', Icono: Pill, valor: concentraciones.join(' · ') },
     presentacionTexto && { etiqueta: 'Presentación', Icono: Package, valor: presentacionTexto },
     registroTexto && {
@@ -521,33 +522,6 @@ function ProductoDetalle() {
           {producto.descripcion && (
             <p className="pd-info__desc" ref={descRef}>{producto.descripcion}</p>
           )}
-
-          <div className="pd-info__specs" ref={specsRef}>
-            {producto.laboratorio && (
-              <div className="pd-spec">
-                <span className="pd-spec__label">Laboratorio</span>
-                <span className="pd-spec__value">{producto.laboratorio}</span>
-              </div>
-            )}
-            {producto.forma && (
-              <div className="pd-spec">
-                <span className="pd-spec__label">Forma</span>
-                <span className="pd-spec__value">{producto.forma}</span>
-              </div>
-            )}
-            {producto.linea && (
-              <div className="pd-spec">
-                <span className="pd-spec__label">Linea</span>
-                <span className="pd-spec__value">{producto.linea}</span>
-              </div>
-            )}
-            {producto.pais_origen && (
-              <div className="pd-spec">
-                <span className="pd-spec__label">Origen</span>
-                <span className="pd-spec__value">{producto.pais_origen}</span>
-              </div>
-            )}
-          </div>
 
           {tieneComposicion && (
             <div className="pd-info__composition">
