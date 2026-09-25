@@ -3,37 +3,13 @@ import { useSearchParams } from 'react-router-dom'
 import api from '../api/axios'
 import BottomNav from '../components/BottomNav'
 import Footer from '../components/Footer'
+import InhrrFichaModal from '../components/InhrrFichaModal'
 import { useEsMobile } from '../hooks/useEsMobile'
+import { CATEGORIAS, COLOR_CATEGORIA, nombreCategoria, formatFecha } from '../utils/inhrr'
 import './Catalogo.css'
 import './RegistroInhrr.css'
 
 const PAGE_SIZE = 20
-
-const CATEGORIAS = [
-  { id: 'ME', nombre: 'Medicamentos', icono: '💊' },
-  { id: 'HO', nombre: 'Hospitalarios', icono: '🏥' },
-  { id: 'MM', nombre: 'Material médico', icono: '🩺' },
-  { id: 'MI', nombre: 'Misceláneos', icono: '🧩' },
-]
-
-const COLOR_CATEGORIA = {
-  ME: '#0052DC',
-  HO: '#0D9373',
-  MM: '#D97706',
-  MI: '#6B7280',
-}
-
-function nombreCategoria(id) {
-  return CATEGORIAS.find((c) => c.id === id)?.nombre || id || '—'
-}
-
-function formatFecha(f) {
-  if (!f) return '—'
-  const iso = String(f).slice(0, 10)
-  const d = new Date(`${iso}T00:00:00`)
-  if (Number.isNaN(d.getTime())) return '—'
-  return d.toLocaleDateString('es-VE', { day: '2-digit', month: 'short', year: 'numeric' })
-}
 
 function RegistroInhrr() {
   const esMobile = useEsMobile(768)
@@ -56,8 +32,7 @@ function RegistroInhrr() {
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
 
-  const [ficha, setFicha] = useState(null)
-  const [cargandoFicha, setCargandoFicha] = useState(false)
+  const [fichaSku, setFichaSku] = useState('')
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false)
   const [seccionesAbiertas, setSeccionesAbiertas] = useState({
     categoria: true,
@@ -120,29 +95,11 @@ function RegistroInhrr() {
     cargarPagina(1)
   }, [cargarPagina])
 
-  const abrirFicha = useCallback(async (sku) => {
-    setCargandoFicha(true)
-    setFicha(null)
-    try {
-      const { data } = await api.get(`/catalogo/${encodeURIComponent(sku)}`)
-      setFicha(data)
-    } catch (err) {
-      console.error('Error al cargar la ficha:', err)
-    } finally {
-      setCargandoFicha(false)
-    }
-  }, [])
-
-  const cerrarFicha = () => {
-    setFicha(null)
-    setCargandoFicha(false)
-  }
-
   useEffect(() => {
     if (!skuDeepLink) return
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    abrirFicha(skuDeepLink)
-  }, [skuDeepLink, abrirFicha])
+    setFichaSku(skuDeepLink)
+  }, [skuDeepLink])
 
   const toggleSeccion = (key) =>
     setSeccionesAbiertas((prev) => ({ ...prev, [key]: !prev[key] }))
@@ -429,7 +386,7 @@ function RegistroInhrr() {
                   {!p.moleculas?.length && (
                     <p className="inhrr-card__sinmol">Sin molécula enlazada</p>
                   )}
-                  <button type="button" className="inhrr-card__btn" onClick={() => abrirFicha(p.sku)}>
+                  <button type="button" className="inhrr-card__btn" onClick={() => setFichaSku(p.sku)}>
                     Ver ficha
                   </button>
                 </article>
@@ -503,104 +460,8 @@ function RegistroInhrr() {
         </>
       )}
 
-      {(ficha || cargandoFicha) && (
-        <>
-          <div className="inhrr-ficha-overlay" onClick={cerrarFicha} />
-          <div className="inhrr-ficha" role="dialog" aria-modal="true">
-            <button type="button" className="inhrr-ficha__close" aria-label="Cerrar ficha" onClick={cerrarFicha}>
-              ✕
-            </button>
-            {cargandoFicha || !ficha ? (
-              <div className="inhrr-ficha__cargando">Cargando ficha…</div>
-            ) : (
-              <div className="inhrr-ficha__content">
-                <div className="inhrr-ficha__header">
-                  <span
-                    className="inhrr-card__cat"
-                    style={{ background: COLOR_CATEGORIA[ficha.categoria] || '#6B7280' }}
-                  >
-                    {ficha.categoria} · {nombreCategoria(ficha.categoria)}
-                  </span>
-                  <span className="inhrr-card__sku">{ficha.sku}</span>
-                </div>
-                <h2 className="inhrr-ficha__nombre">{ficha.nombre}</h2>
-
-                <dl className="inhrr-ficha__grid">
-                  <div className="inhrr-ficha__item">
-                    <dt>Registro sanitario</dt>
-                    <dd>{ficha.ef || '—'}</dd>
-                  </div>
-                  <div className="inhrr-ficha__item">
-                    <dt>Forma farmacéutica</dt>
-                    <dd>{ficha.forma || '—'}</dd>
-                  </div>
-                  <div className="inhrr-ficha__item">
-                    <dt>Principio activo</dt>
-                    <dd>{ficha.principio_activo || '—'}</dd>
-                  </div>
-                  <div className="inhrr-ficha__item">
-                    <dt>Laboratorio</dt>
-                    <dd>{ficha.laboratorio || '—'}</dd>
-                  </div>
-                  {ficha.representante && (
-                    <div className="inhrr-ficha__item">
-                      <dt>Representante</dt>
-                      <dd>
-                        {ficha.representante}
-                        {ficha.rif_representante ? ` · RIF ${ficha.rif_representante}` : ''}
-                      </dd>
-                    </div>
-                  )}
-                  {ficha.patrocinante && (
-                    <div className="inhrr-ficha__item">
-                      <dt>Patrocinante</dt>
-                      <dd>{ficha.patrocinante}</dd>
-                    </div>
-                  )}
-                  {ficha.fabricante && (
-                    <div className="inhrr-ficha__item">
-                      <dt>Fabricante</dt>
-                      <dd>{ficha.fabricante}</dd>
-                    </div>
-                  )}
-                  <div className="inhrr-ficha__item">
-                    <dt>Fecha aprobado</dt>
-                    <dd>{formatFecha(ficha.fecha_aprobado)}</dd>
-                  </div>
-                  <div className="inhrr-ficha__item">
-                    <dt>Vigencia</dt>
-                    <dd>{formatFecha(ficha.fecha_vigencia)}</dd>
-                  </div>
-                  <div className="inhrr-ficha__item">
-                    <dt>Cancelado</dt>
-                    <dd>{ficha.fecha_cancelado ? formatFecha(ficha.fecha_cancelado) : 'No'}</dd>
-                  </div>
-                </dl>
-
-                <div className="inhrr-ficha__mols">
-                  <h3>Moléculas / ATC</h3>
-                  {ficha.moleculas?.length > 0 ? (
-                    <div className="inhrr-mol-chips">
-                      {ficha.moleculas.map((m) => (
-                        <span key={m.id} className="inhrr-mol-chip">
-                          {m.nombre}
-                          {m.atc ? ` · ${m.atc}` : ''}
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="filtro-vacio">Este registro aún no tiene molécula enlazada.</p>
-                  )}
-                </div>
-
-                <p className="inhrr-ficha__nota">
-                  Fuente: Registro sanitario del INHRR (Instituto Nacional de Higiene «Rafael Rangel»).
-                  Consulta informativa; no sustituye el empaque ni la información oficial del producto.
-                </p>
-              </div>
-            )}
-          </div>
-        </>
+      {fichaSku && (
+        <InhrrFichaModal fichaSku={fichaSku} onClose={() => setFichaSku('')} />
       )}
 
       <Footer />

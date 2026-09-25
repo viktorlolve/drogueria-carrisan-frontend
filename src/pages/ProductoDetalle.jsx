@@ -15,6 +15,7 @@ import Valoraciones from '../components/Valoraciones'
 import { agruparPorLinea } from '../utils/agruparPorLinea'
 import Footer from '../components/Footer'
 import BottomNav from '../components/BottomNav'
+import InhrrFichaModal from '../components/InhrrFichaModal'
 import { ProductoImagen } from '../components/icons/ProductoImagen'
 import SECCIONES_FICHA from '../config/seccionesFicha'
 import './ProductoDetalle.css'
@@ -132,8 +133,12 @@ function ProductoDetalle() {
   const specsRef = useRef(null)
   const tabsRef = useRef(null)
   const resenasRef = useRef(null)
+  const infoRef = useRef(null)
 
   const sinPrecio = producto ? (producto.precio_usd == null || Number(producto.precio_usd) <= 0) : false
+
+  const [registroAbierto, setRegistroAbierto] = useState(false)
+  const [mostrarBarra, setMostrarBarra] = useState(false)
 
   useEffect(() => {
     return () => {
@@ -158,6 +163,14 @@ function ProductoDetalle() {
       .catch(() => activo && setSuscripcion(false))
     return () => { activo = false }
   }, [user, producto, sinPrecio])
+
+  useEffect(() => {
+    const info = infoRef.current
+    if (!info) return
+    const onScroll = () => setMostrarBarra(info.getBoundingClientRect().bottom < 0)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [producto])
 
   const cargarProducto = useCallback(async () => {
     if (controllerRef.current) controllerRef.current.abort()
@@ -330,12 +343,15 @@ function ProductoDetalle() {
   const galeria = [producto.foto_url, ...(detalles?.imagen_secundaria_urls || [])].filter(Boolean)
 
   const tieneComposicion = moleculas.length > 0
-  const tieneSpecs = !!(producto.laboratorio || producto.forma || producto.linea || producto.pais_origen)
 
-  const principioActivo =
-    (moleculas.map((m) => m.moleculas_referencias?.nombre).filter(Boolean).join(', ')) ||
-    producto.molecula ||
-    ''
+  const principioActivoEnlaces = moleculas
+    .map((m) => {
+      const ref = m.moleculas_referencias
+      if (!ref?.nombre) return null
+      return { texto: ref.nombre, to: ref.id ? `/vademecum/${ref.id}` : null }
+    })
+    .filter(Boolean)
+  const principioActivo = producto.molecula || ''
   const concentraciones = [
     ...new Set(
       moleculas
@@ -349,19 +365,25 @@ function ProductoDetalle() {
       ? `CAJA ${producto.presentacion}`
       : producto.presentacion
     : ''
-  const registroTexto = detalles?.registro_sanitario || producto.sku || ''
+  const registroTexto = detalles?.registro_sanitario || ''
 
   const fichaTecnicaItems = [
     producto.laboratorio && { etiqueta: 'Laboratorio', Icono: Building2, valor: producto.laboratorio },
     producto.pais_origen && { etiqueta: 'País de origen', Icono: MapPin, valor: producto.pais_origen },
-    principioActivo && { etiqueta: 'Principio activo', Icono: FlaskConical, valor: principioActivo },
+    (principioActivoEnlaces.length > 0 || principioActivo) && {
+      etiqueta: 'Principio activo',
+      Icono: FlaskConical,
+      ...(principioActivoEnlaces.length > 0
+        ? { enlaces: principioActivoEnlaces }
+        : { valor: principioActivo }),
+    },
     concentraciones.length > 0 && { etiqueta: 'Concentración', Icono: Pill, valor: concentraciones.join(' · ') },
     presentacionTexto && { etiqueta: 'Presentación', Icono: Package, valor: presentacionTexto },
     registroTexto && {
       etiqueta: 'Registro sanitario',
       Icono: FileCheck2,
       valor: registroTexto,
-      enlace: producto.sku ? `/registro-inhrr?sku=${encodeURIComponent(producto.sku)}` : '/registro-inhrr',
+      abreRegistro: true,
     },
     detalles?.condiciones_almacenamiento && {
       etiqueta: 'Almacenamiento',
@@ -372,13 +394,6 @@ function ProductoDetalle() {
 
   const tieneFichaTecnica = fichaTecnicaItems.length > 0
   const tieneDetallesClinicos = !!detalles && FICHA_CLINICA_CAMPOS.some(({ clave }) => detalles[clave])
-
-  const anclas = [
-    producto.descripcion && { id: 'descripcion', label: 'Descripción' },
-    tieneSpecs && { id: 'specs', label: 'Especificaciones' },
-    (tieneFichaTecnica || tieneDetallesClinicos || tieneComposicion) && { id: 'ficha', label: 'Ficha técnica' },
-    { id: 'resenas', label: 'Reseñas' },
-  ].filter(Boolean)
 
   const categoriasClinicas = SECCIONES_FICHA
     .map(({ clave, etiqueta, icono }) => {
@@ -445,7 +460,7 @@ function ProductoDetalle() {
           )}
         </div>
 
-        <div className="pd-info">
+        <div className="pd-info" ref={infoRef}>
           {producto.marcas?.nombre && (
             <span className="pd-info__brand">{producto.marcas.nombre}</span>
           )}
@@ -503,16 +518,6 @@ function ProductoDetalle() {
             {producto.disponible ? 'Disponible' : 'Agotado'}
           </span>
 
-          {anclas.length > 1 && (
-            <nav className="pd-anchor-nav" aria-label="Ir a sección">
-              {anclas.map((a) => (
-                <button key={a.id} type="button" onClick={() => irAAncla(a.id)}>
-                  {a.label}
-                </button>
-              ))}
-            </nav>
-          )}
-
           {producto.descripcion && (
             <p className="pd-info__desc" ref={descRef}>{producto.descripcion}</p>
           )}
@@ -568,7 +573,7 @@ function ProductoDetalle() {
           )}
         </div>
 
-        <div className="pd-purchase">
+        <div className={`pd-purchase${mostrarBarra ? ' pd-purchase--show' : ''}`}>
           <div className="pd-purchase__card">
             <div className="pd-purchase__prices">
               {producto.precio_usd != null ? (
@@ -697,15 +702,36 @@ function ProductoDetalle() {
             <div className="pd-tabs__panel" role="tabpanel">
               {tabActiva === 'ficha' && (
                 <div className="pd-ficha-grid">
-                  {fichaTecnicaItems.map(({ etiqueta, Icono, valor, enlace }) => (
+                  {fichaTecnicaItems.map(({ etiqueta, Icono, valor, enlace, enlaces, abreRegistro }) => (
                     <div key={etiqueta} className="pd-ficha-item">
                       <span className="pd-ficha-item__icono">
                         <Icono size={16} aria-hidden="true" />
                       </span>
                       <div className="pd-ficha-item__body">
                         <span className="pd-ficha-item__label">{etiqueta}</span>
-                        {enlace ? (
+                        {enlaces ? (
+                          <span className="pd-ficha-item__value">
+                            {enlaces.map((e, i) => (
+                              <span key={i}>
+                                {i > 0 && <span>, </span>}
+                                {e.to ? (
+                                  <Link to={e.to} className="pd-ficha-item__link">{e.texto}</Link>
+                                ) : (
+                                  e.texto
+                                )}
+                              </span>
+                            ))}
+                          </span>
+                        ) : enlace ? (
                           <Link to={enlace} className="pd-ficha-item__link">{valor}</Link>
+                        ) : abreRegistro ? (
+                          <button
+                            type="button"
+                            className="pd-ficha-item__link pd-ficha-item__btn"
+                            onClick={() => setRegistroAbierto(true)}
+                          >
+                            {valor}
+                          </button>
                         ) : (
                           <span className="pd-ficha-item__value">{valor}</span>
                         )}
@@ -826,6 +852,10 @@ function ProductoDetalle() {
         <Footer />
       </div>
       <div className="pd-footer-spacer" aria-hidden="true" />
+
+      {registroAbierto && (
+        <InhrrFichaModal fichaSku={producto.sku} onClose={() => setRegistroAbierto(false)} />
+      )}
     </>
   )
 }
