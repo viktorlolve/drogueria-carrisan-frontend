@@ -1,6 +1,6 @@
 /* ==========================================================
    ProductoDetalle — Walmart-style redesign
-   Palette: Blue #1B4B8F · Teal #12A594 · Gold #F59E0B
+   Palette: Blue #0052DC (unificado) · Teal #12A594 · Gold #F59E0B
    Ink #1A1A2E · Surface #F5F7FA · Border #E2E8F0
    ========================================================== */
 
@@ -36,7 +36,7 @@
 }
 
 .pd-breadcrumb a {
-  color: #1B4B8F;
+  color: #0052DC;
   text-decoration: none;
   font-weight: 500;
 }
@@ -98,12 +98,25 @@
   justify-content: center;
   padding: 32px;
   min-height: 380px;
+  overflow: hidden;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pd-gallery__main {
+    cursor: zoom-in;
+  }
 }
 
 .pd-gallery__img {
   max-width: 100%;
   max-height: 380px;
   object-fit: contain;
+  transition: transform 0.25s ease;
+}
+
+.pd-gallery__img--zoom {
+  transform: scale(1.9);
+  transition: transform 0.1s ease-out;
 }
 
 .pd-badge {
@@ -154,11 +167,11 @@
 }
 
 .pd-gallery__thumb:hover {
-  border-color: #1B4B8F;
+  border-color: #0052DC;
 }
 
 .pd-gallery__thumb.active {
-  border-color: #1B4B8F;
+  border-color: #0052DC;
   border-width: 2px;
 }
 
@@ -174,10 +187,17 @@
 
 .pd-info__brand {
   font-size: 0.78rem;
-  color: #1B4B8F;
+  color: #0052DC;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+
+.pd-info__title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .pd-info__title {
@@ -190,11 +210,50 @@
   overflow-wrap: break-word;
 }
 
+.pd-info__title-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.pd-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+  background: #FFFFFF;
+  color: #64748B;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.pd-icon-btn:hover {
+  border-color: #CBD5E1;
+  background: #F8FAFC;
+}
+
+.pd-icon-btn.active {
+  border-color: #FCA5A5;
+  background: #FEF2F2;
+  color: #DC2626;
+}
+
 /* Rating */
 .pd-info__rating {
   display: flex;
   align-items: center;
   gap: 8px;
+  width: fit-content;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.pd-info__rating:hover .pd-info__rating-text {
+  text-decoration: underline;
 }
 
 .pd-rating-stars {
@@ -270,30 +329,66 @@
   margin: 2px 0;
 }
 
-/* Quick specs */
-.pd-info__specs {
+/* Anchor nav — navegación rápida a secciones de la página */
+.pd-anchor-nav {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 2px 0 4px;
+}
+
+.pd-anchor-nav button {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 100px;
+  border: 1px solid #E2E8F0;
+  background: #F8FAFC;
+  color: #4A5166;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.pd-anchor-nav button:hover {
+  border-color: #0052DC;
+  color: #0052DC;
+  background: #EAF1FF;
+}
+
+/* Quick specs — grid de tarjetas, no lista apilada */
+.pd-info__specs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
   padding-top: 10px;
   border-top: 1px solid #E2E8F0;
 }
 
 .pd-spec {
   display: flex;
-  gap: 8px;
-  font-size: 0.82rem;
+  flex-direction: column;
+  gap: 2px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 8px 10px;
 }
 
 .pd-spec__label {
   color: #94A3B8;
   font-weight: 600;
-  min-width: 100px;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .pd-spec__value {
   color: #1A1A2E;
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 0.85rem;
 }
 
 /* Composition summary */
@@ -330,7 +425,7 @@
 }
 
 .pd-chip a {
-  color: #1B4B8F;
+  color: #0052DC;
   text-decoration: none;
   font-weight: 600;
 }
@@ -392,6 +487,38 @@
   color: #64748B;
 }
 
+.pd-purchase__savings {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #16A34A;
+  background: #DCFCE7;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.pd-purchase__trust {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pd-purchase__trust li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.76rem;
+  color: #64748B;
+}
+
+.pd-purchase__trust svg {
+  color: #12A594;
+  flex-shrink: 0;
+}
+
 .pd-purchase__consultar {
   font-family: 'Manrope', sans-serif;
   font-size: 1.2rem;
@@ -445,7 +572,7 @@
 .pd-purchase__cta {
   width: 100%;
   padding: 13px 24px;
-  background: #1B4B8F;
+  background: #0052DC;
   color: #FFFFFF;
   border: none;
   border-radius: 8px;
@@ -456,7 +583,7 @@
 }
 
 .pd-purchase__cta:hover:not(:disabled) {
-  background: #163c72;
+  background: #003EA8;
 }
 
 .pd-purchase__cta:disabled {
@@ -481,8 +608,8 @@
   width: 100%;
   padding: 11px 24px;
   background: transparent;
-  color: #1B4B8F;
-  border: 1.5px solid #1B4B8F;
+  color: #0052DC;
+  border: 1.5px solid #0052DC;
   border-radius: 8px;
   font-weight: 700;
   font-size: 0.85rem;
@@ -491,7 +618,7 @@
 }
 
 .pd-purchase__btn-outline:hover:not(:disabled) {
-  background: #1B4B8F;
+  background: #0052DC;
   color: #FFFFFF;
 }
 
@@ -513,7 +640,7 @@
 }
 
 .pd-purchase__login a {
-  color: #1B4B8F;
+  color: #0052DC;
   font-weight: 700;
   text-decoration: none;
 }
@@ -526,6 +653,45 @@
   font-size: 0.72rem;
   color: #94A3B8;
   margin: 0;
+}
+
+/* ---------------------------------------------------------
+   Cinta de confianza regulatoria (registro sanitario)
+   --------------------------------------------------------- */
+.pd-trust-band {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #EAF1FF;
+  border: 1px solid #CBDBFF;
+  border-radius: 12px;
+  padding: 14px 20px;
+  margin-bottom: 40px;
+  color: #0B3D91;
+}
+
+.pd-trust-band svg {
+  flex-shrink: 0;
+  color: #0052DC;
+}
+
+.pd-trust-band__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pd-trust-band__text strong {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #0B3D91;
+}
+
+.pd-trust-band__text span {
+  font-size: 0.78rem;
+  color: #3D6BC7;
+  overflow-wrap: break-word;
 }
 
 /* ---------------------------------------------------------
@@ -561,11 +727,11 @@
 }
 
 .pd-tabs__btn:hover {
-  color: #1B4B8F;
+  color: #0052DC;
 }
 
 .pd-tabs__btn.active {
-  color: #1B4B8F;
+  color: #0052DC;
   border-bottom-color: #12A594;
 }
 
@@ -573,38 +739,60 @@
   min-height: 80px;
 }
 
-/* Specs table (Ficha tecnica) */
-.pd-specs-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.88rem;
+/* Ficha tecnica — grid de tarjetas con icono, no tabla */
+.pd-ficha-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
 }
 
-.pd-specs-table tr {
-  border-bottom: 1px solid #E2E8F0;
+@media (max-width: 640px) {
+  .pd-ficha-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-.pd-specs-table tr:last-child {
-  border-bottom: none;
+.pd-ficha-item {
+  display: flex;
+  gap: 12px;
+  padding: 14px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
 }
 
-.pd-specs-table th {
-  text-align: left;
-  padding: 12px 16px 12px 0;
-  width: 200px;
-  min-width: 140px;
+.pd-ficha-item__icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #EAF1FF;
+  color: #0052DC;
+  flex-shrink: 0;
+}
+
+.pd-ficha-item__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pd-ficha-item__label {
+  font-size: 0.7rem;
+  font-weight: 700;
   color: #94A3B8;
-  font-weight: 600;
-  font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  vertical-align: top;
 }
 
-.pd-specs-table td {
-  padding: 12px 0;
+.pd-ficha-item__value {
+  font-size: 0.88rem;
   color: #1A1A2E;
-  line-height: 1.6;
+  line-height: 1.55;
+  overflow-wrap: break-word;
 }
 
 /* ---------------------------------------------------------
@@ -735,6 +923,15 @@
 }
 
 /* ---------------------------------------------------------
+   Reseñas (Valoraciones.jsx)
+   --------------------------------------------------------- */
+.pd-reviews {
+  border-top: 1px solid #E2E8F0;
+  padding-top: 32px;
+  margin-bottom: 40px;
+}
+
+/* ---------------------------------------------------------
    Related carousels
    --------------------------------------------------------- */
 .pd-related {
@@ -750,7 +947,7 @@
    --------------------------------------------------------- */
 .pd-skeleton {
   display: grid;
-  grid-template-columns: 1fr 340px;
+  grid-template-columns: 1.15fr 0.85fr 320px;
   gap: 40px;
 }
 
@@ -867,7 +1064,7 @@
 
 .pd-error button {
   padding: 10px 24px;
-  background: #1B4B8F;
+  background: #0052DC;
   color: #FFFFFF;
   border: none;
   border-radius: 8px;
@@ -876,7 +1073,7 @@
 }
 
 .pd-error button:hover {
-  background: #163c72;
+  background: #003EA8;
 }
 
 /* ---------------------------------------------------------

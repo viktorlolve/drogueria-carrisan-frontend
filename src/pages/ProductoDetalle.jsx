@@ -1,9 +1,16 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import {
+  Heart, Share2, Check, Stethoscope, Pill, Route, ShieldAlert,
+  AlertTriangle, ShieldCheck, Package, Boxes, Thermometer,
+  FileCheck2, Building2, ReceiptText, CreditCard,
+} from 'lucide-react'
 import api from '../api/axios'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
+import { useFavoritos } from '../context/FavoritosContext'
 import HomeCarrusel from '../components/HomeCarrusel'
+import Valoraciones from '../components/Valoraciones'
 import { agruparPorLinea } from '../utils/agruparPorLinea'
 import BottomNav from '../components/BottomNav'
 import { ProductoImagen } from '../components/icons/ProductoImagen'
@@ -12,6 +19,22 @@ import './ProductoDetalle.css'
 
 const CANTIDAD_CARRUSELES = 2
 const MINIMO_POR_CARRUSEL = 4
+
+// Campos de la ficha técnica: clave en `detalles` + etiqueta + ícono.
+// Reemplaza la tabla plana por un grid de tarjetas más escaneable.
+const FICHA_CAMPOS = [
+  { clave: 'indicaciones', etiqueta: 'Indicaciones', Icono: Stethoscope },
+  { clave: 'dosis_recomendada', etiqueta: 'Dosis recomendada', Icono: Pill },
+  { clave: 'via_administracion', etiqueta: 'Vía de administración', Icono: Route },
+  { clave: 'contraindicaciones', etiqueta: 'Contraindicaciones', Icono: ShieldAlert },
+  { clave: 'efectos_secundarios', etiqueta: 'Efectos secundarios', Icono: AlertTriangle },
+  { clave: 'precauciones', etiqueta: 'Precauciones', Icono: ShieldCheck },
+  { clave: 'presentacion', etiqueta: 'Presentación', Icono: Package },
+  { clave: 'unidades_por_presentacion', etiqueta: 'Unidades por presentación', Icono: Boxes },
+  { clave: 'condiciones_almacenamiento', etiqueta: 'Almacenamiento', Icono: Thermometer },
+  { clave: 'registro_sanitario', etiqueta: 'Registro sanitario', Icono: FileCheck2 },
+  { clave: 'titular_registro', etiqueta: 'Titular del registro', Icono: Building2 },
+]
 
 function barajar(array) {
   const copia = [...array]
@@ -83,6 +106,7 @@ function ProductoDetalle() {
   const navigate = useNavigate()
   const { addItem } = useCart()
   const { user } = useAuth()
+  const { esFavorito, toggleFavorito } = useFavoritos()
 
   const [producto, setProducto] = useState(null)
   const [detalles, setDetalles] = useState(null)
@@ -101,26 +125,18 @@ function ProductoDetalle() {
   const [seccionAbierta, setSeccionAbierta] = useState('')
   const [suscripcion, setSuscripcion] = useState(null)
   const [procesandoToggle, setProcesandoToggle] = useState(false)
+  const [zoomActivo, setZoomActivo] = useState(false)
+  const [zoomOrigen, setZoomOrigen] = useState({ x: 50, y: 50 })
+  const [linkCopiado, setLinkCopiado] = useState(false)
 
   const timerRef = useRef(null)
   const controllerRef = useRef(null)
+  const descRef = useRef(null)
+  const specsRef = useRef(null)
+  const tabsRef = useRef(null)
+  const resenasRef = useRef(null)
 
   const sinPrecio = producto ? (producto.precio_usd == null || Number(producto.precio_usd) <= 0) : false
-
-  // Al cambiar de producto, reseteamos los estados locales derivados del id
-  // (imagen, tab, agregado, sección, resultados de la carga anterior).
-  const [prevId, setPrevId] = useState(id)
-  if (prevId !== id) {
-    setPrevId(id)
-    setCargando(true)
-    setCarruseles([])
-    setSuscripcion(null)
-    setError('')
-    setImagenActiva(0)
-    setTabActiva('ficha')
-    setAgregado(false)
-    setSeccionAbierta('')
-  }
 
   useEffect(() => {
     return () => {
@@ -129,6 +145,10 @@ function ProductoDetalle() {
   }, [])
 
   useEffect(() => {
+    setImagenActiva(0)
+    setTabActiva('ficha')
+    setAgregado(false)
+    setSeccionAbierta('')
     window.scrollTo(0, 0)
   }, [id])
 
@@ -146,6 +166,11 @@ function ProductoDetalle() {
     if (controllerRef.current) controllerRef.current.abort()
     const controller = new AbortController()
     controllerRef.current = controller
+
+    setCargando(true)
+    setCarruseles([])
+    setSuscripcion(null)
+    setError('')
 
     try {
       const [resCompleto, resTasa] = await Promise.all([
@@ -206,10 +231,7 @@ function ProductoDetalle() {
   }, [id])
 
   useEffect(() => {
-    async function iniciar() {
-      await cargarProducto()
-    }
-    iniciar()
+    cargarProducto()
   }, [cargarProducto])
 
   function handleAgregar() {
@@ -235,6 +257,30 @@ function ProductoDetalle() {
     } finally {
       setProcesandoToggle(false)
     }
+  }
+
+  function handleZoomMove(e) {
+    const rect = e.currentTarget.getBoundingClientRect()
+    setZoomOrigen({
+      x: ((e.clientX - rect.left) / rect.width) * 100,
+      y: ((e.clientY - rect.top) / rect.height) * 100,
+    })
+  }
+
+  function handleCompartir() {
+    navigator.clipboard?.writeText(window.location.href).then(() => {
+      setLinkCopiado(true)
+      setTimeout(() => setLinkCopiado(false), 2000)
+    })
+  }
+
+  function irASeccion(ref) {
+    ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  function irAAncla(id) {
+    const refs = { descripcion: descRef, specs: specsRef, ficha: tabsRef, resenas: resenasRef }
+    irASeccion(refs[id])
   }
 
   if (cargando) {
@@ -291,6 +337,14 @@ function ProductoDetalle() {
     detalles.presentacion || detalles.registro_sanitario
   )
   const tieneComposicion = moleculas.length > 0
+  const tieneSpecs = !!(producto.laboratorio || producto.forma || producto.linea || producto.pais_origen)
+
+  const anclas = [
+    producto.descripcion && { id: 'descripcion', label: 'Descripción' },
+    tieneSpecs && { id: 'specs', label: 'Especificaciones' },
+    (tieneFichaTecnica || tieneComposicion) && { id: 'ficha', label: 'Ficha técnica' },
+    { id: 'resenas', label: 'Reseñas' },
+  ].filter(Boolean)
 
   const categoriasClinicas = SECCIONES_FICHA
     .map(({ clave, etiqueta, icono }) => {
@@ -319,11 +373,17 @@ function ProductoDetalle() {
 
       <div className="pd-hero">
         <div className="pd-gallery">
-          <div className="pd-gallery__main">
+          <div
+            className="pd-gallery__main"
+            onMouseEnter={() => setZoomActivo(true)}
+            onMouseLeave={() => setZoomActivo(false)}
+            onMouseMove={handleZoomMove}
+          >
             <ProductoImagen
               src={galeria[imagenActiva] || null}
               alt={producto.nombre_comercial}
-              className="pd-gallery__img"
+              className={`pd-gallery__img${zoomActivo ? ' pd-gallery__img--zoom' : ''}`}
+              style={zoomActivo ? { transformOrigin: `${zoomOrigen.x}% ${zoomOrigen.y}%` } : undefined}
             />
             {!producto.disponible && (
               <span className="pd-badge pd-badge--red">No disponible</span>
@@ -355,10 +415,39 @@ function ProductoDetalle() {
             <span className="pd-info__brand">{producto.marcas.nombre}</span>
           )}
 
-          <h1 className="pd-info__title">{producto.nombre_comercial}</h1>
+          <div className="pd-info__title-row">
+            <h1 className="pd-info__title">{producto.nombre_comercial}</h1>
+            <div className="pd-info__title-actions">
+              {user && (
+                <button
+                  type="button"
+                  className={`pd-icon-btn ${esFavorito(producto.id) ? 'active' : ''}`}
+                  onClick={() => toggleFavorito(producto)}
+                  aria-label={esFavorito(producto.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                  aria-pressed={esFavorito(producto.id)}
+                >
+                  <Heart size={18} fill={esFavorito(producto.id) ? '#DC2626' : 'none'} />
+                </button>
+              )}
+              <button
+                type="button"
+                className="pd-icon-btn"
+                onClick={handleCompartir}
+                aria-label="Copiar enlace del producto"
+              >
+                {linkCopiado ? <Check size={18} color="#16A34A" /> : <Share2 size={18} />}
+              </button>
+            </div>
+          </div>
 
           {valoraciones.total > 0 && (
-            <div className="pd-info__rating">
+            <div
+              className="pd-info__rating"
+              role="button"
+              tabIndex={0}
+              onClick={() => irAAncla('resenas')}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') irAAncla('resenas') }}
+            >
               <Estrellas promedio={valoraciones.promedio} />
               <span className="pd-info__rating-text">
                 {valoraciones.promedio} · {valoraciones.total} {valoraciones.total === 1 ? 'valoracion' : 'valoraciones'}
@@ -379,11 +468,21 @@ function ProductoDetalle() {
             {producto.disponible ? 'Disponible' : 'Agotado'}
           </span>
 
-          {producto.descripcion && (
-            <p className="pd-info__desc">{producto.descripcion}</p>
+          {anclas.length > 1 && (
+            <nav className="pd-anchor-nav" aria-label="Ir a sección">
+              {anclas.map((a) => (
+                <button key={a.id} type="button" onClick={() => irAAncla(a.id)}>
+                  {a.label}
+                </button>
+              ))}
+            </nav>
           )}
 
-          <div className="pd-info__specs">
+          {producto.descripcion && (
+            <p className="pd-info__desc" ref={descRef}>{producto.descripcion}</p>
+          )}
+
+          <div className="pd-info__specs" ref={specsRef}>
             {producto.laboratorio && (
               <div className="pd-spec">
                 <span className="pd-spec__label">Laboratorio</span>
@@ -447,6 +546,11 @@ function ProductoDetalle() {
                   <span className="pd-purchase__price">
                     ${Number(producto.precio_usd).toFixed(2)}
                   </span>
+                  {producto.precio_original_usd && (
+                    <span className="pd-purchase__savings">
+                      Ahorras ${(Number(producto.precio_original_usd) - Number(producto.precio_usd)).toFixed(2)}
+                    </span>
+                  )}
                   {precioVes && (
                     <span className="pd-purchase__ves">Bs. {precioVes}</span>
                   )}
@@ -455,6 +559,12 @@ function ProductoDetalle() {
                 <span className="pd-purchase__consultar">Consultar precio</span>
               )}
             </div>
+
+            <ul className="pd-purchase__trust">
+              <li><ReceiptText size={14} aria-hidden="true" /> Factura fiscal incluida</li>
+              <li><CreditCard size={14} aria-hidden="true" /> Compra con línea de crédito</li>
+              <li><ShieldCheck size={14} aria-hidden="true" /> Pago 100% seguro</li>
+            </ul>
 
             {producto.disponible && (
               <div className="pd-purchase__actions">
@@ -525,8 +635,22 @@ function ProductoDetalle() {
         </div>
       </div>
 
+      {(detalles?.registro_sanitario || detalles?.titular_registro) && (
+        <div className="pd-trust-band">
+          <ShieldCheck size={20} aria-hidden="true" />
+          <div className="pd-trust-band__text">
+            <strong>Producto con registro sanitario verificado</strong>
+            <span>
+              {detalles.registro_sanitario && `Reg. ${detalles.registro_sanitario}`}
+              {detalles.registro_sanitario && detalles.titular_registro && ' · '}
+              {detalles.titular_registro && `Titular: ${detalles.titular_registro}`}
+            </span>
+          </div>
+        </div>
+      )}
+
       {(tieneFichaTecnica || tieneComposicion) && (
-        <div className="pd-tabs">
+        <div className="pd-tabs" ref={tabsRef}>
           <div className="pd-tabs__nav" role="tablist">
           {tieneFichaTecnica && (
             <button
@@ -552,43 +676,19 @@ function ProductoDetalle() {
 
         <div className="pd-tabs__panel" role="tabpanel">
           {tabActiva === 'ficha' && detalles && (
-            <table className="pd-specs-table">
-              <tbody>
-                {detalles.indicaciones && (
-                  <tr><th>Indicaciones</th><td>{detalles.indicaciones}</td></tr>
-                )}
-                {detalles.dosis_recomendada && (
-                  <tr><th>Dosis recomendada</th><td>{detalles.dosis_recomendada}</td></tr>
-                )}
-                {detalles.via_administracion && (
-                  <tr><th>Via de administracion</th><td>{detalles.via_administracion}</td></tr>
-                )}
-                {detalles.contraindicaciones && (
-                  <tr><th>Contraindicaciones</th><td>{detalles.contraindicaciones}</td></tr>
-                )}
-                {detalles.efectos_secundarios && (
-                  <tr><th>Efectos secundarios</th><td>{detalles.efectos_secundarios}</td></tr>
-                )}
-                {detalles.precauciones && (
-                  <tr><th>Precauciones</th><td>{detalles.precauciones}</td></tr>
-                )}
-                {detalles.presentacion && (
-                  <tr><th>Presentacion</th><td>{detalles.presentacion}</td></tr>
-                )}
-                {detalles.unidades_por_presentacion && (
-                  <tr><th>Unidades por presentacion</th><td>{detalles.unidades_por_presentacion}</td></tr>
-                )}
-                {detalles.condiciones_almacenamiento && (
-                  <tr><th>Almacenamiento</th><td>{detalles.condiciones_almacenamiento}</td></tr>
-                )}
-                {detalles.registro_sanitario && (
-                  <tr><th>Registro sanitario</th><td>{detalles.registro_sanitario}</td></tr>
-                )}
-                {detalles.titular_registro && (
-                  <tr><th>Titular del registro</th><td>{detalles.titular_registro}</td></tr>
-                )}
-              </tbody>
-            </table>
+            <div className="pd-ficha-grid">
+              {FICHA_CAMPOS.filter(({ clave }) => detalles[clave]).map(({ clave, etiqueta, Icono }) => (
+                <div key={clave} className="pd-ficha-item">
+                  <span className="pd-ficha-item__icono">
+                    <Icono size={16} aria-hidden="true" />
+                  </span>
+                  <div className="pd-ficha-item__body">
+                    <span className="pd-ficha-item__label">{etiqueta}</span>
+                    <span className="pd-ficha-item__value">{detalles[clave]}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
 
           {tabActiva === 'fichaclinica' && (
@@ -644,6 +744,10 @@ function ProductoDetalle() {
         </div>
       </div>
       )}
+
+      <div className="pd-reviews" ref={resenasRef}>
+        <Valoraciones productoId={producto.id} />
+      </div>
 
       {carruseles.length > 0 && (
         <div className="pd-related">
