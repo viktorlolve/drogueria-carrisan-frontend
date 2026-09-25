@@ -2,8 +2,9 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   Heart, Share2, Check, Stethoscope, Pill, Route, ShieldAlert,
-  AlertTriangle, ShieldCheck, Package, Boxes, Thermometer,
+  AlertTriangle, ShieldCheck, Package, Thermometer,
   FileCheck2, Building2, ReceiptText, CreditCard,
+  MapPin, FlaskConical,
 } from 'lucide-react'
 import api from '../api/axios'
 import { useCart } from '../context/CartContext'
@@ -12,6 +13,7 @@ import { useFavoritos } from '../context/FavoritosContext'
 import HomeCarrusel from '../components/HomeCarrusel'
 import Valoraciones from '../components/Valoraciones'
 import { agruparPorLinea } from '../utils/agruparPorLinea'
+import Footer from '../components/Footer'
 import BottomNav from '../components/BottomNav'
 import { ProductoImagen } from '../components/icons/ProductoImagen'
 import SECCIONES_FICHA from '../config/seccionesFicha'
@@ -20,20 +22,15 @@ import './ProductoDetalle.css'
 const CANTIDAD_CARRUSELES = 2
 const MINIMO_POR_CARRUSEL = 4
 
-// Campos de la ficha técnica: clave en `detalles` + etiqueta + ícono.
-// Reemplaza la tabla plana por un grid de tarjetas más escaneable.
-const FICHA_CAMPOS = [
+// Campos clínicos propios en `detalles` — se muestran en la tab "Ficha clinica",
+// arriba del acordeón CIMA (grid de tarjetas con icono).
+const FICHA_CLINICA_CAMPOS = [
   { clave: 'indicaciones', etiqueta: 'Indicaciones', Icono: Stethoscope },
   { clave: 'dosis_recomendada', etiqueta: 'Dosis recomendada', Icono: Pill },
   { clave: 'via_administracion', etiqueta: 'Vía de administración', Icono: Route },
   { clave: 'contraindicaciones', etiqueta: 'Contraindicaciones', Icono: ShieldAlert },
   { clave: 'efectos_secundarios', etiqueta: 'Efectos secundarios', Icono: AlertTriangle },
   { clave: 'precauciones', etiqueta: 'Precauciones', Icono: ShieldCheck },
-  { clave: 'presentacion', etiqueta: 'Presentación', Icono: Package },
-  { clave: 'unidades_por_presentacion', etiqueta: 'Unidades por presentación', Icono: Boxes },
-  { clave: 'condiciones_almacenamiento', etiqueta: 'Almacenamiento', Icono: Thermometer },
-  { clave: 'registro_sanitario', etiqueta: 'Registro sanitario', Icono: FileCheck2 },
-  { clave: 'titular_registro', etiqueta: 'Titular del registro', Icono: Building2 },
 ]
 
 function barajar(array) {
@@ -184,12 +181,13 @@ function ProductoDetalle() {
       setMoleculas(m || [])
       setTasaVes(resTasa.data.usd_a_ves)
 
-      const tieneFichaTecnica = !!d && (
+      const tieneSpecHoja = !!p && (p.laboratorio || p.pais_origen || p.sku || p.presentacion)
+      const tieneClinicaPropia = !!d && (
         d.indicaciones || d.contraindicaciones || d.dosis_recomendada ||
         d.via_administracion || d.efectos_secundarios || d.precauciones ||
-        d.presentacion || d.registro_sanitario
+        d.presentacion || d.condiciones_almacenamiento || d.registro_sanitario
       )
-      setTabActiva(tieneFichaTecnica ? 'ficha' : 'fichaclinica')
+      setTabActiva(tieneSpecHoja || tieneClinicaPropia ? 'ficha' : 'fichaclinica')
 
       const fichasPromise = (m && m.length > 0) ? (async () => {
         setCargandoFichas(true)
@@ -331,18 +329,54 @@ function ProductoDetalle() {
 
   const galeria = [producto.foto_url, ...(detalles?.imagen_secundaria_urls || [])].filter(Boolean)
 
-  const tieneFichaTecnica = !!detalles && (
-    detalles.indicaciones || detalles.contraindicaciones || detalles.dosis_recomendada ||
-    detalles.via_administracion || detalles.efectos_secundarios || detalles.precauciones ||
-    detalles.presentacion || detalles.registro_sanitario
-  )
   const tieneComposicion = moleculas.length > 0
   const tieneSpecs = !!(producto.laboratorio || producto.forma || producto.linea || producto.pais_origen)
+
+  const principioActivo =
+    (moleculas.map((m) => m.moleculas_referencias?.nombre).filter(Boolean).join(', ')) ||
+    producto.molecula ||
+    ''
+  const concentraciones = [
+    ...new Set(
+      moleculas
+        .map((m) => [m.concentracion, m.unidad_concentracion].filter(Boolean).join(' '))
+        .filter(Boolean)
+    ),
+  ]
+  const presentacionUnidades = /^X\s+\d+/.test(producto.presentacion || '')
+  const presentacionTexto = producto.presentacion
+    ? presentacionUnidades
+      ? `CAJA ${producto.presentacion}`
+      : producto.presentacion
+    : ''
+  const registroTexto = detalles?.registro_sanitario || producto.sku || ''
+
+  const fichaTecnicaItems = [
+    producto.laboratorio && { etiqueta: 'Laboratorio', Icono: Building2, valor: producto.laboratorio },
+    producto.pais_origen && { etiqueta: 'País de origen', Icono: MapPin, valor: producto.pais_origen },
+    principioActivo && { etiqueta: 'Principio activo', Icono: FlaskConical, valor: principioActivo },
+    concentraciones.length > 0 && { etiqueta: 'Concentración', Icono: Pill, valor: concentraciones.join(' · ') },
+    presentacionTexto && { etiqueta: 'Presentación', Icono: Package, valor: presentacionTexto },
+    registroTexto && {
+      etiqueta: 'Registro sanitario',
+      Icono: FileCheck2,
+      valor: registroTexto,
+      enlace: producto.sku ? `/registro-inhrr?sku=${encodeURIComponent(producto.sku)}` : '/registro-inhrr',
+    },
+    detalles?.condiciones_almacenamiento && {
+      etiqueta: 'Almacenamiento',
+      Icono: Thermometer,
+      valor: detalles.condiciones_almacenamiento,
+    },
+  ].filter(Boolean)
+
+  const tieneFichaTecnica = fichaTecnicaItems.length > 0
+  const tieneDetallesClinicos = !!detalles && FICHA_CLINICA_CAMPOS.some(({ clave }) => detalles[clave])
 
   const anclas = [
     producto.descripcion && { id: 'descripcion', label: 'Descripción' },
     tieneSpecs && { id: 'specs', label: 'Especificaciones' },
-    (tieneFichaTecnica || tieneComposicion) && { id: 'ficha', label: 'Ficha técnica' },
+    (tieneFichaTecnica || tieneDetallesClinicos || tieneComposicion) && { id: 'ficha', label: 'Ficha técnica' },
     { id: 'resenas', label: 'Reseñas' },
   ].filter(Boolean)
 
@@ -362,8 +396,9 @@ function ProductoDetalle() {
     .filter((c) => c.entradas.length > 0)
 
   return (
-    <div className="pd-page">
-      <nav className="pd-breadcrumb" aria-label="Breadcrumb">
+    <>
+      <div className="pd-page">
+        <nav className="pd-breadcrumb" aria-label="Breadcrumb">
         <Link to="/">Inicio</Link>
         <span className="pd-breadcrumb__sep">/</span>
         <Link to="/catalogo">Catalogo</Link>
@@ -633,6 +668,122 @@ function ProductoDetalle() {
             </p>
           </div>
         </div>
+
+        {(tieneFichaTecnica || tieneDetallesClinicos || tieneComposicion) && (
+          <div className="pd-tabs" ref={tabsRef}>
+            <div className="pd-tabs__nav" role="tablist">
+              {tieneFichaTecnica && (
+                <button
+                  role="tab"
+                  className={`pd-tabs__btn ${tabActiva === 'ficha' ? 'active' : ''}`}
+                  onClick={() => setTabActiva('ficha')}
+                  aria-selected={tabActiva === 'ficha'}
+                >
+                  Ficha tecnica
+                </button>
+              )}
+              {(tieneDetallesClinicos || tieneComposicion) && (
+                <button
+                  role="tab"
+                  className={`pd-tabs__btn ${tabActiva === 'fichaclinica' ? 'active' : ''}`}
+                  onClick={() => setTabActiva('fichaclinica')}
+                  aria-selected={tabActiva === 'fichaclinica'}
+                >
+                  Ficha clinica
+                </button>
+              )}
+            </div>
+
+            <div className="pd-tabs__panel" role="tabpanel">
+              {tabActiva === 'ficha' && (
+                <div className="pd-ficha-grid">
+                  {fichaTecnicaItems.map(({ etiqueta, Icono, valor, enlace }) => (
+                    <div key={etiqueta} className="pd-ficha-item">
+                      <span className="pd-ficha-item__icono">
+                        <Icono size={16} aria-hidden="true" />
+                      </span>
+                      <div className="pd-ficha-item__body">
+                        <span className="pd-ficha-item__label">{etiqueta}</span>
+                        {enlace ? (
+                          <Link to={enlace} className="pd-ficha-item__link">{valor}</Link>
+                        ) : (
+                          <span className="pd-ficha-item__value">{valor}</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {tabActiva === 'fichaclinica' && (
+                <div className="pd-clinical">
+                  {detalles && FICHA_CLINICA_CAMPOS.some(({ clave }) => detalles[clave]) && (
+                    <div className="pd-ficha-grid pd-ficha-grid--clinica">
+                      {FICHA_CLINICA_CAMPOS.filter(({ clave }) => detalles[clave]).map(({ clave, etiqueta, Icono }) => (
+                        <div key={clave} className="pd-ficha-item">
+                          <span className="pd-ficha-item__icono">
+                            <Icono size={16} aria-hidden="true" />
+                          </span>
+                          <div className="pd-ficha-item__body">
+                            <span className="pd-ficha-item__label">{etiqueta}</span>
+                            <span className="pd-ficha-item__value">{detalles[clave]}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {cargandoFichas && <span className="pd-clinical__loading">Cargando fichas clinicas...</span>}
+
+                  {!cargandoFichas && categoriasClinicas.length > 0 ? (
+                    <div className="pd-clinical__list">
+                      {categoriasClinicas.map(({ clave, etiqueta, icono, entradas }) => {
+                        const abierta = seccionAbierta === clave
+                        return (
+                          <div key={clave} className={`pd-clinical__item ${abierta ? 'open' : ''}`}>
+                            <div className="pd-clinical__row">
+                              <button
+                                type="button"
+                                className="pd-clinical__toggle"
+                                onClick={() => setSeccionAbierta(abierta ? '' : clave)}
+                                aria-expanded={abierta}
+                              >
+                                <span className="pd-clinical__icono">{icono}</span>
+                                <span className="pd-clinical__name">{etiqueta}</span>
+                                <span className={`pd-clinical__chevron ${abierta ? 'open' : ''}`}>&#9662;</span>
+                              </button>
+                            </div>
+                            {abierta && (
+                              <div className="pd-clinical__body">
+                                {entradas.map((e, i) => (
+                                  <div key={`${e.id}-${i}`} className="pd-clinical__section">
+                                    {entradas.length > 1 && (
+                                      <h4 className="pd-clinical__section-title">{e.nombre}</h4>
+                                    )}
+                                    <p className="pd-clinical__section-text">{e.texto}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    !cargandoFichas && (
+                      <p className="pd-clinical__empty">
+                        Sin ficha clinica disponible para este producto.
+                      </p>
+                    )
+                  )}
+                  <p className="pd-clinical__source">
+                    Informacion farmacologica de referencia (AEMPS - CIMA). No sustituye la consulta con un profesional de la salud.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {(detalles?.registro_sanitario || detalles?.titular_registro) && (
@@ -647,102 +798,6 @@ function ProductoDetalle() {
             </span>
           </div>
         </div>
-      )}
-
-      {(tieneFichaTecnica || tieneComposicion) && (
-        <div className="pd-tabs" ref={tabsRef}>
-          <div className="pd-tabs__nav" role="tablist">
-          {tieneFichaTecnica && (
-            <button
-              role="tab"
-              className={`pd-tabs__btn ${tabActiva === 'ficha' ? 'active' : ''}`}
-              onClick={() => setTabActiva('ficha')}
-              aria-selected={tabActiva === 'ficha'}
-            >
-              Ficha tecnica
-            </button>
-          )}
-          {tieneComposicion && (
-            <button
-              role="tab"
-              className={`pd-tabs__btn ${tabActiva === 'fichaclinica' ? 'active' : ''}`}
-              onClick={() => setTabActiva('fichaclinica')}
-              aria-selected={tabActiva === 'fichaclinica'}
-            >
-              Ficha clinica
-            </button>
-          )}
-        </div>
-
-        <div className="pd-tabs__panel" role="tabpanel">
-          {tabActiva === 'ficha' && detalles && (
-            <div className="pd-ficha-grid">
-              {FICHA_CAMPOS.filter(({ clave }) => detalles[clave]).map(({ clave, etiqueta, Icono }) => (
-                <div key={clave} className="pd-ficha-item">
-                  <span className="pd-ficha-item__icono">
-                    <Icono size={16} aria-hidden="true" />
-                  </span>
-                  <div className="pd-ficha-item__body">
-                    <span className="pd-ficha-item__label">{etiqueta}</span>
-                    <span className="pd-ficha-item__value">{detalles[clave]}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {tabActiva === 'fichaclinica' && (
-            <div className="pd-clinical">
-              {cargandoFichas && <span className="pd-clinical__loading">Cargando fichas clinicas...</span>}
-
-              {!cargandoFichas && categoriasClinicas.length > 0 ? (
-                <div className="pd-clinical__list">
-                  {categoriasClinicas.map(({ clave, etiqueta, icono, entradas }) => {
-                    const abierta = seccionAbierta === clave
-                    return (
-                      <div key={clave} className={`pd-clinical__item ${abierta ? 'open' : ''}`}>
-                        <div className="pd-clinical__row">
-                          <button
-                            type="button"
-                            className="pd-clinical__toggle"
-                            onClick={() => setSeccionAbierta(abierta ? '' : clave)}
-                            aria-expanded={abierta}
-                          >
-                            <span className="pd-clinical__icono">{icono}</span>
-                            <span className="pd-clinical__name">{etiqueta}</span>
-                            <span className={`pd-clinical__chevron ${abierta ? 'open' : ''}`}>&#9662;</span>
-                          </button>
-                        </div>
-                        {abierta && (
-                          <div className="pd-clinical__body">
-                            {entradas.map((e, i) => (
-                              <div key={`${e.id}-${i}`} className="pd-clinical__section">
-                                {entradas.length > 1 && (
-                                  <h4 className="pd-clinical__section-title">{e.nombre}</h4>
-                                )}
-                                <p className="pd-clinical__section-text">{e.texto}</p>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              ) : (
-                !cargandoFichas && (
-                  <p className="pd-clinical__empty">
-                    Sin ficha clinica disponible para este producto.
-                  </p>
-                )
-              )}
-              <p className="pd-clinical__source">
-                Informacion farmacologica de referencia (AEMPS - CIMA). No sustituye la consulta con un profesional de la salud.
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
       )}
 
       <div className="pd-reviews" ref={resenasRef}>
@@ -765,7 +820,13 @@ function ProductoDetalle() {
       )}
 
       <BottomNav />
-    </div>
+      </div>
+
+      <div className="pd-footer-wrapper">
+        <Footer />
+      </div>
+      <div className="pd-footer-spacer" aria-hidden="true" />
+    </>
   )
 }
 

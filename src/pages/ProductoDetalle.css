@@ -74,8 +74,16 @@
     grid-template-columns: 1fr;
     gap: 28px;
   }
+  .pd-purchase,
+  .pd-tabs {
+    grid-column: auto;
+    grid-row: auto;
+  }
   .pd-purchase {
     order: 3;
+  }
+  .pd-tabs {
+    order: 4;
   }
 }
 
@@ -447,6 +455,8 @@
 .pd-purchase {
   position: sticky;
   top: 20px;
+  grid-column: 3;
+  grid-row: 1 / span 2;
 }
 
 .pd-purchase__card {
@@ -698,6 +708,7 @@
    Tabs
    --------------------------------------------------------- */
 .pd-tabs {
+  grid-column: 1 / span 2;
   border-top: 1px solid #E2E8F0;
   padding-top: 32px;
   margin-bottom: 40px;
@@ -793,6 +804,22 @@
   color: #1A1A2E;
   line-height: 1.55;
   overflow-wrap: break-word;
+}
+
+.pd-ficha-item__link {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #0052DC;
+  text-decoration: none;
+  overflow-wrap: break-word;
+}
+
+.pd-ficha-item__link:hover {
+  text-decoration: underline;
+}
+
+.pd-ficha-grid--clinica {
+  margin-bottom: 24px;
 }
 
 /* ---------------------------------------------------------
@@ -1131,4 +1158,15 @@
     display: block;
     padding: 10px 0;
   }
+}
+
+/* ---- Footer (igual a Home) ---- */
+.pd-footer-wrapper {
+  margin-top: 20px;
+  border-top: 1px solid rgba(35, 43, 69, 0.08);
+}
+
+/* Espacio para que el bottom nav fijo no tape el final del footer */
+.pd-footer-spacer {
+  height: 92px;
 }

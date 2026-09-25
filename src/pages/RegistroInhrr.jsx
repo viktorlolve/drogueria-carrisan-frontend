@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import api from '../api/axios'
 import BottomNav from '../components/BottomNav'
 import Footer from '../components/Footer'
@@ -36,6 +37,8 @@ function formatFecha(f) {
 
 function RegistroInhrr() {
   const esMobile = useEsMobile(768)
+  const [searchParams] = useSearchParams()
+  const skuDeepLink = searchParams.get('sku')
 
   const [termino, setTermino] = useState('')
   const [terminoActivo, setTerminoActivo] = useState('')
@@ -134,6 +137,12 @@ function RegistroInhrr() {
     setFicha(null)
     setCargandoFicha(false)
   }
+
+  useEffect(() => {
+    if (!skuDeepLink) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    abrirFicha(skuDeepLink)
+  }, [skuDeepLink, abrirFicha])
 
   const toggleSeccion = (key) =>
     setSeccionesAbiertas((prev) => ({ ...prev, [key]: !prev[key] }))
