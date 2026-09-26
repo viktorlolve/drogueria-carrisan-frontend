@@ -7,8 +7,9 @@ import { useFavoritos } from '../context/FavoritosContext'
 import { usePush } from '../hooks/usePush'
 import { CATEGORIAS } from '../utils/notificacionesCatalogo'
 import {
-  Package, ChevronRight, ChevronDown, Loader2, AlertCircle,
-  MessageCircle, ShieldCheck, Wallet, Bell, LogOut, Settings, X, Lock, Scale, Users,
+  ChevronRight, ChevronDown, Loader2, AlertCircle, AlertTriangle,
+  MessageCircle, ShieldCheck, Wallet, Bell, LogOut, Settings, Lock, Scale, Users,
+  CreditCard, FileText, ClipboardList, ListChecks, Heart,
 } from 'lucide-react'
 import LayoutPaginaPrincipal from '../components/paginas-principales/Layoutpaginaprincipal'
 import HojaInferior from '../components/HojaInferior'
@@ -229,7 +230,13 @@ function ContenidoModalPermisos() {
             const Icono = cat.icono
             return (
               <div className="modal-permisos__fila" key={cat.id}>
-                <div className="modal-permisos__fila-icono" style={{ background: `var(--color-${cat.color}-light, var(--color-bg))` }}>
+                <div
+                  className="modal-permisos__fila-icono"
+                  style={{
+                    background: `var(--color-${cat.color}-light, var(--color-bg))`,
+                    color: `var(--color-${cat.color}, var(--color-brand))`,
+                  }}
+                >
                   <Icono size={17} />
                 </div>
                 <div className="modal-permisos__fila-texto">
@@ -277,47 +284,102 @@ function ContenidoModalPermisos() {
 }
 
 // ---------------------------------------------------------
-// MiniOrdenCard — tarjeta compacta para el carrusel de "Tus pedidos"
+// MiniOrdenCard — tarjeta compacta del carrusel "Tus pedidos".
+//
+// Cuatro rangos, un trabajo cada uno:
+//   1. identidad → "Orden #123" + fecha de creación (sello dd/mm/yy)
+//   2. hechos    → envío · artículos válidos · última actualización
+//   3. dinero    → el total, en línea propia (nunca compite con el estado)
+//   4. estado    → banda a sangre con el label de estadosOrden.js
+//
+// El label y los colores del estado SIEMPRE salen de getEstadoOrden()
+// (fuente única: src/config/estadosOrden.js). Nada de "pago pendiente":
+// es una condición de estado_pago, no un estado logístico.
 // ---------------------------------------------------------
+
+// dd/mm/yy → "15/08/26". Formato a mano (no toLocaleDateString) para no
+// depender de la versión de ICU del navegador. Devuelve null si no hay
+// fecha válida, y el JSX omite el dato en vez de pintar "Invalid Date".
+function formatearFechaCorta(iso) {
+  if (!iso) return null
+  const fecha = new Date(iso)
+  if (Number.isNaN(fecha.getTime())) return null
+  const dd = String(fecha.getDate()).padStart(2, '0')
+  const mm = String(fecha.getMonth() + 1).padStart(2, '0')
+  const aa = String(fecha.getFullYear()).slice(-2)
+  return `${dd}/${mm}/${aa}`
+}
+
+// Última actualización SOLO si cae en otro día calendario que la creación:
+// el updated_at se toca al crear la orden, así que el mismo día es ruido.
+function fechaActualizacion(orden) {
+  const creada = orden.created_at ? new Date(orden.created_at) : null
+  const actualizada = orden.updated_at ? new Date(orden.updated_at) : null
+  if (!creada || Number.isNaN(creada.getTime())) return null
+  if (!actualizada || Number.isNaN(actualizada.getTime())) return null
+  const dia = (f) => `${f.getFullYear()}-${f.getMonth() + 1}-${f.getDate()}`
+  return dia(actualizada) === dia(creada) ? null : formatearFechaCorta(orden.updated_at)
+}
+
 function MiniOrdenCard({ orden }) {
   const estado = getEstadoOrden(orden.estado)
+
+  const fechaCreacion = formatearFechaCorta(orden.created_at)
+  const fechaCambio = fechaActualizacion(orden)
+
+  // Los ítems anulados no cuentan para la orden.
+  const items = (orden.ordenes_items || []).filter((item) => item.anulado !== true)
+  const itemsTexto = items.length === 1 ? '1 artículo' : `${items.length} artículos`
+
   return (
     <Link to={`/orders/${orden.id}`} className="mini-orden-card">
+      {/* 1 · identidad */}
       <div className="mini-orden-card__top">
-        <div className="mini-orden-card__icono">
-          <Package size={18} />
-        </div>
-        <div className="mini-orden-card__info">
-          <span className="mini-orden-card__titulo">Orden #{orden.id}</span>
-          <span className="mini-orden-card__meta">
-            {ETIQUETAS_ENVIO[orden.tipo_envio] || ETIQUETAS_ENVIO.retiro}
+        <span className="mini-orden-card__titulo">Orden #{orden.id}</span>
+        {fechaCreacion && (
+          <span className="mini-orden-card__fecha">
+            <time dateTime={orden.created_at}>{fechaCreacion}</time>
           </span>
-        </div>
+        )}
+        <span className="mini-orden-card__ir" aria-hidden="true">
+          <ChevronRight size={14} />
+        </span>
       </div>
 
-      <div className="mini-orden-card__bottom">
-        <div className="mini-orden-card__texto">
-          <span className="mini-orden-card__monto">{formatearMonto(orden.total_usd)}</span>
-        </div>
-        <div className="mini-orden-card__pie">
-          <span className="mini-orden-card__badge" style={{ color: estado.color, background: estado.bg }}>
-            {estado.label}
-          </span>
-          <span className="mini-orden-card__flecha">
-            <ChevronRight size={16} />
-          </span>
-        </div>
+      {/* 2 · hechos */}
+      <div className="mini-orden-card__facts">
+        <span className="mini-orden-card__envio">
+          {ETIQUETAS_ENVIO[orden.tipo_envio] || ETIQUETAS_ENVIO.retiro}
+        </span>
+        {items.length > 0 && <span>{itemsTexto}</span>}
+        {fechaCambio && <span>Cambió {fechaCambio}</span>}
       </div>
+
+      {/* 3 · dinero — línea propia, nunca recortada */}
+      <span className="mini-orden-card__monto">{formatearMonto(orden.total_usd)}</span>
+
+      {/* 4 · estado — banda a sangre; los colores entran por --estado-color */}
+      <span
+        className="mini-orden-card__estado"
+        style={{ background: estado.bg, '--estado-color': estado.color }}
+      >
+        {estado.label}
+      </span>
     </Link>
   )
 }
 
 // ---------------------------------------------------------
-// Bloque de crédito — barra de progreso (Chakra) si el cliente tiene
-// línea de crédito asignada; si es cliente de contado, un bloque
-// distinto invitando a Pagos en su lugar.
+// Bloque de estado de cuenta — "saldo disponible" como cifra
+// protagonista (es lo que el cliente quiere saber: cuánto puede
+// gastar ya), con la deuda al día y vencida al lado.
+//
+// Todos los datos vienen en `resumen` del endpoint que la página ya
+// llama (GET /clientes/:id/estado-cuenta) — este bloque no agrega
+// ni una request. Si el cliente no tiene línea de crédito, cae a la
+// variante de contado que lo manda a Pagos.
 // ---------------------------------------------------------
-function BloqueCredito({ resumen }) {
+function BloqueEstadoCuenta({ resumen }) {
   const tieneCredito = (resumen?.linea_credito || 0) > 0
 
   if (!tieneCredito) {
@@ -339,13 +401,29 @@ function BloqueCredito({ resumen }) {
 
   const porcentaje = Math.min((resumen.deuda_actual / resumen.linea_credito) * 100, 100)
   const colorPalette = porcentaje >= 90 ? 'red' : porcentaje >= 60 ? 'orange' : 'blue'
+  const hayVencida = (resumen.deuda_vencida || 0) > 0
 
   return (
-    <Link to="/estado-cuenta" className="bloque-tarjeta bloque-credito">
-      <div className="bloque-credito__header">
-        <span className="bloque-tarjeta__titulo">Línea de crédito</span>
+    <div className="bloque-tarjeta bloque-credito">
+      {resumen.credito_bloqueado && (
+        <div className="bloque-credito__bloqueado">
+          <AlertTriangle size={15} />
+          <span>
+            Tu crédito está bloqueado
+            {resumen.credito_bloqueado_motivo ? `: ${resumen.credito_bloqueado_motivo}` : '.'}
+          </span>
+        </div>
+      )}
+
+      <Link to="/estado-cuenta" className="bloque-credito__hero">
+        <div>
+          <span className="bloque-credito__hero-label">Disponible para comprar</span>
+          <strong className={`bloque-credito__hero-monto${resumen.saldo <= 0 ? ' bloque-credito__cifra--rojo' : ''}`}>
+            {formatearMonto(resumen.saldo)}
+          </strong>
+        </div>
         <span className="bloque-credito__porcentaje">{Math.round(porcentaje)}% usado</span>
-      </div>
+      </Link>
 
       <Progress.Root value={porcentaje} colorPalette={colorPalette} size="sm" className="bloque-credito__barra">
         <Progress.Track borderRadius="999px">
@@ -361,11 +439,31 @@ function BloqueCredito({ resumen }) {
           </strong>
         </div>
         <div>
+          <span className="bloque-credito__cifra-label">Vencida</span>
+          <strong className={hayVencida ? 'bloque-credito__cifra--rojo' : ''}>
+            {formatearMonto(resumen.deuda_vencida)}
+          </strong>
+          {hayVencida && resumen.cantidad_ordenes_vencidas > 0 && (
+            <span className="bloque-credito__cifra-nota">
+              {resumen.cantidad_ordenes_vencidas} {resumen.cantidad_ordenes_vencidas === 1 ? 'orden vencida' : 'órdenes vencidas'}
+            </span>
+          )}
+        </div>
+        <div>
           <span className="bloque-credito__cifra-label">Línea total</span>
           <strong>{formatearMonto(resumen.linea_credito)}</strong>
         </div>
       </div>
-    </Link>
+
+      {resumen.proxima_orden_vencer?.fecha_vencimiento && (
+        <div className="bloque-credito__proximo">
+          <span>
+            Próximo vencimiento · {formatearFechaCorta(resumen.proxima_orden_vencer.fecha_vencimiento)}
+          </span>
+          <strong>{formatearMonto(resumen.proxima_orden_vencer.total_usd)}</strong>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -447,20 +545,90 @@ function GraficoGastoMensual({ datos }) {
 }
 
 // ---------------------------------------------------------
-// Preview de favoritos — mini grid con imagen
+// Bloque de pendientes — la cola de tareas del cliente. Cada tile
+// es un contador con su link; si no hay nada en todo el bloque, la
+// tarjeta no se renderiza (ocupar espacio con "0, 0, 0" es ruido).
 // ---------------------------------------------------------
-function BloqueFavoritos({ favoritos }) {
+
+// Órdenes de contado que todavía no tienen pago verificado. Sale de los
+// pedidos que la página YA tiene en memoria — no cuesta una request.
+// El crédito no entra: no requiere reporte de pago.
+function calcularPagosPendientes(ordenes) {
+  return ordenes.filter(
+    (o) =>
+      o.forma_pago === 'contado' &&
+      !ESTADOS_CERRADOS.has(o.estado) &&
+      (o.estado_pago === 'esperando' || o.estado_pago === 'reportado')
+  ).length
+}
+
+function BloquePendientes({ tiles }) {
+  const activos = tiles.filter((t) => t.cantidad > 0)
+  if (activos.length === 0) return null
+
+  return (
+    <div className="bloque-tarjeta bloque-pendientes">
+      <div className="bloque-pendientes__header">
+        <span className="bloque-tarjeta__titulo">Pendientes</span>
+        <span className="bloque-pendientes__total">
+          {activos.reduce((acc, t) => acc + t.cantidad, 0)}
+        </span>
+      </div>
+
+      <div className="bloque-pendientes__grid">
+        {activos.map((t) => {
+          const Icono = t.icono
+          return (
+            <Link key={t.id} to={t.to} className={`bloque-pendientes__tile bloque-pendientes__tile--${t.tone}`}>
+              <span className="bloque-pendientes__tile-icono">
+                <Icono size={17} />
+              </span>
+              <span className="bloque-pendientes__tile-cantidad">{t.cantidad}</span>
+              <span className="bloque-pendientes__tile-label">{t.label}</span>
+            </Link>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------
+// Mis items — listas guardadas + favoritos, con contadores.
+// El grid de fotos se mantiene (el dueño lo pidió): es el vistazo
+// rápido a lo que guardó sin abrir la página.
+// ---------------------------------------------------------
+function BloqueMisItems({ favoritos, listas }) {
   const preview = (favoritos || []).slice(0, 4)
+  const totalFavoritos = (favoritos || []).length
+  const totalListas = (listas || []).length
 
   return (
     <Link to="/mis-items" className="bloque-tarjeta bloque-favoritos">
       <div className="bloque-favoritos__header">
-        <span className="bloque-tarjeta__titulo">Favoritos guardados</span>
-        <span className="bloque-pedidos-activos__total">{(favoritos || []).length}</span>
+        <span className="bloque-tarjeta__titulo">Mis items</span>
+        <span className="bloque-pedidos-activos__flecha">
+          <ChevronRight size={16} />
+        </span>
+      </div>
+
+      <div className="bloque-favoritos__contadores">
+        <span className="bloque-favoritos__contador">
+          <ListChecks size={15} />
+          <strong>{totalListas}</strong>
+          {totalListas === 1 ? 'lista' : 'listas'}
+        </span>
+        <span className="bloque-favoritos__contador">
+          <Heart size={15} />
+          <strong>{totalFavoritos}</strong>
+          {totalFavoritos === 1 ? 'favorito' : 'favoritos'}
+        </span>
       </div>
 
       {preview.length === 0 ? (
-        <p className="bloque-tarjeta__descripcion">Guardá productos que uses seguido para encontrarlos rápido.</p>
+        <p className="bloque-tarjeta__descripcion">
+          Guardá productos que uses seguido y armá listas para encontrarlos rápido.
+        </p>
       ) : (
         <div className="bloque-favoritos__grid">
           {preview.map((producto) => (
@@ -484,6 +652,14 @@ function MiCuenta() {
   const navigate = useNavigate()
   const [estadoCuenta, setEstadoCuenta] = useState(null)
   const [ordenes, setOrdenes] = useState([])
+  const [listas, setListas] = useState([])
+  const [pendientes, setPendientes] = useState({
+    mensajes: 0,
+    documentos: 0,
+    cotizaciones: 0,
+    requerimientos: 0,
+    notificaciones: 0,
+  })
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
 
@@ -494,12 +670,14 @@ function MiCuenta() {
   useEffect(() => {
     async function cargarDatos() {
       try {
-        const [{ data: dataCuenta }, { data: dataOrdenes }] = await Promise.all([
+        const [{ data: dataCuenta }, { data: dataOrdenes }, { data: dataListas }] = await Promise.all([
           api.get(`/clientes/${user.id}/estado-cuenta`),
           api.get('/orders'),
+          api.get('/lists'),
         ])
         setEstadoCuenta(dataCuenta)
-        setOrdenes(dataOrdenes)
+        setOrdenes(dataOrdenes || [])
+        setListas(dataListas || [])
       } catch (err) {
         setError('No se pudieron cargar los datos de tu cuenta')
         console.error(err)
@@ -508,7 +686,45 @@ function MiCuenta() {
       }
     }
 
+    // Contadores de "Pendientes" — van aparte y con allSettled para que un
+    // endpoint caído no tumbe el bloque entero ni ensucie el error global.
+    async function cargarPendientes() {
+      const [mensajes, documentos, cotizaciones, requerimientos, notificaciones] = await Promise.allSettled([
+        api.get('/chat/no-leidos'),
+        api.get('/documentos/mios'),
+        api.get('/cotizaciones/mias'),
+        api.get('/requerimientos/mias'),
+        api.get('/notifications/unread-count'),
+      ])
+
+      const valor = (r, select) => (r.status === 'fulfilled' ? select(r.value?.data) : 0)
+      const ahora = new Date()
+
+      setPendientes({
+        mensajes: valor(mensajes, (d) => d?.no_leidos || 0),
+        // Documentos que la empresa pidió y el cliente todavía no subió
+        // (los no subidos a tiempo ya no cuentan: la ventana venció).
+        documentos: valor(documentos, (d) =>
+          (Array.isArray(d) ? d : []).filter(
+            (doc) =>
+              !doc.url_documento &&
+              (!doc.fecha_expiracion || new Date(doc.fecha_expiracion) > ahora)
+          ).length
+        ),
+        // Solicitudes que YA tienen respuesta de la empresa y esperan una
+        // acción del cliente (no las que la empresa tiene que cotizar).
+        cotizaciones: valor(cotizaciones, (d) =>
+          (Array.isArray(d) ? d : []).filter((c) => c.estado === 'cotizada').length
+        ),
+        requerimientos: valor(requerimientos, (d) =>
+          (Array.isArray(d) ? d : []).filter((r) => r.estado === 'respondido').length
+        ),
+        notificaciones: valor(notificaciones, (d) => d?.count || 0),
+      })
+    }
+
     cargarDatos()
+    cargarPendientes()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -516,6 +732,53 @@ function MiCuenta() {
   const ultimasOrdenes = useMemo(() => ordenes.slice(0, 5), [ordenes])
   const gastoMensual = useMemo(() => calcularGastoMensual(ordenes), [ordenes])
   const pedidosActivos = useMemo(() => calcularPedidosActivos(ordenes), [ordenes])
+
+  const tilesPendientes = useMemo(
+    () => [
+      {
+        id: 'pagos',
+        label: 'Pagos por reportar',
+        cantidad: calcularPagosPendientes(ordenes),
+        to: '/orders',
+        icono: CreditCard,
+        tone: 'naranja',
+      },
+      {
+        id: 'mensajes',
+        label: 'Mensajes sin leer',
+        cantidad: pendientes.mensajes,
+        to: '/mensajes',
+        icono: MessageCircle,
+        tone: 'azul',
+      },
+      {
+        id: 'documentos',
+        label: 'Documentos por subir',
+        cantidad: pendientes.documentos,
+        to: '/mis-documentos',
+        icono: FileText,
+        tone: 'teal',
+      },
+      {
+        id: 'solicitudes',
+        label: 'Solicitudes por revisar',
+        cantidad: pendientes.cotizaciones + pendientes.requerimientos,
+        to: '/mis-solicitudes',
+        icono: ClipboardList,
+        tone: 'violeta',
+      },
+      {
+        id: 'notificaciones',
+        label: 'Notificaciones',
+        cantidad: pendientes.notificaciones,
+        to: '/notificaciones',
+        icono: Bell,
+        tone: 'gris',
+      },
+    ],
+    [ordenes, pendientes]
+  )
+
   const inicial = (user.nombre || user.email || '?').charAt(0).toUpperCase()
 
   // "Cambiar cuenta": cierra sesión para que otra persona inicie con
@@ -596,32 +859,30 @@ function MiCuenta() {
         )}
 
         {mostrarConfirmarLogout && (
-          <div className="modal-overlay" onClick={() => setMostrarConfirmarLogout(false)}>
-            <div className="modal-confirmar" onClick={(e) => e.stopPropagation()}>
+          <HojaInferior titulo="Cerrar sesión" onCerrar={() => setMostrarConfirmarLogout(false)}>
+            <p className="confirmar-logout__texto">
+              Tendrás que iniciar sesión de nuevo para acceder a tu cuenta.
+            </p>
+            <div className="confirmar-logout__acciones">
               <button
                 type="button"
-                className="modal-confirmar__cerrar"
-                aria-label="Cerrar"
+                className="btn btn--secundario"
                 onClick={() => setMostrarConfirmarLogout(false)}
               >
-                <X size={16} />
+                Cancelar
               </button>
-              <h3>¿Cerrar sesión?</h3>
-              <p>Tendrás que iniciar sesión de nuevo para acceder a tu cuenta.</p>
-              <div className="modal-confirmar__acciones">
-                <button
-                  type="button"
-                  className="btn btn--secundario"
-                  onClick={() => setMostrarConfirmarLogout(false)}
-                >
-                  Cancelar
-                </button>
-                <button type="button" className="btn btn--peligro" onClick={logout}>
-                  Cerrar sesión
-                </button>
-              </div>
+              <button
+                type="button"
+                className="btn btn--peligro"
+                onClick={() => {
+                  setMostrarConfirmarLogout(false)
+                  logout()
+                }}
+              >
+                Cerrar sesión
+              </button>
             </div>
-          </div>
+          </HojaInferior>
         )}
 
         {error && (
@@ -640,9 +901,11 @@ function MiCuenta() {
         ) : (
           <>
             <div className="mi-cuenta__grid-2col">
-              <BloqueCredito resumen={resumen} />
+              <BloqueEstadoCuenta resumen={resumen} />
               <BloquePedidosActivos ordenes={pedidosActivos} />
             </div>
+
+            <BloquePendientes tiles={tilesPendientes} />
 
             <GraficoGastoMensual datos={gastoMensual} />
 
@@ -672,7 +935,7 @@ function MiCuenta() {
             </section>
 
             <div className="mi-cuenta__grid-2col">
-              <BloqueFavoritos favoritos={favoritos} />
+              <BloqueMisItems favoritos={favoritos} listas={listas} />
 
               <Link to="/contacto" className="bloque-tarjeta soporte-card">
                 <div className="bloque-tarjeta__icono bloque-tarjeta__icono--teal">

@@ -19,6 +19,49 @@
 }
 .hoja-inferior 
 {
+  /* --- Contrato de tokens -----------------------------------------------
+     El portal a document.body saca la hoja del subárbol de la página que
+     la abre, así que no hereda los `--color-*` que esa página declare
+     scopeados a sí misma (p.ej. `.mi-cuenta`). Sin este bloque, todo
+     `color: var(--color-text-muted)` / `background: var(--color-brand-light)`
+     dentro de la hoja queda inválido en tiempo de cómputo: el color
+     heredado cae al `--text` de body y los fondos/bordes quedan
+     transparentes. Es el mismo contrato en todas las páginas.
+     Si agregás un token nuevo, agregalo acá. */
+  --color-brand: #0052DC;
+  --color-brand-dark: #1A1A3A;
+  --color-brand-light: #eaf0ff;
+  --color-accent: #12A594;
+  --color-accent-light: #e7f8f5;
+  --color-positive: #15803d;
+  --color-negative: #dc2626;
+  --color-warning: #d97706;
+  --color-bg: #FFFFFF;
+  --color-surface: #ffffff;
+  --color-border: #e7e6e0;
+  --color-text: #1A1A3A;
+  --color-text-muted: #6b6b7a;
+
+  /* Tintes por categoría — los mismos valores que .notif-icon--* en
+     pages/Notificaciones.css, para que los iconos de las hojas de
+     permisos coincidan con los del centro de notificaciones. */
+  --color-blue-light: #E9EFFC;
+  --color-blue: #0052DC;
+  --color-green-light: #E6F7EC;
+  --color-green: #16a34a;
+  --color-purple-light: #F1EBFB;
+  --color-purple: #7c3aed;
+  --color-orange-light: #FEF3E6;
+  --color-orange: #ea580c;
+  --color-gray-light: #F1F1F2;
+  --color-gray: #4b4d52;
+  --color-teal-light: #E0F5F1;
+  --color-teal: #0d9488;
+  --color-cyan-light: #E0F4FE;
+  --color-cyan: #0891b2;
+  --color-red-light: #FEE2E2;
+  --color-red: #dc2626;
+
   width: 100%
 ;
   max-width: 440px
@@ -34,6 +77,8 @@
   overflow-y: auto
 ;
   animation: hoja-inferior-slide-up 0.25s ease
+;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif
 ;
 }
 .hoja-inferior__manija 

@@ -25,11 +25,15 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* El saludo es <h1> dentro de un <button>, y los botones no heredan
+   `color`: el selector global `h1 { color: var(--text-h) }` de index.css
+   gana por herencia y lo pintaba casi negro. Color explícito. */
 .mi-cuenta h1 {
   font-size: 1.4rem;
   font-weight: 700;
   margin: 0;
   letter-spacing: -0.01em;
+  color: var(--color-brand-dark);
 }
 
 .mi-cuenta h2 {
@@ -88,6 +92,7 @@
   cursor: pointer;
   text-align: left;
   font-family: inherit;
+  color: inherit;
   transition: background 0.15s ease;
 }
 
@@ -190,68 +195,34 @@
 }
 
 /* ================================================================== */
-/* Modal de confirmaciÃ³n rÃ¡pida (icono de logout del header)           */
-/* ================================================================== */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(26, 26, 58, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
-}
+/* La confirmación de cierre de sesión usa <HojaInferior> (portal a
+   document.body), no un overlay propio. Antes esta página declaraba un
+   `.modal-overlay` global que pisaba el de Admin.css (z-index 1000 vs 200)
+   y —más grave— quedaba atrapado dentro de `.ppal-shift`
+   (Layoutpaginaprincipal.css), que tiene `will-change: transform` y por
+   tanto es containing block de sus descendientes `position: fixed`:
+   el modal se centraba contra toda la altura del documento y en móvil
+   caía muy por debajo del fold. El portal de HojaInferior lo evita. */
 
-.modal-confirmar {
-  position: relative;
-  background: var(--color-surface);
-  border-radius: 18px;
-  padding: 24px 22px 20px;
-  width: 100%;
-  max-width: 340px;
-  text-align: center;
-}
 
-.modal-confirmar__cerrar {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: none;
-  background: var(--color-bg);
-  color: var(--color-text-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.modal-confirmar h3 {
-  margin: 6px 0 8px;
-  font-size: 1.05rem;
-  font-weight: 700;
-}
-
-.modal-confirmar p {
-  margin: 0 0 20px;
+/* --- Contenido: confirmar cierre de sesión (HojaInferior) --- */
+.confirmar-logout__texto {
+  margin: 0 0 18px;
   font-size: 0.87rem;
   color: var(--color-text-muted);
   line-height: 1.4;
+  text-align: center;
 }
 
-.modal-confirmar__acciones {
+.confirmar-logout__acciones {
   display: flex;
   gap: 10px;
 }
 
-.modal-confirmar__acciones .btn {
+.confirmar-logout__acciones .btn {
   flex: 1;
   justify-content: center;
 }
-
 
 /* --- Contenido: "Tu cuenta" --- */
 .modal-cuenta__usuario {
@@ -535,8 +506,8 @@ a.bloque-tarjeta:hover {
 }
 
 /* ================================================================== */
-/* Bloque de crÃ©dito â€” barra Chakra + cifras. Si es cliente de contado,  */
-/* variante con icono + CTA a Pagos en su lugar.                       */
+/* Bloque de estado de cuenta — hero "disponible", cifras, próximo      */
+/* vencimiento y aviso de crédito bloqueado.                           */
 /* ================================================================== */
 .bloque-credito--contado {
   flex-direction: row;
@@ -552,16 +523,64 @@ a.bloque-tarjeta:hover {
   gap: 2px;
 }
 
-.bloque-credito__header {
+.bloque-credito__hero {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 10px;
+}
+
+/* La card ya no es un <a> entero (contiene el aviso de bloqueo), así que
+   la afordancia de "esto lleva a Estado de cuenta" vive en el hero. */
+a.bloque-credito__hero:hover {
+  color: var(--color-brand-dark);
+}
+
+a.bloque-credito__hero:hover .bloque-credito__porcentaje {
+  color: var(--color-brand);
+}
+
+.bloque-credito__hero-label {
+  display: block;
+  font-size: 0.74rem;
+  color: var(--color-text-muted);
+}
+
+.bloque-credito__hero-monto {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
 }
 
 .bloque-credito__porcentaje {
+  flex-shrink: 0;
   font-size: 0.78rem;
   font-weight: 700;
   color: var(--color-text-muted);
+}
+
+.bloque-credito__bloqueado {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: -2px 0 12px;
+  padding: 9px 11px;
+  border-radius: 10px;
+  background: #fef3e6;
+  color: var(--color-warning);
+  font-size: 0.79rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.bloque-credito__bloqueado svg {
+  flex-shrink: 0;
+  margin-top: 1px;
 }
 
 .bloque-credito__barra {
@@ -569,8 +588,8 @@ a.bloque-tarjeta:hover {
 }
 
 .bloque-credito__cifras {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -578,6 +597,7 @@ a.bloque-tarjeta:hover {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
 
 .bloque-credito__cifras > div:last-child {
@@ -590,12 +610,100 @@ a.bloque-tarjeta:hover {
 }
 
 .bloque-credito__cifras strong {
-  font-size: 1.02rem;
+  font-size: 0.95rem;
   font-weight: 700;
+  white-space: nowrap;
+}
+
+.bloque-credito__cifra-nota {
+  font-size: 0.7rem;
+  color: var(--color-negative);
 }
 
 .bloque-credito__cifra--rojo {
   color: var(--color-negative);
+}
+
+.bloque-credito__proximo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.bloque-credito__proximo strong {
+  color: var(--color-text);
+}
+
+/* ================================================================== */
+/* Bloque de pendientes — cola de tareas del cliente (icono + número)  */
+/* ================================================================== */
+.bloque-pendientes__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bloque-pendientes__total {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.bloque-pendientes__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.bloque-pendientes__tile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-bg);
+  text-decoration: none;
+  color: var(--color-text);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.bloque-pendientes__tile:hover {
+  border-color: var(--color-brand-light);
+  background: var(--color-brand-light);
+}
+
+.bloque-pendientes__tile-icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  flex-shrink: 0;
+}
+
+/* Cada tile toma su tinte de la misma paleta de Notificaciones.css */
+.bloque-pendientes__tile--naranja .bloque-pendientes__tile-icono { background: #FEF3E6; color: #ea580c; }
+.bloque-pendientes__tile--azul     .bloque-pendientes__tile-icono { background: #E9EFFC; color: #0052DC; }
+.bloque-pendientes__tile--teal     .bloque-pendientes__tile-icono { background: #E0F5F1; color: #0d9488; }
+.bloque-pendientes__tile--violeta  .bloque-pendientes__tile-icono { background: #F1EBFB; color: #7c3aed; }
+.bloque-pendientes__tile--gris     .bloque-pendientes__tile-icono { background: #F1F1F2; color: #4b4d52; }
+
+.bloque-pendientes__tile-cantidad {
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.bloque-pendientes__tile-label {
+  font-size: 0.76rem;
+  line-height: 1.25;
+  color: var(--color-text-muted);
 }
 
 /* ================================================================== */
@@ -753,130 +861,189 @@ a.bloque-tarjeta:hover {
   display: none;
 }
 
+/* MiniOrdenCard — tarjeta del carrusel "Tus pedidos".
+   Cuatro rangos: identidad / hechos / dinero / estado. La banda de estado
+   va a sangre (toca los bordes de la tarjeta) y es el único elemento con
+   peso visual; el color del estado lo inyecta el JSX como --estado-color
+   desde estadosOrden.js — nunca se escribe un hex de estado aquí. */
 .mini-orden-card {
   flex: 0 0 auto;
-  width: 240px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  padding: 14px 16px;
-  text-decoration: none;
-  color: var(--color-text);
+  width: 260px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  padding: 14px 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  color: var(--color-text);
+  text-decoration: none;
+  transition: box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
 }
 
 .mini-orden-card:hover {
-  box-shadow: 0 8px 20px rgba(26, 26, 58, 0.08);
   transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(26, 26, 58, 0.08);
+  border-color: var(--color-brand-light);
 }
 
+.mini-orden-card:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+/* --- 1 · identidad ----------------------------------------------- */
 .mini-orden-card__top {
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-
-.mini-orden-card__icono {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: var(--color-brand-light);
-  color: var(--color-brand);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.mini-orden-card__info {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  flex: 1;
+  gap: 8px;
   min-width: 0;
 }
 
 .mini-orden-card__titulo {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.9rem;
   font-weight: 700;
-  font-size: 0.88rem;
+  letter-spacing: -0.01em;
 }
 
-.mini-orden-card__meta {
-  font-size: 0.74rem;
+/* La fecha va en un sello: es el segundo dato más escaneable después del
+   total, y el recuadro lo separa tipográficamente del resto de los hechos. */
+.mini-orden-card__fecha {
+  flex-shrink: 0;
+  padding: 3px 7px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.2;
   color: var(--color-text-muted);
 }
 
-.mini-orden-card__badge {
-  font-size: 0.66rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  padding: 4px 9px;
-  border-radius: 999px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.mini-orden-card__bottom {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 10px;
-  padding-top: 10px;
-  border-top: 1px solid #f0f0eb;
-}
-
-.mini-orden-card__texto {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-}
-
-.mini-orden-card__monto {
-  font-size: 0.92rem;
-  font-weight: 700;
-}
-
-.mini-orden-card__pie {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
-}
-
-.mini-orden-card__badge {
-  font-size: 0.66rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  padding: 4px 9px;
-  border-radius: 999px;
-  white-space: nowrap;
-}
-
-.mini-orden-card__flecha {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--color-brand-dark);
-  color: #ffffff;
+.mini-orden-card__ir {
   display: flex;
   align-items: center;
-  justify-content: center;
   flex-shrink: 0;
+  color: var(--color-text-muted);
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.mini-orden-card:hover .mini-orden-card__ir {
+  transform: translateX(2px);
+  color: var(--color-brand);
+}
+
+/* --- 2 · hechos -------------------------------------------------- */
+.mini-orden-card__facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 0;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  color: var(--color-text-muted);
+}
+
+/* Separador = filete de 1px entre hechos contiguos (no punto medio).
+   El wrap es la válvula anti-recorte: en el peor caso el último hecho
+   baja de línea en vez de cortarse. */
+.mini-orden-card__facts > * + *::before {
+  content: '';
+  display: inline-block;
+  width: 1px;
+  height: 10px;
+  margin-right: 8px;
+  background: var(--color-border);
+  vertical-align: -1px;
+}
+
+/* --- 3 · dinero -------------------------------------------------- */
+.mini-orden-card__monto {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+/* --- 4 · estado (banda a sangre) --------------------------------- */
+.mini-orden-card__estado {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  /* auto = la banda se pega al fondo aunque los hechos ocupen 2 líneas */
+  margin: auto -16px -14px;
+  padding: 9px 16px 9px 19px;
+  border-radius: 0 0 15px 15px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: center;
+  white-space: nowrap;
+  /* --color-text, no estado.color: los pares de estadosOrden.js no pasan AA */
+  color: var(--color-text);
+}
+
+/* El color del estado informa por tono, no por contraste del texto. */
+.mini-orden-card__estado::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--estado-color, var(--color-brand));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mini-orden-card,
+  .mini-orden-card__ir {
+    transition: none;
+  }
+
+  .mini-orden-card:hover,
+  .mini-orden-card:hover .mini-orden-card__ir {
+    transform: none;
+  }
 }
 
 /* ================================================================== */
-/* Preview de favoritos â€” mini grid con imagen                         */
+/* Mis items — contadores de listas + favoritos, con el grid de fotos  */
+/* de favoritos como vistazo rápido                                    */
 /* ================================================================== */
 .bloque-favoritos__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.bloque-pedidos-activos__flecha {
+  display: flex;
+  align-items: center;
+  color: var(--color-text-muted);
+}
+
+.bloque-favoritos__contadores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+
+.bloque-favoritos__contador {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.bloque-favoritos__contador svg {
+  color: var(--color-brand);
+}
+
+.bloque-favoritos__contador strong {
+  color: var(--color-text);
+  font-size: 0.95rem;
 }
 
 .bloque-favoritos__grid {
