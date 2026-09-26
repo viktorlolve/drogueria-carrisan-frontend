@@ -59,19 +59,23 @@
 }
 
 /* ---------------------------------------------------------
-   Hero: Gallery + Info + Purchase (2-column on desktop)
+   Layout de página completa: contenido | columna de compra
+   sticky. El sticky abarca TODA la página (no solo el hero),
+   usando grid-template-areas: "main purchase" / "rest purchase".
    --------------------------------------------------------- */
 .pd-hero {
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr 320px;
+  grid-template-columns: 1fr 320px;
+  grid-template-areas:
+    "main purchase"
+    "rest purchase";
   gap: 40px;
-  margin-bottom: 48px;
   align-items: start;
 }
 
 @media (min-width: 768px) and (max-width: 1024px) {
   .pd-hero {
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr) 280px;
+    grid-template-columns: 1fr 280px;
     gap: 24px;
   }
 }
@@ -79,11 +83,44 @@
 @media (max-width: 767px) {
   .pd-hero {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      "main"
+      "purchase"
+      "rest";
     gap: 28px;
   }
-  .pd-tabs {
-    order: 4;
+}
+
+/* Gallery + Info, lado a lado dentro del área "main" */
+.pd-hero-main {
+  grid-area: main;
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 40px;
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .pd-hero-main {
+    gap: 24px;
   }
+}
+
+@media (max-width: 767px) {
+  .pd-hero-main {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+}
+
+/* Todo lo que va debajo del hero: cinta de confianza, tabs,
+   carrusel 1, reseñas, carruseles 2 y 3 — una sola columna
+   que le da al sticky su recorrido completo. */
+.pd-page-rest {
+  grid-area: rest;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
 }
 
 /* ---------------------------------------------------------
@@ -387,13 +424,12 @@
 }
 
 /* ---------------------------------------------------------
-   Purchase card (sticky on desktop)
+   Purchase card (sticky en toda la página — desktop/tablet)
    --------------------------------------------------------- */
 .pd-purchase {
+  grid-area: purchase;
   position: sticky;
   top: 20px;
-  grid-column: 3;
-  grid-row: 1 / span 2;
 }
 
 .pd-purchase__card {
@@ -602,6 +638,70 @@
   margin: 0;
 }
 
+.pd-purchase__divider {
+  border: none;
+  border-top: 1px solid #E2E8F0;
+  margin: 0;
+}
+
+.pd-purchase__seller {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #4A5166;
+}
+
+.pd-purchase__seller svg {
+  color: #64748B;
+  flex-shrink: 0;
+}
+
+.pd-purchase__seller strong {
+  color: #1A1A2E;
+}
+
+.pd-purchase__returns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #0052DC;
+  text-decoration: none;
+}
+
+.pd-purchase__returns:hover {
+  text-decoration: underline;
+}
+
+/* ---------------------------------------------------------
+   Key features — debajo del nombre del producto
+   --------------------------------------------------------- */
+.pd-key-features {
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pd-key-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: #4A5166;
+}
+
+.pd-key-features svg {
+  color: #12A594;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
 /* ---------------------------------------------------------
    Cinta de confianza regulatoria (registro sanitario)
    --------------------------------------------------------- */
@@ -613,7 +713,6 @@
   border: 1px solid #CBDBFF;
   border-radius: 12px;
   padding: 14px 20px;
-  margin-bottom: 40px;
   color: #0B3D91;
 }
 
@@ -645,10 +744,8 @@
    Tabs
    --------------------------------------------------------- */
 .pd-tabs {
-  grid-column: 1 / span 2;
   border-top: 1px solid #E2E8F0;
   padding-top: 32px;
-  margin-bottom: 40px;
 }
 
 .pd-tabs__nav {
@@ -687,56 +784,55 @@
   min-height: 80px;
 }
 
-/* Ficha tecnica — grid de tarjetas con icono, no tabla */
-.pd-ficha-grid {
+/* Ficha tecnica — lista de especificaciones estilo Walmart (label | valor) */
+.pd-spec-list {
+  margin: 0;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.pd-spec-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  grid-template-columns: 200px 1fr;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #E2E8F0;
+  margin: 0;
+}
+
+.pd-spec-row:last-child {
+  border-bottom: none;
+}
+
+.pd-spec-row:nth-child(even) {
+  background: #F8FAFC;
 }
 
 @media (max-width: 640px) {
-  .pd-ficha-grid {
+  .pd-spec-row {
     grid-template-columns: 1fr;
+    gap: 3px;
   }
 }
 
-.pd-ficha-item {
-  display: flex;
-  gap: 12px;
-  padding: 14px;
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
-  border-radius: 10px;
-}
-
-.pd-ficha-item__icono {
+.pd-spec-row__label {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: #EAF1FF;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748B;
+  margin: 0;
+}
+
+.pd-spec-row__label svg {
   color: #0052DC;
   flex-shrink: 0;
 }
 
-.pd-ficha-item__body {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.pd-ficha-item__label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: #94A3B8;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.pd-ficha-item__value {
+.pd-spec-row__value {
+  margin: 0;
   font-size: 0.88rem;
   color: #1A1A2E;
   line-height: 1.55;
@@ -762,10 +858,6 @@
   font-family: 'Inter', sans-serif;
   cursor: pointer;
   text-align: left;
-}
-
-.pd-ficha-grid--clinica {
-  margin-bottom: 24px;
 }
 
 /* ---------------------------------------------------------
@@ -901,7 +993,6 @@
 .pd-reviews {
   border-top: 1px solid #E2E8F0;
   padding-top: 32px;
-  margin-bottom: 40px;
 }
 
 /* ---------------------------------------------------------
@@ -1120,8 +1211,7 @@
     right: 12px;
     bottom: calc(78px + env(safe-area-inset-bottom, 0));
     top: auto;
-    grid-column: auto;
-    grid-row: auto;
+    grid-area: auto;
     z-index: 45;
     padding: 0;
     border: none;

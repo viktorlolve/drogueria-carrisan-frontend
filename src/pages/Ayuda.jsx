@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import InfoModal from '../components/InfoModal'
 import ayudaData from '../data/ayudaData'
+import { CONTACTO } from '../config/contacto'
 import './Ayuda.css'
 
 // ---------------------------------------------------------
@@ -409,7 +410,17 @@ function Ayuda() {
         <div className="faq-banner">
           <h2 className="faq-banner__titulo">¿No encontraste tu respuesta?</h2>
           <div className="faq-banner__acciones">
-            <a href="mailto:dcarrisan@gmail.com" className="faq-banner__cta">Escríbenos un correo</a>
+            <a
+              href={CONTACTO.whatsapp.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="faq-banner__cta"
+            >
+              Escríbenos por WhatsApp
+            </a>
+            <a href={`mailto:${CONTACTO.email.texto}`} className="faq-banner__cta faq-banner__cta--secundario">
+              O escríbenos un correo
+            </a>
           </div>
         </div>
       </div>

@@ -1,0 +1,409 @@
+/* ============================================
+   Contacto
+   Paleta: Azul #0052DC · Índigo #1A1A3A · Teal #12A594 · Verde WA #25D366 · Paper #FBFAF7
+   Misma gramática visual de QuienesSomos / Ayuda
+   ============================================ */
+
+.ct-page {
+  background: var(--paper, #FBFAF7);
+  min-height: 100vh;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* ---------- Hero ---------- */
+.ct-hero {
+  background: linear-gradient(135deg, #1A1A3A, #0052DC);
+  padding: 44px 20px 38px;
+}
+
+.ct-hero__contenido {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.ct-hero__eyebrow {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8FB2F5;
+  margin: 0 0 12px;
+}
+
+.ct-hero h1 {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 1.7rem;
+  line-height: 1.25;
+  color: #FFFFFF;
+  margin: 0 0 14px;
+}
+
+.ct-hero__texto {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+}
+
+/* ---------- Contenedor ---------- */
+.ct-container {
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 28px 16px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 34px;
+}
+
+/* ---------- Tarjetas de canal ---------- */
+.ct-canales {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: -46px;
+}
+
+.ct-canal {
+  background: #FFFFFF;
+  border: 1px solid #e3e4e5;
+  border-top: 4px solid #0052DC;
+  border-radius: 18px;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 10px 30px rgba(27, 75, 143, 0.08);
+}
+
+.ct-canal--wa {
+  border-top-color: #25D366;
+}
+
+.ct-canal__cabecera {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ct-canal__icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: #E9EFFC;
+  color: #0052DC;
+  flex-shrink: 0;
+}
+
+.ct-canal--wa .ct-canal__icono {
+  background: #E7F8EE;
+  color: #128C3E;
+}
+
+.ct-canal__badge {
+  display: inline-block;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #0052DC;
+  background: #E9EFFC;
+  border-radius: 999px;
+  padding: 4px 10px;
+  margin-bottom: 6px;
+}
+
+.ct-canal--wa .ct-canal__badge {
+  color: #128C3E;
+  background: #E7F8EE;
+}
+
+.ct-canal h2 {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 1.15rem;
+  color: #1A1A3A;
+  margin: 0;
+}
+
+.ct-canal__desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #464646;
+  margin: 0;
+  flex: 1;
+}
+
+.ct-canal__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #FFFFFF;
+  background: #0052DC;
+  border-radius: 999px;
+  padding: 14px 24px;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ct-canal--wa .ct-canal__btn {
+  background: #25D366;
+  color: #0B3D1E;
+}
+
+.ct-canal__btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0, 82, 220, 0.22);
+}
+
+.ct-canal--wa .ct-canal__btn:hover {
+  box-shadow: 0 8px 18px rgba(37, 211, 102, 0.32);
+}
+
+.ct-canal__nota {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  color: #74767c;
+  text-align: center;
+  margin: 0;
+}
+
+/* ---------- Información ---------- */
+.ct-info__titulo {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 1.3rem;
+  color: #1A1A3A;
+  margin: 0 0 16px;
+}
+
+.ct-info {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.ct-info-card {
+  background: #FFFFFF;
+  border: 1px solid #e3e4e5;
+  border-radius: 16px;
+  padding: 22px 20px;
+}
+
+.ct-info-card__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.ct-info-card__icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #E9EFFC;
+  color: #0052DC;
+  flex-shrink: 0;
+}
+
+.ct-info-card h3 {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #1A1A3A;
+  margin: 0;
+}
+
+/* Horario */
+.ct-horario {
+  display: flex;
+  flex-direction: column;
+}
+
+.ct-horario__fila {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border-top: 1px solid #eef0f2;
+}
+
+.ct-horario__fila:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.ct-horario__dias {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.88rem;
+  color: #464646;
+}
+
+.ct-horario__rango {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #1A1A3A;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.ct-horario__fila--cerrado .ct-horario__rango {
+  color: #9a9ca2;
+  font-weight: 600;
+}
+
+/* Contacto */
+.ct-datos {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ct-dato {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ct-dato__texto {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1A1A3A;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.ct-dato__texto:hover {
+  color: #0052DC;
+}
+
+/* Dirección */
+.ct-direccion {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #464646;
+  margin: 0 0 14px;
+}
+
+.ct-mapa {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #0052DC;
+  text-decoration: none;
+  border: 1.5px solid #0052DC;
+  border-radius: 999px;
+  padding: 9px 18px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.ct-mapa:hover {
+  background: #0052DC;
+  color: #FFFFFF;
+}
+
+/* ---------- Franja informativa ---------- */
+.ct-franja {
+  background: linear-gradient(135deg, #1A1A3A, #0052DC);
+  border-radius: 18px;
+  padding: 26px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ct-franja__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.ct-franja__icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  color: #FFFFFF;
+  flex-shrink: 0;
+}
+
+.ct-franja__texto {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+}
+
+.ct-franja__texto strong {
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+/* ============================================
+   Tablet / Desktop
+   ============================================ */
+@media (min-width: 768px) {
+  .ct-hero {
+    padding: 68px 40px 54px;
+  }
+
+  .ct-hero h1 {
+    font-size: 2.4rem;
+  }
+
+  .ct-hero__texto {
+    font-size: 1.05rem;
+  }
+
+  .ct-container {
+    padding: 40px 40px 84px;
+    gap: 44px;
+  }
+
+  .ct-canales {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .ct-canal {
+    padding: 28px 26px;
+  }
+
+  .ct-info {
+    grid-template-columns: repeat(3, 1fr);
+    align-items: start;
+  }
+}
+
+@media (min-width: 1100px) {
+  .ct-info {
+    grid-template-columns: 1.1fr 1fr 1.1fr;
+  }
+}

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { FaWhatsapp, FaMapMarkerAlt } from 'react-icons/fa'
 import logoBlanco from '../assets/minilogo blanco sin fondo.png'
+import { CONTACTO } from '../config/contacto'
 import './Footer.css'
 
 const COLUMNAS = [
@@ -38,14 +39,13 @@ const COLUMNAS = [
   },
 ]
 
-const CONTACTO = 'dcarrisan@gmail.com'
 const WHATSAPP = {
-  texto: '+58 414 5949532',
-  enlace: 'https://wa.link/imsb5w',
+  texto: CONTACTO.whatsapp.texto,
+  enlace: CONTACTO.whatsapp.url,
 }
 const DIRECCION = {
-  texto: 'Av Urdaneta (99) Qta Mirabal, Local 04C, Valencia 2001, Carabobo, Venezuela',
-  enlace: 'https://maps.app.goo.gl/pm3MwK1r9JX5R4s9A',
+  texto: `${CONTACTO.direccion.linea1}, ${CONTACTO.direccion.linea2}`,
+  enlace: CONTACTO.direccion.mapa,
 }
 
 function Footer() {
@@ -61,7 +61,7 @@ function Footer() {
           <ul className="footer-contacto">
             <li>
               <span className="footer-contacto__icon" aria-hidden="true">✉</span>
-              <a href={`mailto:${CONTACTO}`}>{CONTACTO}</a>
+              <a href={`mailto:${CONTACTO.email.texto}`}>{CONTACTO.email.texto}</a>
             </li>
             <li>
               <span className="footer-contacto__icon"><FaWhatsapp size={14} /></span>

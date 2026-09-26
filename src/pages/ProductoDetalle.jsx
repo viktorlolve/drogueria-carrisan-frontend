@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
-  Heart, Share2, Check, Stethoscope, Pill, Route, ShieldAlert,
-  AlertTriangle, ShieldCheck, Package, Thermometer,
+  Heart, Share2, Check, Stethoscope, Pill, ShieldCheck, Package, Thermometer,
   FileCheck2, Building2, ReceiptText, CreditCard,
-  MapPin, FlaskConical, Layers, Tablet,
+  MapPin, FlaskConical, Layers, Tablet, Store, RotateCcw,
 } from 'lucide-react'
 import api from '../api/axios'
 import { useCart } from '../context/CartContext'
@@ -18,20 +17,21 @@ import BottomNav from '../components/BottomNav'
 import InhrrFichaModal from '../components/InhrrFichaModal'
 import { ProductoImagen } from '../components/icons/ProductoImagen'
 import SECCIONES_FICHA from '../config/seccionesFicha'
+import { obtenerTipForma } from '../config/formasFarmaceuticas'
 import './ProductoDetalle.css'
 
-const CANTIDAD_CARRUSELES = 2
+const CANTIDAD_CARRUSELES = 3
 const MINIMO_POR_CARRUSEL = 4
 
-// Campos clínicos propios en `detalles` — se muestran en la tab "Ficha clinica",
-// arriba del acordeón CIMA (grid de tarjetas con icono).
+// Campos clínicos propios en `detalles` — se fusionan con el acordeón CIMA
+// en la tab "Ficha clinica" (mismo diseño de acordeón, una sola lista).
 const FICHA_CLINICA_CAMPOS = [
-  { clave: 'indicaciones', etiqueta: 'Indicaciones', Icono: Stethoscope },
-  { clave: 'dosis_recomendada', etiqueta: 'Dosis recomendada', Icono: Pill },
-  { clave: 'via_administracion', etiqueta: 'Vía de administración', Icono: Route },
-  { clave: 'contraindicaciones', etiqueta: 'Contraindicaciones', Icono: ShieldAlert },
-  { clave: 'efectos_secundarios', etiqueta: 'Efectos secundarios', Icono: AlertTriangle },
-  { clave: 'precauciones', etiqueta: 'Precauciones', Icono: ShieldCheck },
+  { clave: 'indicaciones', etiqueta: 'Indicaciones', icono: '🩺' },
+  { clave: 'dosis_recomendada', etiqueta: 'Dosis recomendada', icono: '💊' },
+  { clave: 'via_administracion', etiqueta: 'Vía de administración', icono: '💉' },
+  { clave: 'contraindicaciones', etiqueta: 'Contraindicaciones', icono: '⛔' },
+  { clave: 'efectos_secundarios', etiqueta: 'Efectos secundarios', icono: '🤕' },
+  { clave: 'precauciones', etiqueta: 'Precauciones', icono: '⚠️' },
 ]
 
 function barajar(array) {
@@ -394,9 +394,17 @@ function ProductoDetalle() {
   ].filter(Boolean)
 
   const tieneFichaTecnica = fichaTecnicaItems.length > 0
-  const tieneDetallesClinicos = !!detalles && FICHA_CLINICA_CAMPOS.some(({ clave }) => detalles[clave])
 
-  const categoriasClinicas = SECCIONES_FICHA
+  const entradasPropias = FICHA_CLINICA_CAMPOS
+    .filter(({ clave }) => detalles?.[clave])
+    .map(({ clave, etiqueta, icono }) => ({
+      clave,
+      etiqueta,
+      icono,
+      entradas: [{ id: clave, nombre: '', texto: detalles[clave] }],
+    }))
+
+  const categoriasClinicasCima = SECCIONES_FICHA
     .map(({ clave, etiqueta, icono }) => {
       const entradas = moleculas
         .map((m) => {
@@ -411,6 +419,23 @@ function ProductoDetalle() {
     })
     .filter((c) => c.entradas.length > 0)
 
+  const categoriasClinicas = [...entradasPropias, ...categoriasClinicasCima]
+  const tieneDetallesClinicos = entradasPropias.length > 0
+
+  // Key features debajo del nombre: qué es / para qué sirve (de la ficha
+  // clínica), forma farmacéutica, y un tip de almacenamiento según la forma.
+  const tipForma = obtenerTipForma(producto.forma)
+  const indicacionesCorta = detalles?.indicaciones
+    ? detalles.indicaciones.length > 130
+      ? `${detalles.indicaciones.slice(0, 130).trim()}…`
+      : detalles.indicaciones
+    : ''
+  const keyFeatures = [
+    indicacionesCorta && { Icono: Stethoscope, texto: indicacionesCorta },
+    producto.forma && { Icono: Tablet, texto: `${producto.forma}. ${tipForma.uso}` },
+    { Icono: Thermometer, texto: tipForma.almacenamiento },
+  ].filter(Boolean)
+
   return (
     <>
       <div className="pd-page">
@@ -423,6 +448,7 @@ function ProductoDetalle() {
       </nav>
 
       <div className="pd-hero">
+        <div className="pd-hero-main">
         <div className="pd-gallery">
           <div
             className="pd-gallery__main"
@@ -491,6 +517,17 @@ function ProductoDetalle() {
             </div>
           </div>
 
+          {keyFeatures.length > 0 && (
+            <ul className="pd-key-features">
+              {keyFeatures.map(({ Icono, texto }, i) => (
+                <li key={i}>
+                  <Icono size={15} aria-hidden="true" />
+                  <span>{texto}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+
           {valoraciones.total > 0 && (
             <div
               className="pd-info__rating"
@@ -545,6 +582,7 @@ function ProductoDetalle() {
               </div>
             </div>
           )}
+        </div>
         </div>
 
         <div className={`pd-purchase${mostrarBarra ? ' pd-purchase--show' : ''}`}>
@@ -642,11 +680,38 @@ function ProductoDetalle() {
               </p>
             )}
 
+            <hr className="pd-purchase__divider" />
+
+            <div className="pd-purchase__seller">
+              <Store size={14} aria-hidden="true" />
+              <span>Vendido y enviado por <strong>Droguería Carrisán</strong></span>
+            </div>
+
+            <Link to="/politica-devoluciones" className="pd-purchase__returns">
+              <RotateCcw size={14} aria-hidden="true" />
+              Política de devolución
+            </Link>
+
             <p className="pd-purchase__note">
               * Precios no incluyen IVA. Sujetos a cambios sin previo aviso.
             </p>
           </div>
         </div>
+
+        <div className="pd-page-rest">
+        {(detalles?.registro_sanitario || detalles?.titular_registro) && (
+          <div className="pd-trust-band">
+            <ShieldCheck size={20} aria-hidden="true" />
+            <div className="pd-trust-band__text">
+              <strong>Producto con registro sanitario verificado</strong>
+              <span>
+                {detalles.registro_sanitario && `Reg. ${detalles.registro_sanitario}`}
+                {detalles.registro_sanitario && detalles.titular_registro && ' · '}
+                {detalles.titular_registro && `Titular: ${detalles.titular_registro}`}
+              </span>
+            </div>
+          </div>
+        )}
 
         {(tieneFichaTecnica || tieneDetallesClinicos || tieneComposicion) && (
           <div className="pd-tabs" ref={tabsRef}>
@@ -675,27 +740,25 @@ function ProductoDetalle() {
 
             <div className="pd-tabs__panel" role="tabpanel">
               {tabActiva === 'ficha' && (
-                <div className="pd-ficha-grid">
+                <dl className="pd-spec-list">
                   {fichaTecnicaItems.map(({ etiqueta, Icono, valor, enlace, enlaces, abreRegistro }) => (
-                    <div key={etiqueta} className="pd-ficha-item">
-                      <span className="pd-ficha-item__icono">
-                        <Icono size={16} aria-hidden="true" />
-                      </span>
-                      <div className="pd-ficha-item__body">
-                        <span className="pd-ficha-item__label">{etiqueta}</span>
+                    <div key={etiqueta} className="pd-spec-row">
+                      <dt className="pd-spec-row__label">
+                        <Icono size={14} aria-hidden="true" />
+                        {etiqueta}
+                      </dt>
+                      <dd className="pd-spec-row__value">
                         {enlaces ? (
-                          <span className="pd-ficha-item__value">
-                            {enlaces.map((e, i) => (
-                              <span key={i}>
-                                {i > 0 && <span>, </span>}
-                                {e.to ? (
-                                  <Link to={e.to} className="pd-ficha-item__link">{e.texto}</Link>
-                                ) : (
-                                  e.texto
-                                )}
-                              </span>
-                            ))}
-                          </span>
+                          enlaces.map((e, i) => (
+                            <span key={i}>
+                              {i > 0 && <span>, </span>}
+                              {e.to ? (
+                                <Link to={e.to} className="pd-ficha-item__link">{e.texto}</Link>
+                              ) : (
+                                e.texto
+                              )}
+                            </span>
+                          ))
                         ) : enlace ? (
                           <Link to={enlace} className="pd-ficha-item__link">{valor}</Link>
                         ) : abreRegistro ? (
@@ -707,32 +770,16 @@ function ProductoDetalle() {
                             {valor}
                           </button>
                         ) : (
-                          <span className="pd-ficha-item__value">{valor}</span>
+                          valor
                         )}
-                      </div>
+                      </dd>
                     </div>
                   ))}
-                </div>
+                </dl>
               )}
 
               {tabActiva === 'fichaclinica' && (
                 <div className="pd-clinical">
-                  {detalles && FICHA_CLINICA_CAMPOS.some(({ clave }) => detalles[clave]) && (
-                    <div className="pd-ficha-grid pd-ficha-grid--clinica">
-                      {FICHA_CLINICA_CAMPOS.filter(({ clave }) => detalles[clave]).map(({ clave, etiqueta, Icono }) => (
-                        <div key={clave} className="pd-ficha-item">
-                          <span className="pd-ficha-item__icono">
-                            <Icono size={16} aria-hidden="true" />
-                          </span>
-                          <div className="pd-ficha-item__body">
-                            <span className="pd-ficha-item__label">{etiqueta}</span>
-                            <span className="pd-ficha-item__value">{detalles[clave]}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
                   {cargandoFichas && <span className="pd-clinical__loading">Cargando fichas clinicas...</span>}
 
                   {!cargandoFichas && categoriasClinicas.length > 0 ? (
@@ -784,40 +831,37 @@ function ProductoDetalle() {
             </div>
           </div>
         )}
-      </div>
 
-      {(detalles?.registro_sanitario || detalles?.titular_registro) && (
-        <div className="pd-trust-band">
-          <ShieldCheck size={20} aria-hidden="true" />
-          <div className="pd-trust-band__text">
-            <strong>Producto con registro sanitario verificado</strong>
-            <span>
-              {detalles.registro_sanitario && `Reg. ${detalles.registro_sanitario}`}
-              {detalles.registro_sanitario && detalles.titular_registro && ' · '}
-              {detalles.titular_registro && `Titular: ${detalles.titular_registro}`}
-            </span>
+        {carruseles.length > 0 && (
+          <HomeCarrusel
+            titulo={carruseles[0].titulo}
+            productos={carruseles[0].productos}
+            tasaVes={tasaVes}
+            verTodoTo={carruseles[0].verTodoTo || '/catalogo'}
+            cargando={false}
+          />
+        )}
+
+        <div className="pd-reviews" ref={resenasRef}>
+          <Valoraciones productoId={producto.id} />
+        </div>
+
+        {carruseles.length > 1 && (
+          <div className="pd-related">
+            {carruseles.slice(1).map((c, i) => (
+              <HomeCarrusel
+                key={`${producto.id}-${i + 1}`}
+                titulo={c.titulo}
+                productos={c.productos}
+                tasaVes={tasaVes}
+                verTodoTo={c.verTodoTo || '/catalogo'}
+                cargando={false}
+              />
+            ))}
           </div>
+        )}
         </div>
-      )}
-
-      <div className="pd-reviews" ref={resenasRef}>
-        <Valoraciones productoId={producto.id} />
       </div>
-
-      {carruseles.length > 0 && (
-        <div className="pd-related">
-          {carruseles.map((c, i) => (
-            <HomeCarrusel
-              key={`${producto.id}-${i}`}
-              titulo={c.titulo}
-              productos={c.productos}
-              tasaVes={tasaVes}
-              verTodoTo={c.verTodoTo || '/catalogo'}
-              cargando={false}
-            />
-          ))}
-        </div>
-      )}
 
       <BottomNav />
       </div>

@@ -1,89 +1,187 @@
-import { useState } from 'react'
+import { Clock, Mail, MapPin, MessageCircle, MessageSquare, Phone, Zap } from 'lucide-react'
+import { FaWhatsapp } from 'react-icons/fa'
+import CONTACTO from '../config/contacto'
+import './Contacto.css'
+
+const { whatsapp, email, telefono, horario, direccion, tiempoRespuesta } = CONTACTO
+
+const mailtoHref = `mailto:${email.texto}?subject=${encodeURIComponent(email.asunto)}&body=${encodeURIComponent(email.cuerpo)}`
 
 function Contacto() {
-  const [nombre, setNombre] = useState('')
-  const [email, setEmail] = useState('')
-  const [mensaje, setMensaje] = useState('')
-  const [enviado, setEnviado] = useState(false)
-  const [error, setError] = useState('')
-
-  async function handleSubmit(e) {
-    e.preventDefault()
-    setError('')
-
-    if (!nombre || !email || !mensaje) {
-      setError('Todos los campos son obligatorios')
-      return
-    }
-
-    // Por ahora, abrimos el cliente de correo con mailto
-    // En el futuro puedes conectar a un endpoint si creas la tabla contactos
-    const asunto = encodeURIComponent(`Consulta de ${nombre} - Droguería Carrirán`)
-    const cuerpo = encodeURIComponent(
-      `Nombre: ${nombre}\nEmail: ${email}\n\nMensaje:\n${mensaje}`
-    )
-    
-    window.open(`mailto:ventas@carrisan.com?subject=${asunto}&body=${cuerpo}`)
-    setEnviado(true)
-    setNombre('')
-    setEmail('')
-    setMensaje('')
-  }
-
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
-      <h1>Contacto</h1>
-
-      {enviado ? (
-        <div style={{ marginTop: '30px', padding: '20px', background: '#e8f5e9', borderRadius: '8px' }}>
-          <p>✅ ¡Mensaje listo! Se abrirá tu cliente de correo para enviarlo.</p>
-          <button onClick={() => setEnviado(false)}>Enviar otro mensaje</button>
+    <div className="ct-page">
+      {/* Hero */}
+      <section className="ct-hero">
+        <div className="ct-hero__contenido">
+          <p className="ct-hero__eyebrow">Droguería Carrisán · Atención directa</p>
+          <h1>¿Cómo prefieres escribirnos?</h1>
+          <p className="ct-hero__texto">
+            Elige el canal que prefieras y te respondemos directamente. Somos una empresa
+            familiar: hay una persona esperándote detrás de cada mensaje.
+          </p>
         </div>
-      ) : (
-        <form onSubmit={handleSubmit} style={{ marginTop: '30px' }}>
-          {error && <p style={{ color: 'red' }}>{error}</p>}
+      </section>
 
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '5px' }}>Nombre</label>
-            <input
-              type="text"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              style={{ width: '100%', padding: '10px' }}
-            />
+      <div className="ct-container">
+        {/* Los dos canales de contacto */}
+        <div className="ct-canales">
+          <section className="ct-canal ct-canal--wa">
+            <div className="ct-canal__cabecera">
+              <span className="ct-canal__icono" aria-hidden="true">
+                <FaWhatsapp size={26} />
+              </span>
+              <div>
+                <span className="ct-canal__badge">Respuesta más rápida</span>
+                <h2>Escríbenos por WhatsApp</h2>
+              </div>
+            </div>
+
+            <p className="ct-canal__desc">{CONTACTO.whatsappDesc}</p>
+
+            <a
+              className="ct-canal__btn"
+              href={whatsapp.url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <FaWhatsapp size={18} />
+              Abrir WhatsApp
+            </a>
+
+            <p className="ct-canal__nota">{whatsapp.texto}</p>
+          </section>
+
+          <section className="ct-canal">
+            <div className="ct-canal__cabecera">
+              <span className="ct-canal__icono" aria-hidden="true">
+                <Mail size={24} />
+              </span>
+              <div>
+                <span className="ct-canal__badge">Cotizaciones y documentos</span>
+                <h2>Envíanos un correo</h2>
+              </div>
+            </div>
+
+            <p className="ct-canal__desc">{CONTACTO.emailDesc}</p>
+
+            <a className="ct-canal__btn" href={mailtoHref}>
+              <Mail size={18} />
+              Escribir por correo
+            </a>
+
+            <p className="ct-canal__nota">{email.texto}</p>
+          </section>
+        </div>
+
+        {/* Información de contacto */}
+        <section>
+          <h2 className="ct-info__titulo">Información de contacto</h2>
+
+          <div className="ct-info">
+            <div className="ct-info-card">
+              <div className="ct-info-card__head">
+                <span className="ct-info-card__icono" aria-hidden="true">
+                  <Clock size={18} />
+                </span>
+                <h3>Horario de atención</h3>
+              </div>
+
+              <div className="ct-horario">
+                {horario.map((fila) => (
+                  <div
+                    key={fila.dias}
+                    className={`ct-horario__fila${fila.rango === 'Cerrado' ? ' ct-horario__fila--cerrado' : ''}`}
+                  >
+                    <span className="ct-horario__dias">{fila.dias}</span>
+                    <span className="ct-horario__rango">{fila.rango}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="ct-info-card">
+              <div className="ct-info-card__head">
+                <span className="ct-info-card__icono" aria-hidden="true">
+                  <Phone size={18} />
+                </span>
+                <h3>Datos de contacto</h3>
+              </div>
+
+              <div className="ct-datos">
+                <div className="ct-dato">
+                  <Mail size={16} color="#0052DC" aria-hidden="true" />
+                  <a className="ct-dato__texto" href={`mailto:${email.texto}`}>
+                    {email.texto}
+                  </a>
+                </div>
+
+                <div className="ct-dato">
+                  <Phone size={16} color="#0052DC" aria-hidden="true" />
+                  <a className="ct-dato__texto" href={`tel:${telefono.tel}`}>
+                    {telefono.texto}
+                  </a>
+                </div>
+
+                <div className="ct-dato">
+                  <MessageCircle size={16} color="#25D366" aria-hidden="true" />
+                  <a
+                    className="ct-dato__texto"
+                    href={whatsapp.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    WhatsApp
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div className="ct-info-card">
+              <div className="ct-info-card__head">
+                <span className="ct-info-card__icono" aria-hidden="true">
+                  <MapPin size={18} />
+                </span>
+                <h3>Nuestra sede</h3>
+              </div>
+
+              <p className="ct-direccion">
+                {direccion.linea1}
+                <br />
+                {direccion.linea2}
+              </p>
+
+              <a
+                className="ct-mapa"
+                href={direccion.mapa}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <MapPin size={15} />
+                Ver en el mapa
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* Franja informativa */}
+        <div className="ct-franja">
+          <div className="ct-franja__item">
+            <span className="ct-franja__icono" aria-hidden="true">
+              <Zap size={17} />
+            </span>
+            <p className="ct-franja__texto">{tiempoRespuesta}</p>
           </div>
 
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '5px' }}>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={{ width: '100%', padding: '10px' }}
-            />
+          <div className="ct-franja__item">
+            <span className="ct-franja__icono" aria-hidden="true">
+              <MessageSquare size={17} />
+            </span>
+            <p className="ct-franja__texto">
+              <strong>Para una cotización más rápida</strong>, incluye en tu mensaje tu RIF o cédula,
+              la lista de productos y las cantidades que necesitas.
+            </p>
           </div>
-
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '5px' }}>Mensaje</label>
-            <textarea
-              value={mensaje}
-              onChange={(e) => setMensaje(e.target.value)}
-              rows="5"
-              style={{ width: '100%', padding: '10px' }}
-            />
-          </div>
-
-          <button type="submit" style={{ padding: '10px 30px' }}>
-            Enviar mensaje
-          </button>
-        </form>
-      )}
-
-      <div style={{ marginTop: '40px', padding: '20px', background: '#f5f5f5', borderRadius: '8px' }}>
-        <h3>Información de contacto</h3>
-        <p><strong>Email:</strong> ventas@carrisan.com</p>
-        <p><strong>Teléfono:</strong> +58 414-1234567</p>
-        <p><strong>Horario:</strong> Lunes a Viernes de 8:00 AM a 5:00 PM</p>
+        </div>
       </div>
     </div>
   )
