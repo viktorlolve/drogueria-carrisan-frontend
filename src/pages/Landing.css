@@ -1676,6 +1676,25 @@
   max-width: 340px;
 }
 
+/* Móvil: más aire entre los elementos del hero */
+@media (max-width: 767px) {
+  .landing-hero {
+    padding: 40px 20px 36px;
+  }
+
+  .landing-hero__contenido {
+    gap: 24px;
+  }
+
+  .landing-hero__texto {
+    gap: 24px;
+  }
+
+  .landing-hero__acciones {
+    gap: 20px;
+  }
+}
+
 /* Ajustes para desktop */
 @media (min-width: 1024px) {
   .landing-hero__texto {

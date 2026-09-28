@@ -3,6 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom'
 import logo from '../assets/minilogo color sin fondo.png'
 import api from '../api/axios'
 import EnlaceInvalido from '../components/registro/EnlaceInvalido'
+import { LegalLink } from '../components/legal/LegalModal'
 import './Auth.css'
 import './RegistroInvita.css'
 
@@ -68,10 +69,9 @@ function RegistroInvita() {
 
           {estado === 'ok' && (
             <>
-              <h1 className="auth-title">Registro por invitación</h1>
+              <h1 className="auth-title">Nos alegrara tenerte con nosotros</h1>
               <p className="auth-subtitle">
-                Recibiste este enlace de la Droguería Carrisan para crear tu cuenta. Elige el
-                perfil que mejor te describa.
+                Recibiste este enlace de la Droguería Carrisan para crear tu cuenta. Elige tu perfil de usuario.
               </p>
 
               <div className="reg-invita__grid">
@@ -92,7 +92,7 @@ function RegistroInvita() {
                   </div>
                   <div className="reg-invita__cuerpo">
                     <h3>Profesional de la Salud</h3>
-                    <p>Médico, enfermero, fisioterapeuta u otro profesional de la salud</p>
+                    <p>Médico, enfermero, paramedico u otro profesional de la salud</p>
                   </div>
                   <span className="reg-invita__flecha" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none">
@@ -148,9 +148,9 @@ function RegistroInvita() {
         <div className="auth-footer-content">
           <span className="auth-footer-rif">RIF J-40068410-2</span>
           <div className="auth-footer-links">
-            <Link to="/terminos">Términos de uso</Link>
-            <Link to="/privacidad">Aviso de privacidad</Link>
-            <Link to="/contacto">Soporte</Link>
+            <LegalLink doc="terminos">Términos de uso</LegalLink>
+            <LegalLink doc="privacidad">Aviso de privacidad</LegalLink>
+            <a href="/contacto" target="_blank" rel="noopener noreferrer">Soporte</a>
           </div>
           © 2026 Drogueria Carrisan, C.A. Todos los derechos reservados.
         </div>

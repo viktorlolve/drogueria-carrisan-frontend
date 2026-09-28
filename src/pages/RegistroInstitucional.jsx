@@ -18,6 +18,7 @@ import {
 import { useAuth } from '../context/AuthContext'
 import api from '../api/axios'
 import logo from '../assets/minilogo color sin fondo.png'
+import { LegalLink } from '../components/legal/LegalModal'
 import './Auth.css'
 
 const CODIGOS_TELEFONO = ['414', '424', '412', '422', '416', '426']
@@ -694,7 +695,7 @@ function RegistroInstitucional() {
                     onChange={(e) => setAceptaTerminos(e.target.checked)}
                   />
                   <span>
-                    He leído y acepto los <Link to="/terminos">Términos y Condiciones</Link>
+                    He leído y acepto los <LegalLink doc="terminos">Términos y Condiciones</LegalLink>
                   </span>
                 </label>
 
@@ -705,7 +706,7 @@ function RegistroInstitucional() {
                     onChange={(e) => setAceptaPrivacidad(e.target.checked)}
                   />
                   <span>
-                    He leído y acepto la <Link to="/privacidad">Política de Privacidad</Link>
+                    He leído y acepto la <LegalLink doc="privacidad">Política de Privacidad</LegalLink>
                   </span>
                 </label>
 
@@ -716,7 +717,7 @@ function RegistroInstitucional() {
                     onChange={(e) => setAceptaComercial(e.target.checked)}
                   />
                   <span>
-                    He leído y acepto la <Link to="/terminoscomerciales">Política Comercial</Link>
+                    He leído y acepto la <LegalLink doc="comercial">Política Comercial</LegalLink>
                   </span>
                 </label>
                 {errores.terminos && <span id="terminos-error" className="registro-error-texto" role="alert">{errores.terminos}</span>}
@@ -749,9 +750,9 @@ function RegistroInstitucional() {
         <div className="auth-footer-content">
           © 2026 Drogueria Carrisan, C.A. Todos los derechos reservados.
           <div className="auth-footer-links">
-            <Link to="/terminos">Términos de uso</Link>
-            <Link to="/privacidad">Aviso de privacidad</Link>
-            <Link to="/contacto">Soporte</Link>
+            <LegalLink doc="terminos">Términos de uso</LegalLink>
+            <LegalLink doc="privacidad">Aviso de privacidad</LegalLink>
+            <a href="/contacto" target="_blank" rel="noopener noreferrer">Soporte</a>
           </div>
           <span className="auth-footer-rif">RIF J-40068410-2</span>
         </div>
