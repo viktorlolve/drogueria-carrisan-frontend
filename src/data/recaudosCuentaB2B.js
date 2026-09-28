@@ -6,7 +6,7 @@ const recaudosB2BInfo = {
   subtitulo: 'Antes de activar tu línea de crédito, necesitamos estos datos básicos de tu negocio.',
   tipo: 'checklist',
   contenido: [
-    'RIF de la empresa o cédula del comprador',
+    'RIF de la institucion',
     'Dirección fiscal',
     'Dirección de entrega',
     'Datos de contacto (teléfono y correo)',

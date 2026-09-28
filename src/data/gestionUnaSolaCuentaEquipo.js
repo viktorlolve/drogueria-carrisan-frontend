@@ -8,9 +8,9 @@ const gestionEquipoInfo = {
   contenido: [
     {
       icono: 'Users',
-      titulo: 'Sub-usuarios con su propio acceso',
+      titulo: 'Sub-usuarios con su PIN de compra',
       // TODO: confirmar mecanismo real (PIN, usuario/clave propio, etc.)
-      texto: 'Cada persona de tu equipo puede generar pedidos identificados, sin compartir la contraseña principal.',
+      texto: 'Cada persona de tu equipo puede generar pedidos identificados para mejor gestion de pedidos.',
     },
     {
       icono: 'FileText',

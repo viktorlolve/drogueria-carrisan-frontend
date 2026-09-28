@@ -191,14 +191,14 @@ const TESTIMONIOS = [
 
 const MAS_EXPLORAR = [
   {
-    titulo: 'Línea Quirúrgica y Hospitalaria',
+    titulo: 'Linea Hospitalaria',
     texto: 'Accede a un catálogo especializado en anestesia, fluidoterapia y material médico-quirúrgico para clínicas y centros médicos.',
     imagen: urls.lineahospitalariaa,
     data:  lineaHospitalariaInsumosQuirurgicos,
   },
   {
     titulo: 'Programa de Crédito B2B',
-    texto: 'Obtén financiamiento a 7 días diseñado para respaldar el flujo de caja de pequeñas empresas y médicos independientes.',
+    texto: 'Obtén financiamiento a 7 días diseñado para respaldar el flujo de caja de pequeñas empresas.',
     imagen: urls.tratohecho,
     data: financiamiento,
   },
@@ -213,17 +213,17 @@ const MAS_EXPLORAR = [
 const FAQS = [
   {
     pregunta: '¿Qué requisitos necesito para abrir una cuenta B2B?',
-    respuesta: 'Solo necesitas el RIF comercial o profesional, copia de la cédula del representante legal, y el registro o permiso sanitario correspondiente (SACS) para validar tu establecimiento.',
+    respuesta: 'Solo necesitas el RIF comercial, copia de la cédula del representante legal, y el registro o permiso sanitario correspondiente (SACS) para validar tu establecimiento.',
     data: recaudosCuentaB2B,
   },
   { 
     pregunta: '¿Cómo puedo consultar precios y disponibilidad de inventario?', 
-    respuesta: 'Al iniciar sesión en nuestro portal, tendrás acceso inmediato a precios actualizados en tiempo real y tu pedido sera confirmado con las cantidades disponibles en cuestion de minutos',
+    respuesta: 'Al iniciar sesión en nuestro portal, tendrás acceso inmediato a precios actualizados en tiempo real y tu orden sera confirmada con las cantidades disponibles en cuestion de minutos',
     data: catalogoUnitarioIntegral,
   },
   { 
     pregunta: '¿Cómo funciona el crédito a 7 días y quiénes aplican?', 
-    respuesta: 'Es una facilidad otorgada a pequeñas farmacias, clínicas y médicos registrados. Te despachamos el pedido de inmediato y dispones de 7 días continuos para liquidar tu orden',
+    respuesta: 'Es una facilidad otorgada a pequeñas farmacias, clínicas y centros quirurgicos. Te despachamos el pedido de inmediato y dispones de 7 días continuos para liquidar tu orden',
     data: financiamiento,
   },
   { 
@@ -485,13 +485,8 @@ function Landing() {
             <div>
               <strong>¿Gestionas una red de farmacias o grupo médico?</strong>
               <p>Consolida el abastecimiento de múltiples sedes con atención personalizada.
-                <br /> 
-              <a href="#"
-                 onClick={(e) => {
-                   e.preventDefault()
-                   abrirModal(gestionUnaSolaCuentaEquipo)
-                 }}
-              >Hablar con un asesor de cuentas</a>.</p>
+                <br /></p>
+              
             </div>
           </div>
         </div>
@@ -503,7 +498,7 @@ function Landing() {
       <section className="landing-ayudarte">
         <div className="landing-ayudarte__texto">
           <h2>Asesoría técnica y respaldo comercial</h2>
-          <p>Nuestro equipo cuenta con años de experiencia en el sector salud, siempre buscando verificar la calidad y trazabilidad de cada despacho. ¿Necesitas un requerimiento especial para tu quirófano? Contáctanos directamente.</p>
+          <p>Nuestro equipo cuenta con años de experiencia en el sector salud, siempre buscando verificar la calidad y trazabilidad de cada despacho.</p>
           <div className="landing-ayudarte__badges">
             <img src={urls.sacs} alt="sacs" className="landing-badge-img" />
             <img src={urls.farmapatria} alt="farmapatria" className="landing-badge-img" />

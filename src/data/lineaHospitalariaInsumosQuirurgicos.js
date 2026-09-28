@@ -1,7 +1,7 @@
 const lineaHospitalariaInfo = {
   etiqueta: 'Hospitalaria',
   etiquetaIcono: 'Stethoscope',
-  titulo: 'Línea hospitalaria e insumos quirúrgicos',
+  titulo: 'Linea hospitalaria',
   subtitulo: 'Cobertura clínica y hospitalaria, con trazabilidad de lote y asesoría especializada.',
   tipo: 'secciones',
   contenido: [
@@ -14,7 +14,7 @@ const lineaHospitalariaInfo = {
       subtitulo: 'Trazabilidad de lote',
       // TODO: confirmar si esto ya existe en la plataforma o es una funcionalidad planeada
       texto:
-        'Cada insumo cuenta con información de lote y fecha de vencimiento visible antes de comprar.',
+        'Cada insumo cuenta con información del registro sanitario, laboratorio e informacion de la molecula en nuestro vademecum',
     },
     {
       subtitulo: 'Asesoría especializada',

@@ -3,13 +3,13 @@ const cadenaSuministroInfo = {
   etiqueta: 'Logística',
   etiquetaIcono: 'Boxes',
   titulo: 'Cadena de suministro con 0 interrupciones',
-  subtitulo: 'Inventario real, múltiples proveedores y reposición anticipada para que nunca te quedes sin stock.',
+  subtitulo: 'Inventario de reserva, múltiples proveedores y reposición anticipada para que nunca te quedes sin stock.',
   tipo: 'secciones',
   contenido: [
     {
-      subtitulo: 'Inventario en tiempo real',
+      subtitulo: 'Stock de seguridad estratégico',
       texto:
-        'Solo ves disponible lo que realmente tenemos en stock, para que no generes un pedido que después no podamos cumplir.',
+        'Mantenemos un inventario de reserva en los productos críticos, para absorber picos de demanda o retrasos imprevistos sin afectar la disponibilidad.',
     },
     {
       subtitulo: 'Múltiples proveedores por línea',
