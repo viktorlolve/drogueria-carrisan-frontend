@@ -34,7 +34,7 @@ src/
 │   ├── admin/                # Componentes del panel admin (~33 archivos)
 │   ├── icons/                # Iconos custom
 │   ├── paginas-principales/  # Layouts de navegacion
-│   ├── registro/             # Stepper, Selectores de estado/ciudad, Turnstile, SubidaArchivos
+│   ├── registro/             # Stepper, Selectores de estado/ciudad, SubidaArchivos
 │   ├── ui/                   # Wrappers de Chakra UI (provider, toaster, tooltip)
 │   └── PrivateRouteStaff.jsx # Guard de staff: sesion staff + rolesPermitidos opcional
 ├── config/empresa.js         # Datos estaticos de la empresa
@@ -75,9 +75,8 @@ src/
 - `/registro/institucional` → RegistroInstitucional (multi-paso: Datos → Documentos → Confirmacion)
 - `/registro/profesional` → RegistroProfesional (multi-paso)
 - `/registro/honorifico` → RegistroHonorifico (multi-paso, requiere codigo de invitacion)
-- `/registro/finalizar` → RegistroPasoFinal (contrasena + Turnstile — compartido)
 
-Cada formulario de registro es un archivo JSX autonomo con su propio estado local (useState, no useReducer). No comparten logica de formulario entre si.
+Cada formulario de registro es un archivo JSX autonomo con su propio estado local (useState, no useReducer). No comparten logica de formulario entre si. El paso final de Confirmacion NO lleva Turnstile (eliminado 2026-09-28 — ver AGENTS raiz); la proteccion anti-bot es el `authLimiter` del backend (10 req/15 min).
 
 ### Login — Flujo de dos pasos
 1. El usuario escribe email → se verifica si existe via POST /auth/check-email
@@ -194,8 +193,11 @@ El Admin.jsx usa rutas anidadas. Componentes en `src/components/admin/`:
 - Service worker en src/sw.js
 - Workbox para caching (precaching + strategies)
 - Manifest: Drogueria Carrisan, theme #0052DC
-- PWA staff separada: `public/manifest-staff.json` (scope /staff/, start_url /staff/login) + iconos `staff-*.png`
-  - `PwaScopeSwitcher` (cambia manifest/titulo/icono segun la ruta sea /staff) esta montado en App.jsx → el swap de PWA staff funciona.
+- **PWA ÚNICA (decidido 2026-09-28, Plan A).** Hay un solo HTML (`index.html`), un solo manifest (`manifest.webmanifest`, `scope: "/"`, `start_url: "/"`), un solo service worker (`sw.js`, scope `/`) y **un solo ícono instalado** para todos, staff incluido. La "PWA staff" anterior (`staff.html` + `public/manifest-staff.json` + `staff-*.png`) fue eliminada: era imposible de instalar de forma fiable (mismo origen = un solo SW = una sola app instalable) y `staff.html` acababa con **dos** `<link rel="manifest">`, lo que hacía la instalabilidad impredecible. `/staff/*` se sirve por el catch-all rewrite de `vercel.json` → `index.html`, y `App.jsx` enruta las rutas staff normalmente.
+  - El personal entra por el link "Acceso personal" del login de clientes (`src/pages/Login.jsx:311`) o por `/staff/login`, y **si tiene sesión staff pero no sesión de cliente, abrir la app instalada lo manda directo a `/staff/dashboard`** (`RootRedirect.jsx`). Con ambas sesiones gana la de cliente (comportamiento de siempre).
+  - `PwaScopeSwitcher` (montado en `App.jsx:157`) SOLO ajusta `document.title`, `meta[name="theme-color"]` (azul `#0052DC` en tienda / azul marino `#1B4B8F` en staff) y el favicon de la pestaña. **Prohibido volver a tocar el manifest o el `apple-touch-icon` desde JS**: el navegador ya parseó el manifest al cargar (un `setAttribute` posterior no cambia la instalabilidad) y el `apple-touch-icon` es lo que iOS congela como ícono instalado — swapearlo daría ícono staff en iOS y de tienda en Android.
+  - Regresión: `node scripts/verificar-pwa.mjs` (tras `npx vite build`) falla si reaparece un segundo manifest, `staff.html`, iconos `staff-*`, un segundo service worker, o el rewrite `/staff → staff.html` de `vercel.json`.
+  - Push funciona con esta PWA única: la suscripción vive en el `PushManager` del navegador, no en el service worker, así que sobrevive a los deploys (`registerType: 'autoUpdate'` + `vercel.json` sin bloque `headers` → `sw.js` se revalida siempre).
 
 ## Autenticacion de personal interno (staff) — Frontend
 
@@ -285,7 +287,7 @@ Desde 2026-09-04 el módulo staff se organiza en **3 departamentos**: `finanzas`
 | Ruta | Guard | Departamento | Estado | Descripcion |
 |------|-------|--------------|--------|-------------|
 | /staff/login | publico | — | funcional | Login interno (email+password), usa Auth.css |
-| /staff/registro | publico | — | funcional | Registro de personal con código de invitación staff (`StaffRegistro.jsx` + `StaffRegistro.css`): verifica el código via `/auth/verificar-codigo {tipo:'staff'}`, formula (email, nombre, password, Turnstile), POST `/staff/registro` → auto-login (iniciarSesionConDatos) → /staff/dashboard |
+| /staff/registro | publico | — | funcional | Registro de personal con código de invitación staff (`StaffRegistro.jsx` + `StaffRegistro.css`): verifica el código via `/auth/verificar-codigo {tipo:'staff'}`, formula (email, nombre, password), POST `/staff/registro` → auto-login (iniciarSesionConDatos) → /staff/dashboard |
 | /staff/dashboard | PrivateRouteStaff | — | funcional | Panel visual standalone (sin sidebar): tarjetas de departamento + boton admin-bridge (`StaffDashboard.css`) |
 | /staff/finanzas · /staff/comercial · /staff/logistica | PrivateRouteStaff | — | funcional | Hubs de departamento (`StaffDepartamento`): hero del depto + tarjetas de módulos visibles por rol |
 | /staff/ventas | roles: contabilidad/administrador/director/admin | Finanzas | funcional | **Facturación** (`StaffFacturacion.jsx`): emitir facturas/recibos + notas de crédito y débito + historial + anular. Endpoints `/staff/contabilidad/facturas*` (migración `026_facturacion.sql`) |
@@ -337,7 +339,7 @@ La pagina de crear orden a cliente (StaffOrdenes) usa **staffApi** (no el `api` 
 5. **Las validaciones** estan en src/utils/validadores.js y se reusan en Login y todos los registros.
 6. **La ruta `/analytics` esta protegida** con `<PrivateRoute adminOnly>`. No quitar el guard.
 7. **Staff ≠ cliente.** No mezclar `useAuth`/`api` con `useStaffAuth`/`staffApi`. Usa `staffApi` para endpoints `/staff` y `api` para `/auth` y el resto. Nunca llamar `useAuth().login()` desde una pagina staff (eso seria el login de cliente, no staff).
-8. **PwaScopeSwitcher ESTÁ montado** en `App.jsx` — no removerlo: el swap de manifest/titulo/icono staff (manifest-staff.json, scope /staff/) depende de él. Verifica que exista el componente (ver Error #1).
+8. **PwaScopeSwitcher ESTÁ montado** en `App.jsx` — no removerlo: el ajuste de `title` + `theme-color` por depto (tienda vs `/staff`) depende de él. Verifica que exista el componente (ver Error #1). Solo ajusta metadata de pestaña: **nunca** el manifest ni el `apple-touch-icon` (ver la sección PWA de este archivo).
 
 ## Deuda de lint — backlog para otra sesión (2026-09-18)
 
