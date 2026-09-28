@@ -704,7 +704,7 @@ function Landing() {
       {/* INFORMACIÓN */}
       <div className="landing-footer__info">
         <p className="landing-footer__direccion">
-          Droguería Carrisan, C.A. · Av. Urdaneta (99) Qta. Mirabal,
+          Av. Urdaneta (99) Qta. Mirabal,
           Local 04C, Valencia 2001, Carabobo, Venezuela
         </p>
         
@@ -716,7 +716,7 @@ function Landing() {
             abrirModal(respaldoMedicoVenezolano)
           }}
         >
-          Droguería Carrisan respaldando la labor del Médico Venezolano 🇻🇪❤️
+          Drogueria Carrisan respaldando la labor del Médico Venezolano 🇻🇪❤️
           <span>›</span>
         </a>
       </div>
@@ -727,7 +727,7 @@ function Landing() {
         </p>
         <p>
           <strong>
-            *LAS DROGUERÍAS NO REALIZAN VENTA DIRECTA AL PÚBLICO.
+            *LAS DROGUERIAS NO REALIZAN VENTA DIRECTA AL PÚBLICO.
           </strong>{" "}
           De conformidad con la normativa sanitaria vigente en la República
           Bolivariana de Venezuela, las droguerías son establecimientos
@@ -797,7 +797,7 @@ function Landing() {
       </div>
       {/* COPYRIGHT */}
       <div className="landing-footer__copyright">
-        © 2026 Droguería Carrisan, C.A. · Todos los derechos reservados
+        © 2026 Drogueria Carrisan, C.A. · Todos los derechos reservados
       </div>
     </div>
   </div>

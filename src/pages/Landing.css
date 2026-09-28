@@ -1297,7 +1297,6 @@
 
 
   .landing-footer__info {
-    display: flex;
     align-items: flex-start;
     gap: 12px;
     font-size: 0.76rem;
