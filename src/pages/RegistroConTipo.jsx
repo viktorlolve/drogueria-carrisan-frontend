@@ -32,7 +32,7 @@ function RegistroConTipo() {
         <div className="auth-card">
           <h1 className="auth-title">Registro cuenta B2B</h1>
           <p className="auth-subtitle">
-            Procede con tu registro institucional y le contactaremos una vez confirmemos la informacion
+            Procede con tu registro institucional y les contactaremos una vez confirmemos la informacion
           </p>
 
           <div className="registro-tipo__panel">
@@ -93,7 +93,7 @@ function RegistroConTipo() {
                   documento obligatorio del registro (se adjunta en PDF).
                 </li>
                 <li>
-                  <strong>Documentos adicionales</strong>: En este proceso tambien puedes adjuntar el permiso sanitario, la cédula y el título del farmacéutico regente y la autorización del director médico. Si no los tienes a la mano, los entregas luego a tus asesores de la Drogueria.
+                  <strong>Documentos adicionales</strong> En este proceso tambien puedes adjuntar el permiso sanitario, la cédula y el título del farmacéutico regente y la autorización del director médico. Si no los tienes a la mano, los entregas luego a tus asesores de la Drogueria.
                 </li>
               </ul>
               <p className="registro-tipo__info-nota">
