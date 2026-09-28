@@ -210,9 +210,9 @@ function Login() {
 
               {/* Crear cuenta — link simple, sin competir en peso con la card de login */}
               <p className="auth-crear-cuenta">
-                ¿No tenés cuenta aún?{' '}
+                ¿No tienes cuenta aún?{' '}
                 <button type="button" onClick={() => navigate('/registro')}>
-                  Creá una gratis
+                  Crea una gratis
                 </button>
               </p>
             </div>

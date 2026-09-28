@@ -320,20 +320,20 @@ function StaffLogin() {
             {/* Footer discreto */}
             <Separator borderColor="gray.100" />
             <Box textAlign="center" fontSize="sm" color="gray.500">
-              ¿No tenés acceso?{' '}
+              ¿No tienes acceso?{' '}
               <Link to="/staff/registro" style={{ color: TEAL, fontWeight: 600 }}>
                 Registrate con tu código
               </Link>
             </Box>
             <Box textAlign="center" fontSize="xs" color="gray.400">
-              ¿No sos personal?{' '}
+              ¿Login equivocado?{' '}
               <Link to="/login" style={{ color: TEAL, fontWeight: 600 }}>
                 Ir al login de clientes
               </Link>
             </Box>
             <Flex align="center" justify="center" gap={1.5} color="gray.400" fontSize="xs">
               <Lock size={12} aria-hidden="true" />
-              <Text>Acceso restringido · Uso interno — Drogueria Carrisan</Text>
+              <Text>Acceso restringido · Uso interno</Text>
             </Flex>
           </Card.Body>
         </Card.Root>

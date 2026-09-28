@@ -391,6 +391,7 @@
   line-height: 1.4;
   margin-bottom: 20px;
   text-align: center;
+  margin-top: 10px;
 }
 
 /* Botón Principal */
@@ -1554,6 +1555,7 @@
   background: #FBFAF7;
   margin-top: 0;
   padding-top: 2.5rem;
+  padding-bottom: 1.25rem;
   justify-content: center;
 }
 
@@ -1585,7 +1587,7 @@
 .auth-crear-cuenta {
   width: 100%;
   text-align: center;
-  margin-top: 20px;
+  margin-top: 40px;
   font-family: 'Inter', sans-serif;
   font-size: 0.86rem;
   color: #4a4c53;
