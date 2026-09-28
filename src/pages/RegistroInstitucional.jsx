@@ -260,9 +260,6 @@ function RegistroInstitucional() {
         <Link to="/" className="auth-logo" style={{ margin: 0 }}>
           <img src={logo} alt="Logo" className="logologin" style={{ margin: 0 }} />
         </Link>
-        <Link to="/login" className="reginst-topbar-link">
-          ¿Ya tenés cuenta? Iniciá sesión
-        </Link>
       </header>
 
       <main className="reginst-main">

@@ -19,6 +19,7 @@ import comoFuncionaLaPlataforma from '../data/comoFuncionaLaPlataforma'
 import recaudosCuentaB2B from '../data/recaudosCuentaB2B'
 import seguridadInformacion from '../data/seguridadInformacion'
 import respaldoMedicoVenezolano from '../data/respaldoMedicoVenezolano'
+import avisoNoDiscriminacion from '../data/avisoNoDiscriminacion'
 
 
   const BASE_URL = 'https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages'
@@ -791,9 +792,15 @@ function Landing() {
         <Link to="/privacidad">
           Política de privacidad
         </Link>
-        <Link to="/privacidad">
+        <a
+          href="#"
+          onClick={(e) => {
+            e.preventDefault()
+            abrirModal(avisoNoDiscriminacion)
+          }}
+        >
           Aviso de no discriminación
-        </Link>
+        </a>
       </div>
       {/* COPYRIGHT */}
       <div className="landing-footer__copyright">
