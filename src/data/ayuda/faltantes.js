@@ -7,7 +7,7 @@ const faltantes = {
   contenido: [
     {
       subtitulo: '¿Qué hacer si faltan productos?',
-      texto: 'Revisa el empaque al momento de la entrega. Si falta un producto, repórtalo inmediatamente a través de la plataforma o escríbenos a ventas@carrisan.com.',
+      texto: 'Revisa el empaque al momento de la entrega. Si falta un producto, repórtalo inmediatamente a través de la plataforma o escríbenos a dcarrisan@gmail.com.',
     },
     {
       subtitulo: '¿Cómo reporto un faltante?',

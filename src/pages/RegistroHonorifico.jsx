@@ -203,7 +203,7 @@ function RegistroHonorifico() {
             </svg>
           </div>
           <h1 className="auth-title">
-            {nombrePila ? `¡Bienvenido${terminacionGenero}, ${nombrePila}!` : '¡Bienvenido a Droguería Carrisán!'}
+            {nombrePila ? `¡Bienvenido${terminacionGenero}, ${nombrePila}!` : '¡Bienvenido a Droguería Carrisan!'}
           </h1>
           <p className="auth-subtitle">
             Tu cuenta fue creada con éxito. Ya formás parte de nuestra comunidad y podés empezar a
@@ -527,7 +527,7 @@ function RegistroHonorifico() {
 
         <div className="registro-nav-botones">
           <button type="button" className="registro-btn-atras" onClick={irAtras}>
-            ← Atrás
+            Atrás
           </button>
           <button
             type="button"
@@ -535,7 +535,7 @@ function RegistroHonorifico() {
             onClick={handleSiguiente}
             disabled={cargando}
           >
-            {paso === 1 ? (cargando ? 'Creando cuenta...' : 'Crear cuenta') : 'Siguiente'}
+            {paso === 1 ? (cargando ? 'Creando…' : 'Crear cuenta') : 'Siguiente'}
           </button>
         </div>
         </div>

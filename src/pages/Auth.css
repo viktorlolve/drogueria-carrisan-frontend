@@ -702,29 +702,41 @@
 
 /* ---------- Selector de horario semanal (Institucional) ---------- */
 
+/* Cada día ocupa una línea (switch + día + 2 selectores a ancho completo) y
+   "Copiar a todos" cae en una 2ª línea dentro de la misma tarjeta en móvil. */
 .horario-semanal {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
   width: 100%;
 }
 
 .horario-semanal-fila {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.6rem 0.75rem;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.5rem;
+  padding: 0.5rem 0.6rem;
   border: 1px solid #E5E7EB;
   border-radius: 10px;
-  flex-wrap: wrap;
 }
 
 .horario-semanal-dia {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  min-width: 130px;
+  gap: 0.4rem;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.horario-semanal-dia-nombre {
+  white-space: nowrap;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.horario-semanal-dia-corto {
+  display: none;
 }
 
 .horario-semanal-dia--cerrado {
@@ -777,30 +789,39 @@
 .horario-semanal-horas {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  flex-wrap: wrap;
+  gap: 0.3rem;
+  flex: 1 1 8rem;
+  min-width: 0;
+  flex-wrap: nowrap;
 }
 
 .horario-semanal-horas select {
-  padding: 0.4rem 0.5rem;
+  flex: 1 1 0;
+  min-width: 0;
+  width: 100%;
+  padding: 0.38rem 0.3rem;
   border: 1px solid #D1D5DB;
   border-radius: 8px;
-  font-size: 0.85rem;
+  background-color: #fff;
+  font-size: 0.82rem;
 }
 
 .horario-semanal-separador {
+  flex-shrink: 0;
   color: #9CA3AF;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
 }
 
+/* En escritorio el botón cierra la fila; en móvil pasa a su propia línea. */
 .horario-semanal-copiar {
   border: none;
   background: none;
   color: #0052DC;
-  font-size: 0.8rem;
-  font-weight: 500;
+  font-size: 0.78rem;
+  font-weight: 600;
   cursor: pointer;
-  padding: 0.2rem 0.4rem;
+  padding: 0;
+  margin-left: auto;
 }
 
 .horario-semanal-copiar:hover {
@@ -808,8 +829,27 @@
 }
 
 .horario-semanal-cerrado-texto {
+  flex: 1 1 auto;
   color: #9CA3AF;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 600px) {
+  /* El día abreviado (Lun/Mar/Mié...) deja espacio para los 2 selectores. */
+  .horario-semanal-dia-largo {
+    display: none;
+  }
+
+  .horario-semanal-dia-corto {
+    display: inline;
+  }
+
+  .horario-semanal-copiar {
+    order: 3;
+    flex: 0 0 100%;
+    margin-left: 0;
+    text-align: right;
+  }
 }
 
 /* ---------- Subida de archivos PDF (registro) ---------- */
@@ -1183,49 +1223,35 @@
   }
 }
 
+/* Par de navegación: dos columnas del mismo ancho (grid 1fr 1fr) para que
+   "Atrás" y "Siguiente" midan siempre lo mismo, sin depender del texto. */
 .registro-nav-botones {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-top: 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin: 1.5rem auto 0;
   width: 100%;
+  max-width: 22rem;
 }
 
-/* Botón "Atrás": mismo estilo que el botón Siguiente */
-.registro-btn-atras {
-  padding: 0.55rem 1.5rem;
-  border: none;
-  border-radius: 100px;
-  background: #1B4B8F;
-  color: #fff;
-  font-size: 0.9rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.registro-btn-atras:hover {
-  background: #00509a;
-  transform: translateY(-1px);
-}
-
-/* Botón Siguiente/Crear cuenta: pequeño y alineado a la derecha */
+/* "Atrás" y "Siguiente"/"Crear cuenta": mismo estilo y mismo tamaño. */
+.registro-btn-atras,
 .registro-btn-siguiente {
-  margin-left: auto;
-  padding: 0.55rem 1.5rem;
+  width: 100%;
+  padding: 0.55rem 1rem;
   border: none;
   border-radius: 100px;
   background: #1B4B8F;
   color: #fff;
   font-size: 0.9rem;
   font-weight: 700;
+  text-align: center;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
 }
 
+.registro-btn-atras:hover,
 .registro-btn-siguiente:hover:not(:disabled) {
   background: #00509a;
   transform: translateY(-1px);
@@ -1234,6 +1260,16 @@
 .registro-btn-siguiente:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Pantallas muy angostas: menos padding horizontal para que quepan
+   textos largos ("Crear cuenta") dentro de una columna de ~130px. */
+@media (max-width: 400px) {
+  .registro-btn-atras,
+  .registro-btn-siguiente {
+    padding: 0.55rem 0.6rem;
+    font-size: 0.85rem;
+  }
 }
 
 .registro-seccion-titulo-paso {

@@ -109,7 +109,7 @@ function Ofertas() {
 
       <section className="ofertas-banner">
         <div className="ofertas-banner__texto">
-          <span className="ofertas-banner__eyebrow">Ofertas Carrisán</span>
+          <span className="ofertas-banner__eyebrow">Ofertas Carrisan</span>
           <h2>Ahorra en cada pedido</h2>
           <p>Descuentos activos por producto, marca y laboratorio — actualizados constantemente.</p>
           <Link to="/catalogo" className="ofertas-banner__cta">Ver catálogo completo</Link>

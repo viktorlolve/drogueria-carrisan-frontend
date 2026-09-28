@@ -31,7 +31,7 @@ function CartLine({ item, tasaVes, onUpdateCantidad, onRemove }) {
       </div>
 
       <div className="cart-line__body">
-        <p className="cart-line__vendedor">Vendido por <strong>Droguería Carrisán</strong></p>
+        <p className="cart-line__vendedor">Vendido por <strong>Droguería Carrisan</strong></p>
         <h3 className="cart-line__nombre">{producto.nombre_comercial}</h3>
         {producto.laboratorio && (
           <p className="cart-line__meta">{producto.laboratorio}</p>
@@ -773,7 +773,7 @@ function Carrito() {
             {/* Líneas de producto */}
             <section className="cart-lines">
               <p className="cart-lines__count">
-                Vendido y enviado por <strong>Droguería Carrisán</strong>
+                Vendido y enviado por <strong>Droguería Carrisan</strong>
               </p>
               {items.map((item) => (
                 <CartLine

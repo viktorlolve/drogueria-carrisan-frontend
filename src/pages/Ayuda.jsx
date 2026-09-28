@@ -127,7 +127,7 @@ const categorias = [
 ]
 
 const preguntas = [
-  { pregunta: '¿Cómo me registro en la plataforma?', respuesta: 'El registro es gestionado por nuestro equipo. Contáctanos a ventas@carrisan.com y te crearemos una cuenta con los precios según tu perfil comercial.' },
+  { pregunta: '¿Cómo me registro en la plataforma?', respuesta: 'El registro es gestionado por nuestro equipo. Contáctanos a dcarrisan@gmail.com y te crearemos una cuenta con los precios según tu perfil comercial.' },
   { pregunta: '¿Cómo realizo un pedido?', respuesta: 'Navega por el catálogo, agrega productos al carrito, revisa tu orden y confírmala. Recibirás una notificación con el número de orden.' },
   { pregunta: '¿Cuáles son los tiempos de entrega?', respuesta: 'El despacho se coordina directamente con cada cliente. Los tiempos varían según ubicación y disponibilidad de productos.' },
   { pregunta: '¿Qué métodos de pago aceptan?', respuesta: 'Trabajamos con transferencia bancaria y pago móvil. Los detalles de pago se envían al confirmar la orden.' },
@@ -150,9 +150,9 @@ const necesidades = [
 ]
 
 const enlacesUtiles = [
-  { label: 'Escríbenos por correo', desc: '¿Necesitas ayuda? Estamos aquí para ayudarte.', href: 'mailto:ventas@carrisan.com', externo: true, icono: 'mail' },
+  { label: 'Escríbenos por correo', desc: '¿Necesitas ayuda? Estamos aquí para ayudarte.', href: 'mailto:dcarrisan@gmail.com', externo: true, icono: 'mail' },
   { label: 'Ver catálogo completo', desc: 'Todos nuestros productos, marcas y ofertas.', to: '/catalogo', icono: 'catalogo' },
-  { label: '¿Quiénes somos?', desc: 'Conoce más sobre Droguería Carrisán.', to: '/quienes-somos', icono: 'faq' },
+  { label: '¿Quiénes somos?', desc: 'Conoce más sobre Droguería Carrisan.', to: '/quienes-somos', icono: 'faq' },
 ]
 
 // ---------------------------------------------------------
@@ -226,15 +226,17 @@ function Ayuda() {
     <div className="ayuda-page">
       {/* Header azul con título */}
       <div className="ayuda-header">
-        <button
-          type="button"
-          className="pagina-volver pagina-volver--hero"
-          onClick={() => navigate(-1)}
-          aria-label="Volver atrás"
-        >
-          {ICONOS.flechaIzq}
-        </button>
-        <h1>Centro de Ayuda</h1>
+        <div className="pagina-titulo pagina-titulo--centro">
+          <button
+            type="button"
+            className="pagina-volver pagina-volver--hero"
+            onClick={() => navigate(-1)}
+            aria-label="Volver atrás"
+          >
+            {ICONOS.flechaIzq}
+          </button>
+          <h1>Centro de Ayuda</h1>
+        </div>
         <p>¿En qué podemos ayudarte hoy?</p>
 
         {/* Buscador Integrado */}
@@ -273,7 +275,7 @@ function Ayuda() {
             <h2 className="ayuda-card__titulo">Resultados para "{busqueda}"</h2>
             {preguntasFiltradas.length === 0 && itemsFiltrados.length === 0 ? (
               <p className="ayuda-sin-resultados">
-                No encontramos temas relacionados. Escríbenos directamente a ventas@carrisan.com.
+                No encontramos temas relacionados. Escríbenos directamente a dcarrisan@gmail.com.
               </p>
             ) : (
               <>
@@ -346,7 +348,7 @@ function Ayuda() {
         <div className="ayuda-banner-imagen">
           <img
             src="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/victor.png"
-            alt="Foto de equipo Carrisán"
+            alt="Foto de equipo Carrisan"
             className="ayuda-banner-img"
             loading="lazy"
           />

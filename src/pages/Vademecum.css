@@ -1,67 +1,42 @@
 /* =========================================================
-   Vademecum.css — Página pública de ficha clínica de
-   moléculas (/vademecum).
-   Reutiliza clases de Catalogo.css y RegistroInhrr.css.
-   Paleta de marca: #0052DC / #1B4B8F / #12A594.
+   Vademecum.css — Estilos propios de la ficha clínica de
+   moléculas (/vademecum). Se apoya en el sistema "cs-*" de
+   RegistroInhrr.css (hero, buscador, tarjetas, paginación).
    ========================================================= */
-
-/* HERO */
-.vad-hero {
-  background: linear-gradient(145deg, #1a1a3a, #0052dc);
-  color: #fff;
-  padding: 56px 20px 44px;
-}
-
-.vad-hero__inner {
-  max-width: 1100px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-}
 
 .vad-hero__en {
   font-family: 'Source Serif 4', serif;
   font-size: 14px;
   font-style: italic;
   color: rgba(255, 255, 255, 0.75);
-  margin: 0;
+  margin: 0 0 6px;
 }
 
 .vad-hero__sinonimos {
   font-family: 'Figtree', sans-serif;
-  font-size: 14px;
+  font-size: 13.5px;
   color: rgba(255, 255, 255, 0.85);
-  margin: 8px 0 0;
+  margin: 0 0 20px;
 }
 
-.vad-hero__buscar {
-  margin-top: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  border-radius: 999px;
-  padding: 8px 16px;
-  font-family: 'Figtree', sans-serif;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.2s ease;
+.vad-hero__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.vad-hero__buscar:hover {
-  background: rgba(255, 255, 255, 0.22);
-}
-
-/* BREADCRUMB ATC */
+/* ÁRBOL ATC */
 .vad-atc {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 18px 20px 0;
+  position: static;
+  border-bottom: 1px solid #e6eaf2;
+}
+
+.vad-atc__inner {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
+  padding: 14px 20px;
 }
 
 .vad-atc__item {
@@ -69,7 +44,7 @@
   align-items: center;
   gap: 6px;
   font-family: 'Figtree', sans-serif;
-  font-size: 13px;
+  font-size: 12.5px;
   color: #1b4b8f;
   background: #eaf1fb;
   border-radius: 999px;
@@ -78,7 +53,7 @@
 
 .vad-atc__codigo {
   font-weight: 800;
-  color: #0052dc;
+  color: #12a594;
 }
 
 .vad-atc__nombre {
@@ -87,67 +62,56 @@
 
 .vad-atc__sep {
   color: #8a93a6;
-  font-size: 16px;
-  line-height: 1;
 }
 
 /* CUERPO */
 .vad-body {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 24px 20px 60px;
+  padding: 28px 20px 60px;
 }
 
-.vad-toolbar {
-  margin-bottom: 28px;
-}
-
-.vad-btn-catalogo {
-  border: none;
-  background: #0052dc;
-  color: #fff;
-  font-family: 'Figtree', sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  border-radius: 999px;
-  padding: 12px 22px;
-  cursor: pointer;
-  box-shadow: 0 8px 20px rgba(0, 82, 220, 0.25);
-  transition: background 0.2s ease, transform 0.1s ease;
-}
-
-.vad-btn-catalogo:hover {
-  background: #1b4b8f;
-  transform: translateY(-1px);
-}
-
-/* SECCIONES */
 .vad-seccion {
-  margin-bottom: 36px;
+  margin-bottom: 34px;
 }
 
 .vad-seccion__titulo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
   font-family: 'Bricolage Grotesque', sans-serif;
-  font-size: 22px;
+  font-size: 20px;
   color: #1a1a3a;
   margin: 0 0 14px;
 }
 
-.vad-seccion__titulo span {
-  color: #8a93a6;
-  font-size: 15px;
-  font-weight: 500;
+.vad-seccion__titulo svg {
+  color: #12a594;
 }
 
-.vad-vacio {
-  font-family: 'Figtree', sans-serif;
+.vad-seccion__titulo span {
+  color: #8a93a6;
   font-size: 14px;
-  color: #6b7280;
-  background: #f3f5f9;
-  border: 1px dashed #d5dbe6;
+  font-weight: 500;
+  font-family: 'Figtree', sans-serif;
+}
+
+.vad-fuente-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-family: 'Figtree', sans-serif;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #1b4b8f;
+  background: #eaf1fb;
+  border: 1px solid #cfe0fb;
   border-radius: 12px;
-  padding: 18px;
-  margin: 0;
+  padding: 10px 14px;
+  margin: 0 0 14px;
+}
+
+.vad-fuente-banner svg {
+  flex-shrink: 0;
+  margin-top: 1px;
 }
 
 /* ACORDEÓN DE FICHA CLÍNICA */
@@ -167,19 +131,20 @@
 
 .vad-acordeon__item.abierta {
   box-shadow: 0 6px 18px rgba(26, 26, 58, 0.08);
+  border-color: #b8e3dd;
 }
 
 .vad-acordeon__head {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   border: none;
   background: transparent;
   padding: 14px 16px;
   cursor: pointer;
   font-family: 'Figtree', sans-serif;
-  font-size: 14px;
+  font-size: 14.5px;
   font-weight: 700;
   color: #232b45;
   text-align: left;
@@ -190,15 +155,23 @@
 }
 
 .vad-acordeon__icono {
-  font-size: 16px;
+  display: flex;
+  color: #12a594;
+  flex-shrink: 0;
 }
 
 .vad-acordeon__etiqueta {
   flex: 1;
 }
 
+.vad-acordeon__chevron {
+  color: #8a93a6;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
 .vad-acordeon__body {
-  padding: 0 16px 16px;
+  padding: 0 16px 18px 46px;
   font-family: 'Source Serif 4', serif;
   font-size: 15px;
   line-height: 1.65;
@@ -221,21 +194,30 @@
 }
 
 .vad-producto {
+  width: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
   border: 1px solid #e3e8f0;
   border-radius: 12px;
   background: #fff;
-  padding: 12px 14px;
+  padding: 13px 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.vad-producto:hover {
+  border-color: #0052dc;
+  box-shadow: 0 6px 16px rgba(0, 82, 220, 0.1);
 }
 
 .vad-producto__info {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
-  min-width: 0;
 }
 
 .vad-producto__nombre {
@@ -251,122 +233,39 @@
   color: #8a93a6;
 }
 
-.vad-producto__categoria {
+.vad-producto__flecha {
+  color: #b8c0cf;
   flex-shrink: 0;
-  font-family: 'Figtree', sans-serif;
-  font-size: 11px;
-  font-weight: 700;
-  color: #fff;
-  border-radius: 999px;
-  padding: 4px 10px;
 }
 
 .vad-productos__nota {
-  margin-top: 12px;
+  margin-top: 14px;
 }
 
-/* PAGINACIÓN PRODUCTOS */
-.inhrr-paginacion {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  margin-top: 18px;
-}
-
-.inhrr-paginacion button {
-  border: 1px solid #d5dbe6;
-  background: #fff;
-  color: #1b4b8f;
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  font-size: 15px;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.inhrr-paginacion button:hover:not(:disabled) {
-  background: #eaf1fb;
-}
-
-.inhrr-paginacion button:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-.inhrr-paginacion span {
-  font-family: 'Figtree', sans-serif;
-  font-size: 13px;
-  color: #232b45;
-}
-
-/* RESULTADOS DE BÚSQUEDA */
-.vad-resultados {
+/* SUGERIDO EN PORTADA */
+.vad-sugerido {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-}
-
-.vad-resultado {
-  width: 100%;
-  display: flex;
   align-items: center;
+  text-align: center;
   gap: 12px;
-  border: 1px solid #e3e8f0;
-  border-radius: 12px;
-  background: #fff;
-  padding: 14px 16px;
-  cursor: pointer;
-  text-align: left;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.vad-resultado:hover {
-  border-color: #0052dc;
-  box-shadow: 0 6px 16px rgba(0, 82, 220, 0.1);
-}
-
-.vad-resultado__nombre {
-  flex: 1;
-  font-family: 'Figtree', sans-serif;
-  font-size: 15px;
-  font-weight: 700;
-  color: #232b45;
-}
-
-.vad-resultado__en {
-  font-family: 'Source Serif 4', serif;
-  font-size: 13px;
-  font-style: italic;
   color: #8a93a6;
+  padding: 50px 20px;
 }
 
-.vad-resultado__atc {
-  flex-shrink: 0;
+.vad-sugerido svg {
+  color: #12a594;
+}
+
+.vad-sugerido p {
   font-family: 'Figtree', sans-serif;
-  font-size: 12px;
-  font-weight: 800;
-  color: #0052dc;
-  background: #eaf1fb;
-  border-radius: 999px;
-  padding: 4px 10px;
+  font-size: 14px;
+  max-width: 420px;
+  margin: 0;
 }
 
 @media (max-width: 640px) {
-  .vad-atc {
-    gap: 4px;
-  }
-
-  .vad-atc__nombre {
-    display: none;
-  }
-
-  .vad-resultado__en {
-    display: none;
-  }
-
-  .vad-btn-catalogo {
-    width: 100%;
-  }
+  .vad-atc__nombre { display: none; }
+  .vad-hero__acciones .cs-boton { flex: 1; justify-content: center; }
+  .vad-acordeon__body { padding-left: 16px; }
 }

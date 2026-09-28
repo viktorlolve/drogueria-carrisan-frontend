@@ -686,7 +686,7 @@ function ProductoDetalle() {
 
             <div className="pd-purchase__seller">
               <Store size={14} aria-hidden="true" />
-              <span>Vendido y enviado por <strong>Droguería Carrisán</strong></span>
+              <span>Vendido y enviado por <strong>Droguería Carrisan</strong></span>
             </div>
 
             <Link to="/politica-devoluciones" className="pd-purchase__returns">

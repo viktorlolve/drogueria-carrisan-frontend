@@ -48,7 +48,7 @@ function QuienesSomos() {
       {/* Hero */}
       <section className="qs-hero">
         <div className="qs-hero__contenido">
-          <p className="qs-hero__eyebrow">Droguería Carrisán · Desde 2010</p>
+          <p className="qs-hero__eyebrow">Droguería Carrisan · Desde 2010</p>
           <h1>Una empresa familiar, cerca de quienes cuidan la salud</h1>
           <p className="qs-hero__texto">
             Somos una empresa venezolana, familiar desde el primer día, dedicada a la distribución
@@ -79,7 +79,7 @@ function QuienesSomos() {
         <section className="qs-seccion">
           <h2>Quiénes somos</h2>
           <p>
-            Droguería Carrisán nació en 2010 como un negocio familiar, y una década y media después
+            Droguería Carrisan nació en 2010 como un negocio familiar, y una década y media después
             seguimos siendo exactamente eso — una familia que trabaja para que farmacias, clínicas y
             distribuidores tengan lo que necesitan, cuando lo necesitan. No somos una corporación
             grande y anónima: somos personas que conocen a sus clientes, que responden el teléfono, y
@@ -95,7 +95,7 @@ function QuienesSomos() {
           </p>
           <p className="qs-destacado__contexto">
             La pandemia nos recordó, de la forma más dura posible, por qué existe Droguería
-            Carrisán. No distribuimos artículos — distribuimos salud. Esa responsabilidad no se
+            Carrisan. No distribuimos artículos — distribuimos salud. Esa responsabilidad no se
             apaga nunca, y menos cuando más se necesita.
           </p>
         </section>
@@ -140,7 +140,7 @@ function QuienesSomos() {
           <div className="qs-contacto__grid">
             <div>
               <span className="qs-contacto__label">Email</span>
-              <a href="mailto:ventas@carrisan.com">ventas@carrisan.com</a>
+              <a href="mailto:dcarrisan@gmail.com">dcarrisan@gmail.com</a>
             </div>
             <div>
               <span className="qs-contacto__label">Teléfono</span>

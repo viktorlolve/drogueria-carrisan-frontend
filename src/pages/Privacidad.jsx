@@ -5,7 +5,7 @@ import './Privacidad.css'
 // ---------------------------------------------------------
 // Aviso de Privacidad — mismo patrón de diseño que /terminos
 // (índice con anclas, secciones numeradas). El TEXTO es original,
-// redactado para el negocio real de Droguería Carrisán, inspirado
+// redactado para el negocio real de Droguería Carrisan, inspirado
 // en las categorías típicas de un aviso de privacidad (qué se
 // recopila, cómo se usa, con quién se comparte, tus opciones, etc.)
 // pero sin copiar contenido de terceros.
@@ -58,17 +58,19 @@ function Privacidad() {
   return (
     <div className="privacidad-page">
       <div className="privacidad-header">
-        <button
-          type="button"
-          className="pagina-volver"
-          onClick={() => navigate(-1)}
-          aria-label="Volver atrás"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="15 6 9 12 15 18" />
-          </svg>
-        </button>
-        <h1>Aviso de Privacidad</h1>
+        <div className="pagina-titulo">
+          <button
+            type="button"
+            className="pagina-volver"
+            onClick={() => navigate(-1)}
+            aria-label="Volver atrás"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="15 6 9 12 15 18" />
+            </svg>
+          </button>
+          <h1>Aviso de Privacidad</h1>
+        </div>
         <p className="privacidad-header__fecha">Última actualización: 12 de agosto de 2026</p>
       </div>
 
@@ -76,7 +78,7 @@ function Privacidad() {
         <strong>Resumen:</strong> usamos tu información para gestionar tu cuenta, procesar tus
         pedidos y darte soporte comercial. No vendemos tu información a terceros. Podés pedirnos
         acceder, corregir o eliminar tus datos escribiéndonos a{' '}
-        <a href="mailto:ventas@carrisan.com">ventas@carrisan.com</a>.
+        <a href="mailto:dcarrisan@gmail.com">dcarrisan@gmail.com</a>.
       </div>
 
       <button
@@ -110,7 +112,7 @@ function Privacidad() {
             <h2>1. Qué Cubre este Aviso</h2>
             <p>
               Este Aviso de Privacidad describe qué información personal recopila Droguería
-              Carrisán ("<strong>nosotros</strong>", "<strong>Carrisán</strong>"), cómo la usamos,
+              Carrisan ("<strong>nosotros</strong>", "<strong>Carrisan</strong>"), cómo la usamos,
               con quién la compartimos y qué opciones tenés al respecto. Aplica a la plataforma web
               y a cualquier aplicación asociada donde publiquemos este Aviso (el "<strong>Sitio</strong>").
             </p>
@@ -193,7 +195,7 @@ function Privacidad() {
               Podés actualizar tus datos de contacto, dirección de entrega y preferencias
               directamente desde tu cuenta. Para solicitar acceso, corrección o eliminación de otra
               información asociada a tu cuenta, escribinos a{' '}
-              <a href="mailto:ventas@carrisan.com">ventas@carrisan.com</a>. Responderemos tu
+              <a href="mailto:dcarrisan@gmail.com">dcarrisan@gmail.com</a>. Responderemos tu
               solicitud en un plazo razonable, salvo que exista una obligación legal o comercial que
               nos impida eliminar cierta información (por ejemplo, registros contables).
             </p>
@@ -259,7 +261,7 @@ function Privacidad() {
             <p>
               Si tenés preguntas sobre este Aviso de Privacidad o sobre cómo manejamos tu
               información, escribinos a{' '}
-              <a href="mailto:ventas@carrisan.com">ventas@carrisan.com</a>.
+              <a href="mailto:dcarrisan@gmail.com">dcarrisan@gmail.com</a>.
             </p>
           </section>
         </div>

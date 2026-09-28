@@ -1,29 +1,32 @@
 import { useState } from 'react'
 
+// `corto` se usa en móvil (ver .horario-semanal-dia-corto en Auth.css) para
+// que el día completo + los dos selectores quepan en una sola línea.
 const DIAS = [
-  { key: 'lunes', label: 'Lunes' },
-  { key: 'martes', label: 'Martes' },
-  { key: 'miercoles', label: 'Miércoles' },
-  { key: 'jueves', label: 'Jueves' },
-  { key: 'viernes', label: 'Viernes' },
-  { key: 'sabado', label: 'Sábado' },
-  { key: 'domingo', label: 'Domingo' }
+  { key: 'lunes', label: 'Lunes', corto: 'Lun' },
+  { key: 'martes', label: 'Martes', corto: 'Mar' },
+  { key: 'miercoles', label: 'Miércoles', corto: 'Mié' },
+  { key: 'jueves', label: 'Jueves', corto: 'Jue' },
+  { key: 'viernes', label: 'Viernes', corto: 'Vie' },
+  { key: 'sabado', label: 'Sábado', corto: 'Sáb' },
+  { key: 'domingo', label: 'Domingo', corto: 'Dom' }
 ]
 
-// Opciones de hora en intervalos de 30 min, formato 12h para mostrar
-// al usuario pero guardamos en 24h internamente (más fácil de comparar
-// y ordenar en el backend/reportes).
+// Opciones de hora en intervalos de 30 min. Guardamos en 24h ("08:30") y
+// mostramos 12h compacto ("8:30 am"): el formato largo de toLocaleTimeString
+// ("8:30 a. m.") es lo que hace que los <select> no entren en una línea móvil.
+function formatearHora12(hora24) {
+  const [h, m] = hora24.split(':')
+  const h12 = Number(h) % 12 === 0 ? 12 : Number(h) % 12
+  return `${h12}:${m} ${Number(h) < 12 ? 'am' : 'pm'}`
+}
+
 function generarOpcionesHora() {
   const opciones = []
   for (let h = 0; h < 24; h++) {
     for (const m of [0, 30]) {
       const hora24 = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
-      const hora12 = new Date(2000, 0, 1, h, m).toLocaleTimeString('es-VE', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-      })
-      opciones.push({ value: hora24, label: hora12 })
+      opciones.push({ value: hora24, label: formatearHora12(hora24) })
     }
   }
   return opciones
@@ -44,7 +47,9 @@ function crearHorarioInicial() {
 /**
  * Selector de horario semanal de recepción de pedidos.
  * Por cada día: switch abierto/cerrado + hora de apertura/cierre.
- * Botón "Copiar a todos los días" para no repetir la config 7 veces.
+ * En móvil cada día se resuelve en 1 línea (switch + día + 2 selectores a
+ * ancho completo) y "Copiar a todos" cae en una 2ª línea dentro de la misma
+ * tarjeta (ver .horario-semanal-copiar en Auth.css).
  *
  * Props:
  *  - value: objeto { lunes: {abierto, apertura, cierre}, ... } o undefined
@@ -96,8 +101,9 @@ function SelectorHorarioSemanal({ value, onChange }) {
                 />
                 <span className="horario-semanal-switch-track" />
               </label>
-              <span className={config.abierto ? '' : 'horario-semanal-dia--cerrado'}>
-                {dia.label}
+              <span className={`horario-semanal-dia-nombre${config.abierto ? '' : ' horario-semanal-dia--cerrado'}`}>
+                <span className="horario-semanal-dia-largo">{dia.label}</span>
+                <span className="horario-semanal-dia-corto" aria-hidden="true">{dia.corto}</span>
               </span>
             </div>
 
@@ -122,17 +128,20 @@ function SelectorHorarioSemanal({ value, onChange }) {
                     <option key={h.value} value={h.value}>{h.label}</option>
                   ))}
                 </select>
-                <button
-                  type="button"
-                  className="horario-semanal-copiar"
-                  onClick={() => copiarATodos(dia.key)}
-                  title="Copiar este horario a todos los días"
-                >
-                  Copiar a todos
-                </button>
               </div>
             ) : (
               <span className="horario-semanal-cerrado-texto">Cerrado</span>
+            )}
+
+            {config.abierto && (
+              <button
+                type="button"
+                className="horario-semanal-copiar"
+                onClick={() => copiarATodos(dia.key)}
+                title={`Copiar el horario de ${dia.label} a todos los días`}
+              >
+                Copiar a todos
+              </button>
             )}
           </div>
         )

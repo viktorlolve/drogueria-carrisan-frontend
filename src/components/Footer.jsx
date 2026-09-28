@@ -6,7 +6,7 @@ import './Footer.css'
 
 const COLUMNAS = [
   {
-    titulo: 'Droguería Carrisán',
+    titulo: 'Droguería Carrisan',
     enlaces: [
       { texto: 'Quiénes Somos', to: '/quienes-somos' },
       { texto: 'Catálogo', to: '/catalogo' },
@@ -56,7 +56,7 @@ function Footer() {
       <div className="footer-top">
         {/* Bloque de marca + contacto */}
         <div className="footer-marca">
-          <img src={logoBlanco} alt="Droguería Carrisán" className="footer-logo" />
+          <img src={logoBlanco} alt="Droguería Carrisan" className="footer-logo" />
           <p className="footer-tagline">La plataforma digital de abastecimiento farmacéutico y hospitalario para clínicas, farmacias y centros quirúrgicos.</p>
           <ul className="footer-contacto">
             <li>
@@ -98,7 +98,7 @@ function Footer() {
           <Link to="/privacidad">Privacidad</Link>
           <Link to="/ayuda">Ayuda</Link>
         </div>
-        <span>© {anioActual} Droguería Carrisán, C.A. Todos los derechos reservados.</span>
+        <span>© {anioActual} Droguería Carrisan, C.A. Todos los derechos reservados.</span>
       </div>
     </footer>
   )

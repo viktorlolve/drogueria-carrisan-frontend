@@ -6,11 +6,11 @@
 // Completa los placeholders marcados con TODO.
 
 const empresaInfo = {
-  nombre: 'Droguería Carrisán',
+  nombre: 'Droguería Carrisan',
   tagline: 'Distribución farmacéutica y hospitalaria',
   rif: 'J-00000000-0', // TODO: coloca el RIF real de la empresa
   telefono: '+58 000-0000000', // TODO: teléfono de contacto
-  email: 'ventas@carrisan.com',
+  email: 'dcarrisan@gmail.com',
   direccion: 'Dirección fiscal de la empresa, Ciudad, Venezuela', // TODO
 
   // Opcional: logo en base64 (data URL o solo el base64) para que el

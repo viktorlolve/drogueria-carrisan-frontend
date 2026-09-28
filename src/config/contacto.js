@@ -1,6 +1,6 @@
 // src/config/contacto.js
 //
-// Fuente única de verdad de los datos de contacto de Droguería Carrisán.
+// Fuente única de verdad de los datos de contacto de Droguería Carrisan.
 // La consumen `pages/Contacto.jsx`, `components/Footer.jsx` y `pages/Ayuda.jsx`
 // para que cambiar un dato (por ejemplo el enlace de WhatsApp) se haga en UN
 // solo lugar y no en tres archivos distintos.
@@ -16,8 +16,8 @@ export const CONTACTO = {
   email: {
     texto: 'dcarrisan@gmail.com',
     // Asunto y saludo prellenados del mailto: (se codifican con encodeURIComponent).
-    asunto: 'Consulta desde el sitio web — Droguería Carrisán',
-    cuerpo: 'Hola,\n\nEscribo desde el sitio web de Droguería Carrisán.\n\n',
+    asunto: 'Consulta desde el sitio web — Droguería Carrisan',
+    cuerpo: 'Hola,\n\nEscribo desde el sitio web de Droguería Carrisan.\n\n',
   },
 
   telefono: {

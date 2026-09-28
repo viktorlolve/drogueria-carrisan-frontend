@@ -731,7 +731,7 @@ function RegistroInstitucional() {
 
           <div className="registro-nav-botones">
             <button type="button" className="registro-btn-atras" onClick={irAtras}>
-              ← Atrás
+              Atrás
             </button>
             <button
               type="button"
@@ -739,7 +739,7 @@ function RegistroInstitucional() {
               onClick={handleSiguiente}
               disabled={cargando}
             >
-              {paso === 2 ? (cargando ? 'Creando cuenta...' : 'Crear cuenta') : 'Siguiente'}
+              {paso === 2 ? (cargando ? 'Creando…' : 'Crear cuenta') : 'Siguiente'}
             </button>
           </div>
         </div>

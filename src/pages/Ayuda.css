@@ -385,7 +385,6 @@
 
 /* Header Azul y Buscador */
 .ayuda-header {
-  position: relative;
   background-color: var(--ayuda-primary);
   color: #ffffff;
   padding: 2.5rem 1.5rem 2rem;

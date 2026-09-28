@@ -646,21 +646,38 @@ function StaffRegistro() {
                       )}
                     </Box>
 
-                    <Button
-                      type="submit"
-                      w="100%"
-                      size="lg"
-                      mt={1}
-                      bgGradient="linear-gradient(135deg, #0D9373 0%, #12A594 100%)"
-                      color="white"
-                      fontWeight="700"
-                      _hover={{ bgGradient: 'linear-gradient(135deg, #0C8268 0%, #0FA688 100%)' }}
-                      _active={{ bgGradient: 'linear-gradient(135deg, #0B6F5B 0%, #0D9373 100%)' }}
-                      loading={cargando}
-                      loadingText="Creando cuenta..."
-                    >
-                      Crear cuenta
-                    </Button>
+                    <Flex gap={3} mt={1}>
+                      <Button
+                        type="button"
+                        flex="1"
+                        size="lg"
+                        onClick={() => navigate('/staff/login')}
+                        isDisabled={cargando}
+                        bgGradient="linear-gradient(135deg, #0D9373 0%, #12A594 100%)"
+                        color="white"
+                        fontWeight="700"
+                        _hover={{ bgGradient: 'linear-gradient(135deg, #0C8268 0%, #0FA688 100%)' }}
+                        _active={{ bgGradient: 'linear-gradient(135deg, #0B6F5B 0%, #0D9373 100%)' }}
+                        _disabled={{ opacity: 0.6, cursor: 'not-allowed' }}
+                      >
+                        Atrás
+                      </Button>
+
+                      <Button
+                        type="submit"
+                        flex="1"
+                        size="lg"
+                        bgGradient="linear-gradient(135deg, #0D9373 0%, #12A594 100%)"
+                        color="white"
+                        fontWeight="700"
+                        _hover={{ bgGradient: 'linear-gradient(135deg, #0C8268 0%, #0FA688 100%)' }}
+                        _active={{ bgGradient: 'linear-gradient(135deg, #0B6F5B 0%, #0D9373 100%)' }}
+                        loading={cargando}
+                        loadingText="Creando..."
+                      >
+                        Crear cuenta
+                      </Button>
+                    </Flex>
                   </Stack>
                 </form>
               </>

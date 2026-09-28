@@ -5,7 +5,7 @@
 //
 // `tipo` acepta solo dos valores — así se elige la etiqueta con un simple
 // cambio de texto en la data, sin tocar componentes:
-//   'promocionado' → producto/sección propia de Droguería Carrisán
+//   'promocionado' → producto/sección propia de Droguería Carrisan
 //   'patrocinado'  → contenido pagado por un tercero (laboratorio, etc.)
 //
 // `link` interno (empieza con "/") navega dentro de la app; un link externo
@@ -21,7 +21,7 @@ export const NOTICIAS_ADS = [
     tipo: 'promocionado',
     imagen: `${BASE_IMG}/ads/noticias/catalogo.png`,
     titulo: 'Todo tu catálogo farmacéutico en un solo lugar',
-    resumen: 'Compará precios, revisá existencias y pedí en minutos desde Droguería Carrisán.',
+    resumen: 'Compará precios, revisá existencias y pedí en minutos desde Droguería Carrisan.',
     link: '/catalogo',
   },
   {

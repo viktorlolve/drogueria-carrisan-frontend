@@ -123,7 +123,7 @@ function PresupuestoModal({ presupuestoId, onClose, onRecotizado }) {
     doc.setTextColor(255, 255, 255)
     doc.setFontSize(16)
     doc.setFont(undefined, 'bold')
-    doc.text('Droguería Carrisán', 14, 13)
+    doc.text('Droguería Carrisan', 14, 13)
     doc.setFontSize(10)
     doc.setFont(undefined, 'normal')
     doc.text(`Presupuesto #${detalle.numero}`, 14, 21)

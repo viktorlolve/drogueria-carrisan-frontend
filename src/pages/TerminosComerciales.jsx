@@ -7,7 +7,7 @@ import './TerminosComerciales.css'
 // diseño que /terminos y /privacidad (índice con anclas,
 // secciones numeradas, subsecciones con letra, avisos
 // destacados). El TEXTO es original, redactado para el
-// negocio real de Droguería Carrisán.
+// negocio real de Droguería Carrisan.
 //
 // Enlazada desde el checkbox "Política Comercial" en
 // RegistroInstitucional.jsx (aceptaComercial), que ya
@@ -105,8 +105,8 @@ function TerminosComerciales() {
             <h2>1. Objeto y Aceptación</h2>
             <p>
               Esta Política Comercial (la "<strong>Política</strong>") regula el funcionamiento de
-              la <strong>Línea de Crédito B2B</strong> ofrecida por Droguería Carrisán ("
-              <strong>Carrisán</strong>", "<strong>nosotros</strong>") a sus clientes institucionales,
+              la <strong>Línea de Crédito B2B</strong> ofrecida por Droguería Carrisan ("
+              <strong>Carrisan</strong>", "<strong>nosotros</strong>") a sus clientes institucionales,
               como modalidad de pago alternativa al contado dentro de la plataforma.
             </p>
             <p>
@@ -121,8 +121,8 @@ function TerminosComerciales() {
           <section id="definiciones" className="comercial-seccion">
             <h2>2. Definiciones</h2>
             <ul className="comercial-lista">
-              <li><strong>"Línea de Crédito":</strong> el cupo de compra a crédito asignado a tu cuenta, expresado en dólares estadounidenses (USD), sujeto a evaluación y aprobación de Carrisán.</li>
-              <li><strong>"Compra de contado" o "efectiva":</strong> un pedido pagado bajo modalidad de contado cuyo comprobante de pago ha sido verificado por Carrisán (no basta con el reporte del pago por el cliente).</li>
+              <li><strong>"Línea de Crédito":</strong> el cupo de compra a crédito asignado a tu cuenta, expresado en dólares estadounidenses (USD), sujeto a evaluación y aprobación de Carrisan.</li>
+              <li><strong>"Compra de contado" o "efectiva":</strong> un pedido pagado bajo modalidad de contado cuyo comprobante de pago ha sido verificado por Carrisan (no basta con el reporte del pago por el cliente).</li>
               <li><strong>"Pedido a crédito":</strong> un pedido cargado a la Línea de Crédito en lugar de pagado de contado al momento de la orden.</li>
               <li><strong>"Plazo de crédito":</strong> el número de días, contados desde la creación del pedido, dentro de los cuales debe cancelarse un pedido a crédito.</li>
               <li><strong>"Vencido":</strong> un pedido a crédito cuyo plazo de crédito ha transcurrido sin haberse verificado el pago correspondiente.</li>
@@ -171,7 +171,7 @@ function TerminosComerciales() {
             </p>
             <p>
               Excepcionalmente, clientes con <strong>historial crediticio favorable</strong> con
-              Carrisán pueden acceder a un plazo extendido de <strong>14 días</strong>, sujeto
+              Carrisan pueden acceder a un plazo extendido de <strong>14 días</strong>, sujeto
               también a evaluación y aprobación manual de nuestro equipo administrativo.
             </p>
             <p>
@@ -232,7 +232,7 @@ function TerminosComerciales() {
           <section id="mora" className="comercial-seccion">
             <h2>9. Mora e Incumplimiento de Pago</h2>
             <p>
-              Carrisán <strong>no aplica intereses, recargos ni penalidades monetarias</strong> por
+              Carrisan <strong>no aplica intereses, recargos ni penalidades monetarias</strong> por
               atraso en el pago de pedidos a crédito.
             </p>
             <p>
@@ -294,7 +294,7 @@ function TerminosComerciales() {
             <p>
               Si tienes preguntas sobre esta Política Comercial o sobre el estado de tu Línea de
               Crédito, puedes escribirnos a{' '}
-              <a href="mailto:ventas@carrisan.com">ventas@carrisan.com</a>.
+              <a href="mailto:dcarrisan@gmail.com">dcarrisan@gmail.com</a>.
             </p>
           </section>
         </div>

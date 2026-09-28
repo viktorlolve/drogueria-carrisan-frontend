@@ -15,7 +15,7 @@ const facturas = {
     },
     {
       subtitulo: '¿Cómo envío un comprobante de pago?',
-      texto: 'Si realizaste un pago por transferencia o pago móvil, adjunta el comprobante desde "Mis Órdenes" o envíalo por correo a ventas@carrisan.com.',
+      texto: 'Si realizaste un pago por transferencia o pago móvil, adjunta el comprobante desde "Mis Órdenes" o envíalo por correo a dcarrisan@gmail.com.',
     },
     {
       subtitulo: '¿Qué hago si no veo mi factura?',

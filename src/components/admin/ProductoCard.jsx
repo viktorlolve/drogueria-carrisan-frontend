@@ -343,7 +343,7 @@ function ProductCard({ producto, tasaVes, variante = 'vertical' }) {
             {producto.marcas?.nombre || producto.laboratorio || ''}
           </p>
 
-          <p className="pcard__save-with">Ahorra con <strong>Plan Carrisán+</strong></p>
+          <p className="pcard__save-with">Ahorra con <strong>Plan Carrisan+</strong></p>
 
           <div className="pcard__delivery-info">
             <p className="pcard__delivery-arrive">

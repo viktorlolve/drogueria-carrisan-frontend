@@ -959,7 +959,7 @@ function MiCuenta() {
 
             <div className="mi-cuenta__footer">
               <ShieldCheck size={14} />
-              <span>Droguería Carrisán · Tu información está protegida</span>
+              <span>Droguería Carrisan · Tu información está protegida</span>
             </div>
           </>
         )}

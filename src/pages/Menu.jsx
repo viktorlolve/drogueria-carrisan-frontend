@@ -211,7 +211,7 @@ const LISTA_SOLICITUDES = [
 const LISTA_SOPORTE = [
   { to: '/ayuda', titulo: 'Preguntas Frecuentes', descripcion: 'Resuelve dudas sobre pedidos, pagos y entregas.', icono: 'ayuda' },
   { to: '/contacto', titulo: 'Contáctanos', descripcion: 'Habla directo con nuestro equipo comercial.', icono: 'contacto' },
-  { to: '/quienes-somos', titulo: 'Quiénes Somos', descripcion: 'Conoce la trayectoria de Droguería Carrisán.', icono: 'quienesSomos' },
+  { to: '/quienes-somos', titulo: 'Quiénes Somos', descripcion: 'Conoce la trayectoria de Droguería Carrisan.', icono: 'quienesSomos' },
 ]
 
 const LISTA_LEGAL = [

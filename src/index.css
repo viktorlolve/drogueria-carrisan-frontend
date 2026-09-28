@@ -126,20 +126,27 @@ code {
 }
 
 /* ---------------------------------------------------------
- * Boton "volver atras" compartido — paginas de contenido legal
- * y de contacto (/privacidad, /terminos, /contacto) + /ayuda.
- * El contenedor del header debe tener position: relative.
+ * Boton "volver atras" compartido — /ayuda, /privacidad,
+ * /terminos y /contacto. Se usa dentro de .pagina-titulo,
+ * que lo coloca a la IZQUIERDA del titulo de la pagina.
  * --------------------------------------------------------- */
+.pagina-titulo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pagina-titulo--centro {
+  justify-content: center;
+}
+
 .pagina-volver {
-  position: absolute;
-  top: 14px;
-  left: 14px;
-  z-index: 2;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
   padding: 0;
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 50%;
@@ -173,10 +180,12 @@ code {
 }
 
 @media (max-width: 640px) {
+  .pagina-titulo {
+    gap: 8px;
+  }
+
   .pagina-volver {
-    top: 10px;
-    left: 10px;
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
   }
 }

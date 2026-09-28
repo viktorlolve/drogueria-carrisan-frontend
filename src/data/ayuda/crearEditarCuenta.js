@@ -7,7 +7,7 @@ const crearEditarCuenta = {
   contenido: [
     {
       subtitulo: '¿Cómo creo mi cuenta?',
-      texto: 'El registro es gestionado por nuestro equipo. Contáctanos a ventas@carrisan.com con tus datos y te crearemos una cuenta con los precios según tu perfil comercial.',
+      texto: 'El registro es gestionado por nuestro equipo. Contáctanos a dcarrisan@gmail.com con tus datos y te crearemos una cuenta con los precios según tu perfil comercial.',
     },
     {
       subtitulo: '¿Cómo edito mis datos?',

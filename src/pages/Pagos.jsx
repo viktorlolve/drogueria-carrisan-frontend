@@ -10,8 +10,8 @@ import './Pagos.css'
 // se hizo con la tasa de cambio.
 // ---------------------------------------------------------------
 const DATOS_BANCARIOS = [
-  { banco: 'Banesco', tipo: 'Cuenta Corriente', numero: '0134-XXXX-XX-XXXXXXXXXX', titular: 'Droguería Carrisán, C.A.', rif: 'J-XXXXXXXX-X' },
-  { banco: 'Pago Móvil', tipo: '', numero: 'Tel: 0414-XXXXXXX', titular: 'Droguería Carrisán, C.A.', rif: 'J-XXXXXXXX-X' },
+  { banco: 'Banesco', tipo: 'Cuenta Corriente', numero: '0134-XXXX-XX-XXXXXXXXXX', titular: 'Droguería Carrisan, C.A.', rif: 'J-XXXXXXXX-X' },
+  { banco: 'Pago Móvil', tipo: '', numero: 'Tel: 0414-XXXXXXX', titular: 'Droguería Carrisan, C.A.', rif: 'J-XXXXXXXX-X' },
 ]
 
 function formatUSD(valor) {

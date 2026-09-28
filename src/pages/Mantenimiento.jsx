@@ -91,7 +91,7 @@ function Mantenimiento() {
         fontSize: '0.8rem',
         color: '#aaa',
       }}>
-        Droguería Carrisán &copy; {new Date().getFullYear()}
+        Droguería Carrisan &copy; {new Date().getFullYear()}
       </p>
     </div>
   )

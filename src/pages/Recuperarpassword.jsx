@@ -56,7 +56,7 @@ function RecuperarPassword() {
         <Link to="/" className="auth-logo">
           <span className="auth-logo-dot auth-logo-dot--teal" />
           <span className="auth-logo-dot auth-logo-dot--indigo" />
-          Carrisán
+          Carrisan
         </Link>
 
         {exito ? (

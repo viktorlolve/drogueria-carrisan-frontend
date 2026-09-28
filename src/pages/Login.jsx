@@ -95,7 +95,7 @@ function Login() {
               <img src={logo} alt="" className="auth-brand-panel__logo" />
             </span>
             <div>
-              <div className="auth-brand-panel__brand">Droguería Carrisán</div>
+              <div className="auth-brand-panel__brand">Droguería Carrisan</div>
               <div className="auth-brand-panel__tag">Distribución B2B farmacéutica</div>
             </div>
           </div>

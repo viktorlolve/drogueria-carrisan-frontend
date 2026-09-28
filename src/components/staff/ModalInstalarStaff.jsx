@@ -33,13 +33,13 @@ const PASOS_ANDROID = [
 const PASOS_DESKTOP = [
   { fuerte: 'Tocá el icono de instalar', detalle: 'En la barra de direcciones de Chrome o Edge' },
   { fuerte: 'Confirmá con "Instalar"', detalle: 'El navegador la abre como una aplicación propia' },
-  { fuerte: 'Usala desde tu escritorio', detalle: 'Queda un acceso directo a "Carrisán Staff"' },
+  { fuerte: 'Usala desde tu escritorio', detalle: 'Queda un acceso directo a "Carrisan Staff"' },
 ]
 
 function ModalInstalarStaff({ onClose }) {
   const { esIOS, esAndroid } = detectarPlataforma()
   const pasos = esIOS ? PASOS_IOS : esAndroid ? PASOS_ANDROID : PASOS_DESKTOP
-  const titulo = esIOS ? 'Agregar a pantalla de inicio' : 'Instalar Carrisán Staff'
+  const titulo = esIOS ? 'Agregar a pantalla de inicio' : 'Instalar Carrisan Staff'
   const sub =
     esAndroid
       ? 'Tu navegador no mostró la pregunta de instalación todavía. Podés instalarla manualmente en unos segundos:'

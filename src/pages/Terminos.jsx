@@ -7,7 +7,7 @@ import './Terminos.css'
 // El diseño (índice con anclas, secciones numeradas, subsecciones
 // con letra, avisos destacados) está inspirado en la página de
 // Términos de Walmart. El TEXTO es original, redactado para el
-// negocio real de Droguería Carrisán — no es una copia.
+// negocio real de Droguería Carrisan — no es una copia.
 //
 // ⚠️ Este es un borrador de referencia, no asesoría legal. Antes
 // de publicarlo, hazlo revisar por un abogado en Venezuela para
@@ -62,17 +62,19 @@ function Terminos() {
   return (
     <div className="terminos-page">
       <div className="terminos-header">
-        <button
-          type="button"
-          className="pagina-volver"
-          onClick={() => navigate(-1)}
-          aria-label="Volver atrás"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="15 6 9 12 15 18" />
-          </svg>
-        </button>
-        <h1>Términos y Condiciones de Uso</h1>
+        <div className="pagina-titulo">
+          <button
+            type="button"
+            className="pagina-volver"
+            onClick={() => navigate(-1)}
+            aria-label="Volver atrás"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="15 6 9 12 15 18" />
+            </svg>
+          </button>
+          <h1>Términos y Condiciones de Uso</h1>
+        </div>
         <p className="terminos-header__fecha">Última actualización: 12 de agosto de 2026</p>
       </div>
 
@@ -115,7 +117,7 @@ function Terminos() {
             <h2>1. Aceptación de los Términos</h2>
             <p>
               Estos Términos y Condiciones de Uso (los "<strong>Términos</strong>") rigen el acceso
-              y uso de la plataforma de Droguería Carrisán (el "<strong>Sitio</strong>"), disponible en
+              y uso de la plataforma de Droguería Carrisan (el "<strong>Sitio</strong>"), disponible en
               nuestro dominio web y aplicaciones asociadas. Al crear una cuenta, iniciar sesión o
               realizar un pedido a través del Sitio, aceptas quedar obligado por estos Términos. Si no
               estás de acuerdo con alguna parte, debes abstenerte de usar la plataforma.
@@ -131,11 +133,11 @@ function Terminos() {
           <section id="definiciones" className="terminos-seccion">
             <h2>2. Definiciones</h2>
             <ul className="terminos-lista">
-              <li><strong>"Nosotros", "Carrisán" o "la Empresa":</strong> Droguería Carrisán y sus operadores.</li>
+              <li><strong>"Nosotros", "Carrisan" o "la Empresa":</strong> Droguería Carrisan y sus operadores.</li>
               <li><strong>"Tú" o "el Cliente":</strong> la persona natural o jurídica que usa el Sitio con una cuenta autorizada.</li>
-              <li><strong>"Plataforma":</strong> el sitio web, catálogo, carrito, panel de cuenta y cualquier funcionalidad ofrecida por Carrisán en línea.</li>
+              <li><strong>"Plataforma":</strong> el sitio web, catálogo, carrito, panel de cuenta y cualquier funcionalidad ofrecida por Carrisan en línea.</li>
               <li><strong>"Productos":</strong> los artículos farmacéuticos, hospitalarios y de cuidado personal listados en el catálogo.</li>
-              <li><strong>"Línea de Crédito":</strong> el cupo de compra a crédito asignado a tu cuenta, si aplica, según evaluación comercial de Carrisán.</li>
+              <li><strong>"Línea de Crédito":</strong> el cupo de compra a crédito asignado a tu cuenta, si aplica, según evaluación comercial de Carrisan.</li>
             </ul>
           </section>
 
@@ -158,9 +160,9 @@ function Terminos() {
             <h2>4. Uso Permitido de la Plataforma</h2>
             <p>Al usar el Sitio, te comprometes a NO:</p>
             <ul className="terminos-lista">
-              <li>Usar la plataforma con fines distintos a la gestión de tus pedidos comerciales con Carrisán.</li>
+              <li>Usar la plataforma con fines distintos a la gestión de tus pedidos comerciales con Carrisan.</li>
               <li>Intentar acceder a cuentas, datos o áreas administrativas que no te correspondan.</li>
-              <li>Copiar, extraer masivamente o reutilizar el catálogo, precios o contenido del Sitio con fines comerciales ajenos a Carrisán.</li>
+              <li>Copiar, extraer masivamente o reutilizar el catálogo, precios o contenido del Sitio con fines comerciales ajenos a Carrisan.</li>
               <li>Interferir con el funcionamiento técnico del Sitio o de los servidores que lo alojan.</li>
               <li>Suministrar información falsa sobre tu identidad, RIF o capacidad de pago.</li>
             </ul>
@@ -208,7 +210,7 @@ function Terminos() {
             <h3>B. Línea de Crédito</h3>
             <p>
               La Línea de Crédito, cuando es otorgada, es un cupo revisable a discreción comercial de
-              Carrisán en función de tu historial de pago y volumen de compra. Podemos suspender,
+              Carrisan en función de tu historial de pago y volumen de compra. Podemos suspender,
               reducir o retirar el cupo en cualquier momento, notificándotelo con antelación razonable
               salvo casos de mora o riesgo de incumplimiento.
             </p>
@@ -253,14 +255,14 @@ function Terminos() {
             <h2>10. Propiedad Intelectual</h2>
             <p>
               El logo, nombre comercial, diseño de la plataforma, fichas de producto redactadas por
-              Carrisán y demás contenido del Sitio son propiedad de Droguería Carrisán o de sus
+              Carrisan y demás contenido del Sitio son propiedad de Droguería Carrisan o de sus
               licenciantes, y están protegidos por las leyes de propiedad intelectual aplicables. Se te
               concede una licencia limitada, no exclusiva y revocable para acceder y usar el Sitio
               únicamente con fines de compra dentro de tu actividad comercial autorizada.
             </p>
             <p>
               No está permitido reproducir, distribuir o crear obras derivadas del contenido del Sitio
-              sin autorización previa y por escrito de Carrisán.
+              sin autorización previa y por escrito de Carrisan.
             </p>
           </section>
 
@@ -286,7 +288,7 @@ function Terminos() {
           <section id="responsabilidad" className="terminos-seccion">
             <h2>13. Limitación de Responsabilidad</h2>
             <div className="terminos-destacado">
-              En la medida permitida por la ley aplicable, Droguería Carrisán no será responsable por
+              En la medida permitida por la ley aplicable, Droguería Carrisan no será responsable por
               daños indirectos, incidentales o consecuenciales derivados del uso de la plataforma,
               retrasos logísticos fuera de nuestro control razonable, o del uso inadecuado de los
               Productos una vez entregados. Nuestra responsabilidad total frente a ti, en cualquier
@@ -301,7 +303,7 @@ function Terminos() {
           <section id="indemnizacion" className="terminos-seccion">
             <h2>14. Indemnización</h2>
             <p>
-              Aceptas indemnizar a Droguería Carrisán frente a reclamos de terceros que surjan del uso
+              Aceptas indemnizar a Droguería Carrisan frente a reclamos de terceros que surjan del uso
               indebido de tu cuenta, del incumplimiento de estos Términos, o del uso inadecuado de los
               Productos adquiridos fuera de las condiciones informadas por el fabricante.
             </p>
@@ -340,7 +342,7 @@ function Terminos() {
             <h2>18. Contacto</h2>
             <p>
               Si tienes preguntas sobre estos Términos, puedes escribirnos a{' '}
-              <a href="mailto:ventas@carrisan.com">ventas@carrisan.com</a>.
+              <a href="mailto:dcarrisan@gmail.com">dcarrisan@gmail.com</a>.
             </p>
           </section>
         </div>

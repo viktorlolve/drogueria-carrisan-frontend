@@ -1,55 +1,98 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
+import {
+  Search,
+  X,
+  SlidersHorizontal,
+  Pill,
+  Factory,
+  CalendarCheck,
+  FlaskConical,
+  ChevronLeft,
+  ChevronRight,
+  ArrowRight,
+  SearchX,
+  Shapes,
+} from 'lucide-react'
 import api from '../api/axios'
 import BottomNav from '../components/BottomNav'
 import Footer from '../components/Footer'
 import InhrrFichaModal from '../components/InhrrFichaModal'
 import { useEsMobile } from '../hooks/useEsMobile'
-import { CATEGORIAS, COLOR_CATEGORIA, nombreCategoria, formatFecha } from '../utils/inhrr'
-import './Catalogo.css'
+import { CATEGORIAS, COLOR_CATEGORIA, nombreCategoria, formatFecha, estadoRegistro } from '../utils/inhrr'
+import { ICONO_CATEGORIA, ICONO_ESTADO } from '../utils/iconosConsulta'
 import './RegistroInhrr.css'
 
 const PAGE_SIZE = 20
 
 function RegistroInhrr() {
   const esMobile = useEsMobile(768)
-  const [searchParams] = useSearchParams()
-  const skuDeepLink = searchParams.get('sku')
+  const [params, setParams] = useSearchParams()
 
-  const [termino, setTermino] = useState('')
-  const [terminoActivo, setTerminoActivo] = useState('')
-  const [moleculaInput, setMoleculaInput] = useState('')
-  const [moleculaActiva, setMoleculaActiva] = useState('')
-  const [categoriaActiva, setCategoriaActiva] = useState('')
-  const [formaActiva, setFormaActiva] = useState('')
-  const [laboratorioActivo, setLaboratorioActivo] = useState('')
+  // Fuente única de verdad: la URL (filtros compartibles y con botón "atrás")
+  const q = params.get('q') || ''
+  const categoria = params.get('categoria') || ''
+  const forma = params.get('forma') || ''
+  const laboratorio = params.get('laboratorio') || ''
+  const molecula = params.get('molecula') || ''
+  const pagina = Math.max(1, parseInt(params.get('page') || '1', 10) || 1)
+  const fichaSku = params.get('sku') || ''
 
-  const [metadata, setMetadata] = useState({ categorias: [], formas: [], laboratorios: [], total: 0 })
+  const [termino, setTermino] = useState(q)
+  const [moleculaInput, setMoleculaInput] = useState(molecula)
 
+  const [metadata, setMetadata] = useState({ formas: [], laboratorios: [], total: 0 })
   const [productos, setProductos] = useState([])
   const [total, setTotal] = useState(0)
-  const [pagina, setPagina] = useState(1)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
-
-  const [fichaSku, setFichaSku] = useState('')
+  const [reintento, setReintento] = useState(0)
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false)
-  const [seccionesAbiertas, setSeccionesAbiertas] = useState({
-    categoria: true,
-    forma: false,
-    laboratorio: false,
-    molecula: false,
-  })
+
+  const actualizar = useCallback(
+    (patch, { reiniciarPagina = true, push = false } = {}) => {
+      setParams(
+        (prev) => {
+          const next = new URLSearchParams(prev)
+          Object.entries(patch).forEach(([k, v]) => {
+            if (v === '' || v == null) next.delete(k)
+            else next.set(k, String(v))
+          })
+          if (reiniciarPagina && !('page' in patch)) next.delete('page')
+          return next
+        },
+        { replace: !push }
+      )
+    },
+    [setParams]
+  )
+
+  // Sincroniza los inputs si la URL cambia desde fuera (botón atrás, enlaces)
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setTermino(q)
+  }, [q])
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMoleculaInput(molecula)
+  }, [molecula])
+
+  // Inputs → URL con debounce
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const v = termino.trim()
+      if (v !== q) actualizar({ q: v })
+    }, 400)
+    return () => clearTimeout(t)
+  }, [termino, q, actualizar])
 
   useEffect(() => {
-    const t = setTimeout(() => setTerminoActivo(termino.trim()), 400)
+    const t = setTimeout(() => {
+      const v = moleculaInput.trim()
+      if (v !== molecula) actualizar({ molecula: v })
+    }, 400)
     return () => clearTimeout(t)
-  }, [termino])
-
-  useEffect(() => {
-    const t = setTimeout(() => setMoleculaActiva(moleculaInput.trim()), 400)
-    return () => clearTimeout(t)
-  }, [moleculaInput])
+  }, [moleculaInput, molecula, actualizar])
 
   useEffect(() => {
     api
@@ -58,216 +101,150 @@ function RegistroInhrr() {
       .catch((err) => console.error('Error al cargar metadata INHRR:', err))
   }, [])
 
-  const construirParams = useCallback(
-    (page) => {
-      const params = { page, page_size: PAGE_SIZE }
-      if (terminoActivo) params.q = terminoActivo
-      if (categoriaActiva) params.categoria = categoriaActiva
-      if (formaActiva) params.forma = formaActiva
-      if (laboratorioActivo) params.laboratorio = laboratorioActivo
-      if (moleculaActiva) params.molecula = moleculaActiva
-      return params
-    },
-    [terminoActivo, categoriaActiva, formaActiva, laboratorioActivo, moleculaActiva]
-  )
-
-  const cargarPagina = useCallback(
-    async (page = 1) => {
-      setCargando(true)
-      setError('')
-      try {
-        const { data } = await api.get('/catalogo', { params: construirParams(page) })
+  // Carga de resultados
+  useEffect(() => {
+    let activo = true
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCargando(true)
+    setError('')
+    const consulta = { page: pagina, page_size: PAGE_SIZE }
+    if (q) consulta.q = q
+    if (categoria) consulta.categoria = categoria
+    if (forma) consulta.forma = forma
+    if (laboratorio) consulta.laboratorio = laboratorio
+    if (molecula) consulta.molecula = molecula
+    api
+      .get('/catalogo', { params: consulta })
+      .then(({ data }) => {
+        if (!activo) return
         setProductos(data.rows || [])
         setTotal(data.total ?? 0)
-        setPagina(data.page ?? page)
-      } catch (err) {
+      })
+      .catch((err) => {
         console.error('Error al cargar registro INHRR:', err)
-        setError('No se pudieron cargar los registros del catálogo.')
-      } finally {
-        setCargando(false)
-      }
-    },
-    [construirParams]
-  )
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    cargarPagina(1)
-  }, [cargarPagina])
-
-  useEffect(() => {
-    if (!skuDeepLink) return
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setFichaSku(skuDeepLink)
-  }, [skuDeepLink])
-
-  const toggleSeccion = (key) =>
-    setSeccionesAbiertas((prev) => ({ ...prev, [key]: !prev[key] }))
-
-  const togglePill = (valor, setter) =>
-    setter((prev) => (prev === valor ? '' : valor))
-
-  const limpiarFiltros = () => {
-    setTermino('')
-    setCategoriaActiva('')
-    setFormaActiva('')
-    setLaboratorioActivo('')
-    setMoleculaInput('')
-  }
+        if (activo) setError('No se pudieron cargar los registros. Inténtalo de nuevo.')
+      })
+      .finally(() => activo && setCargando(false))
+    return () => {
+      activo = false
+    }
+  }, [q, categoria, forma, laboratorio, molecula, pagina, reintento])
 
   const totalPaginas = Math.max(1, Math.ceil(total / PAGE_SIZE))
-  const hayFiltros =
-    termino.trim() !== '' ||
-    categoriaActiva !== '' ||
-    formaActiva !== '' ||
-    laboratorioActivo !== '' ||
-    moleculaInput.trim() !== ''
 
   const irAPagina = (p) => {
     if (p < 1 || p > totalPaginas || p === pagina) return
-    cargarPagina(p)
+    actualizar({ page: p > 1 ? p : '' }, { reiniciarPagina: false })
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const paginas = []
-  const desde = Math.max(1, pagina - 2)
-  const hasta = Math.min(totalPaginas, pagina + 2)
-  for (let i = desde; i <= hasta; i++) paginas.push(i)
+  const abrirFicha = (sku) => actualizar({ sku }, { reiniciarPagina: false, push: true })
+  const cerrarFicha = useCallback(() => actualizar({ sku: '' }, { reiniciarPagina: false }), [actualizar])
 
-  const filtrosUI = () => (
-    <>
-      <div className="filtro-seccion">
-        <button className="filtro-accordion-btn" type="button" onClick={() => toggleSeccion('categoria')}>
-          <span>Categoría</span>
-          <span
-            className="filtro-chevron"
-            style={{ transform: seccionesAbiertas.categoria ? 'rotate(180deg)' : 'none' }}
-          >
-            ⌄
-          </span>
-        </button>
-        {seccionesAbiertas.categoria && (
-          <div className="filtro-content">
-            <div className="inhrr-pills-cat">
-              {CATEGORIAS.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  className={`filtro-pill inhrr-pill-cat ${categoriaActiva === c.id ? 'active' : ''}`}
-                  style={
-                    categoriaActiva === c.id
-                      ? { background: COLOR_CATEGORIA[c.id], borderColor: COLOR_CATEGORIA[c.id], color: '#fff' }
-                      : undefined
-                  }
-                  onClick={() => togglePill(c.id, setCategoriaActiva)}
-                >
-                  {c.icono} {c.nombre}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+  const chipsActivos = [
+    q && { clave: 'q', etiqueta: `“${q}”` },
+    categoria && { clave: 'categoria', etiqueta: nombreCategoria(categoria) },
+    forma && { clave: 'forma', etiqueta: forma },
+    laboratorio && { clave: 'laboratorio', etiqueta: laboratorio },
+    molecula && { clave: 'molecula', etiqueta: `Molécula: ${molecula}` },
+  ].filter(Boolean)
+  const hayFiltros = chipsActivos.length > 0
+  const filtrosLateralesActivos = [forma, laboratorio, molecula].filter(Boolean).length
+
+  const limpiarTodo = () => {
+    setTermino('')
+    setMoleculaInput('')
+    setParams(new URLSearchParams(fichaSku ? { sku: fichaSku } : {}), { replace: true })
+  }
+
+  const desde = Math.max(1, pagina - 1)
+  const hasta = Math.min(totalPaginas, pagina + 1)
+  const numeros = []
+  for (let i = desde; i <= hasta; i++) numeros.push(i)
+
+  const panelFiltros = (
+    <div className="cs-panel__grupos">
+      <div className="cs-campo">
+        <label htmlFor="cs-forma">Forma farmacéutica</label>
+        <select
+          id="cs-forma"
+          className="cs-select"
+          value={forma}
+          onChange={(e) => actualizar({ forma: e.target.value })}
+          disabled={(metadata.formas || []).length === 0}
+        >
+          <option value="">Todas las formas</option>
+          {(metadata.formas || []).map((f) => (
+            <option key={f} value={f}>
+              {f}
+            </option>
+          ))}
+        </select>
       </div>
 
-      <div className="filtro-seccion">
-        <button className="filtro-accordion-btn" type="button" onClick={() => toggleSeccion('forma')}>
-          <span>Forma farmacéutica</span>
-          <span className="filtro-chevron" style={{ transform: seccionesAbiertas.forma ? 'rotate(180deg)' : 'none' }}>
-            ⌄
-          </span>
-        </button>
-        {seccionesAbiertas.forma && (
-          <div className="filtro-content">
-            {(metadata.formas || []).length === 0 ? (
-              <p className="filtro-vacio">Sin datos aún</p>
-            ) : (
-              <select
-                className="inhrr-select"
-                value={formaActiva}
-                onChange={(e) => setFormaActiva(e.target.value)}
-              >
-                <option value="">Todas las formas</option>
-                {(metadata.formas || []).map((f) => (
-                  <option key={f} value={f}>
-                    {f}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-        )}
+      <div className="cs-campo">
+        <label htmlFor="cs-lab">Laboratorio</label>
+        <select
+          id="cs-lab"
+          className="cs-select"
+          value={laboratorio}
+          onChange={(e) => actualizar({ laboratorio: e.target.value })}
+          disabled={(metadata.laboratorios || []).length === 0}
+        >
+          <option value="">Todos los laboratorios</option>
+          {(metadata.laboratorios || []).map((l) => (
+            <option key={l} value={l}>
+              {l}
+            </option>
+          ))}
+        </select>
       </div>
 
-      <div className="filtro-seccion">
-        <button className="filtro-accordion-btn" type="button" onClick={() => toggleSeccion('laboratorio')}>
-          <span>Laboratorio</span>
-          <span className="filtro-chevron" style={{ transform: seccionesAbiertas.laboratorio ? 'rotate(180deg)' : 'none' }}>
-            ⌄
-          </span>
-        </button>
-        {seccionesAbiertas.laboratorio && (
-          <div className="filtro-content">
-            {(metadata.laboratorios || []).length === 0 ? (
-              <p className="filtro-vacio">Sin datos aún</p>
-            ) : (
-              <select
-                className="inhrr-select"
-                value={laboratorioActivo}
-                onChange={(e) => setLaboratorioActivo(e.target.value)}
-              >
-                <option value="">Todos los laboratorios</option>
-                {(metadata.laboratorios || []).map((l) => (
-                  <option key={l} value={l}>
-                    {l}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-        )}
+      <div className="cs-campo">
+        <label htmlFor="cs-mol">Principio activo</label>
+        <div className="cs-input-icono">
+          <FlaskConical size={16} aria-hidden="true" />
+          <input
+            id="cs-mol"
+            type="text"
+            placeholder="Ej. Amoxicilina, Insulina…"
+            value={moleculaInput}
+            onChange={(e) => setMoleculaInput(e.target.value)}
+          />
+        </div>
+        <p className="cs-ayuda">Filtra productos que contienen esa molécula.</p>
       </div>
-
-      <div className="filtro-seccion">
-        <button className="filtro-accordion-btn" type="button" onClick={() => toggleSeccion('molecula')}>
-          <span>Principio activo</span>
-          <span className="filtro-chevron" style={{ transform: seccionesAbiertas.molecula ? 'rotate(180deg)' : 'none' }}>
-            ⌄
-          </span>
-        </button>
-        {seccionesAbiertas.molecula && (
-          <div className="filtro-content filtro-content--abierto">
-            <input
-              type="text"
-              placeholder="Ej. Amoxicilina, Insulina…"
-              value={moleculaInput}
-              onChange={(e) => setMoleculaInput(e.target.value)}
-              className="filtro-molecula-input"
-            />
-            <p className="filtro-vacio">Filtra productos que contienen esa molécula (por su ATC/nombre).</p>
-          </div>
-        )}
-      </div>
-    </>
+    </div>
   )
 
   return (
-    <div className="catalogo-layout">
-      <section className="inhrr-hero">
-        <div className="inhrr-hero__inner">
-          <p className="inhrr-hero__tag">Consulta pública · INHRR</p>
-          <h1 className="inhrr-hero__title">Registro sanitario de medicamentos</h1>
-          <p className="inhrr-hero__desc">
-            {metadata.total
-              ? `Catálogo de consulta con ${metadata.total.toLocaleString('es-VE')} productos con registro sanitario`
-              : 'Catálogo de consulta con miles de productos con registro sanitario'}{' '}
-            venezolano (INHRR): nombre, forma farmacéutica, laboratorio y molécula/ATC.
+    <div className="cs-page">
+      <section className="cs-hero">
+        <div className="cs-container">
+          <nav className="cs-crumbs" aria-label="Ruta">
+            <Link to="/">Inicio</Link>
+            <ChevronRight size={13} aria-hidden="true" />
+            <span>Registro sanitario</span>
+          </nav>
+          <p className="cs-hero__tag">Consulta pública · INHRR</p>
+          <h1 className="cs-hero__title">Registro sanitario de medicamentos</h1>
+          <p className="cs-hero__desc">
+            Verifica el registro sanitario venezolano (INHRR) de cada producto: forma farmacéutica,
+            laboratorio, vigencia y principio activo con su clasificación ATC.
           </p>
-          <div className="inhrr-search">
-            <span className="inhrr-search__icon" aria-hidden="true">
-              🔍
-            </span>
+
+          <form
+            className="cs-search"
+            role="search"
+            onSubmit={(e) => {
+              e.preventDefault()
+              actualizar({ q: termino.trim() })
+            }}
+          >
+            <Search size={20} aria-hidden="true" className="cs-search__icono" />
             <input
               type="text"
+              aria-label="Buscar por nombre del producto"
               placeholder="Buscar por nombre del producto (ej. Amoxicilina, Tylenol, Insulina…)"
               value={termino}
               onChange={(e) => setTermino(e.target.value)}
@@ -275,158 +252,271 @@ function RegistroInhrr() {
             {termino !== '' && (
               <button
                 type="button"
-                className="inhrr-search__clear"
+                className="cs-search__limpiar"
                 aria-label="Limpiar búsqueda"
                 onClick={() => setTermino('')}
               >
-                ✕
+                <X size={16} />
               </button>
             )}
-          </div>
+            <button type="submit" className="cs-search__btn">
+              Buscar
+            </button>
+          </form>
+
+          <ul className="cs-stats">
+            <li>
+              <strong>{metadata.total ? metadata.total.toLocaleString('es-VE') : '+7.000'}</strong>
+              <span>registros consultables</span>
+            </li>
+            <li>
+              <strong>4</strong>
+              <span>categorías</span>
+            </li>
+            <li>
+              <strong>ATC</strong>
+              <span>enlazado al vademécum</span>
+            </li>
+          </ul>
         </div>
       </section>
 
-      <header className="catalogo-header inhrr-header">
-        <div className="header-titles">
-          <h1>
-            {terminoActivo ? `Resultados para "${terminoActivo}"` : 'Registros activos'}
-            {' '}
-            <span>({total.toLocaleString('es-VE')})</span>
-          </h1>
-          <p className="header-subtitle">
-            {terminoActivo
-              ? 'Mostrando registros que coinciden con la búsqueda'
-              : 'Consulta por nombre, forma farmacéutica, laboratorio o principio activo.'}
-          </p>
-        </div>
-
-        {esMobile && (
-          <button type="button" className="catalogo-filtros-btn" onClick={() => setFiltrosAbiertos(true)}>
-            Filtros
-          </button>
-        )}
-
-        {!esMobile && (
-          <div className="catalogo-ordenar-desktop">
-            <span className="catalogo-ordenar-label">Página</span>
-            <span className="inhrr-pagina-info">
-              {pagina} de {totalPaginas}
-            </span>
+      <div className="cs-tabs-wrap">
+        <div className="cs-container">
+          <div className="cs-tabs" role="tablist" aria-label="Categoría">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={!categoria}
+              className={`cs-tab ${!categoria ? 'activa' : ''}`}
+              onClick={() => actualizar({ categoria: '' })}
+            >
+              <Shapes size={16} aria-hidden="true" /> Todos
+            </button>
+            {CATEGORIAS.map((c) => {
+              const Icono = ICONO_CATEGORIA[c.id]
+              const activa = categoria === c.id
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={activa}
+                  className={`cs-tab ${activa ? 'activa' : ''}`}
+                  style={{ '--cat': COLOR_CATEGORIA[c.id] }}
+                  onClick={() => actualizar({ categoria: activa ? '' : c.id })}
+                >
+                  <Icono size={16} aria-hidden="true" /> {c.nombre}
+                </button>
+              )
+            })}
           </div>
-        )}
-      </header>
+        </div>
+      </div>
 
-      <div className="catalogo-body">
+      <div className="cs-container cs-layout">
         {!esMobile && (
-          <aside className="catalogo-filtros">
-            {hayFiltros && (
-              <button type="button" className="btn-limpiar-filtros" onClick={limpiarFiltros}>
-                Limpiar filtros
-              </button>
-            )}
-            {filtrosUI()}
+          <aside className="cs-aside">
+            <div className="cs-panel">
+              <div className="cs-panel__head">
+                <h2>Filtros</h2>
+                {hayFiltros && (
+                  <button type="button" className="cs-link" onClick={limpiarTodo}>
+                    Limpiar todo
+                  </button>
+                )}
+              </div>
+              {panelFiltros}
+            </div>
           </aside>
         )}
 
-        <main className="catalogo-main-content">
-          {cargando ? (
-            <div className="product-grid">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="inhrr-skeleton" />
-              ))}
+        <main className="cs-main">
+          <div className="cs-resultados-head">
+            <div>
+              <h2 className="cs-resultados-head__titulo">
+                {q ? `Resultados para “${q}”` : 'Registros sanitarios'}
+                <span> · {total.toLocaleString('es-VE')}</span>
+              </h2>
+              <p className="cs-resultados-head__sub">
+                {total > 0
+                  ? `Página ${pagina} de ${totalPaginas}`
+                  : 'Consulta por nombre, forma farmacéutica, laboratorio o principio activo.'}
+              </p>
             </div>
-          ) : error ? (
-            <p className="catalogo-estado catalogo-error">{error}</p>
-          ) : productos.length === 0 ? (
-            <p className="catalogo-vacio">No encontramos registros para esta búsqueda. Prueba con otros filtros.</p>
-          ) : (
-            <div className="product-grid">
-              {productos.map((p) => (
-                <article key={p.id} className="inhrr-card">
-                  <div className="inhrr-card__top">
-                    <span
-                      className="inhrr-card__cat"
-                      style={{ background: COLOR_CATEGORIA[p.categoria] || '#6B7280' }}
-                    >
-                      {p.categoria} · {nombreCategoria(p.categoria)}
-                    </span>
-                    <span className="inhrr-card__sku">{p.sku}</span>
-                  </div>
-                  <h3 className="inhrr-card__nombre">{p.nombre}</h3>
-                  <ul className="inhrr-card__meta">
-                    {p.forma && (
-                      <li>
-                        <span>Forma</span>
-                        {p.forma}
-                      </li>
-                    )}
-                    {p.laboratorio && (
-                      <li className="inhrr-card__lab">
-                        <span>Laboratorio</span>
-                        {p.laboratorio}
-                      </li>
-                    )}
-                    {p.fecha_vigencia && (
-                      <li>
-                        <span>Vigente hasta</span>
-                        {formatFecha(p.fecha_vigencia)}
-                      </li>
-                    )}
-                  </ul>
-                  {p.moleculas?.length > 0 && (
-                    <div className="inhrr-card__mols">
-                      {p.moleculas.map((m) => (
-                        <span key={m.id} className="inhrr-mol-chip">
-                          {m.nombre}
-                          {m.atc ? ` · ${m.atc}` : ''}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {!p.moleculas?.length && (
-                    <p className="inhrr-card__sinmol">Sin molécula enlazada</p>
-                  )}
-                  <button type="button" className="inhrr-card__btn" onClick={() => setFichaSku(p.sku)}>
-                    Ver ficha
-                  </button>
-                </article>
+            {esMobile && (
+              <button type="button" className="cs-boton cs-boton--suave" onClick={() => setFiltrosAbiertos(true)}>
+                <SlidersHorizontal size={16} /> Filtros
+                {filtrosLateralesActivos > 0 && <span className="cs-contador">{filtrosLateralesActivos}</span>}
+              </button>
+            )}
+          </div>
+
+          {hayFiltros && (
+            <div className="cs-activos" aria-label="Filtros activos">
+              {chipsActivos.map((c) => (
+                <button
+                  key={c.clave}
+                  type="button"
+                  className="cs-activo"
+                  onClick={() => {
+                    if (c.clave === 'q') setTermino('')
+                    if (c.clave === 'molecula') setMoleculaInput('')
+                    actualizar({ [c.clave]: '' })
+                  }}
+                >
+                  {c.etiqueta} <X size={13} aria-hidden="true" />
+                  <span className="cs-sr">Quitar filtro</span>
+                </button>
               ))}
             </div>
           )}
 
-          {!cargando && total > 0 && (
-            <nav className="inhrr-paginacion" aria-label="Paginación">
-              <button type="button" disabled={pagina <= 1} onClick={() => irAPagina(pagina - 1)}>
-                ◀ Anterior
+          {cargando ? (
+            <div className="cs-grid" aria-busy="true">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="cs-skeleton" />
+              ))}
+            </div>
+          ) : error ? (
+            <div className="cs-vacio-grande">
+              <p>{error}</p>
+              <button type="button" className="cs-boton cs-boton--primario" onClick={() => setReintento((n) => n + 1)}>
+                Reintentar
               </button>
-              {desde > 1 && (
-                <button type="button" onClick={() => irAPagina(1)}>
-                  1
+            </div>
+          ) : productos.length === 0 ? (
+            <div className="cs-vacio-grande">
+              <SearchX size={40} aria-hidden="true" />
+              <h3>No encontramos registros</h3>
+              <p>Revisa la ortografía o prueba con menos filtros.</p>
+              {hayFiltros && (
+                <button type="button" className="cs-boton cs-boton--primario" onClick={limpiarTodo}>
+                  Limpiar filtros
                 </button>
               )}
-              {desde > 2 && <span className="inhrr-paginacion__sep">…</span>}
-              {paginas.map((p) => (
+            </div>
+          ) : (
+            <div className="cs-grid">
+              {productos.map((p) => {
+                const estado = estadoRegistro(p)
+                const IconoEstado = ICONO_ESTADO[estado.clave]
+                const IconoCat = ICONO_CATEGORIA[p.categoria] || ICONO_CATEGORIA.MI
+                return (
+                  <article
+                    key={p.id}
+                    className="cs-card"
+                    style={{ '--cat': COLOR_CATEGORIA[p.categoria] || '#6B7280' }}
+                  >
+                    <div className="cs-card__top">
+                      <span className="cs-tag">
+                        <IconoCat size={13} aria-hidden="true" /> {nombreCategoria(p.categoria)}
+                      </span>
+                      <span className={`cs-estado cs-estado--${estado.clave}`}>
+                        <IconoEstado size={12} aria-hidden="true" /> {estado.etiqueta}
+                      </span>
+                    </div>
+
+                    <h3 className="cs-card__nombre">{p.nombre}</h3>
+
+                    <ul className="cs-card__meta">
+                      {p.forma && (
+                        <li>
+                          <Pill size={14} aria-hidden="true" />
+                          <span>{p.forma}</span>
+                        </li>
+                      )}
+                      {p.laboratorio && (
+                        <li>
+                          <Factory size={14} aria-hidden="true" />
+                          <span>{p.laboratorio}</span>
+                        </li>
+                      )}
+                      {p.fecha_vigencia && (
+                        <li>
+                          <CalendarCheck size={14} aria-hidden="true" />
+                          <span>Vigente hasta {formatFecha(p.fecha_vigencia)}</span>
+                        </li>
+                      )}
+                    </ul>
+
+                    {p.moleculas?.length > 0 ? (
+                      <div className="cs-card__mols">
+                        {p.moleculas.map((m, i) =>
+                          m.id ? (
+                            <Link
+                              key={m.id}
+                              to={`/vademecum/${m.id}`}
+                              className="cs-mol"
+                              title={`Ver ficha clínica de ${m.nombre}`}
+                            >
+                              <FlaskConical size={12} aria-hidden="true" />
+                              {m.nombre}
+                              {m.atc && <em>{m.atc}</em>}
+                            </Link>
+                          ) : (
+                            <span key={m.nombre || i} className="cs-mol cs-mol--sin-enlace">
+                              <FlaskConical size={12} aria-hidden="true" />
+                              {m.nombre}
+                            </span>
+                          )
+                        )}
+                      </div>
+                    ) : (
+                      <p className="cs-card__sinmol">Sin molécula enlazada</p>
+                    )}
+
+                    <div className="cs-card__pie">
+                      <span className="cs-card__sku">{p.sku}</span>
+                      <button type="button" className="cs-card__btn" onClick={() => abrirFicha(p.sku)}>
+                        Ver registro <ArrowRight size={14} aria-hidden="true" />
+                      </button>
+                    </div>
+                  </article>
+                )
+              })}
+            </div>
+          )}
+
+          {!cargando && !error && total > 0 && totalPaginas > 1 && (
+            <nav className="cs-pag" aria-label="Paginación">
+              <button type="button" disabled={pagina <= 1} onClick={() => irAPagina(pagina - 1)} aria-label="Página anterior">
+                <ChevronLeft size={18} />
+              </button>
+              {desde > 1 && (
+                <>
+                  <button type="button" onClick={() => irAPagina(1)}>
+                    1
+                  </button>
+                  {desde > 2 && <span className="cs-pag__sep">…</span>}
+                </>
+              )}
+              {numeros.map((n) => (
                 <button
-                  key={p}
+                  key={n}
                   type="button"
-                  className={p === pagina ? 'activa' : ''}
-                  onClick={() => irAPagina(p)}
+                  className={n === pagina ? 'activa' : ''}
+                  aria-current={n === pagina ? 'page' : undefined}
+                  onClick={() => irAPagina(n)}
                 >
-                  {p}
+                  {n}
                 </button>
               ))}
-              {hasta < totalPaginas - 1 && <span className="inhrr-paginacion__sep">…</span>}
               {hasta < totalPaginas && (
-                <button type="button" onClick={() => irAPagina(totalPaginas)}>
-                  {totalPaginas}
-                </button>
+                <>
+                  {hasta < totalPaginas - 1 && <span className="cs-pag__sep">…</span>}
+                  <button type="button" onClick={() => irAPagina(totalPaginas)}>
+                    {totalPaginas}
+                  </button>
+                </>
               )}
               <button
                 type="button"
                 disabled={pagina >= totalPaginas}
                 onClick={() => irAPagina(pagina + 1)}
+                aria-label="Página siguiente"
               >
-                Siguiente ▶
+                <ChevronRight size={18} />
               </button>
             </nav>
           )}
@@ -435,38 +525,33 @@ function RegistroInhrr() {
 
       {esMobile && filtrosAbiertos && (
         <>
-          <div className="catalogo-overlay" onClick={() => setFiltrosAbiertos(false)} />
-          <div className="catalogo-filtros-modal">
-            <div className="catalogo-filtros-modal__header">
-              <span>Filtros</span>
+          <div className="cs-sheet-overlay" onClick={() => setFiltrosAbiertos(false)} />
+          <div className="cs-sheet" role="dialog" aria-modal="true" aria-label="Filtros">
+            <div className="cs-sheet__head">
+              <h2>Filtros</h2>
               <button type="button" onClick={() => setFiltrosAbiertos(false)} aria-label="Cerrar filtros">
-                ✕
+                <X size={20} />
               </button>
             </div>
-            {hayFiltros && (
-              <button type="button" className="btn-limpiar-filtros" onClick={limpiarFiltros}>
-                Limpiar filtros
+            <div className="cs-sheet__body">{panelFiltros}</div>
+            <div className="cs-sheet__pie">
+              {hayFiltros && (
+                <button type="button" className="cs-boton cs-boton--suave" onClick={limpiarTodo}>
+                  Limpiar
+                </button>
+              )}
+              <button type="button" className="cs-boton cs-boton--primario" onClick={() => setFiltrosAbiertos(false)}>
+                Ver {total.toLocaleString('es-VE')} resultados
               </button>
-            )}
-            {filtrosUI()}
-            <button
-              type="button"
-              className="catalogo-filtros-modal__apply"
-              onClick={() => setFiltrosAbiertos(false)}
-            >
-              Aplicar filtros
-            </button>
+            </div>
           </div>
         </>
       )}
 
-      {fichaSku && (
-        <InhrrFichaModal fichaSku={fichaSku} onClose={() => setFichaSku('')} />
-      )}
+      {fichaSku && <InhrrFichaModal fichaSku={fichaSku} onClose={cerrarFicha} />}
 
       <Footer />
-
-      <div className="catalogo-espaciador" aria-hidden="true" />
+      <div className="cs-espaciador" aria-hidden="true" />
       <BottomNav />
     </div>
   )

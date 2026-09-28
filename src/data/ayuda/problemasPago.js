@@ -15,7 +15,7 @@ const problemasPago = {
     },
     {
       subtitulo: '¿Cómo reporto el problema?',
-      texto: 'Escríbenos a ventas@carrisan.com con tu comprobante de pago o utilízalo desde la sección "Mis Órdenes" para adjuntarlo directamente.',
+      texto: 'Escríbenos a dcarrisan@gmail.com con tu comprobante de pago o utilízalo desde la sección "Mis Órdenes" para adjuntarlo directamente.',
     },
     {
       subtitulo: '¿Cuánto tarda en resolverse?',

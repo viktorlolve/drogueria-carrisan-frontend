@@ -15,17 +15,19 @@ function Contacto() {
     <div className="ct-page">
       {/* Hero */}
       <section className="ct-hero">
-        <button
-          type="button"
-          className="pagina-volver pagina-volver--hero"
-          onClick={() => navigate(-1)}
-          aria-label="Volver atrás"
-        >
-          <ArrowLeft size={20} />
-        </button>
         <div className="ct-hero__contenido">
-          <p className="ct-hero__eyebrow">Droguería Carrisán · Atención directa</p>
-          <h1>¿Cómo prefieres escribirnos?</h1>
+          <p className="ct-hero__eyebrow">Droguería Carrisan · Atención directa</p>
+          <div className="pagina-titulo">
+            <button
+              type="button"
+              className="pagina-volver pagina-volver--hero"
+              onClick={() => navigate(-1)}
+              aria-label="Volver atrás"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <h1>¿Cómo prefieres escribirnos?</h1>
+          </div>
           <p className="ct-hero__texto">
             Elige el canal que prefieras y te respondemos directamente. Somos una empresa
             familiar: hay una persona esperándote detrás de cada mensaje.

@@ -38,7 +38,7 @@ function MenuDrawer({ isOpen, onClose, user, onLogout }) {
           <span className="menu-drawer__marca">
             <span className="menu-drawer__marca-dot menu-drawer__marca-dot--teal" />
             <span className="menu-drawer__marca-dot menu-drawer__marca-dot--indigo" />
-            Droguería Carrisán
+            Droguería Carrisan
           </span>
           <button
             type="button"

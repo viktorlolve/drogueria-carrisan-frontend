@@ -33,7 +33,7 @@ function CookieConsent() {
       <div className="cookie-consent__icono" aria-hidden="true">🍪</div>
       <div className="cookie-consent__texto">
         <p>
-          Usamos cookies para que tu experiencia en Droguería Carrisán sea más dulce
+          Usamos cookies para que tu experiencia en Droguería Carrisan sea más dulce
           (y para que el carrito no se te olvide). Puedes aceptarlas o rechazarlas.
         </p>
         <a href="/privacidad" className="cookie-consent__link">

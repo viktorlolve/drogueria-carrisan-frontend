@@ -14,7 +14,7 @@ function PwaScopeSwitcher() {
 
     const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]')
     if (appleTitle) {
-      appleTitle.setAttribute('content', esStaff ? 'Carrisán Staff' : 'Drogueria Carrisan')
+      appleTitle.setAttribute('content', esStaff ? 'Carrisan Staff' : 'Drogueria Carrisan')
     }
 
     const appleIcon = document.querySelector('link[rel="apple-touch-icon"]')
@@ -28,7 +28,7 @@ function PwaScopeSwitcher() {
       favicon.setAttribute('type', esStaff ? 'image/png' : 'image/svg+xml')
     }
 
-    document.title = esStaff ? 'Carrisán Staff' : 'Drogueria Carrisan, C.A.'
+    document.title = esStaff ? 'Carrisan Staff' : 'Drogueria Carrisan, C.A.'
   }, [location.pathname])
 
   return null
