@@ -13,8 +13,10 @@
 }
 
 .privacidad-header {
+  position: relative;
   max-width: 900px;
   margin: 0 auto 16px;
+  padding-top: 44px;
 }
 
 .privacidad-header h1 {

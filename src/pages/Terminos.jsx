@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import './Terminos.css'
 
 // ---------------------------------------------------------
@@ -56,10 +57,21 @@ function IndiceLinks({ onNavigate }) {
 
 function Terminos() {
   const [indiceAbierto, setIndiceAbierto] = useState(false)
+  const navigate = useNavigate()
 
   return (
     <div className="terminos-page">
       <div className="terminos-header">
+        <button
+          type="button"
+          className="pagina-volver"
+          onClick={() => navigate(-1)}
+          aria-label="Volver atrás"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="15 6 9 12 15 18" />
+          </svg>
+        </button>
         <h1>Términos y Condiciones de Uso</h1>
         <p className="terminos-header__fecha">Última actualización: 12 de agosto de 2026</p>
       </div>

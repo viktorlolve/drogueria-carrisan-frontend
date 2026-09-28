@@ -13,6 +13,7 @@
 
 /* ---------- Hero ---------- */
 .ct-hero {
+  position: relative;
   background: linear-gradient(135deg, #1A1A3A, #0052DC);
   padding: 44px 20px 38px;
 }

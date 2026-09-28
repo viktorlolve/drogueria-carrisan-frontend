@@ -99,9 +99,9 @@ function RegistroConTipo() {
               <p className="registro-tipo__info-nota">
                 ¿Tienes alguna duda? ¡Contactanos!
                 </p>
-                <p className="registro-tipo__info-nota">
+                
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-circle" aria-hidden="true"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"></path></svg><a class="ct-dato__texto" href="https://wa.link/imsb5w" target="_blank" rel="noopener noreferrer">WhatsApp</a>
-              </p>
+              
             </aside>
           </div>
         </div>

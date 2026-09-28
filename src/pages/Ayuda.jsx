@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import InfoModal from '../components/InfoModal'
 import ayudaData from '../data/ayudaData'
 import { CONTACTO } from '../config/contacto'
@@ -37,6 +37,11 @@ const ICONOS = {
   chevronAbajo: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <polyline points="6 9 12 15 18 9" />
+    </svg>
+  ),
+  flechaIzq: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <polyline points="15 6 9 12 15 18" />
     </svg>
   ),
   externo: (
@@ -79,6 +84,12 @@ const ICONOS = {
 // ---------------------------------------------------------
 const categorias = [
   {
+    id: 'faq',
+    titulo: 'Preguntas Frecuentes',
+    icono: 'faq',
+    esFaq: true,
+  },
+  {
     id: 'pedido',
     titulo: 'Tu Pedido',
     icono: 'pedido',
@@ -92,12 +103,6 @@ const categorias = [
       { label: 'Pedido No Recibido', slug: 'no-recibido', desc: 'Qué hacer si tu pedido nunca llegó.' },
       { label: 'Volver a Pedir', slug: 'volver-a-pedir', desc: 'Repite un pedido anterior en un par de clics.' },
     ],
-  },
-  {
-    id: 'faq',
-    titulo: 'Preguntas Frecuentes',
-    icono: 'faq',
-    esFaq: true,
   },
   {
     id: 'cuenta',
@@ -138,10 +143,10 @@ const pasos = [
 ]
 
 const necesidades = [
-  { titulo: 'Catálogo completo', desc: 'Explora todas nuestras líneas de farmacia y hospitalaria.', to: '/catalogo', boton: 'Ver catálogo' },
-  { titulo: 'Estado de cuenta', desc: 'Revisa tus facturas, pagos y línea de crédito disponible.', to: '/estado-cuenta', boton: 'Ver estado de cuenta' },
-  { titulo: 'Línea Hospitalaria', desc: 'Insumos y productos para instituciones de salud.', to: '/hospitalaria', boton: 'Ver línea' },
-  { titulo: 'Mis Órdenes', desc: 'Consulta el historial y estado de tus pedidos.', to: '/orders', boton: 'Ver mis órdenes' },
+  { titulo: 'Catálogo completo', desc: 'Explora todas nuestras líneas de farmacia y hospitalaria.', to: '/catalogo', boton: 'Ver catálogo', icono: 'catalogo' },
+  { titulo: 'Estado de cuenta', desc: 'Revisa tus facturas, pagos y línea de crédito disponible.', to: '/estado-cuenta', boton: 'Ver estado de cuenta', icono: 'cuenta' },
+  { titulo: 'Línea Hospitalaria', desc: 'Insumos y productos para instituciones de salud.', to: '/hospitalaria', boton: 'Ver línea', icono: 'pedido' },
+  { titulo: 'Mis Órdenes', desc: 'Consulta el historial y estado de tus pedidos.', to: '/orders', boton: 'Ver mis órdenes', icono: 'camion' },
 ]
 
 const enlacesUtiles = [
@@ -191,23 +196,11 @@ function CategoriaPill({ categoria, activa, onClick }) {
   )
 }
 
-function ImagenPlaceholder({ alto = 220, texto = 'Imagen próximamente' }) {
-  return (
-    <div className="ayuda-imagen-placeholder" style={{ height: alto }}>
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <rect x="3" y="3" width="18" height="18" rx="2" />
-        <circle cx="8.5" cy="8.5" r="1.5" />
-        <path d="m21 15-5-5L5 21" />
-      </svg>
-      <span>{texto}</span>
-    </div>
-  )
-}
-
 // ---------------------------------------------------------
 // Página principal
 // ---------------------------------------------------------
 function Ayuda() {
+  const navigate = useNavigate()
   const [modalKey, setModalKey] = useState(null)
   const [categoriaActiva, setCategoriaActiva] = useState('faq')
   const [busqueda, setBusqueda] = useState('')
@@ -233,6 +226,14 @@ function Ayuda() {
     <div className="ayuda-page">
       {/* Header azul con título */}
       <div className="ayuda-header">
+        <button
+          type="button"
+          className="pagina-volver pagina-volver--hero"
+          onClick={() => navigate(-1)}
+          aria-label="Volver atrás"
+        >
+          {ICONOS.flechaIzq}
+        </button>
         <h1>Centro de Ayuda</h1>
         <p>¿En qué podemos ayudarte hoy?</p>
 
@@ -341,8 +342,15 @@ function Ayuda() {
           </section>
         )}
 
-        {/* Banner de imagen — placeholder a reemplazar */}
-        <ImagenPlaceholder texto="Foto de equipo / bodega Carrisán" />
+        {/* Banner de imagen — foto de equipo */}
+        <div className="ayuda-banner-imagen">
+          <img
+            src="https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/victor.png"
+            alt="Foto de equipo Carrisán"
+            className="ayuda-banner-img"
+            loading="lazy"
+          />
+        </div>
 
         {/* Bloque de texto grande */}
         <section className="ayuda-texto-grande">
@@ -369,7 +377,7 @@ function Ayuda() {
           <div className="ayuda-necesidades__fila">
             {necesidades.map((n) => (
               <div key={n.to} className="ayuda-necesidad-card">
-                <ImagenPlaceholder alto={130} texto={n.titulo} />
+                <span className="ayuda-necesidad-card__icono">{ICONOS[n.icono]}</span>
                 <h3>{n.titulo}</h3>
                 <p>{n.desc}</p>
                 <Link to={n.to} className="ayuda-necesidad-card__boton">{n.boton}</Link>

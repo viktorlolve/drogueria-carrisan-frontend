@@ -1,4 +1,5 @@
-import { Clock, Mail, MapPin, MessageCircle, MessageSquare, Phone, Zap } from 'lucide-react'
+import { ArrowLeft, Clock, Mail, MapPin, MessageCircle, MessageSquare, Phone, Zap } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { FaWhatsapp } from 'react-icons/fa'
 import CONTACTO from '../config/contacto'
 import './Contacto.css'
@@ -8,10 +9,20 @@ const { whatsapp, email, telefono, horario, direccion, tiempoRespuesta } = CONTA
 const mailtoHref = `mailto:${email.texto}?subject=${encodeURIComponent(email.asunto)}&body=${encodeURIComponent(email.cuerpo)}`
 
 function Contacto() {
+  const navigate = useNavigate()
+
   return (
     <div className="ct-page">
       {/* Hero */}
       <section className="ct-hero">
+        <button
+          type="button"
+          className="pagina-volver pagina-volver--hero"
+          onClick={() => navigate(-1)}
+          aria-label="Volver atrás"
+        >
+          <ArrowLeft size={20} />
+        </button>
         <div className="ct-hero__contenido">
           <p className="ct-hero__eyebrow">Droguería Carrisán · Atención directa</p>
           <h1>¿Cómo prefieres escribirnos?</h1>
