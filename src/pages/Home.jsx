@@ -209,7 +209,7 @@ function Home() {
     imagen: 'https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/verpresupuesto.png',
     tamano: 'grande',
     posicionTexto: 'arriba',
-    titulo: 'Sin llamadas ni esperas',
+    titulo: 'Presupuestos sin llamadas ni esperas',
     textoCta: 'Generar presupuesto',
     link: '/presupuesto',
   })

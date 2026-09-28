@@ -297,21 +297,23 @@ function ProductoDetalle() {
     return (
       <div className="pd-page">
         <div className="pd-skeleton">
-          <div className="pd-sk-gallery">
-            <div className="pd-sk-image" />
-            <div className="pd-sk-thumbs">
-              <div className="pd-sk-thumb" />
-              <div className="pd-sk-thumb" />
-              <div className="pd-sk-thumb" />
+          <div className="pd-sk-main">
+            <div className="pd-sk-gallery">
+              <div className="pd-sk-image" />
+              <div className="pd-sk-thumbs">
+                <div className="pd-sk-thumb" />
+                <div className="pd-sk-thumb" />
+                <div className="pd-sk-thumb" />
+              </div>
             </div>
-          </div>
-          <div className="pd-sk-info">
-            <div className="pd-sk-line pd-sk-brand" />
-            <div className="pd-sk-line pd-sk-title" />
-            <div className="pd-sk-line" />
-            <div className="pd-sk-line pd-sk-short" />
-            <div className="pd-sk-line" />
-            <div className="pd-sk-line pd-sk-short" />
+            <div className="pd-sk-info">
+              <div className="pd-sk-line pd-sk-brand" />
+              <div className="pd-sk-line pd-sk-title" />
+              <div className="pd-sk-line" />
+              <div className="pd-sk-line pd-sk-short" />
+              <div className="pd-sk-line" />
+              <div className="pd-sk-line pd-sk-short" />
+            </div>
           </div>
           <div className="pd-sk-purchase">
             <div className="pd-sk-line pd-sk-price" />

@@ -19,7 +19,10 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   background: #FFFFFF;
   color: #1A1A2E;
-  overflow-x: hidden;
+  /* clip, NO hidden: `hidden` convierte a .pd-page en scroll container
+     (overflow-y: visible -> auto) y el sticky de .pd-purchase se muere.
+     El recorte horizontal ya lo hacen html/body en index.css. */
+  overflow-x: clip;
 }
 
 /* ---------------------------------------------------------
@@ -83,9 +86,10 @@
 @media (max-width: 767px) {
   .pd-hero {
     grid-template-columns: 1fr;
+    /* sin fila "purchase": en movil la compra es la barra fija (position:fixed),
+       no ocupa celda, y dejarla sumaria un gap de mas. */
     grid-template-areas:
       "main"
-      "purchase"
       "rest";
     gap: 28px;
   }
@@ -1007,17 +1011,55 @@
 }
 
 /* ---------------------------------------------------------
-   Skeleton loading
+   Skeleton loading — replica el layout real (main | purchase)
+   para que no haya salto de maquetacion al cargar
    --------------------------------------------------------- */
 .pd-skeleton {
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr 320px;
+  grid-template-columns: 1fr 320px;
+  grid-template-areas: "main purchase" "rest purchase";
   gap: 40px;
+  align-items: start;
 }
 
-@media (max-width: 1024px) {
+@media (min-width: 768px) and (max-width: 1024px) {
+  .pd-skeleton {
+    grid-template-columns: 1fr 280px;
+    gap: 24px;
+  }
+}
+
+@media (max-width: 767px) {
   .pd-skeleton {
     grid-template-columns: 1fr;
+    grid-template-areas: "main" "rest";
+    gap: 28px;
+  }
+}
+
+.pd-sk-main {
+  grid-area: main;
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .pd-sk-main {
+    gap: 24px;
+  }
+}
+
+@media (max-width: 767px) {
+  .pd-sk-main {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  /* la compra real en movil es la barra fija: el skeleton no la dibuja */
+  .pd-sk-purchase {
+    display: none;
   }
 }
 
@@ -1077,6 +1119,7 @@
 }
 
 .pd-sk-purchase {
+  grid-area: purchase;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -1165,30 +1208,12 @@
   .pd-purchase__price {
     font-size: 1.6rem;
   }
-
-  .pd-specs-table th {
-    width: 120px;
-    min-width: 100px;
-    font-size: 0.7rem;
-  }
 }
 
 @media (max-width: 480px) {
   .pd-gallery__main {
     padding: 16px;
     min-height: 220px;
-  }
-
-  .pd-specs-table th,
-  .pd-specs-table td {
-    display: block;
-    width: 100%;
-    padding: 3px 0;
-  }
-
-  .pd-specs-table tr {
-    display: block;
-    padding: 10px 0;
   }
 }
 
