@@ -160,10 +160,6 @@
   border: 1px solid #dbe4f0;
   border-radius: 18px;
   padding: 1.25rem 1.3rem;
-display: flex;
-  gap: 5px;
-  align-items: center;
-  justify-content: center;
 }
 
 @media (min-width: 900px) {
@@ -184,6 +180,10 @@ display: flex;
   font-size: 0.9rem;
   line-height: 1.55;
   color: #374151;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  display: flex;
 }
 
 .registro-tipo__info-lista {
