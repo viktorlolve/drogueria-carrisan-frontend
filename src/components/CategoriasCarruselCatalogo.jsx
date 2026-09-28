@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { ICONOS_CATEGORIAS, ICONO_CATEGORIA_FALLBACK } from '../config/categoriasIconos'
+import { iconoParaCategoria } from '../config/categoriasIconos'
 import { imagenParaCategoria } from '../config/categoriasImagenes'
 import './CategoriasCarruselCatalogo.css'
 
@@ -32,7 +32,7 @@ function CategoriasCarruselCatalogo({ categorias = [], activoId = 'todos', onSel
 
       <div className="ccc__fila" ref={filaRef}>
         {lista.map((cat) => {
-          const Icono = ICONOS_CATEGORIAS[cat.icono] || ICONO_CATEGORIA_FALLBACK
+          const Icono = iconoParaCategoria(cat)
           const imagen = imagenParaCategoria(cat.id)
           const activa = activoId === cat.id
           return (
