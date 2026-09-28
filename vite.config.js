@@ -56,7 +56,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
-        staff: fileURLToPath(new URL('./staff.html', import.meta.url)),
       },
       output: {
         manualChunks(id) {
