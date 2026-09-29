@@ -72,6 +72,33 @@ function estadoJob(j) {
   return { clase: 'ok', texto: 'Programada' }
 }
 
+// Une el job en memoria con su fila en job_ejecucion.
+//
+// El join NO puede ser por `nombre`: el job en memoria se llama en camelCase
+// ('revisarVencimientos') y la tabla se escribe con el nombre de la URL, en
+// kebab-case ('revisar-vencimientos'). `nombrePersistente` es el puente que
+// declara el backend (server.js) precisamente para esto; si un job no lo
+// declara (los que no tienen endpoint externo), la clave es su propio nombre.
+const clavePersistida = (j) => j.nombrePersistente || j.nombre
+
+// El estado en memoria se reinicia en cada spin-down de Render Free y en
+// cada deploy, así que recién tras arrancar el panel dice "nunca corrió" de
+// un job que sí corrió hace horas. Cuando la fila viene de la BD y no de
+// memoria, la BD manda: es el dato real.
+function unirConPersistencia(j, porNombre) {
+  const p = porNombre[clavePersistida(j)]
+  if (!p) return j
+  return {
+    ...j,
+    ultimaEjecucion: j.ultimaEjecucion || p.ultima_ejecucion || null,
+    ultimaDuracionMs: j.ultimaDuracionMs ?? p.duracion_ms ?? null,
+    ultimoError: j.ultimoError || p.ultimo_error || null,
+    ejecuciones: Math.max(j.ejecuciones || 0, p.ejecuciones || 0),
+    fallos: Math.max(j.fallos || 0, p.fallos || 0),
+    desdePersistencia: !j.ultimaEjecucion && !!p.ultima_ejecucion,
+  }
+}
+
 function MonitoreoAdmin() {
   const [datos, setDatos] = useState(null)
   const [error, setError] = useState('')
@@ -145,7 +172,15 @@ function MonitoreoAdmin() {
     )
   }
 
-  const { nivel, alertas, servidor, baseDatos, negocio, jobs, trafico, rutasLentas, rutasMasUsadas, erroresRecientes } = datos
+  const { nivel, alertas, servidor, baseDatos, negocio, jobs, jobsPersistidos, trafico, rutasLentas, rutasMasUsadas, erroresRecientes } = datos
+
+  // Índice de la tabla job_ejecucion por nombre canónico, para unir cada job
+  // con su histórico. Si la migración 040 no está aplicada llega vacío y los
+  // jobs se muestran solo con el estado en memoria (sin romper).
+  const persistidosPorNombre = Object.fromEntries(
+    (jobsPersistidos || []).map((p) => [p.nombre, p])
+  )
+  const jobsUnidos = jobs.map((j) => unirConPersistencia(j, persistidosPorNombre))
   const cfg = NIVEL[nivel] || NIVEL.warn
   const memPct = Math.min(100, Math.round((servidor.memoria.rssMb / servidor.memoria.limiteMb) * 100))
   const totalHttp = trafico.total || 1
@@ -245,7 +280,7 @@ function MonitoreoAdmin() {
         <section className="mon-card">
           <h3 className="mon-titulo"><Clock size={17} /> Tareas automáticas</h3>
           <ul className="mon-lista">
-            {jobs.map((j) => {
+            {jobsUnidos.map((j) => {
               const e = estadoJob(j)
               return (
                 <li key={j.nombre} className="mon-fila">
@@ -257,8 +292,10 @@ function MonitoreoAdmin() {
                   <p className="mon-fila-meta">
                     {j.programado
                       ? <>Última ejecución: {tiempoRelativo(j.ultimaEjecucion)}
+                        {j.desdePersistencia && <> (registro en BD)</>}
                         {j.ultimaDuracionMs != null && <> · {ms(j.ultimaDuracionMs)}</>}
-                        {j.ejecuciones > 0 && <> · {j.ejecuciones} ejecución{j.ejecuciones === 1 ? '' : 'es'}</>}</>
+                        {j.ejecuciones > 0 && <> · {j.ejecuciones} ejecución{j.ejecuciones === 1 ? '' : 'es'}</>}
+                        {j.fallos > 0 && <> · {j.fallos} fallo{j.fallos === 1 ? '' : 's'}</>}</>
                       : <>Apagada: define <code>{j.flagEnv || 'su env var'}=true</code> en Render para activarla</>}
                   </p>
                   {j.ultimoError && <p className="mon-fila-error">{j.ultimoError}</p>}
