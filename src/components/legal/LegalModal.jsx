@@ -126,7 +126,7 @@ export function LegalModal({ documento, abierto, onCerrar }) {
         </div>
 
         <footer className="legal-modal__footer">
-          <p>Tu informacion sigue aqui. Cierra esta ventana para volver al formulario.</p>
+          <p>Tu información sigue aquí. Cierra esta ventana para volver al formulario.</p>
           <button type="button" className="legal-modal__btn" onClick={onCerrar}>
             Cerrar y volver al formulario
           </button>

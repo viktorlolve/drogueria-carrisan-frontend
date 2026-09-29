@@ -23,7 +23,6 @@ import {
   EyeOff,
   KeyRound,
 } from 'lucide-react'
-import TurnstileWidget from '../../components/registro/TurnstileWidget'
 import { validarEmail, validarPassword } from '../../utils/validadores'
 import { useStaffAuth } from '../../context/StaffAuthContext'
 import api from '../../api/axios'
@@ -67,7 +66,6 @@ function StaffRegistro() {
   const [nombre, setNombre] = useState('')
   const [password, setPassword] = useState('')
   const [confirmarPassword, setConfirmarPassword] = useState('')
-  const [turnstileToken, setTurnstileToken] = useState('')
   const [errores, setErrores] = useState({})
   const [errorGeneral, setErrorGeneral] = useState('')
   const [cargando, setCargando] = useState(false)
@@ -122,7 +120,6 @@ function StaffRegistro() {
     const pwCheck = validarPassword(password)
     if (!pwCheck.valido) nuevosErrores.password = pwCheck.error
     if (password !== confirmarPassword) nuevosErrores.confirmarPassword = 'Las contraseñas no coinciden'
-    if (!turnstileToken) nuevosErrores.turnstile = 'Completa la verificación de seguridad'
     setErrores(nuevosErrores)
     return Object.keys(nuevosErrores).length === 0
   }
@@ -142,7 +139,6 @@ function StaffRegistro() {
         nombre: nombre.trim(),
         password,
         codigo: codigo.trim().toUpperCase(),
-        turnstileToken,
       })
       // Auto-login: el backend devuelve token + staff, igual que /staff/login.
       iniciarSesionConDatos(data)
@@ -634,17 +630,6 @@ function StaffRegistro() {
                         </Field.ErrorText>
                       )}
                     </Field.Root>
-
-                    <Box>
-                      <Box display="flex" justifyContent="center" mx="auto" mt={1} mb={1}>
-                        <TurnstileWidget onVerificado={setTurnstileToken} onExpirado={() => setTurnstileToken('')} />
-                      </Box>
-                      {errores.turnstile && (
-                        <Text fontSize="sm" color="red.600" role="alert">
-                          {errores.turnstile}
-                        </Text>
-                      )}
-                    </Box>
 
                     <Flex gap={3} mt={1}>
                       <Button

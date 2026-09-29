@@ -10,7 +10,7 @@
 // ---------------------------------------------------------------
 import {
   LayoutDashboard, Package, ShoppingCart, Users, Wallet, CreditCard,
-  Tag, FileText, Inbox, MessagesSquare, DollarSign, Files, ReceiptText, Megaphone, Truck, FlaskConical, KeyRound,
+  Tag, FileText, Inbox, MessagesSquare, DollarSign, Files, ReceiptText, Megaphone, Truck, FlaskConical, KeyRound, Activity,
 } from 'lucide-react'
 
 export const NAV_ADMIN = [
@@ -19,6 +19,7 @@ export const NAV_ADMIN = [
     items: [
       { id: 'dashboard', to: '/admin', icono: LayoutDashboard, texto: 'Dashboard' },
       { id: 'tasa', to: '/admin/tasa', icono: DollarSign, texto: 'Tasa de cambio' },
+      { id: 'monitoreo', to: '/admin/monitoreo', icono: Activity, texto: 'Monitoreo' },
     ],
   },
   {

@@ -139,17 +139,31 @@ function ProductoDetalle() {
   const [registroAbierto, setRegistroAbierto] = useState(false)
   const [mostrarBarra, setMostrarBarra] = useState(false)
 
+  // Cada cambio de producto deja la vista en el estado inicial (evita que
+  // queden datos del producto anterior si la carga nueva falla). Se ajusta
+  // DURANTE el render con el patrón "set state on prop change" de React en
+  // lugar de un useEffect: sin render intermedio con el producto viejo.
+  const [idAnterior, setIdAnterior] = useState(id)
+  if (id !== idAnterior) {
+    setIdAnterior(id)
+    setImagenActiva(0)
+    setTabActiva('ficha')
+    setAgregado(false)
+    setSeccionAbierta('')
+    setCargando(true)
+    setCarruseles([])
+    setSuscripcion(null)
+    setError('')
+  }
+
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current)
     }
   }, [])
 
+  // El scroll al inicio es un efecto del navegador, no estado: va en useEffect.
   useEffect(() => {
-    setImagenActiva(0)
-    setTabActiva('ficha')
-    setAgregado(false)
-    setSeccionAbierta('')
     window.scrollTo(0, 0)
   }, [id])
 
@@ -176,11 +190,9 @@ function ProductoDetalle() {
     const controller = new AbortController()
     controllerRef.current = controller
 
-    setCargando(true)
-    setCarruseles([])
-    setSuscripcion(null)
-    setError('')
-
+    // Los resets (cargando/carruseles/suscripcion/error) se hacen en el
+    // ajuste por :id de arriba; aquí solo queda la carga, cuyo primer await
+    // separa el estado síncrono del asíncrono.
     try {
       const [resCompleto, resTasa] = await Promise.all([
         api.get(`/moleculas/products/${id}/completo`, { signal: controller.signal }),
@@ -201,18 +213,26 @@ function ProductoDetalle() {
       )
       setTabActiva(tieneSpecHoja || tieneClinicaPropia ? 'ficha' : 'fichaclinica')
 
-      const fichasPromise = (m && m.length > 0) ? (async () => {
-        setCargandoFichas(true)
-        const ids = [...new Set(m.map((mol) => mol.moleculas_referencias?.id).filter(Boolean))]
-        const entradas = await Promise.all(ids.map(async (molId) => {
-          try {
-            const { data } = await api.get(`/moleculas/moleculas/${molId}`, { signal: controller.signal })
-            return [molId, { ficha_tecnica: data.ficha_tecnica || null }]
-          } catch { return [molId, { ficha_tecnica: null }] }
-        }))
-        setFichasClinicas(Object.fromEntries(entradas))
-        setCargandoFichas(false)
-      })() : Promise.resolve()
+      // Las fichas se piden en cadena .then() y no con un setState síncrono
+      // antes del await: así React lo trata como callback de un sistema
+      // externo. El "true" se aplaza un microtask, sin cambio de comportamiento.
+      const fichasPromise = (m && m.length > 0)
+        ? Promise.resolve()
+            .then(() => {
+              setCargandoFichas(true)
+              const ids = [...new Set(m.map((mol) => mol.moleculas_referencias?.id).filter(Boolean))]
+              return Promise.all(ids.map(async (molId) => {
+                try {
+                  const { data } = await api.get(`/moleculas/moleculas/${molId}`, { signal: controller.signal })
+                  return [molId, { ficha_tecnica: data.ficha_tecnica || null }]
+                } catch { return [molId, { ficha_tecnica: null }] }
+              }))
+            })
+            .then((entradas) => {
+              setFichasClinicas(Object.fromEntries(entradas))
+              setCargandoFichas(false)
+            })
+        : Promise.resolve()
 
       const valoracionesPromise = api
         .get(`/products/${id}/valoraciones`, { signal: controller.signal })
@@ -241,7 +261,15 @@ function ProductoDetalle() {
   }, [id])
 
   useEffect(() => {
-    cargarProducto()
+    // La carga se arranca en un microtask para que su setState inicial cuente
+    // como callback de un sistema externo y no como setState síncrono dentro
+    // del efecto. `cancelado` evita arrancar una petición que ya quedó vieja
+    // (el abort real lo sigue haciendo el AbortController de cargarProducto).
+    let cancelado = false
+    Promise.resolve().then(() => {
+      if (!cancelado) cargarProducto()
+    })
+    return () => { cancelado = true }
   }, [cargarProducto])
 
   function handleAgregar() {

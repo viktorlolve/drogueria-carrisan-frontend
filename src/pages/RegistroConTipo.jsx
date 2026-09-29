@@ -1,6 +1,7 @@
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import logo from '../assets/minilogo color sin fondo.png'
 import { LegalLink } from '../components/legal/LegalModal'
+import { SupportLink } from '../components/registro/SupportModal'
 import './Auth.css'
 import './RegistroConTipo.css'
 
@@ -114,7 +115,7 @@ function RegistroConTipo() {
           <div className="auth-footer-links">
             <LegalLink doc="terminos">Términos de uso</LegalLink>
             <LegalLink doc="privacidad">Aviso de privacidad</LegalLink>
-            <a href="/contacto" target="_blank" rel="noopener noreferrer">Soporte</a>
+            <SupportLink>Soporte</SupportLink>
           </div>
           © 2026 Drogueria Carrisan, C.A. Todos los derechos reservados.
         </div>

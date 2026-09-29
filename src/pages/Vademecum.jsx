@@ -47,18 +47,23 @@ function Vademecum() {
   }, [termino])
 
   // Bug corregido: al vaciar la caja, se limpian resultados y sugerencias
-  // en vez de dejar visible la última búsqueda.
-  useEffect(() => {
+  // en vez de dejar visible la última búsqueda. El ajuste se hace durante el
+  // render (patrón "set state on prop change") en vez de un efecto con setState.
+  const [terminoAnterior, setTerminoAnterior] = useState(terminoActivo)
+  if (terminoActivo !== terminoAnterior) {
+    setTerminoAnterior(terminoActivo)
     if (!terminoActivo) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setResultados([])
       setSugerenciasAbiertas(false)
       setBuscando(false)
-      return
+    } else {
+      setBuscando(true)
     }
+  }
+
+  useEffect(() => {
+    if (!terminoActivo) return
     let activo = true
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setBuscando(true)
     api
       .get('/moleculas/moleculas', { params: { search: terminoActivo } })
       .then((res) => {
@@ -88,36 +93,42 @@ function Vademecum() {
     return () => document.removeEventListener('mousedown', onClick)
   }, [])
 
-  const cargarFicha = useCallback(async (molId) => {
-    setCargandoFicha(true)
+  // Bug corregido: la ficha depende únicamente de :id en la URL. Al volver
+  // a /vademecum (id undefined) se limpia la molécula cargada, así que
+  // "← Buscar otra molécula" ya no se queda pegado en la ficha anterior.
+  // El reset se ajusta durante el render (patrón "set state on prop change").
+  const [idFichaAnterior, setIdFichaAnterior] = useState(id)
+  if (id !== idFichaAnterior) {
+    setIdFichaAnterior(id)
+    setCargandoFicha(!!id)
     setErrorFicha(false)
     setMolecula(null)
     setProductosPagina(1)
     setSeccionesAbiertas({})
-    try {
-      const { data } = await api.get(`/moleculas/moleculas/${molId}`)
-      setMolecula(data)
-    } catch (err) {
-      console.error('Error al cargar la molécula:', err)
-      setErrorFicha(true)
-    } finally {
-      setCargandoFicha(false)
-    }
-  }, [])
+  }
 
-  // Bug corregido: la ficha depende únicamente de :id en la URL. Al volver
-  // a /vademecum (id undefined) se limpia la molécula cargada, así que
-  // "← Buscar otra molécula" ya no se queda pegado en la ficha anterior.
+  // La carga va en un .then() y no en una async fn invocada desde el efecto:
+  // React trata el setState como callback de un sistema externo y, además,
+  // `activo` descarta la respuesta si el id cambia o el componente se desmonta.
   useEffect(() => {
-    if (id) {
-      cargarFicha(id)
-    } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setMolecula(null)
-      setCargandoFicha(false)
-      setErrorFicha(false)
-    }
-  }, [id, cargarFicha])
+    if (!id) return undefined
+    let activo = true
+    api
+      .get(`/moleculas/moleculas/${id}`)
+      .then((res) => {
+        if (!activo) return
+        setMolecula(res.data)
+      })
+      .catch((err) => {
+        if (!activo) return
+        console.error('Error al cargar la molécula:', err)
+        setErrorFicha(true)
+      })
+      .finally(() => {
+        if (activo) setCargandoFicha(false)
+      })
+    return () => { activo = false }
+  }, [id])
 
   const cambiarPaginaProductos = useCallback(
     async (page) => {

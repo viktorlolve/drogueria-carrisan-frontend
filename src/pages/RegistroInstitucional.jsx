@@ -4,7 +4,6 @@ import { Building2, FileCheck2, ShieldCheck } from 'lucide-react'
 import SelectorEstadoCiudad from '../components/registro/SelectorEstadoCiudad'
 import SelectorHorarioSemanal from '../components/registro/SelectorHorarioSemanal'
 import SubidaArchivoDrive from '../components/registro/SubidaArchivoDrive'
-import TurnstileWidget from '../components/registro/TurnstileWidget'
 import PasswordStrength from '../components/registro/PasswordStrength'
 import { TIPOS_INSTITUCION } from '../data/tiposInstitucion'
 import {
@@ -19,6 +18,7 @@ import { useAuth } from '../context/AuthContext'
 import api from '../api/axios'
 import logo from '../assets/minilogo color sin fondo.png'
 import { LegalLink } from '../components/legal/LegalModal'
+import { SupportLink } from '../components/registro/SupportModal'
 import './Auth.css'
 
 const CODIGOS_TELEFONO = ['414', '424', '412', '422', '416', '426']
@@ -85,7 +85,6 @@ function RegistroInstitucional() {
   const [confirmarPassword, setConfirmarPassword] = useState('')
   const [mostrarPassword, setMostrarPassword] = useState(false)
   const [mostrarConfirmarPassword, setMostrarConfirmarPassword] = useState(false)
-  const [turnstileToken, setTurnstileToken] = useState('')
   const [errores, setErrores] = useState({})
   const [errorGeneral, setErrorGeneral] = useState('')
   const [cargando, setCargando] = useState(false)
@@ -161,7 +160,6 @@ function RegistroInstitucional() {
     const passwordCheck = validarPassword(password)
     if (!passwordCheck.valido) nuevosErrores.password = passwordCheck.error
     if (password !== confirmarPassword) nuevosErrores.confirmarPassword = 'Las contraseñas no coinciden'
-    if (!turnstileToken) nuevosErrores.turnstile = 'Completa la verificación de seguridad'
     setErrores(nuevosErrores)
     return Object.keys(nuevosErrores).length === 0
   }
@@ -217,7 +215,6 @@ function RegistroInstitucional() {
           nombre_representante: form.nombre_representante.trim(),
           telefono_representante: telRepFormateado
         },
-        turnstileToken,
       })
 
       await login(form.email.trim().toLowerCase(), password)
@@ -722,9 +719,6 @@ function RegistroInstitucional() {
                 </label>
                 {errores.terminos && <span id="terminos-error" className="registro-error-texto" role="alert">{errores.terminos}</span>}
 
-                <TurnstileWidget onVerificado={setTurnstileToken} onExpirado={() => setTurnstileToken('')} />
-                {errores.turnstile && <span id="turnstile-error" className="registro-error-texto" role="alert">{errores.turnstile}</span>}
-
                 {errorGeneral && <p className="auth-error" role="alert">{errorGeneral}</p>}
               </>
             )}
@@ -752,7 +746,7 @@ function RegistroInstitucional() {
           <div className="auth-footer-links">
             <LegalLink doc="terminos">Términos de uso</LegalLink>
             <LegalLink doc="privacidad">Aviso de privacidad</LegalLink>
-            <a href="/contacto" target="_blank" rel="noopener noreferrer">Soporte</a>
+            <SupportLink>Soporte</SupportLink>
           </div>
           <span className="auth-footer-rif">RIF J-40068410-2</span>
         </div>

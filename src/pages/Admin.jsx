@@ -18,6 +18,7 @@ import LayoutPaginaPrincipal from '../components/paginas-principales/Layoutpagin
 import { NAV_ADMIN } from '../components/paginas-principales/NavAdmin'
 import MoleculasPanel from '../components/admin/MoleculasPanel'
 import GestionCodigos from '../components/admin/GestionCodigos'
+import MonitoreoAdmin from '../components/admin/MonitoreoAdmin'
 import './Admin.css'
 
 
@@ -61,6 +62,7 @@ const TITULOS_SECCION = {
   delivery: 'Delivery',
   moleculas: 'Moléculas',
   gestionCodigos: 'Gestionar códigos',
+  monitoreo: 'Monitoreo',
 }
 
 // Mapea el segmento de la URL (después de /admin/) al id que ya usa
@@ -84,6 +86,7 @@ const SEGMENTO_A_ID = {
   delivery: 'delivery',
   moleculas: 'moleculas',
   'gestion-codigos': 'gestionCodigos',
+  monitoreo: 'monitoreo',
 }
 
 function Admin() {
@@ -103,6 +106,7 @@ function Admin() {
         <Routes>
           <Route index element={<DashboardAdmin onIrA={(id) => navigate(rutaDeId(id))} />} />
           <Route path="tasa" element={<TasaCambio />} />
+          <Route path="monitoreo" element={<MonitoreoAdmin />} />
           <Route path="ordenes" element={<OrdenesAdmin />} />
           <Route path="nueva-orden" element={<NuevaOrdenRapida />} />
           <Route path="productos" element={<ProductosAdmin />} />

@@ -9,6 +9,24 @@ function convertirClaveVapid(claveBase64) {
   return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)))
 }
 
+// La suscripción del navegador queda ATADA a la applicationServerKey con la que
+// se creó. Si se rotan las claves VAPID, getSubscription() sigue devolviendo la
+// suscripción vieja (la UI mostraría "activado") pero TODOS los envíos fallan con
+// 410/403. Por eso no basta con mirar que exista: hay que comparar la clave.
+function claveDeSuscripcionCoincide(suscripcion) {
+  const key = suscripcion?.options?.applicationServerKey
+  if (!key) return false // sin clave guardada no se puede saber -> re-suscribir
+  const bytes = new Uint8Array(key)
+  let binario = ''
+  for (const byte of bytes) binario += String.fromCharCode(byte)
+  const base64url = window
+    .btoa(binario)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '')
+  return base64url === VAPID_KEY
+}
+
 const VAPID_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY
 const PUSH_ENABLED = !!VAPID_KEY
 
@@ -51,8 +69,47 @@ export function usePush() {
       try {
         const reg = await esperarServiceWorker(5000)
         const sub = await reg.pushManager.getSubscription()
+
+        if (!sub) {
+          if (!cancelled) {
+            setSuscrito(false)
+            setPermiso(API_NOTIFICACIONES?.permission || 'default')
+          }
+          return
+        }
+
+        // Clave VAPID rotada: la suscripción vieja está muerta pero sigue
+        // pareciendo activa. Se rehace en silencio. NO se llama a
+        // requestPermission() porque el permiso ya está concedido; si no lo
+        // estuviera no se puede pedir desde un efecto (hace falta un gesto del
+        // usuario), así que en ese caso solo se marca como no suscrito y se
+        // deja que active el botón.
+        if (!claveDeSuscripcionCoincide(sub)) {
+          await sub.unsubscribe()
+
+          if (API_NOTIFICACIONES?.permission === 'granted') {
+            const claveVapid = convertirClaveVapid(VAPID_KEY)
+            const nueva = await reg.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: claveVapid
+            })
+            await api.post('/push/subscribe', nueva.toJSON())
+            if (!cancelled) {
+              setSuscrito(true)
+              setPermiso('granted')
+            }
+            return
+          }
+
+          if (!cancelled) {
+            setSuscrito(false)
+            setPermiso(API_NOTIFICACIONES?.permission || 'default')
+          }
+          return
+        }
+
         if (!cancelled) {
-          setSuscrito(!!sub)
+          setSuscrito(true)
           setPermiso(API_NOTIFICACIONES?.permission || 'default')
         }
       } catch {

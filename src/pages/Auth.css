@@ -1120,12 +1120,6 @@
   margin-bottom: 1rem;
 }
 
-.turnstile-widget {
-  display: flex;
-  justify-content: center;
-  margin: 0.5rem 0 1rem;
-}
-
 /* ---------- RIF con prefijo fijo y teléfono con selector de código ---------- */
 
 .registro-campo-rif {

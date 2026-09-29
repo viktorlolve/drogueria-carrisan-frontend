@@ -2,13 +2,13 @@ import { useState } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import SelectorEstadoCiudad from '../components/registro/SelectorEstadoCiudad'
 import Stepper from '../components/registro/Stepper'
-import TurnstileWidget from '../components/registro/TurnstileWidget'
 import PasswordStrength from '../components/registro/PasswordStrength'
 import { validarEmail, validarTelefonoVenezuela, validarPassword } from '../utils/validadores'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/axios'
 import logo from '../assets/minilogo color sin fondo.png'
 import { LegalLink } from '../components/legal/LegalModal'
+import { SupportLink } from '../components/registro/SupportModal'
 import './Auth.css'
 
 const CODIGOS_TELEFONO = ['414', '424', '412', '422', '416', '426']
@@ -59,7 +59,6 @@ function RegistroHonorifico() {
   const [notifPromociones, setNotifPromociones] = useState(true)
   const [password, setPassword] = useState('')
   const [confirmarPassword, setConfirmarPassword] = useState('')
-  const [turnstileToken, setTurnstileToken] = useState('')
   const [errores, setErrores] = useState({})
   const [errorGeneral, setErrorGeneral] = useState('')
   const [cargando, setCargando] = useState(false)
@@ -141,7 +140,6 @@ function RegistroHonorifico() {
     const pwCheck = validarPassword(password)
     if (!pwCheck.valido) nuevosErrores.password = pwCheck.error
     if (password !== confirmarPassword) nuevosErrores.confirmarPassword = 'Las contraseñas no coinciden'
-    if (!turnstileToken) nuevosErrores.turnstile = 'Completa la verificación de seguridad'
     setErrores(nuevosErrores)
     return Object.keys(nuevosErrores).length === 0
   }
@@ -184,7 +182,6 @@ function RegistroHonorifico() {
           apellido: form.apellido.trim(),
           codigo_invitacion: codigo.trim().toUpperCase()
         },
-        turnstileToken,
       })
 
       await login(form.email.trim().toLowerCase(), password)
@@ -523,9 +520,6 @@ function RegistroHonorifico() {
                 {errores.confirmarPassword && <span id="confirmar-password-error" className="registro-error-texto" role="alert">{errores.confirmarPassword}</span>}
               </div>
 
-              <TurnstileWidget onVerificado={setTurnstileToken} onExpirado={() => setTurnstileToken('')} />
-              {errores.turnstile && <span className="registro-error-texto" role="alert">{errores.turnstile}</span>}
-
               {errorGeneral && <p className="auth-error" role="alert">{errorGeneral}</p>}
             </>
           )}
@@ -553,7 +547,7 @@ function RegistroHonorifico() {
           <div className="auth-footer-links">
             <LegalLink doc="terminos">Términos de uso</LegalLink>
             <LegalLink doc="privacidad">Aviso de privacidad</LegalLink>
-            <a href="/contacto" target="_blank" rel="noopener noreferrer">Soporte</a>
+            <SupportLink>Soporte</SupportLink>
           </div>
           <span className="auth-footer-rif">RIF J-40068410-2</span>
         </div>

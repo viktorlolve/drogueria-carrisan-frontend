@@ -86,23 +86,18 @@ export default function StaffVitrina() {
 }
 
 function EditorHero({ config, onChange }) {
-  const [slides, setSlides] = useState(config.slides || [])
-  useEffect(() => { setSlides(config.slides || []) }, [config])
+  // El bloque vive en `configs` del padre: se deriva de ahí, sin espejarlo en
+  // estado local (antes había useState + useEffect que lo resincronizaba).
+  const slides = config.slides || []
 
   function actualizar(idx, campo, valor) {
-    const next = slides.map((s, i) => (i === idx ? { ...s, [campo]: valor } : s))
-    setSlides(next)
-    onChange({ slides: next })
+    onChange({ slides: slides.map((s, i) => (i === idx ? { ...s, [campo]: valor } : s)) })
   }
   function agregar() {
-    const next = [...slides, { id: Date.now(), imagen: '', alt: '', titulo: '', subtitulo: '', botonTexto: '', botonLink: '' }]
-    setSlides(next)
-    onChange({ slides: next })
+    onChange({ slides: [...slides, { id: Date.now(), imagen: '', alt: '', titulo: '', subtitulo: '', botonTexto: '', botonLink: '' }] })
   }
   function quitar(idx) {
-    const next = slides.filter((_, i) => i !== idx)
-    setSlides(next)
-    onChange({ slides: next })
+    onChange({ slides: slides.filter((_, i) => i !== idx) })
   }
 
   return (
@@ -141,23 +136,16 @@ function EditorHero({ config, onChange }) {
 }
 
 function EditorCargas({ config, onChange }) {
-  const [cargas, setCargas] = useState(config.cargas || [])
-  useEffect(() => { setCargas(config.cargas || []) }, [config])
+  const cargas = config.cargas || []
 
   function actualizar(idx, campo, valor) {
-    const next = cargas.map((c, i) => (i === idx ? { ...c, [campo]: valor } : c))
-    setCargas(next)
-    onChange({ cargas: next })
+    onChange({ cargas: cargas.map((c, i) => (i === idx ? { ...c, [campo]: valor } : c)) })
   }
   function agregar() {
-    const next = [...cargas, { id: `carga-${Date.now()}`, titulo: '', modo: 'laboratorio', valor: [''], categoria: '' }]
-    setCargas(next)
-    onChange({ cargas: next })
+    onChange({ cargas: [...cargas, { id: `carga-${Date.now()}`, titulo: '', modo: 'laboratorio', valor: [''], categoria: '' }] })
   }
   function quitar(idx) {
-    const next = cargas.filter((_, i) => i !== idx)
-    setCargas(next)
-    onChange({ cargas: next })
+    onChange({ cargas: cargas.filter((_, i) => i !== idx) })
   }
 
   return (
@@ -269,56 +257,42 @@ function ListaEditor({ titulo, items, setItems, campos }) {
 }
 
 function EditorPromos({ config, onChange }) {
-  const [seccion1, setSeccion1] = useState(config.seccion1 || { imagen: '', alt: '', visible: true })
-  const [seccion2, setSeccion2] = useState(config.seccion2 || { imagen: '', alt: '', visible: true })
-  const [rotativo, setRotativo] = useState(config.rotativo || [])
-  const [adsPar, setAdsPar] = useState(config.adsPar || [])
+  const seccion1 = config.seccion1 || { imagen: '', alt: '', visible: true }
+  const seccion2 = config.seccion2 || { imagen: '', alt: '', visible: true }
+  const rotativo = config.rotativo || []
+  const adsPar = config.adsPar || []
 
-  useEffect(() => {
-    setSeccion1(config.seccion1 || { imagen: '', alt: '', visible: true })
-    setSeccion2(config.seccion2 || { imagen: '', alt: '', visible: true })
-    setRotativo(config.rotativo || [])
-    setAdsPar(config.adsPar || [])
-  }, [config])
-
-  function push() {
-    const next = { seccion1, seccion2, rotativo, adsPar }
-    onChange(next)
+  // Cada campo publica el bloque completo; la config del padre es la única
+  // fuente de verdad (antes: 4 estados locales + un efecto que los empujaba).
+  function patch(cambio) {
+    onChange({ seccion1, seccion2, rotativo, adsPar, ...cambio })
   }
-  useEffect(() => { push() /* eslint-disable-line react-hooks/exhaustive-deps */ }, [seccion1, seccion2, rotativo, adsPar])
 
   return (
     <div className="sv-editor">
-      <SeccionEditor label="Sección promocional #1 (superior)" valor={seccion1} setValor={setSeccion1} />
-      <SeccionEditor label="Sección promocional #2 (inferior, invertida)" valor={seccion2} setValor={setSeccion2} />
-      <ListaEditor titulo="AdRotativo (banner deslizante)" items={rotativo} setItems={setRotativo}
+      <SeccionEditor label="Sección promocional #1 (superior)" valor={seccion1} setValor={(v) => patch({ seccion1: v })} />
+      <SeccionEditor label="Sección promocional #2 (inferior, invertida)" valor={seccion2} setValor={(v) => patch({ seccion2: v })} />
+      <ListaEditor titulo="AdRotativo (banner deslizante)" items={rotativo} setItems={(v) => patch({ rotativo: v })}
         campos={[['imagenDesktop', 'Imagen desktop (URL)'], ['imagenMovil', 'Imagen móvil (URL)'], ['alt', 'Alt'], ['link', 'Link']]} />
-      <ListaEditor titulo="Ads en par (inferior)" items={adsPar} setItems={setAdsPar}
+      <ListaEditor titulo="Ads en par (inferior)" items={adsPar} setItems={(v) => patch({ adsPar: v })}
         campos={[['imagen', 'Imagen (URL)'], ['alt', 'Alt'], ['link', 'Link']]} />
     </div>
   )
 }
 
 function EditorBento({ config, onChange }) {
-  const [bloques, setBloques] = useState(config.bloques || [])
-  useEffect(() => { setBloques(config.bloques || []) }, [config])
+  const bloques = config.bloques || []
   const IDs = ['home__bloque-a', 'home__bloque-b', 'home__bloque-c', 'home__bloque-e', 'home__bloque-d']
 
   function actualizar(id, campo, valor) {
-    const next = bloques.map((b) => (b.id === id ? { ...b, [campo]: valor } : b))
-    setBloques(next)
-    onChange({ bloques: next })
+    onChange({ bloques: bloques.map((b) => (b.id === id ? { ...b, [campo]: valor } : b)) })
   }
   function agregar(id) {
     if (bloques.some((b) => b.id === id)) return
-    const next = [...bloques, { id, imagen: '', titulo: '', subtitulo: '', textoCta: '', link: '', tamano: 'mediano', posicionTexto: 'abajo', estiloCta: 'boton', visible: true }]
-    setBloques(next)
-    onChange({ bloques: next })
+    onChange({ bloques: [...bloques, { id, imagen: '', titulo: '', subtitulo: '', textoCta: '', link: '', tamano: 'mediano', posicionTexto: 'abajo', estiloCta: 'boton', visible: true }] })
   }
   function quitar(id) {
-    const next = bloques.filter((b) => b.id !== id)
-    setBloques(next)
-    onChange({ bloques: next })
+    onChange({ bloques: bloques.filter((b) => b.id !== id) })
   }
 
   return (
@@ -372,8 +346,7 @@ function EditorBento({ config, onChange }) {
 }
 
 function EditorCarruseles({ config, onChange }) {
-  const [secciones, setSecciones] = useState(config.secciones || [])
-  useEffect(() => { setSecciones(config.secciones || []) }, [config])
+  const secciones = config.secciones || []
 
   const DEFAULT_SECCIONES = [
     { id: 'ofertas', titulo: 'Ofertas destacadas' },
@@ -388,16 +361,12 @@ function EditorCarruseles({ config, onChange }) {
     return DEFAULT_SECCIONES.map((d) => ({ ...d, ...(porId[d.id] || {}), visible: porId[d.id] ? porId[d.id].visible !== false : true }))
   }
 
-  function aplicar(next) {
-    setSecciones(next)
-    onChange({ secciones: next })
-  }
   function cambiar(id, campo, valor) {
     const vista = calcularSecciones()
     const idx = vista.findIndex((s) => s.id === id)
     if (idx === -1) return
     vista[idx] = { ...vista[idx], [campo]: valor }
-    aplicar(vista)
+    onChange({ secciones: vista })
   }
 
   return (

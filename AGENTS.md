@@ -171,7 +171,7 @@ Query params de paginación (solo afectan `productos`): `?pagina=1&por_pagina=50
 
 ## Catálogo INHRR → tienda (IMPLEMENTADO — 2026-09-07)
 
-Los **7,416 productos INHRR** (`productos_catalogo`) entraron a `productos` como **"consultar precio"** (`precio_usd=null`, `disponible=false`, foto placeholder) → **7,356 importadas** (script backend `scripts/importar-tienda.mjs`, idempotente). El comprador los pide por requerimiento hasta que tengan precio; al fijar precio (>0) se vuelven comprables y avisan ("avísame cuando llegue"). Diseño y fases F1–F4 en el **AGENTS.md raíz**. **QA funcional EJECUTADO (2026-09-09/10)**: A–H verificados en navegador (plan archivado); hallazgos mayores resueltos (migración `025_notificaciones_tipos.sql` aplicada, lote de precios arreglado commit `e8d1eff`). **"Avísame cuando llegue" IMPLEMENTADO (2026-09-10)**: rutas `GET/POST/DELETE /products/:id/avisame` montadas en backend con `verifyJWT` + botón en `ProductoDetalle.jsx` (solo productos sin precio y con sesión, estado ternario). Pendiente operativo (no bloquea): limpieza del QA (cuentas QA, scripts `_qa_*.mjs`, logs), decidir estado TRAMAL, deuda de lint `react-hooks/set-state-in-effect`. Implementado en este repo:
+Los **7,416 productos INHRR** (`productos_catalogo`) entraron a `productos` como **"consultar precio"** (`precio_usd=null`, `disponible=false`, foto placeholder) → **7,356 importadas** (script backend `scripts/importar-tienda.mjs`, idempotente). El comprador los pide por requerimiento hasta que tengan precio; al fijar precio (>0) se vuelven comprables y avisan ("avísame cuando llegue"). Diseño y fases F1–F4 en el **AGENTS.md raíz**. **QA funcional EJECUTADO (2026-09-09/10)**: A–H verificados en navegador (plan archivado); hallazgos mayores resueltos (migración `025_notificaciones_tipos.sql` aplicada, lote de precios arreglado commit `e8d1eff`). **"Avísame cuando llegue" IMPLEMENTADO (2026-09-10)**: rutas `GET/POST/DELETE /products/:id/avisame` montadas en backend con `verifyJWT` + botón en `ProductoDetalle.jsx` (solo productos sin precio y con sesión, estado ternario). Pendiente operativo (no bloquea): limpieza del QA (cuentas QA, scripts `_qa_*.mjs`, logs), decidir estado TRAMAL. (Deuda de lint: **cerrada 2026-09-28**, ver sección "Lint" de este archivo.) Implementado en este repo:
 
 - **F2 — UX tienda**: `components/ProductCard.jsx` (sin precio → botón **"Consultar"** → `/producto/:id` en ambas variantes; CSS `.pcard__btn-consultar`), `pages/ProductoDetalle.jsx` (CTA **"Solicitar precio"** → `/mis-solicitudes/requerimientos?producto=<nombre>`), **`pages/Requerimientos.jsx` acepta `?producto=`** (pre-llena la primera fila y abre el formulario), guard en `context/CartContext.jsx` (`addItem` ignora productos sin precio).
 - **F3 — Admin**: `components/admin/ProductosAdmin.jsx` con **paginación server-side (20/pág) + filtros** (disponible, "Solo sin precio", línea, forma, laboratorio dinámico, búsqueda, sort) + celda de precio editable inline + **Importar Precios (XLSX)** → `POST /products/precios-bulk`. `components/admin/EstadisticasProductos.jsx` + `AnalyticsPage.jsx` consumen `GET /products/stats`.
@@ -186,6 +186,9 @@ El Admin.jsx usa rutas anidadas. Componentes en `src/components/admin/`:
 - AnalyticsVentas, EstadisticasProductos, TasaCambio
 - ChatAdmin, DocumentosAdmin, RequerimientosAdmin, CotizacionesAdmin
 - MoleculasPanel, FichasProductoAdmin
+- MonitoreoAdmin (2026-09-29) — estado del sistema: servidor, BD, tareas cron, tráfico, 5xx y pendientes del negocio. Ruta `/admin/monitoreo`, item en el grupo "General" de `NavAdmin.js` (icono `Activity`). CSS propio `.mon-*` reusando los tokens de `Admin.css`. Consume `GET /admin/monitoreo` con el `api` de cliente (`verifyJWT` + `verifyAdmin` = dueño vía bridge).
+
+  **Detalle de lint**: su `cargar()` es una **cadena de `.then()`**, no `async`/`await` — ver la sección "Lint" de este archivo. Si alguien lo convierte a `async` con `setState` después del `await`, `react-hooks/set-state-in-effect` lo va a marcar. El ref `enCurso` evita superponer peticiones y el refresh solo corre con la pestaña visible.
 
 ## PWA / Service Worker
 
@@ -341,15 +344,23 @@ La pagina de crear orden a cliente (StaffOrdenes) usa **staffApi** (no el `api` 
 7. **Staff ≠ cliente.** No mezclar `useAuth`/`api` con `useStaffAuth`/`staffApi`. Usa `staffApi` para endpoints `/staff` y `api` para `/auth` y el resto. Nunca llamar `useAuth().login()` desde una pagina staff (eso seria el login de cliente, no staff).
 8. **PwaScopeSwitcher ESTÁ montado** en `App.jsx` — no removerlo: el ajuste de `title` + `theme-color` por depto (tienda vs `/staff`) depende de él. Verifica que exista el componente (ver Error #1). Solo ajusta metadata de pestaña: **nunca** el manifest ni el `apple-touch-icon` (ver la sección PWA de este archivo).
 
-## Deuda de lint — backlog para otra sesión (2026-09-18)
+## Lint — React Compiler (`eslint-plugin-react-hooks` v6)
 
-El lint corre con el plugin `eslint-plugin-react-hooks` v6 (basado en React Compiler), cuyas reglas nuevas marcaron sintomas en ~40 archivos legacy. **Lo trivial YA se limpió** (2026-09-18): `no-unused-vars` (24), `no-useless-catch` (2 en `EnvioContext.jsx`) y `no-undef` (1 en `EstadoCuentaClientes.jsx` — reemplazó `fetch` + `process.env.REACT_APP_API_URL` legacy CRA por el `api` de axios). **Base actual**: `npm run lint` → **89 problems (76 errors, 13 warnings)**. Lo que queda requiere refactor cuidadoso → resolver con calma en otra sesión, regla por regla:
+**Base verificada 2026-09-28: `npm run lint` → 0 errors, 0 warnings.** `npx vite build` exit 0. La deuda que lasted varios días quedó CERRADA (partía de 89 problems: 76 errors + 13 warnings); ya no hay backlog de lint en el frontend.
 
-- **`react-hooks/set-state-in-effect` (~56 errors, la más masiva)** — `setState()` directo dentro de un `useEffect` (resetear estados al cambiar de id, `setCargando(true)` antes de un fetch). Archivos: `OrdenDetalle.jsx`, `ProductoDetalle.jsx`, `MisItems.jsx`, `ListaDetalle.jsx`, `RegistroProfesional.jsx`, `OrdenesAdmin.jsx`, `RequerimientosAdmin.jsx`, `UsuariosAdmin.jsx`, `NuevoPagoModal.jsx`, `usePush.js`, `StaffComercialModals.jsx`, y staff: `StaffCredito.jsx` (4), `StaffTesoreria.jsx`, `StaffReportesFinancieros.jsx`, `StaffFacturacion.jsx`, `StaffFacturacionEmitir.jsx`, `StaffOrdenes.jsx` (3), `StaffOrdenesPorCancelar.jsx`, `StaffPresupuestos.jsx` (2).
-- **`react-hooks/immutability` (14 errors)** — `useEffect(() => { cargar() }, [])` donde `cargar` es `async function` declarada DESPUÉS (patrón repetido en todo el repo). El fix típico: mover la función antes del effect o envolverla en `useCallback`. Archivos: `Cotizaciones.jsx`, `Notificaciones.jsx`, `Presupuesto.jsx`, `Requerimientos.jsx`, `RequerimientosAdmin.jsx` — conviene resolver todos juntos como una sola tarea.
-- **`react-hooks/exhaustive-deps` (13 warnings + ~5 errors)** — deps faltantes. Archivos: `PagosAdmin.jsx`, `EnvioContext.jsx` (`opcionesEnvio` inestable → `useMemo`), `StaffClientes.jsx`, `StaffPedidos.jsx`, `Requerimientos.jsx` (eslint-disable en desuso). Ojo: algunas `// eslint-disable-next-line` sobraron al arreglar otras reglas — no borrarlas a ciegas sin verificar.
-- **`react-hooks/purity` (3, un solo archivo)** — `Date.now()` llamada durante render en `pages/Documentos.jsx` (líneas 42, 72, 344). Fix: mover `ahora` a `useState`/efecto (cronómetro ya refresca por interval).
-- **`react-hooks/refs` (1)** — `TableroSwipeOrdenes.jsx:94` lee `arrastrando.current` durante render.
-- **`react-hooks/preserve-manual-memoization` (1)** — `ListaDetalle.jsx:185`: el `useMemo` no se preserva en la compilación.
+Cómo se resolvió `react-hooks/set-state-in-effect` (la regla que dominaba, ~56 errors). **No hay supresiones**: estos 3 patrones resuelven casi todo caso, en orden de preferencia:
 
-Método sugerido: una sesión por regla, `npx eslint <archivo>` para verificar en el momento y `npm run lint` para el total. NO son bugs — son deuda de estilo/performance del patrón legacy `useEffect → setState`; no bloquean.
+1. **Ajustar estado durante el render** cuando el reset depende de una prop/ruta (patrón oficial "set state on a prop change"). Se guarda el valor anterior y se re-renderiza sin estado intermedio:
+   ```js
+   const [idAnterior, setIdAnterior] = useState(id)
+   if (id !== idAnterior) {
+     setIdAnterior(id)
+     setCargando(true); setError('')   // los resets van AQUÍ
+   }
+   ```
+   Ejemplos: `ProductoDetalle.jsx` (reset por `:id`), `Vademecum.jsx` (reset por `:id` de la ficha y por `terminoActivo`).
+2. **Derivar de las props y NO espejarlas en estado local.** El peor caso era el patrón `useState(config.x) + useEffect(() => setX(config.x), [config])` + `onChange` en cada handler: la config del padre ya era la única fuente de verdad y el estado local solo la re-renderizaba tarde. Ahora los editores de `StaffVitrina.jsx` derivan directo de `config` y publican con `onChange({ ...campo })` — menos código y sin el render desfasado. Ojo: este patrón además hacía **bucle infinito** cuando el bloque no tenía config (`configs[bloque] || {}` crea un objeto nuevo por render → el efecto reseteaba con valores nuevos → re-render).
+3. **Cadena `.then()` en vez de `async fn` llamada desde el efecto.** La regla NO modela `await` como punto de suspensión: marca cualquier `async` con `setState` aunque el primer `setState` vaya después del `await`. Al invocar `api.get(...).then(...)` el setState cae en un callback y la regla lo acepta. Además permite el guard de cancelación `let activo = true` + `return () => { activo = false }`, que el código viejo no tenía (corrige carreras al cambiar de id). Ejemplos: búsqueda y ficha en `Vademecum.jsx`, fichas clínicas en `ProductoDetalle.jsx`.
+   - Para una `async fn` larga que no conviene reescribir (ej. `cargarProducto` en `ProductoDetalle.jsx`), se arranca desde un microtask con guarda de cancelación: `Promise.resolve().then(() => { if (!cancelado) cargar() })`.
+
+Trampa real de esta regla: **un `// eslint-disable-next-line` puede estar tapando una violación legítima** (en `Vademecum.jsx` el reset de la búsqueda estaba así). Antes de borrar una supresión, quitarla y correr `npx eslint <archivo>` para ver si el error aparece; si aparece, se arregla con los patrones de arriba, no se re-tapa.
