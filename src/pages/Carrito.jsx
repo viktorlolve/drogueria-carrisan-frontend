@@ -437,7 +437,7 @@ function ResumenPedido({
                 <input
                   type="text"
                   className="cart-cupon__input"
-                  placeholder="Ingresá tu código"
+                  placeholder="Ingresa tu código"
                   value={codigoCuponInput}
                   onChange={(e) => setCodigoCuponInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && aplicarCupon()}

@@ -38,7 +38,7 @@ function Login() {
     setEmail(emailLimpio)
 
     if (!validarEmail(emailLimpio)) {
-      setError('Ingresá un correo electrónico válido (ejemplo@correo.com)')
+      setError('Ingresa un correo electrónico válido (ejemplo@correo.com)')
       return
     }
 
@@ -155,7 +155,7 @@ function Login() {
               <div className="auth-card">
                 <h1 className="auth-title">Iniciar sesión</h1>
                 <p className="auth-subtitle">
-                  Ingresá tu correo. Te ayudaremos a continuar con tu cuenta o crear una nueva.
+                  Ingresa tu correo. Te ayudaremos a continuar con tu cuenta o crear una nueva.
                 </p>
 
                 <form className="auth-form" onSubmit={handleContinuar}>
@@ -219,7 +219,7 @@ function Login() {
           ) : (
             <div key="paso-password" className={`auth-paso auth-paso--${direccionSlide}`}>
               <div className="auth-card auth-card--angosto">
-                <h1 className="auth-title">Ingresá tu contraseña</h1>
+                <h1 className="auth-title">Ingresa tu contraseña</h1>
 
                 <div className="auth-email-confirmado">
                   <span>{email}</span>

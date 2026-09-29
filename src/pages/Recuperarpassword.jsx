@@ -73,7 +73,7 @@ function RecuperarPassword() {
           <>
             <h1>Recuperar acceso</h1>
             <p className="auth-subtitulo">
-              Ingresá tu correo electrónico y la nueva contraseña que
+              Ingresa tu correo electrónico y la nueva contraseña que
               deseas usar. El administrador debe autorizar el reinicio
               primero.
             </p>

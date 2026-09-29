@@ -311,7 +311,7 @@ function StaffRegistro() {
                   </Heading>
                   <Text mt={1.5} fontSize="sm" color="gray.500">
                     El registro de personal es exclusivo para quienes tienen un código
-                    generado por la administración. Ingresá el código que te compartieron.
+                    generado por la administración. Ingresa el código que te compartieron.
                   </Text>
                 </Box>
 
