@@ -28,7 +28,7 @@ function PrivacidadContent() {
         <h2>2. Qué Información Recopilamos</h2>
         <p>Según cómo uses la plataforma, podemos recopilar:</p>
         <ul className="privacidad-lista">
-          <li><strong>Datos de identificación:</strong> nombre, razón social, RIF o cédula, teléfono, correo electrónico.</li>
+          <li><strong>Datos de identificación:</strong> nombre, razón social, RIF, teléfono, correo electrónico.</li>
           <li><strong>Datos de ubicación comercial:</strong> dirección fiscal y dirección(es) de entrega.</li>
           <li><strong>Datos de cuenta:</strong> credenciales de acceso, historial de sesiones, preferencias de la cuenta.</li>
           <li><strong>Datos comerciales:</strong> historial de pedidos, productos consultados o comprados, facturas, pagos y estado de tu Línea de Crédito.</li>

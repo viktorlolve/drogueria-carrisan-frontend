@@ -222,7 +222,7 @@ function UsuarioForm({ usuario, etiquetasSugeridas = [], isOpen, onClose, onGuar
               {paso === 2 && (
                 <Stack gap={4}>
                   <Field.Root invalid={Boolean(errores.rifCedula)}>
-                    <Field.Label fontSize="sm">RIF / Cédula</Field.Label>
+                    <Field.Label fontSize="sm">RIF</Field.Label>
                     <Input value={rifCedula} onChange={(e) => setRifCedula(e.target.value)} placeholder="J-12345678-9" />
                     {errores.rifCedula && <Field.ErrorText>{errores.rifCedula}</Field.ErrorText>}
                   </Field.Root>

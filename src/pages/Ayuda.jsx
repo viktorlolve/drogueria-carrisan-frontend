@@ -110,7 +110,7 @@ const categorias = [
     icono: 'cuenta',
     items: [
       { label: 'Crear o Editar tu Cuenta', slug: 'crear-editar', desc: 'Actualiza tus datos comerciales y de entrega.' },
-      { label: 'Recuperar Contraseña', slug: 'recuperar-contrasena', desc: 'Restablece tu acceso con tu RIF o cédula.' },
+      { label: 'Recuperar Contraseña', slug: 'recuperar-contrasena', desc: 'Restablece tu acceso con tu RIF.' },
       { label: 'Estado de Cuenta y Línea de Crédito', slug: 'estado-de-cuenta', desc: 'Consulta tu saldo, facturas y crédito disponible.' },
     ],
   },

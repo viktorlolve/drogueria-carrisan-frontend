@@ -214,7 +214,7 @@ const MAS_EXPLORAR = [
 const FAQS = [
   {
     pregunta: '¿Qué requisitos necesito para abrir una cuenta B2B?',
-    respuesta: 'Solo necesitas el RIF comercial, copia de la cédula del representante legal, y el registro o permiso sanitario correspondiente (SACS) para validar tu establecimiento.',
+    respuesta: 'Solo necesitas el RIF comercial, copia de la cédula del farmaceutico regente, y el registro o permiso sanitario correspondiente (SACS) para validar tu establecimiento.',
     data: recaudosCuentaB2B,
   },
   { 

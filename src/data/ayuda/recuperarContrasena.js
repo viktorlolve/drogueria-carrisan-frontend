@@ -2,7 +2,7 @@ const recuperarContrasena = {
   etiqueta: 'Tu Cuenta',
   etiquetaIcono: 'ShieldCheck',
   titulo: 'Recuperar contraseña',
-  subtitulo: 'Restablece tu acceso con tu RIF o cédula.',
+  subtitulo: 'Restablece tu acceso con tu RIF.',
   tipo: 'pasos',
   contenido: [
     {
@@ -10,7 +10,7 @@ const recuperarContrasena = {
       texto: 'En la pantalla de inicio de sesión, selecciona esta opción para comenzar el proceso de recuperación.',
     },
     {
-      titulo: 'Ingresa tu RIF o cédula',
+      titulo: 'Ingresa tu RIF',
       texto: 'Introduce el documento registrado en tu cuenta para verificarte.',
     },
     {

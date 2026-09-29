@@ -328,7 +328,7 @@ function Documentos() {
       if (tipo_documento === 'referencia_comercial') {
         const { nombre, identificacion } = data.datos_cliente || {}
         if (!nombre || !identificacion) {
-          alert('Tu perfil no tiene registrada la cédula o RIF. Actualízalo antes de generar la referencia.')
+          alert('Tu perfil no tiene registrado el RIF. Actualízalo antes de generar la referencia.')
         } else {
           await generarReferenciaPDF({ nombre, identificacion })
         }

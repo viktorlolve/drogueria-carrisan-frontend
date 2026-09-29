@@ -190,7 +190,7 @@ function Contacto() {
               <MessageSquare size={17} />
             </span>
             <p className="ct-franja__texto">
-              <strong>Para una cotización más rápida</strong>, incluye en tu mensaje tu RIF o cédula,
+              <strong>Para una cotización más rápida</strong>, incluye en tu mensaje tu RIF,
               la lista de productos y las cantidades que necesitas.
             </p>
           </div>

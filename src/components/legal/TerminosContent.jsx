@@ -42,7 +42,7 @@ function TerminosContent() {
         <p>
           El acceso al catálogo con precios y a la posibilidad de generar pedidos requiere una
           cuenta creada por nuestro equipo comercial. Al registrarte, te comprometes a
-          proporcionar información veraz, completa y actualizada sobre tu identidad, RIF o cédula,
+          proporcionar información veraz, completa y actualizada sobre tu identidad, RIF,
           dirección de entrega y datos de contacto.
         </p>
         <p>
@@ -69,8 +69,8 @@ function TerminosContent() {
         <p>
           Los precios se muestran en dólares estadounidenses (USD), con una referencia informativa
           en bolívares (VES) calculada según la tasa de cambio vigente al momento de la consulta.
-          Esta conversión es solo referencial; el monto a facturar se fija en USD (o su equivalente
-          en VES a la tasa aplicable el día de la orden, según lo acordado con cada cliente).
+          Esta conversión es solo referencial; el monto a facturar se fija en VES (su equivalente
+          en USD a la tasa aplicable el día de la orden, según lo acordado con cada cliente).
         </p>
         <p>
           Los precios, descuentos, existencias y fichas de producto pueden cambiar sin previo aviso
