@@ -322,7 +322,7 @@ function Presupuesto() {
     const debounce = setTimeout(async () => {
       setBuscando(true)
       try {
-        const { data } = await api.get(`/products?search=${encodeURIComponent(query.trim())}&limit=8`)
+        const { data } = await api.get(`/products/buscar?q=${encodeURIComponent(query.trim())}&limit=8`)
         setSugerencias(data)
       } catch (err) {
         console.error('Error buscando productos', err)
@@ -419,7 +419,9 @@ function Presupuesto() {
                   <button key={p.id} type="button" className="pres-buscador__item" onClick={() => agregarAlBorrador(p)}>
                     <ProductoImagen src={p.foto_url} alt={p.nombre_comercial} />
                     <span className="pres-buscador__nombre">{p.nombre_comercial}</span>
-                    <span className="pres-buscador__precio">${formatUSD(p.precio_usd)}</span>
+                    {p.precio_usd != null && (
+                      <span className="pres-buscador__precio">${formatUSD(p.precio_usd)}</span>
+                    )}
                     <Plus size={16} />
                   </button>
                 ))

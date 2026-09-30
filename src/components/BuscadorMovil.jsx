@@ -71,7 +71,7 @@ function BuscadorMovil({ onClose, queryInicial = '' }) {
     const debounce = setTimeout(async () => {
       setCargando(true)
       try {
-        const { data } = await api.get(`/products?search=${encodeURIComponent(query.trim())}&limit=8`)
+        const { data } = await api.get(`/products/buscar?q=${encodeURIComponent(query.trim())}&limit=8`)
         setSugerencias(data.slice(0, 8))
       } catch (err) {
         console.error('Error buscando sugerencias:', err)
@@ -245,9 +245,11 @@ function BuscadorMovil({ onClose, queryInicial = '' }) {
                     <span className="buscador-movil__sugerencia-nombre">
                       {resaltarCoincidencia(producto.nombre_comercial, query)}
                     </span>
-                    <span className="buscador-movil__sugerencia-precio">
-                      ${Number(producto.precio_usd).toFixed(2)}
-                    </span>
+                    {producto.precio_usd != null && (
+                      <span className="buscador-movil__sugerencia-precio">
+                        ${Number(producto.precio_usd).toFixed(2)}
+                      </span>
+                    )}
                     <IconoFlecha size={20} />
                   </button>
                 ))}

@@ -84,40 +84,100 @@ const DEPARTAMENTOS = [
   },
 ]
 
-// Datos de servicios y sus subcategorías
-const SERVICIOS = [
+// Servicios que entregamos nosotros dentro de la plataforma.
+// Cada grupo lleva `descripcion` para que el panel derecho del dropdown
+// nunca quede vacío al hacer hover (un grupo con un solo enlace se ve
+// igual de bien que uno con cinco).
+const SERVICIOS_PROPIOS = [
+  {
+    id: 'informacion-clinica',
+    nombre: 'Información clínica',
+    icono: '💊',
+    descripcion: 'Consulta sanitaria oficial y fichas clínicas de medicamentos. Abiertas al público, sin costo y sin registro.',
+    subcategorias: [
+      { nombre: 'Vademécum clínico', ruta: '/vademecum' },
+      { nombre: 'Registro sanitario (INHRR)', ruta: '/registro-inhrr' },
+    ]
+  },
+  {
+    id: 'solicitudes',
+    nombre: 'Solicitudes y documentos',
+    icono: '📄',
+    descripcion: 'Cuéntanos qué necesitas y te respondemos con precios, cotizaciones o la documentación para tu institución.',
+    subcategorias: [
+      { nombre: 'Solicitar documentos', ruta: '/mis-solicitudes/documentos' },
+      { nombre: 'Cotizaciones', ruta: '/mis-solicitudes/cotizaciones' },
+      { nombre: 'Requerimientos (consultar precio)', ruta: '/mis-solicitudes/requerimientos' },
+      { nombre: 'Presupuesto rápido', ruta: '/presupuesto' },
+    ]
+  },
+  {
+    id: 'noticias',
+    nombre: 'Noticias',
+    icono: '📰',
+    descripcion: 'Novedades, alertas y comunicados del sector farmacéutico.',
+    subcategorias: [
+      { nombre: 'Noticias del sector', ruta: '/noticias' },
+    ]
+  },
+  {
+    id: 'ayuda-contacto',
+    nombre: 'Ayuda y contacto',
+    icono: '💬',
+    descripcion: 'Habla con alguien de nuestro equipo o resuelve tus dudas de compra y cuenta.',
+    subcategorias: [
+      { nombre: 'Chat con la empresa', ruta: '/chat' },
+      { nombre: 'Contacto', ruta: '/contacto' },
+      { nombre: 'Ayuda y preguntas frecuentes', ruta: '/ayuda' },
+      { nombre: 'Quiénes somos', ruta: '/quienes-somos' },
+    ]
+  },
+]
+
+// Servicios aliados: los que la empresa da con terceros (consultas, laboratorio,
+// detalles). Sus páginas todavía NO existen — las rutas `/servicios/...` no están
+// en App.jsx — así que cada enlace va marcado `proximamente: true` y se renderiza
+// deshabilitado en vez de llevar a una pantalla en blanco. Cuando exista la página,
+// se cambia el flag por una `ruta` real.
+const SERVICIOS_ALIADOS = [
   {
     id: 'consulta-medica',
     nombre: 'Consulta Médica',
     icono: '🩺',
+    descripcion: 'Atención médica con especialistas aliados de la comunidad.',
     subcategorias: [
-      { nombre: 'Cardiología', ruta: '/servicios/consulta-medica/cardiologia' },
-      { nombre: 'Medicina Interna', ruta: '/servicios/consulta-medica/medicina-interna' },
-      { nombre: 'Estudios pre-operatorios', ruta: '/servicios/consulta-medica/pre-operatorios' },
+      { nombre: 'Cardiología', proximamente: true },
+      { nombre: 'Medicina Interna', proximamente: true },
+      { nombre: 'Estudios pre-operatorios', proximamente: true },
     ]
   },
   {
     id: 'laboratorio-clinico',
     nombre: 'Laboratorio Clínico',
     icono: '🔬',
+    descripcion: 'Análisis clínicos de laboratorio con aliados.',
     subcategorias: [
-      { nombre: 'Análisis de Sangre', ruta: '/servicios/laboratorio/analisis-sangre' },
-      { nombre: 'Análisis de orina y heces', ruta: '/servicios/laboratorio/analisis-orina-heces' },
-      { nombre: 'Microbiología y parasitología', ruta: '/servicios/laboratorio/microbiologia' },
+      { nombre: 'Análisis de sangre', proximamente: true },
+      { nombre: 'Análisis de orina y heces', proximamente: true },
+      { nombre: 'Microbiología y parasitología', proximamente: true },
     ]
   },
   {
     id: 'detalles-disenos',
     nombre: 'Detalles & Diseños',
     icono: '🎁',
+    descripcion: 'Arreglos, cestas y decoración para regalar a empresas y personas.',
     subcategorias: [
-      { nombre: 'Arreglos florales', ruta: '/servicios/detalles/arreglos-florales' },
-      { nombre: 'Cestas conmemorativas', ruta: '/servicios/detalles/cestas' },
-      { nombre: 'Escultura con Globos', ruta: '/servicios/detalles/globos' },
-      { nombre: 'Decoración para eventos', ruta: '/servicios/detalles/decoracion-eventos' },
+      { nombre: 'Arreglos florales', proximamente: true },
+      { nombre: 'Cestas conmemorativas', proximamente: true },
+      { nombre: 'Escultura con globos', proximamente: true },
+      { nombre: 'Decoración para eventos', proximamente: true },
     ]
   },
 ]
+
+// Lista plana: la usa el panel derecho para resolver el grupo activo por id.
+const SERVICIOS = [...SERVICIOS_PROPIOS, ...SERVICIOS_ALIADOS]
 
 function Navbar() {
   const { user, logout } = useAuth()
@@ -222,7 +282,7 @@ function Navbar() {
     debounceRef.current = setTimeout(async () => {
       if (busquedaEnviadaRef.current) return
       try {
-        const { data } = await api.get(`/products?search=${encodeURIComponent(busqueda)}&limit=5`)
+        const { data } = await api.get(`/products/buscar?q=${encodeURIComponent(busqueda)}&limit=5`)
         if (busquedaEnviadaRef.current) return
         setSugerencias(data.slice(0, 5))
         setMostrarSugerencias(true)
@@ -312,6 +372,9 @@ function Navbar() {
   const ciudadEstado = direccionSeleccionada 
     ? `${direccionSeleccionada.ciudad || 'Ciudad'}, ${direccionSeleccionada.estado || 'Estado'}`
     : 'Valencia, Carabobo'
+
+  // Grupo de servicios hovered (o clickeado) en el sidebar del dropdown.
+  const servicioSeleccionado = SERVICIOS.find(s => s.id === servicioActivo) || null
 
   const emojiActual = EMOJIS_ENVIO[tipoEnvio] || EMOJIS_ENVIO.default;
 
@@ -431,7 +494,9 @@ function Navbar() {
                       className="suggestion-item__img"
                     />
                     <span className="suggestion-item__nombre">{producto.nombre_comercial}</span>
-                    <span className="suggestion-price">${Number(producto.precio_usd).toFixed(2)}</span>
+                    {producto.precio_usd != null && (
+                      <span className="suggestion-price">${Number(producto.precio_usd).toFixed(2)}</span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -718,44 +783,63 @@ function Navbar() {
               {showServiciosMenu && (
                 <div className="deptos-dropdown">
                   <div className="deptos-dropdown__sidebar">
-                    <p className="deptos-dropdown__titulo">Todos los servicios</p>
-                    {SERVICIOS.map((servicio) => (
-                      <button
+                    <p className="deptos-dropdown__titulo">Servicios Droguería Carrisan</p>
+                    {SERVICIOS_PROPIOS.map((servicio) => (
+                      <ItemSidebarServicios
                         key={servicio.id}
-                        className={`deptos-dropdown__depto-btn ${servicioActivo === servicio.id ? 'active' : ''}`}
-                        onMouseEnter={() => setServicioActivo(servicio.id)}
-                        onClick={() => {
-                          setServicioActivo(servicioActivo === servicio.id ? null : servicio.id)
-                        }}
-                      >
-                        <span className="deptos-dropdown__depto-icono">{servicio.icono}</span>
-                        <span className="deptos-dropdown__depto-nombre">{servicio.nombre}</span>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="9 18 15 12 9 6"></polyline>
-                        </svg>
-                      </button>
+                        servicio={servicio}
+                        activo={servicioActivo === servicio.id}
+                        onActivar={() => setServicioActivo(servicioActivo === servicio.id ? null : servicio.id)}
+                      />
+                    ))}
+
+                    <div className="servicios-sidebar__separador"></div>
+                    <p className="deptos-dropdown__titulo">Servicios aliados</p>
+                    {SERVICIOS_ALIADOS.map((servicio) => (
+                      <ItemSidebarServicios
+                        key={servicio.id}
+                        servicio={servicio}
+                        activo={servicioActivo === servicio.id}
+                        onActivar={() => setServicioActivo(servicioActivo === servicio.id ? null : servicio.id)}
+                      />
                     ))}
                   </div>
 
-                  {servicioActivo && (
+                  {servicioSeleccionado && (
                     <div className="deptos-dropdown__subcategorias">
                       <p className="deptos-dropdown__subtitulo">
-                        {SERVICIOS.find(s => s.id === servicioActivo)?.nombre}
+                        {servicioSeleccionado.nombre}
                       </p>
-                      {SERVICIOS.find(s => s.id === servicioActivo)?.subcategorias.map((sub) => (
-                        <button
-                          key={sub.nombre}
-                          className="deptos-dropdown__sub-link"
-                          onClick={() => {
-                            setShowServiciosMenu(false)
-                            setServicioActivo(null)
-                            navigate(sub.ruta)
-                          }}
-                        >
-                          <span className="deptos-dropdown__sub-icon">•</span>
-                          {sub.nombre}
-                        </button>
-                      ))}
+                      {servicioSeleccionado.descripcion && (
+                        <p className="deptos-dropdown__subdesc">
+                          {servicioSeleccionado.descripcion}
+                        </p>
+                      )}
+                      {servicioSeleccionado.subcategorias.map((sub) =>
+                        sub.proximamente ? (
+                          <span
+                            key={sub.nombre}
+                            className="deptos-dropdown__sub-link deptos-dropdown__sub-link--proximo"
+                          >
+                            <span className="deptos-dropdown__sub-icon">•</span>
+                            <span>{sub.nombre}</span>
+                            <span className="servicios-badge">Próximamente</span>
+                          </span>
+                        ) : (
+                          <button
+                            key={sub.nombre}
+                            className="deptos-dropdown__sub-link"
+                            onClick={() => {
+                              setShowServiciosMenu(false)
+                              setServicioActivo(null)
+                              navigate(sub.ruta)
+                            }}
+                          >
+                            <span className="deptos-dropdown__sub-icon">•</span>
+                            {sub.nombre}
+                          </button>
+                        )
+                      )}
                     </div>
                   )}
                 </div>
@@ -772,6 +856,28 @@ function Navbar() {
         </nav>
       </header>
     </>
+  )
+}
+
+// -------------------------------------------------------------
+// FILA DEL SIDEBAR DEL DROPDOWN DE SERVICIOS
+// -------------------------------------------------------------
+// La usan los dos bloques del sidebar (servicios propios y aliados), por eso
+// vive fuera de Navbar y recibe el estado por props en vez de cerrarlo sobre
+// `servicioActivo`.
+function ItemSidebarServicios({ servicio, activo, onActivar }) {
+  return (
+    <button
+      className={`deptos-dropdown__depto-btn ${activo ? 'active' : ''}`}
+      onMouseEnter={onActivar}
+      onClick={onActivar}
+    >
+      <span className="deptos-dropdown__depto-icono">{servicio.icono}</span>
+      <span className="deptos-dropdown__depto-nombre">{servicio.nombre}</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <polyline points="9 18 15 12 9 6"></polyline>
+      </svg>
+    </button>
   )
 }
 
