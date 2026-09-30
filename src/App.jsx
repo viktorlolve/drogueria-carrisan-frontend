@@ -13,12 +13,14 @@ import Navbar from './components/Navbar'
 import ScrollToTop from './components/ScrollToTop'
 import ScrollToTopFloat from './components/ScrollToTopFloat'
 import PrivateRoute from './components/PrivateRoute'
+import ConSesionCatalogo from './components/ConSesionCatalogo'
 import PrivateRouteSensible from './components/PrivateRouteSensible'
 import PrivateRouteStaff from './components/PrivateRouteStaff'
 import RequiereInvitacion from './components/registro/RequiereInvitacion'
 import RootRedirect from './components/RootRedirect'
 import { Toaster } from './components/ui/toaster'
 import PwaScopeSwitcher from './components/PwaScopeSwitcher'
+import ProtegerImagenes from './components/ProtegerImagenes'
 import { STAFF_PAGINAS } from './pages/staff/STAFF_PAGINAS'
 import { DEPARTAMENTOS, MODULOS } from './components/staff/NavStaff'
 
@@ -155,6 +157,7 @@ function App() {
             <ScrollToTop />
             <LoadingBarProvider>
               <PwaScopeSwitcher />
+              <ProtegerImagenes />
               <Navbar />
               <ScrollToTopFloat />
               <LoadingBarBridge />
@@ -163,7 +166,7 @@ function App() {
                 <Routes>
                   <Route path="/" element={<RootRedirect />} />
                   <Route path="/home" element={<PrivateRoute><Home /></PrivateRoute>} />
-                  <Route path="/catalogo" element={<Catalogo />} />
+                  <Route path="/catalogo" element={<ConSesionCatalogo><Catalogo /></ConSesionCatalogo>} />
                   <Route path="/registro-inhrr" element={<RegistroInhrr />} />
                   <Route path="/vademecum" element={<Vademecum />} />
                   <Route path="/vademecum/:id" element={<Vademecum />} />
@@ -196,7 +199,7 @@ function App() {
                   <Route path="/mantenimiento" element={<Mantenimiento />} />
                   <Route path="/noticias" element={<Noticias />} />
                   <Route path="/estado-cuenta" element={<PrivateRouteSensible><EstadoCuenta /></PrivateRouteSensible>} />
-                  <Route path="/producto/:id" element={<ProductoDetalle />} />
+                  <Route path="/producto/:id" element={<ConSesionCatalogo><ProductoDetalle /></ConSesionCatalogo>} />
                   <Route path="/listas/:id" element={<PrivateRoute><ListaDetalle /></PrivateRoute>} />
                   <Route path="/menu" element={<PrivateRoute><Menu /></PrivateRoute>} />
                   <Route path="/ofertas" element={<PrivateRoute><Ofertas /></PrivateRoute>} />

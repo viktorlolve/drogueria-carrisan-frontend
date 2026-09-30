@@ -1,0 +1,184 @@
+/* ============================================
+   Pantalla de acceso B2B (catálogo privado)
+   Paleta y gradiente de marca tomados de Auth.css
+   (.auth-brand-panel: linear-gradient(165deg, #06274F 0%, #0052DC 100%);
+   #1B4B8F, #12A594, #0052DC, #232B45, #14182A). Mobile-first.
+   ============================================ */
+
+.catalogo-acceso {
+  --ca-gradiente: linear-gradient(165deg, #06274F 0%, #0052DC 100%);
+  --ca-azul: #0052DC;
+  --ca-azul-oscuro: #1B4B8F;
+  --ca-teal: #12A594;
+  --ca-tinta: #232B45;
+  --ca-texto: #14182A;
+  --ca-texto-muted: rgba(20, 24, 42, 0.62);
+  --ca-borde: #E5E7EB;
+
+  width: 100%;
+  min-height: calc(100vh - 76px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.25rem 3.5rem;
+  box-sizing: border-box;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(18, 165, 148, 0.10), transparent 55%),
+    radial-gradient(circle at 92% 100%, rgba(0, 82, 220, 0.08), transparent 55%),
+    #FFFFFF;
+  color: var(--ca-texto);
+  font-family: 'Inter', sans-serif;
+}
+
+.catalogo-acceso__card {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  box-sizing: border-box;
+  background: #FFFFFF;
+  border: 1px solid var(--ca-borde);
+  border-radius: 18px;
+  box-shadow: 0 4px 20px rgba(17, 24, 39, 0.06);
+  padding: 28px 22px 26px;
+  text-align: center;
+  overflow: hidden;
+  animation: catalogoAccesoEntra 0.28s ease-out;
+}
+
+/* Franja superior con el gradiente de marca */
+.catalogo-acceso__card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: var(--ca-gradiente);
+}
+
+@keyframes catalogoAccesoEntra {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .catalogo-acceso__card {
+    animation: none;
+  }
+}
+
+.catalogo-acceso__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  margin-bottom: 18px;
+  border-radius: 50%;
+  background: rgba(0, 82, 220, 0.08);
+  color: var(--ca-azul-oscuro);
+}
+
+.catalogo-acceso__titulo {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 1.3rem;
+  line-height: 1.3;
+  color: var(--ca-tinta);
+  margin: 0 0 14px;
+}
+
+.catalogo-acceso__texto {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--ca-texto);
+  margin: 0 0 12px;
+}
+
+.catalogo-acceso__texto--muted {
+  font-size: 0.88rem;
+  color: var(--ca-texto-muted);
+}
+
+.catalogo-acceso__acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+/* ---------- Botones (Links de react-router) ---------- */
+.btn-catalogo-acceso {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px 20px;
+  box-sizing: border-box;
+  border: 1px solid rgba(35, 43, 69, 0.18);
+  border-radius: 10px;
+  background: #FFFFFF;
+  color: var(--ca-azul-oscuro);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-catalogo-acceso:hover {
+  border-color: var(--ca-azul-oscuro);
+  background: rgba(27, 75, 143, 0.05);
+}
+
+.btn-catalogo-acceso:focus-visible {
+  outline: 2px solid var(--ca-azul);
+  outline-offset: 2px;
+}
+
+.btn-catalogo-acceso--primario {
+  background: var(--ca-gradiente);
+  border-color: transparent;
+  color: #FFFFFF;
+  box-shadow: 0 6px 16px rgba(0, 82, 220, 0.22);
+}
+
+.btn-catalogo-acceso--primario:hover {
+  background: var(--ca-gradiente);
+  border-color: transparent;
+  box-shadow: 0 8px 20px rgba(0, 82, 220, 0.28);
+}
+
+/* ---------- A partir de aquí: desktop ---------- */
+@media (min-width: 640px) {
+  .catalogo-acceso {
+    padding: 3.5rem 2rem 4rem;
+  }
+
+  .catalogo-acceso__card {
+    padding: 40px 40px 36px;
+  }
+
+  .catalogo-acceso__titulo {
+    font-size: 1.6rem;
+  }
+
+  .catalogo-acceso__acciones {
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .btn-catalogo-acceso {
+    width: auto;
+    min-width: 200px;
+    padding: 14px 26px;
+  }
+}

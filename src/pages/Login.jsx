@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useSearchParams, Link } from 'react-router-dom'
+import { useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom'
 import { PackageSearch, ShieldCheck, Clock3 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import logo from '../assets/minilogo color sin fondo.png'
@@ -27,8 +27,19 @@ function Login() {
 
   const { login } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [searchParams] = useSearchParams()
   const sesionExpirada = searchParams.get('expirado') === '1'
+
+  // Destino al que volvemos tras entrar: lo deja PrivateRoute en state.from
+  // (ruta + query de la página protegida que intentó abrir el visitante).
+  // Solo rutas internas: un `from` con esquema/host permitiría redirigir fuera del
+  // sitio (open redirect). Cualquier cosa que no empiece por '/' y no tenga '//'
+  // se descarta.
+  const destino = location.state?.from
+  const from = typeof destino === 'string' && destino.startsWith('/') && !destino.startsWith('//')
+    ? destino
+    : null
 
   async function handleContinuar(e) {
     e.preventDefault()
@@ -77,7 +88,7 @@ function Login() {
 
     try {
       const user = await login(email, password)
-      navigate(user.es_admin ? '/admin' : '/')
+      navigate(from ?? (user.es_admin ? '/admin' : '/'))
     } catch (err) {
       setError(err.response?.data?.error || 'Correo o contraseña incorrectos')
     } finally {
