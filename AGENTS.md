@@ -98,10 +98,10 @@ Cada formulario de registro es un archivo JSX autonomo con su propio estado loca
 | Pagina | Ruta | Auth? | Descripcion |
 |--------|------|-------|-------------|
 | Home | /home | Si | Dashboard del usuario con carruseles, ofertas, etc. |
-| Catalogo | /catalogo | No | Catalogo de productos con busqueda y filtros |
+| Catalogo | /catalogo | Si (wrapper) | Catalogo de productos con busqueda y filtros. Exige sesión vía `ConSesionCatalogo` (ver nota abajo) |
 | RegistroInhrr | /registro-inhrr | No | Consulta publica del registro sanitario INHRR (medicamentos, hospitalarios, misceláneos) con filtros por categoría/forma/laboratorio/molécula/ATC. Ficha por SKU con datos completos del registro. |
 | Vademecum (IMPLEMENTADO — 2026-09-10) | /vademecum · /vademecum/:id | No | **Task F completa** — buscador por molécula (`GET /moleculas/moleculas?search=`) + ficha clínica CIMA (acordeones de `ficha_tecnica`, fallback "Ficha en revisión") + breadcrumb ATC (`atc_arbol`) + productos INHRR paginados + botón **"Buscar en Catálogo"** → `/catalogo?molecula=<nombre>`. Enlaces en `Footer.jsx` y `MenuDrawer.jsx`. Secciones de ficha compartidas en `src/config/seccionesFicha.js`. |
-| ProductoDetalle | /producto/:id | No | Detalle de producto individual. **Bloques de ficha clínica IMPLEMENTADOS (2026-09-10)**: tab "Composición" enlaza cada molécula a `/vademecum/:id`; sección **"Ficha clínica"** (acordeón por molécula, cargada en paralelo) debajo de los tabs y antes de los carruseles, con referencia AEMPS-CIMA. |
+| ProductoDetalle | /producto/:id | Si (wrapper) | Detalle de producto individual. Exige sesión vía `ConSesionCatalogo` (ver nota abajo). **Bloques de ficha clínica IMPLEMENTADOS (2026-09-10)**: tab "Composición" enlaza cada molécula a `/vademecum/:id`; sección **"Ficha clínica"** (acordeón por molécula, cargada en paralelo) debajo de los tabs y antes de los carruseles, con referencia AEMPS-CIMA. |
 | Carrito | /carrito | Si | Carrito de compras + checkout |
 | MisOrdenes | /orders | Si | Historial de pedidos |
 | OrdenDetalle | /orders/:id | Si | Detalle de un pedido |
@@ -115,6 +115,8 @@ Cada formulario de registro es un archivo JSX autonomo con su propio estado loca
 | Ofertas | /ofertas | Si | Ofertas especiales |
 | Cotizaciones | /mis-solicitudes/cotizaciones | Si | Solicitudes de cotizacion |
 | Presupuesto | /presupuesto | Si | Presupuesto/requerimiento rapido |
+
+**Nota — el catálogo comercial exige sesión (2026-09-30).** `/catalogo` y `/producto/:id` van envueltos en `<ConSesionCatalogo>` (`src/components/`), no en `PrivateRoute`: sin sesión se muestra `CatalogoAcceso` **en el mismo lugar y con la misma URL** (para que un enlace de WhatsApp siga sirviendo y, tras loguearse, vuelva al mismo producto), y con sesión renderiza los hijos. El backend exige JWT en `GET /products`, `GET /products/:id` y las rutas de `moleculas` del producto. **El nombre del producto sigue siendo público**: por `GET /products/buscar?q=` (payload mínimo `id, nombre_comercial, sku, laboratorio, linea`; con sesión agrega `foto_url` y `precio_usd` — lo usan el navbar, `BuscadorMovil` y `/presupuesto`) y por `/registro-inhrr` + `/vademecum`.
 
 ## Vademécum clínico — ficha de molécula (IMPLEMENTADO — 2026-09-10)
 

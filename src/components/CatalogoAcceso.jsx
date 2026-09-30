@@ -1,8 +1,17 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { ShieldCheck, LogIn } from 'lucide-react';
 import './CatalogoAcceso.css';
 
 export default function CatalogoAcceso() {
+  const location = useLocation();
+
+  // Destino al que Login.jsx vuelve tras entrar: sin esto, quien abre un
+  // enlace de /producto/:id por WhatsApp caería en '/' en vez del producto.
+  // Solo ruta interna: lo que empiece por '//' o traiga esquema/host sería un
+  // open redirect, así que se descarta al construir el state.
+  const destino = location.pathname + location.search;
+  const from = destino.startsWith('/') && !destino.startsWith('//') ? destino : null;
+
   return (
     <div className="catalogo-acceso">
       <div className="catalogo-acceso__card">
@@ -16,7 +25,11 @@ export default function CatalogoAcceso() {
           ¿Buscas un insumo específico? Escríbenos y te cotizamos por WhatsApp.
         </p>
         <div className="catalogo-acceso__acciones">
-          <Link className="btn-catalogo-acceso btn-catalogo-acceso--primario" to="/login">
+          <Link
+            className="btn-catalogo-acceso btn-catalogo-acceso--primario"
+            to="/login"
+            state={{ from }}
+          >
             <LogIn size={18} /> Iniciar sesión
           </Link>
           <Link className="btn-catalogo-acceso" to="/registro">
