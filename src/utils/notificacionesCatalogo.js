@@ -1,9 +1,6 @@
 import {
   Package,
-  Truck,
   CheckCircle,
-  XCircle,
-  RotateCcw,
   DollarSign,
   CreditCard,
   Ban,
@@ -18,6 +15,8 @@ import {
   ShoppingBag,
   Info,
   Megaphone,
+  Lock,
+  LockOpen,
 } from 'lucide-react'
 
 export const CATEGORIAS = {
@@ -29,11 +28,13 @@ export const CATEGORIAS = {
     tipos: [
       'orden_creada',
       'orden_confirmada',
+      'orden_aprobada',
       'orden_enviada',
       'orden_entregada',
       'orden_cancelada',
       'estado_cambiado',
       'orden_actualizada',
+      'orden_incidencia',
     ],
   },
 
@@ -64,7 +65,13 @@ export const CATEGORIAS = {
     nombre: 'Crédito',
     color: 'orange',
     icono: AlertTriangle,
-    tipos: ['orden_por_vencer', 'orden_vencida'],
+    tipos: [
+      'orden_por_vencer',
+      'orden_vencida',
+      'recordatorio_cobro',
+      'credito_bloqueado',
+      'credito_desbloqueado',
+    ],
   },
 
   documentos: {
@@ -126,13 +133,13 @@ export const DESCRIPCION_CATEGORIA = {
     'Actualizaciones sobre tus órdenes, desde que se crean hasta que se entregan, cancelan o cambian de estado.',
 
   pagos:
-    'Información sobre los pagos registrados, recibidos, reportados, verificados o rechazados.',
+    'Información sobre tus pagos: cuando reportas uno, cuando lo verificamos y si lo rechazamos.',
 
   chat:
     'Avisos cuando recibes nuevos mensajes o respuestas en el Centro de Comunicaciones.',
 
   credito:
-    'Avisos relacionados con órdenes a crédito que están próximas a vencer o que ya vencieron.',
+    'Avisos de tus órdenes a crédito: próximos a vencer, ya vencidos, recordatorios de pago y cuándo se bloquea o desbloquea tu crédito.',
 
   documentos:
     'Actualizaciones sobre tus documentos, incluyendo cuando están disponibles, aprobados o rechazados.',
@@ -147,38 +154,105 @@ export const DESCRIPCION_CATEGORIA = {
     'Información sobre ofertas, promociones y oportunidades especiales disponibles para ti.',
 }
 
+/**
+ * Ícono por tipo de notificación. Si un tipo no aparece aquí, se usa
+ * el ícono de su categoría.
+ *
+ * Regla del dueño: todo lo que habla del pedido (creada, aprobada,
+ * cambio de estado) usa la CAJA azul; el ícono de pago queda solo para
+ * `pago_reportado` y `pago_verificado` lleva tilde verde.
+ */
 const ICONOS_POR_TIPO = {
+  // Órdenes — caja azul para todo lo del pedido
   orden_creada: ShoppingBag,
-  orden_confirmada: CheckCircle,
-  orden_enviada: Truck,
-  orden_entregada: CheckCircle,
-  orden_cancelada: XCircle,
-  estado_cambiado: RotateCcw,
+  orden_confirmada: Package,
+  orden_aprobada: Package,
+  orden_enviada: Package,
+  orden_entregada: Package,
+  orden_cancelada: Package,
+  estado_cambiado: Package,
   orden_actualizada: Package,
+  orden_incidencia: AlertTriangle,
 
+  // Pagos — el de pago solo para lo reportado, la tilde verde para verificado
+  pago_reportado: DollarSign,
+  pago_verificado: CheckCircle,
   pago_registrado: CreditCard,
   pago_recibido: DollarSign,
   pago_rechazado: Ban,
-  pago_reportado: Clock,
-  pago_verificado: CheckCircle,
 
   chat_mensaje: MessageCircle,
 
+  // Crédito
   orden_por_vencer: Clock,
   orden_vencida: AlertTriangle,
+  recordatorio_cobro: Bell,
+  credito_bloqueado: Lock,
+  credito_desbloqueado: LockOpen,
 
+  // Documentos
   documento_listo: FileCheck,
   documento_aprobado: CheckCircle,
   documento_rechazado: FileX,
 
+  // Solicitudes
   cotizacion_respondida: CheckCircle,
   cotizacion_rechazada: Ban,
   requerimiento_respondido: CheckCircle,
 
+  // Sistema
   producto_disponible: Bell,
   factura_emitida: FileText,
 
   oferta: Megaphone,
+}
+
+/**
+ * Color por tipo de notificación. Si un tipo no aparece aquí, se usa
+ * el color de su categoría. Los colores válidos son las clases
+ * `.notif-icon--*` de `pages/Notificaciones.css`.
+ */
+const COLOR_POR_TIPO = {
+  // Órdenes: azul, salvo la incidencia (es un problema → ámbar)
+  orden_creada: 'blue',
+  orden_confirmada: 'blue',
+  orden_aprobada: 'blue',
+  orden_enviada: 'blue',
+  orden_entregada: 'blue',
+  orden_cancelada: 'blue',
+  estado_cambiado: 'blue',
+  orden_actualizada: 'blue',
+  orden_incidencia: 'amber',
+
+  // Pagos: lo reportado espera (ámbar), lo verificado está listo (verde)
+  pago_reportado: 'amber',
+  pago_verificado: 'green',
+  pago_registrado: 'blue',
+  pago_recibido: 'green',
+  pago_rechazado: 'red',
+
+  chat_mensaje: 'purple',
+
+  // Crédito
+  orden_por_vencer: 'amber',
+  orden_vencida: 'red',
+  recordatorio_cobro: 'amber',
+  credito_bloqueado: 'red',
+  credito_desbloqueado: 'green',
+
+  // Documentos
+  documento_listo: 'teal',
+  documento_aprobado: 'teal',
+  documento_rechazado: 'red',
+
+  // Solicitudes
+  cotizacion_respondida: 'cyan',
+  cotizacion_rechazada: 'red',
+  requerimiento_respondido: 'cyan',
+
+  // Sistema
+  producto_disponible: 'gray',
+  factura_emitida: 'gray',
 }
 
 export function getCategoriaDeTipo(tipo) {
@@ -191,15 +265,21 @@ export function getCategoriaDeTipo(tipo) {
   return 'sistema'
 }
 
+/**
+ * Config visual de un tipo de notificación: la de su categoría con el
+ * ícono y el color del tipo por encima (si el tipo los define).
+ * Devuelve siempre `{ ...categoria, icono, color }`.
+ */
 export function getConfigTipo(tipo) {
-  const categoriaId = getCategoriaDeTipo(tipo)
+  const categoria = CATEGORIAS[getCategoriaDeTipo(tipo)]
 
-  return CATEGORIAS[categoriaId]
+  return {
+    ...categoria,
+    icono: ICONOS_POR_TIPO[tipo] || categoria.icono,
+    color: COLOR_POR_TIPO[tipo] || categoria.color,
+  }
 }
 
 export function getIconoTipo(tipo) {
-  return (
-    ICONOS_POR_TIPO[tipo] ||
-    CATEGORIAS[getCategoriaDeTipo(tipo)].icono
-  )
+  return getConfigTipo(tipo).icono
 }

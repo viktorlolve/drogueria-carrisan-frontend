@@ -118,6 +118,17 @@ Cada formulario de registro es un archivo JSX autonomo con su propio estado loca
 
 **Nota — el catálogo comercial exige sesión (2026-09-30).** `/catalogo` y `/producto/:id` van envueltos en `<ConSesionCatalogo>` (`src/components/`), no en `PrivateRoute`: sin sesión se muestra `CatalogoAcceso` **en el mismo lugar y con la misma URL** (para que un enlace de WhatsApp siga sirviendo y, tras loguearse, vuelva al mismo producto), y con sesión renderiza los hijos. El backend exige JWT en `GET /products`, `GET /products/:id` y las rutas de `moleculas` del producto. **El nombre del producto sigue siendo público**: por `GET /products/buscar?q=` (payload mínimo `id, nombre_comercial, sku, laboratorio, linea`; con sesión agrega `foto_url` y `precio_usd` — lo usan el navbar, `BuscadorMovil` y `/presupuesto`) y por `/registro-inhrr` + `/vademecum`.
 
+## Notificaciones — ícono y color por tipo (2026-10-01)
+
+`src/utils/notificacionesCatalogo.js` es la **única fuente** de ícono/color de cada notificación. La resolución es `getConfigTipo(tipo)` = **categoría + override por tipo** (`COLOR_POR_TIPO` / `ICONOS_POR_TIPO`); si el tipo no está en el override se cae al ícono/color de su categoría. `getIconoTipo()` delega en `getConfigTipo()`. Reglas del dueño (no re-debatar):
+
+- **Todo lo del pedido usa la caja azul** (`Package`): `orden_confirmada`, `orden_aprobada`, `orden_enviada`, `orden_entregada`, `orden_cancelada`, `orden_actualizada`, `estado_cambiado` y `orden_por_vencer` (este último con `Clock`, ámbar: no es un problema). `orden_creada` usa `ShoppingBag`, también azul.
+- `orden_incidencia` es la **única** de órdenes en ámbar (`AlertTriangle`).
+- **El ícono de pago (`DollarSign`) queda solo para `pago_reportado`** y es ámbar; `pago_verificado` lleva `CheckCircle` verde; `pago_registado` `CreditCard` azul y `pago_rechazado` `Ban` rojo.
+- La leyenda (`Notificaciones.jsx`) recorre **`ORDEN_CATEGORIAS`** (una fila por sección), **nunca** `DESCRIPCION_CATEGORIA` como si fueran tipos — ese bug pintaba todos los íconos `Info` gris. La fila de Pagos muestra los **dos** íconos (`ICONOS_LEYENDA` en la página) porque sus tarjetas tienen dos estados visuales.
+- Colores disponibles en `Notificaciones.css` como `.notif-icon--<color>` (incluye `--amber`); `colorPalette` de los badges usa el nombre del color.
+- OJO: el backend agrupa todos los hitos del pedido como tipo `estado_cambiado`; **no** deduzcas el estado parseando el mensaje para cambiar el ícono.
+
 ## Vademécum clínico — ficha de molécula (IMPLEMENTADO — 2026-09-10)
 
 Contexto: el vademécum explica por **molécula** (ficha clínica CIMA); el INHRR es solo registro sanitario. El backend enriqueció `GET /moleculas/moleculas/:id` (2026-09-10) — **contrato listo para consumir**, ver "Contrato del endpoint" abajo. Detalle completo y conteos en el AGENTS raíz (sección vademécum clínico).

@@ -1,0 +1,23 @@
+/* ProtegerImagenes — reglas globales de "no arrastrar / no guardar".
+   El menú contextual lo bloquea el listener del componente; aquí van los
+   otros dos caminos: el arrastre al escritorio (Chrome/Edge/Firefox) y el
+   menú de largo toque de iOS, que el preventDefault del contextmenu NO
+   frena en Safari.
+
+   `img` a secas y sin `!important` a propósito: el CSS no es de módulos,
+   el archivo se inyecta una vez en toda la app y así cubre TODAS las
+   fotos del catálogo sin tocar cada componente. Si algún día hace falta
+   una foto descargable, se marca el contenedor con
+   [data-permitir-guardar] y estas reglas se le quitan abajo. */
+img {
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+img[data-permitir-guardar='true'],
+[data-permitir-guardar='true'] img {
+  -webkit-user-drag: auto;
+  -webkit-touch-callout: default;
+  user-select: auto;
+}

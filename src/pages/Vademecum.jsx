@@ -11,13 +11,18 @@ import {
   Info,
   BookOpenText,
   SearchX,
+  TrendingUp,
+  History,
+  ExternalLink,
 } from 'lucide-react'
 import api from '../api/axios'
 import BottomNav from '../components/BottomNav'
 import Footer from '../components/Footer'
 import SECCIONES_FICHA from '../config/seccionesFicha'
+import { MOLECULAS_FRECUENTES } from '../config/moleculasFrecuentes'
 import { COLOR_CATEGORIA, nombreCategoria } from '../utils/inhrr'
 import { ICONO_SECCION } from '../utils/iconosConsulta'
+import { leerRecientes, guardarReciente, borrarRecientes } from '../utils/moleculasRecientes'
 import './RegistroInhrr.css'
 import './Vademecum.css'
 
@@ -39,6 +44,11 @@ function Vademecum() {
   const [errorFicha, setErrorFicha] = useState(false)
   const [seccionesAbiertas, setSeccionesAbiertas] = useState({})
   const [productosPagina, setProductosPagina] = useState(1)
+
+  // Historial local de fichas ya abiertas (solo en este navegador, sin sesión).
+  // Se lee con el inicializador lazy de useState a propósito: leer localStorage
+  // dentro de un useEffect dispararía la regla react-hooks/set-state-in-effect.
+  const [recientes, setRecientes] = useState(leerRecientes)
 
   // Debounce de la búsqueda en vivo
   useEffect(() => {
@@ -110,6 +120,8 @@ function Vademecum() {
   // La carga va en un .then() y no en una async fn invocada desde el efecto:
   // React trata el setState como callback de un sistema externo y, además,
   // `activo` descarta la respuesta si el id cambia o el componente se desmonta.
+  // Aquí también se registra la molécula en el historial local, para que la
+  // portada de /vademecum ofrezca "vuelven a consultarse" al volver.
   useEffect(() => {
     if (!id) return undefined
     let activo = true
@@ -118,6 +130,13 @@ function Vademecum() {
       .then((res) => {
         if (!activo) return
         setMolecula(res.data)
+        setRecientes(
+          guardarReciente({
+            id: res.data.id,
+            nombre: res.data.nombre,
+            atc: res.data.atc_clasificaciones?.codigo || null,
+          })
+        )
       })
       .catch((err) => {
         if (!activo) return
@@ -437,9 +456,73 @@ function Vademecum() {
 
       <main className="cs-container vad-body">
         {!terminoActivo && (
-          <div className="vad-sugerido">
-            <FlaskConical size={28} aria-hidden="true" />
-            <p>Escribe el nombre de un principio activo para ver su ficha clínica y los registros INHRR que lo contienen.</p>
+          <div className="vad-landing">
+            {/* Bloque 1 — siempre visible: la lista curada garantiza que la
+                portada tenga contenido para quien entra por primera vez. */}
+            <section className="vad-seccion">
+              <h2 className="vad-seccion__titulo">
+                <TrendingUp size={20} aria-hidden="true" /> Las más consultadas
+              </h2>
+              <div className="vad-frecuentes">
+                {MOLECULAS_FRECUENTES.map((m) => (
+                  <Link key={m.id} to={`/vademecum/${m.id}`} className="vad-frecuente">
+                    <span className="vad-frecuente__atc">{m.atc}</span>
+                    <span className="vad-frecuente__nombre">{m.nombre}</span>
+                    <span className="vad-frecuente__uso">{m.uso}</span>
+                    <span className="vad-frecuente__registros">
+                      {m.registros.toLocaleString('es-VE')} registros INHRR
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+
+            {/* Bloque 2 — solo si este navegador ya abrió fichas. */}
+            {recientes.length > 0 && (
+              <section className="vad-seccion">
+                <h2 className="vad-seccion__titulo">
+                  <History size={20} aria-hidden="true" /> Vuelven a consultarse
+                  <button
+                    type="button"
+                    className="vad-recientes__borrar"
+                    onClick={() => {
+                      if (borrarRecientes()) setRecientes([])
+                    }}
+                  >
+                    Borrar historial
+                  </button>
+                </h2>
+                <div className="vad-recientes">
+                  {recientes.map((m) => (
+                    <Link key={m.id} to={`/vademecum/${m.id}`} className="vad-chip">
+                      {m.atc && <span className="vad-chip__atc">{m.atc}</span>}
+                      {m.nombre}
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Bloque 3 — salida hacia las otras dos bases de datos públicas. */}
+            <section className="vad-landing__escape">
+              <p className="vad-landing__escape-titulo">
+                <FlaskConical size={18} aria-hidden="true" />
+                ¿No encuentras tu principio activo?
+              </p>
+              <p className="vad-landing__escape-desc">
+                El vademécum explica el medicamento; el registro sanitario lista las
+                marcas y presentaciones aprobadas, y el catálogo los que tenemos para
+                entregar.
+              </p>
+              <div className="vad-landing__escape-acciones">
+                <Link to="/registro-inhrr" className="vad-landing__escape-link">
+                  Registro sanitario INHRR <ExternalLink size={15} aria-hidden="true" />
+                </Link>
+                <Link to="/catalogo" className="vad-landing__escape-link">
+                  Ver el catálogo <ExternalLink size={15} aria-hidden="true" />
+                </Link>
+              </div>
+            </section>
           </div>
         )}
       </main>

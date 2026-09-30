@@ -496,7 +496,7 @@ function Home() {
         {vitrina.promos?.seccion2?.visible === false ? null : (
           <SeccionPromocional
             invertido
-            imagen={vitrina.promos?.seccion2?.imagen || 'https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/ads/caloxpromo2.jpg'}
+            imagen={vitrina.promos?.seccion2?.imagen || 'https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/megalabsmartesia.jpg'}
             alt={vitrina.promos?.seccion2?.alt || (labInferior ? `Productos ${labInferior.lab}` : 'Recomendados para ti')}
             linkImagen={labInferior ? `/catalogo?laboratorio=${encodeURIComponent(labInferior.lab)}` : '/catalogo'}
             productos={labInferior ? labInferior.productos : productosIniciales}

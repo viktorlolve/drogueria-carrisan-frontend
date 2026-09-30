@@ -15,7 +15,9 @@ import LayoutPaginaPrincipal from '../components/paginas-principales/Layoutpagin
 import HojaInferior from '../components/HojaInferior'
 import BannerOnboarding from '../components/BannerOnboarding'
 import { NAV_UNIFICADO } from '../components/paginas-principales/NavUnificado'
-import { ESTADOS_ORDEN, getEstadoConfig, getLabelEstado, normalizarEstado } from '../config/estadosOrden'
+import { ESTADOS_ORDEN, getEstadoVisual } from '../config/estadosOrden'
+import { OrdenCard } from '../components/OrdenCard'
+import { formatearMonto, formatearFechaCorta } from '../utils/formato'
 import './MiCuenta.css'
 
 // ---------------------------------------------------------------
@@ -28,29 +30,6 @@ import './MiCuenta.css'
 // real de la cuenta en bloques visuales (crédito, pedidos activos,
 // gasto mensual, favoritos).
 // ---------------------------------------------------------------
-
-function formatearMonto(valor) {
-  return new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'USD' }).format(valor || 0)
-}
-
-const ETIQUETAS_ENVIO = {
-  delivery: 'Delivery',
-  envio_nacional: 'Envío nacional',
-  retiro: 'Retiro en tienda',
-}
-
-// Visual de un estado: label para el cliente, color/bg y reseña — leídos de la
-// fuente única src/config/estadosOrden.js (estados legacy normalizados al set actual).
-function getEstadoOrden(estado) {
-  const normalizado = normalizarEstado(estado)
-  const cfg = getEstadoConfig(normalizado)
-  return {
-    label: getLabelEstado(normalizado, { rol: 'cliente' }),
-    color: cfg?.color || '#6b6b7a',
-    bg: cfg?.bg || '#f1f1ea',
-    resena: cfg?.descripcion || '',
-  }
-}
 
 const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
 
@@ -83,7 +62,7 @@ function calcularPedidosActivos(ordenes) {
   const activas = ordenes.filter((o) => !ESTADOS_CERRADOS.has(o.estado))
   const conteos = ORDEN_ETAPAS.map((estado) => ({
     estado,
-    ...getEstadoOrden(estado),
+    ...getEstadoVisual(estado),
     cantidad: activas.filter((o) => o.estado === estado).length,
   })).filter((e) => e.cantidad > 0)
   return { total: activas.length, conteos }
@@ -280,92 +259,6 @@ function ContenidoModalPermisos() {
         <ChevronRight size={18} className="modal-permisos__fila-flecha" />
       </Link>
     </>
-  )
-}
-
-// ---------------------------------------------------------
-// MiniOrdenCard — tarjeta compacta del carrusel "Tus pedidos".
-//
-// Cuatro rangos, un trabajo cada uno:
-//   1. identidad → "Orden #123" + fecha de creación (sello dd/mm/yy)
-//   2. hechos    → envío · artículos válidos · última actualización
-//   3. dinero    → el total, en línea propia (nunca compite con el estado)
-//   4. estado    → banda a sangre con el label de estadosOrden.js
-//
-// El label y los colores del estado SIEMPRE salen de getEstadoOrden()
-// (fuente única: src/config/estadosOrden.js). Nada de "pago pendiente":
-// es una condición de estado_pago, no un estado logístico.
-// ---------------------------------------------------------
-
-// dd/mm/yy → "15/08/26". Formato a mano (no toLocaleDateString) para no
-// depender de la versión de ICU del navegador. Devuelve null si no hay
-// fecha válida, y el JSX omite el dato en vez de pintar "Invalid Date".
-function formatearFechaCorta(iso) {
-  if (!iso) return null
-  const fecha = new Date(iso)
-  if (Number.isNaN(fecha.getTime())) return null
-  const dd = String(fecha.getDate()).padStart(2, '0')
-  const mm = String(fecha.getMonth() + 1).padStart(2, '0')
-  const aa = String(fecha.getFullYear()).slice(-2)
-  return `${dd}/${mm}/${aa}`
-}
-
-// Última actualización SOLO si cae en otro día calendario que la creación:
-// el updated_at se toca al crear la orden, así que el mismo día es ruido.
-function fechaActualizacion(orden) {
-  const creada = orden.created_at ? new Date(orden.created_at) : null
-  const actualizada = orden.updated_at ? new Date(orden.updated_at) : null
-  if (!creada || Number.isNaN(creada.getTime())) return null
-  if (!actualizada || Number.isNaN(actualizada.getTime())) return null
-  const dia = (f) => `${f.getFullYear()}-${f.getMonth() + 1}-${f.getDate()}`
-  return dia(actualizada) === dia(creada) ? null : formatearFechaCorta(orden.updated_at)
-}
-
-function MiniOrdenCard({ orden }) {
-  const estado = getEstadoOrden(orden.estado)
-
-  const fechaCreacion = formatearFechaCorta(orden.created_at)
-  const fechaCambio = fechaActualizacion(orden)
-
-  // Los ítems anulados no cuentan para la orden.
-  const items = (orden.ordenes_items || []).filter((item) => item.anulado !== true)
-  const itemsTexto = items.length === 1 ? '1 artículo' : `${items.length} artículos`
-
-  return (
-    <Link to={`/orders/${orden.id}`} className="mini-orden-card">
-      {/* 1 · identidad */}
-      <div className="mini-orden-card__top">
-        <span className="mini-orden-card__titulo">Orden #{orden.id}</span>
-        {fechaCreacion && (
-          <span className="mini-orden-card__fecha">
-            <time dateTime={orden.created_at}>{fechaCreacion}</time>
-          </span>
-        )}
-        <span className="mini-orden-card__ir" aria-hidden="true">
-          <ChevronRight size={14} />
-        </span>
-      </div>
-
-      {/* 2 · hechos */}
-      <div className="mini-orden-card__facts">
-        <span className="mini-orden-card__envio">
-          {ETIQUETAS_ENVIO[orden.tipo_envio] || ETIQUETAS_ENVIO.retiro}
-        </span>
-        {items.length > 0 && <span>{itemsTexto}</span>}
-        {fechaCambio && <span>Cambió {fechaCambio}</span>}
-      </div>
-
-      {/* 3 · dinero — línea propia, nunca recortada */}
-      <span className="mini-orden-card__monto">{formatearMonto(orden.total_usd)}</span>
-
-      {/* 4 · estado — banda a sangre; los colores entran por --estado-color */}
-      <span
-        className="mini-orden-card__estado"
-        style={{ background: estado.bg, '--estado-color': estado.color }}
-      >
-        {estado.label}
-      </span>
-    </Link>
   )
 }
 
@@ -910,7 +803,7 @@ function MiCuenta() {
             <GraficoGastoMensual datos={gastoMensual} />
 
             {/* ---------------------------------------------------------------- */}
-            {/* Tus pedidos — título + flecha, carrusel de MiniOrdenCard          */}
+            {/* Tus pedidos — título + flecha, carrusel de OrdenCard              */}
             {/* ---------------------------------------------------------------- */}
             <section className="seccion-pedidos">
               <div className="seccion-pedidos__header">
@@ -928,7 +821,7 @@ function MiCuenta() {
               ) : (
                 <div className="mini-ordenes-carrusel">
                   {ultimasOrdenes.map((orden) => (
-                    <MiniOrdenCard key={orden.id} orden={orden} />
+                    <OrdenCard key={orden.id} orden={orden} />
                   ))}
                 </div>
               )}

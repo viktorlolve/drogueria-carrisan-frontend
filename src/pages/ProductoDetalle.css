@@ -433,7 +433,13 @@
 .pd-purchase {
   grid-area: purchase;
   position: sticky;
-  top: 20px;
+  top: 80px;
+}
+
+@media (min-width: 1024px) {
+  .pd-purchase {
+    top: 130px;
+  }
 }
 
 .pd-purchase__card {

@@ -246,6 +246,21 @@ export function getEstadosParaFulfillment(fulfillmentMethod) {
     .map((e) => e.id)
 }
 
+// Visual completo de un estado para el CLIENTE, listo para pintar: label,
+// color y fondo. Compone los helpers de arriba y normaliza los estados
+// heredados, para que quien la use no tenga que acordarse de ese paso.
+// Los pares (color/bg) son de estadosOrden.js: quien la consume los inyecta
+// por CSS var (ej. --estado-color) y nunca escribe el hex por su cuenta.
+export function getEstadoVisual(estadoId, ctx = {}) {
+  const normalizado = normalizarEstado(estadoId)
+  const cfg = getEstadoConfig(normalizado)
+  return {
+    label: getLabelEstado(normalizado, { rol: 'cliente', ...ctx }),
+    color: cfg?.color || '#6b6b7a',
+    bg: cfg?.bg || '#f1f1ea',
+  }
+}
+
 // Normaliza estados heredados (de antes del pipeline actual) al set nuevo,
 // para que órdenes viejas sigan mostrando algo coherente. 'procesando'
 // fue la ventana de pago de contado y hoy se representa con

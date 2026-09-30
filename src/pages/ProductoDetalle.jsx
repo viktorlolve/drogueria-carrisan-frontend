@@ -15,6 +15,7 @@ import { agruparPorLinea } from '../utils/agruparPorLinea'
 import Footer from '../components/Footer'
 import BottomNav from '../components/BottomNav'
 import InhrrFichaModal from '../components/InhrrFichaModal'
+import CompartirProductoImagen from '../components/CompartirProductoImagen'
 import { ProductoImagen } from '../components/icons/ProductoImagen'
 import SECCIONES_FICHA from '../config/seccionesFicha'
 import { obtenerTipForma } from '../config/formasFarmaceuticas'
@@ -544,6 +545,11 @@ function ProductoDetalle() {
               >
                 {linkCopiado ? <Check size={18} color="#16A34A" /> : <Share2 size={18} />}
               </button>
+              <CompartirProductoImagen
+                producto={producto}
+                imagenUrl={galeria[imagenActiva] || producto.foto_url}
+                tasaVes={tasaVes}
+              />
             </div>
           </div>
 

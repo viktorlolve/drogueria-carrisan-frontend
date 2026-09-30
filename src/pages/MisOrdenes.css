@@ -163,155 +163,23 @@
   background: rgba(255, 255, 255, 0.25);
 }
 
-/* --- Lista de órdenes (filas compactas) --- */
-.mo-lista {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.mo-fila {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  background: var(--mo-surface);
-  border: 1px solid var(--mo-border);
-  border-radius: 12px;
-  padding: 13px 16px;
-}
-
-.mo-fila__main {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-}
-
-.mo-fila__id {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.mo-fila__numero {
-  margin: 0;
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: var(--mo-text);
-}
-
-.mo-fila__badges {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.mo-fila__fecha {
-  margin: 0;
-  font-size: 0.76rem;
-  color: var(--mo-text-muted);
-}
-
-.mo-fila__comprador,
-.mo-fila__cliente {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  margin: 2px 0 0;
-  font-size: 0.8rem;
-  color: var(--mo-text-muted);
-}
-
-.mo-fila__comprador svg {
-  flex-shrink: 0;
-  color: var(--mo-accent);
-}
-
-.mo-fila__comprador strong,
-.mo-fila__cliente strong {
-  color: var(--mo-text);
-  font-weight: 600;
-}
-
-.mo-fila__side {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.mo-fila__total {
-  margin: 0;
-  font-size: 0.98rem;
-  font-weight: 700;
-  color: var(--mo-text);
-  white-space: nowrap;
-}
-
-.mo-fila__ver {
-  padding: 7px 14px;
-  border-radius: 8px;
-  border: 1px solid var(--mo-brand);
-  background: #fff;
-  color: var(--mo-brand);
-  font-size: 0.8rem;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.mo-fila__ver:hover {
-  background: var(--mo-brand);
-  color: #fff;
-}
-
-/* --- Badges de estado --- */
-.mo-badge {
-  flex-shrink: 0;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.mo-badge--pedido_creado { background: #eaf0ff; color: var(--mo-brand); }
-.mo-badge--preparando { background: #e0e7ff; color: #4338ca; }
-.mo-badge--enviado { background: var(--mo-accent-light); color: var(--mo-accent); }
-.mo-badge--entregado { background: #dcfce7; color: #15803d; }
-.mo-badge--listo_para_retiro { background: #cffafe; color: #0e7490; }
-.mo-badge--retirado { background: #dcfce7; color: #15803d; }
-.mo-badge--cancelado { background: #fee2e2; color: #dc2626; }
-.mo-badge--pago { background: #fef3c7; color: #b45309; }
-.mo-badge--neutro { background: #f1f0eb; color: var(--mo-text-muted); }
-
-/* --- Skeleton de carga (filas) --- */
-.mo-fila--skeleton {
-  align-items: stretch;
+/* --- Grid de órdenes (misma card que el carrusel de Mi Cuenta) --- */
+.mo-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
 }
 
-.mo-skeleton-line {
-  height: 12px;
-  border-radius: 6px;
-  background: linear-gradient(90deg, #f1f0eb 25%, #e7e6e0 37%, #f1f0eb 63%);
-  background-size: 400% 100%;
-  animation: mo-shimmer 1.4s ease infinite;
+@media (min-width: 560px) {
+  .mo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
-.mo-skeleton-line--numero { width: 45%; height: 14px; }
-.mo-skeleton-line--fecha { width: 30%; }
-.mo-skeleton-line--total { width: 70%; height: 14px; }
-.mo-skeleton-line--btn { width: 100%; height: 32px; }
-
-@keyframes mo-shimmer {
-  0% { background-position: 100% 50%; }
-  100% { background-position: 0 50%; }
+@media (min-width: 900px) {
+  .mo-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 /* --- Estado vacío --- */
@@ -366,18 +234,4 @@
   padding: 40px 20px;
   color: var(--mo-text-muted);
   font-size: 0.9rem;
-}
-
-@media (max-width: 640px) {
-  .mo-fila {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-  }
-
-  .mo-fila__side {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
 }

@@ -2,9 +2,10 @@ import { useState, useEffect, useMemo } from 'react'
 import api from '../api/axios'
 import { useAuth } from '../context/AuthContext'
 import { Link, useNavigate } from 'react-router-dom'
-import { Package, ArrowRight, User } from 'lucide-react'
+import { Package, ArrowRight } from 'lucide-react'
 import LayoutPaginaPrincipal from '../components/paginas-principales/Layoutpaginaprincipal'
-import { getEstadoConfig, getLabelEstado, normalizarEstado } from '../config/estadosOrden'
+import { OrdenCard, OrdenCardSkeleton } from '../components/OrdenCard'
+import { normalizarEstado } from '../config/estadosOrden'
 import './MisOrdenes.css'
 
 // ---------------------------------------------------------------
@@ -15,17 +16,13 @@ import './MisOrdenes.css'
 // "Pendiente de Pago" es una CONDICIÓN del pago (contado no verificado),
 // no un order.status — por eso no vive en estadosOrden.js (ver la regla
 // ORDER STATUS ≠ PAYMENT STATUS en el AGENTS raíz).
+//
+// Cada orden se pinta con <OrdenCard>, la MISMA tarjeta del carrusel de
+// Mi Cuenta (src/components/OrdenCard.jsx): aquí en grid, allá en fila
+// horizontal. Solo esta página le pasa `aviso` — el pill "Pago
+// pendiente" — porque el pago es su dimensión propia y la card no la
+// conoce. Los labels y colores del estado salen de estadosOrden.js.
 // ---------------------------------------------------------------
-
-// Badge de estado. Labels vienen de la ÚNICA fuente de verdad
-// (src/config/estadosOrden.js); la clase CSS local es solo un hook de
-// presentación ligado al id del estado (normalizado para estados legacy).
-function getEstadoBadge(estado) {
-  const normalizado = normalizarEstado(estado)
-  const cfg = getEstadoConfig(normalizado)
-  if (!cfg) return { label: estado || 'Desconocido', clase: 'mo-badge--neutro' }
-  return { label: getLabelEstado(normalizado, { rol: 'cliente' }), clase: `mo-badge--${normalizado}` }
-}
 
 // Estados que ya cerraron su ciclo: viven en la pestaña Historial.
 const ESTADOS_HISTORIAL = new Set(['entregado', 'retirado', 'cancelado'])
@@ -59,69 +56,6 @@ const GRUPOS = [
   { id: 'activos', label: 'Activos', esDeGrupo: (o) => !esHistorial(o) },
   { id: 'historial', label: 'Historial', esDeGrupo: esHistorial },
 ]
-
-function OrdenFilaSkeleton() {
-  return (
-    <div className="mo-fila mo-fila--skeleton">
-      <div className="mo-fila__main">
-        <div className="mo-skeleton-line mo-skeleton-line--numero" />
-        <div className="mo-skeleton-line mo-skeleton-line--fecha" />
-      </div>
-      <div className="mo-fila__side">
-        <div className="mo-skeleton-line mo-skeleton-line--total" />
-        <div className="mo-skeleton-line mo-skeleton-line--btn" />
-      </div>
-    </div>
-  )
-}
-
-function OrdenFila({ orden, esAdmin, onVerDetalle }) {
-  const estadoBadge = getEstadoBadge(orden.estado)
-  const fecha = new Date(orden.created_at).toLocaleDateString('es-VE', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
-
-  const comprador = orden.sub_usuarios?.nombre
-
-  return (
-    <div className="mo-fila">
-      <div className="mo-fila__main">
-        <div className="mo-fila__id">
-          <p className="mo-fila__numero">Orden #{orden.id}</p>
-          <div className="mo-fila__badges">
-            <span className={`mo-badge ${estadoBadge.clase}`}>{estadoBadge.label}</span>
-            {requierePago(orden) && <span className="mo-badge mo-badge--pago">Pago pendiente</span>}
-          </div>
-        </div>
-        <p className="mo-fila__fecha">{fecha}</p>
-
-        {comprador && (
-          <p className="mo-fila__comprador">
-            <User size={13} />
-            Realizado por: <strong>{comprador}</strong>
-          </p>
-        )}
-
-        {esAdmin && orden.users?.nombre && (
-          <p className="mo-fila__cliente">
-            Cliente: <strong>{orden.users.nombre}</strong>
-          </p>
-        )}
-      </div>
-
-      <div className="mo-fila__side">
-        <p className="mo-fila__total">
-          {orden.total_usd?.toFixed(2) ? `$${orden.total_usd.toFixed(2)}` : '—'}
-        </p>
-        <button type="button" className="mo-fila__ver" onClick={() => onVerDetalle(orden)}>
-          Ver detalle
-        </button>
-      </div>
-    </div>
-  )
-}
 
 function MisOrdenes() {
   const [ordenes, setOrdenes] = useState([])
@@ -196,9 +130,9 @@ function MisOrdenes() {
         )}
 
         {cargando ? (
-          <div className="mo-lista">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <OrdenFilaSkeleton key={i} />
+          <div className="mo-grid">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <OrdenCardSkeleton key={i} />
             ))}
           </div>
         ) : ordenes.length === 0 ? (
@@ -265,13 +199,17 @@ function MisOrdenes() {
             ) : ordenesFiltradas.length === 0 ? (
               <p className="mo-vacio-filtro">No hay órdenes con este filtro.</p>
             ) : (
-              <div className="mo-lista">
+              <div className="mo-grid">
                 {ordenesFiltradas.map((orden) => (
-                  <OrdenFila
+                  <OrdenCard
                     key={orden.id}
                     orden={orden}
-                    esAdmin={user?.es_admin}
-                    onVerDetalle={() => navigate(`/orders/${orden.id}`)}
+                    mostrarCliente={!!user?.es_admin}
+                    aviso={
+                      requierePago(orden) && (
+                        <span className="orden-card__alerta">Pago pendiente</span>
+                      )
+                    }
                   />
                 ))}
               </div>

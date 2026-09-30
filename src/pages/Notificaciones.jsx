@@ -5,7 +5,7 @@ import {
   Badge,
   Text,
 } from '@chakra-ui/react'
-import { ChevronDown, Filter, CheckCheck } from 'lucide-react'
+import { ChevronDown, Filter, CheckCheck, DollarSign, CheckCircle } from 'lucide-react'
 import LayoutPaginaPrincipal from '../components/paginas-principales/Layoutpaginaprincipal'
 import { NAV_NOTIFICACIONES } from '../components/paginas-principales/NavNotificaciones'
 import api from '../api/axios'
@@ -26,6 +26,17 @@ import './Notificaciones.css'
 // ---------------------------------------------------------------
 
 const CLAVE_SILENCIADAS = 'notif_categorias_silenciadas'
+
+// La leyenda tiene UNA fila por sección. Casi todas muestran el ícono de
+// la sección; Pagos es la excepción porque sus tarjetas usan dos íconos
+// (el de pago ámbar = reportaste y falta verificación, la tilde verde =
+// verificado).
+const ICONOS_LEYENDA = {
+  pagos: [
+    { icono: DollarSign, color: 'amber' },
+    { icono: CheckCircle, color: 'green' },
+  ],
+}
 
 function leerSilenciadas() {
   try {
@@ -299,15 +310,31 @@ function Notificaciones() {
               </Accordion.ItemTrigger>
               <Accordion.ItemContent>
                 <Accordion.ItemBody className="notif-leyenda">
-                  {Object.entries(DESCRIPCION_CATEGORIA).map(([tipo, descripcion]) => {
-                    const config = getConfigTipo(tipo)
-                    const Icono = config.icono
+                  {ORDEN_CATEGORIAS.map((catId) => {
+                    const cat = CATEGORIAS[catId]
+                    const special = ICONOS_LEYENDA[catId]
+                    const IconoSeccion = cat.icono
                     return (
-                      <div key={tipo} className="notif-leyenda__item">
-                        <span className={`notif-icon notif-icon--${config.color} notif-icon--sm`}>
-                          <Icono size={14} />
+                      <div key={catId} className="notif-leyenda__item">
+                        {special ? (
+                          <span className="notif-leyenda__iconos">
+                            {special.map(({ icono: Icono, color }) => (
+                              <span
+                                key={color}
+                                className={`notif-icon notif-icon--${color} notif-icon--sm`}
+                              >
+                                <Icono size={13} />
+                              </span>
+                            ))}
+                          </span>
+                        ) : (
+                          <span className={`notif-icon notif-icon--${cat.color} notif-icon--sm`}>
+                            <IconoSeccion size={14} />
+                          </span>
+                        )}
+                        <span className="notif-leyenda__texto">
+                          <strong>{cat.nombre}.</strong> {DESCRIPCION_CATEGORIA[catId]}
                         </span>
-                        <span className="notif-leyenda__texto">{descripcion}</span>
                       </div>
                     )
                   })}

@@ -1928,5 +1928,75 @@ body
 ;
     padding-right: 6px
 ;
+  }
 }
+/* ============================================ */
+/* DROPDOWN DE SERVICIOS (bloques + aliados)     */
+/* ============================================ */
+/* Separador entre "Servicios Droguería Carrisan" y "Servicios aliados" */
+.servicios-sidebar__separador 
+{
+  height: 1px
+;
+  background: #dee2e6
+;
+  margin: 0.75rem 1.25rem
+;
+}
+/* Descripción del grupo, bajo el título del panel derecho */
+.deptos-dropdown__subdesc 
+{
+  font-size: 0.8rem
+;
+  color: #6c757d
+;
+  line-height: 1.45
+;
+  margin: 0.75rem 0 0.35rem 0
+;
+}
+/* Enlace de servicio aliado sin página todavía: sin clic, sin hover */
+.deptos-dropdown__sub-link--proximo 
+{
+  cursor: default
+;
+  color: #adb5bd
+;
+}
+.deptos-dropdown__sub-link--proximo:hover 
+{
+  background: none
+;
+  color: #adb5bd
+;
+  padding-left: 0.5rem
+;
+}
+.deptos-dropdown__sub-link--proximo .deptos-dropdown__sub-icon 
+{
+  color: #ced4da
+;
+}
+.servicios-badge 
+{
+  margin-left: auto
+;
+  font-size: 0.6rem
+;
+  font-weight: 600
+;
+  text-transform: uppercase
+;
+  letter-spacing: 0.3px
+;
+  color: #868e96
+;
+  background: #e9ecef
+;
+  border-radius: 999px
+;
+  padding: 2px 8px
+;
+  white-space: nowrap
+;
 }
