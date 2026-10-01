@@ -33,6 +33,7 @@ export default function PagosEstadoCuenta() {
   const { user } = useAuth()
   const [pagos, setPagos] = useState([])
   const [cliente, setCliente] = useState(null)
+  const [facturas, setFacturas] = useState([])
   const [cargando, setCargando] = useState(true)
   const [busqueda, setBusqueda] = useState('')
   const [pagoSeleccionado, setPagoSeleccionado] = useState(null)
@@ -42,6 +43,7 @@ export default function PagosEstadoCuenta() {
       .then(({ data }) => {
         setPagos(data.pagos || [])
         setCliente(data.cliente || null)
+        setFacturas(data.facturas || [])
       })
       .finally(() => setCargando(false))
   }, [user.id])
@@ -70,7 +72,7 @@ export default function PagosEstadoCuenta() {
   }, [pagos])
 
   async function exportarPDF(pago) {
-    await generarComprobantePagoPDF({ pago, cliente })
+    await generarComprobantePagoPDF({ pago, cliente, facturas })
   }
 
   return (
@@ -153,7 +155,7 @@ export default function PagosEstadoCuenta() {
       </div>
 
       {pagoSeleccionado && (
-        <PagoClienteModal pago={pagoSeleccionado} cliente={cliente} onClose={() => setPagoSeleccionado(null)} />
+        <PagoClienteModal pago={pagoSeleccionado} cliente={cliente} facturas={facturas} onClose={() => setPagoSeleccionado(null)} />
       )}
     </LayoutPaginaPrincipal>
   )

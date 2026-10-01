@@ -5,6 +5,7 @@ import { useStaffAuth } from '../../context/StaffAuthContext'
 import staffApi from '../../api/staffAxios'
 import { DEPARTAMENTOS, MODULOS, ROLES_BRIDGE_ADMIN } from '../../components/staff/NavStaff'
 import BotonInstalarStaff from '../../components/staff/BotonInstalarStaff'
+import StaffCampanaNotificaciones from '../../components/staff/StaffCampanaNotificaciones'
 import { safeSetItem } from '../../utils/safeStorage'
 import './StaffDashboard.css'
 
@@ -57,19 +58,9 @@ function StaffDashboard() {
     }
   }
 
-  const campana = (
-    <button
-      type="button"
-      className="sd-campana"
-      aria-label="Notificaciones"
-      title="Notificaciones"
-    >
-      <svg className="icono sd-campana__icono" aria-hidden="true" viewBox="0 0 24 24" width="19" height="19">
-        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M13.73 21a2 2 0 0 1-3.46 0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      </svg>
-    </button>
-  )
+  // La campana real (contador + previas + deep-links). El dashboard es
+// standalone (no usa LayoutDepartamento), así que se monta aquí.
+const campana = <StaffCampanaNotificaciones />
 
   if (esJornadaEnfocada) {
     return (

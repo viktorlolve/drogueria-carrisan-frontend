@@ -256,10 +256,16 @@ function Home() {
         setSeccionesRollback2(agruparEspecifico(activos.filter((p) => !idsRollback1.has(p.id)), 6, 4))
 
         // Top 2 laboratorios para las secciones promocionales: panel de
-        // campaña (solo imagen) + carrusel de "Productos {lab}". Requiere al
-        // menos 2 productos por laboratorio para llenar el carrusel.
+        // campaña (solo imagen) + carrusel de "Productos {lab}".
+        // El pool se limita a productos COMPRABLES (precio_usd > 0) para que
+        // el carrusel no muestre tarjetas "consultar precio" con foto
+        // placeholder. Requiere al menos 2 productos por laboratorio para
+        // llenar el carrusel, y se toman 9 AL AZAR (sampleAleatorio) para que
+        // cada recarga muestre productos distintos en vez de siempre los
+        // mismos 9 primeros por orden alfabético.
         const gruposLab = activos.reduce((acc, p) => {
           if (!p.laboratorio) return acc
+          if (!Number.isFinite(Number(p.precio_usd)) || Number(p.precio_usd) <= 0) return acc
           acc[p.laboratorio] = acc[p.laboratorio] || []
           acc[p.laboratorio].push(p)
           return acc
@@ -268,7 +274,7 @@ function Home() {
           .filter(([, items]) => items.length >= 2)
           .sort((a, b) => b[1].length - a[1].length)
           .slice(0, 2)
-          .map(([lab, items]) => ({ lab, productos: items.slice(0, 9) }))
+          .map(([lab, items]) => ({ lab, productos: sampleAleatorio(items, 9) }))
         setSeccionesLab(seccionesLabTop)
 
         })

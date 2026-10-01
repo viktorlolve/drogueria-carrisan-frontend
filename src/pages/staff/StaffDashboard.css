@@ -363,29 +363,11 @@
   color: #a9f3e6;
 }
 
-.sd-campana {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: 1.5px solid var(--sd-border);
-  border-radius: 12px;
-  background: #fff;
-  color: var(--sd-text-muted);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.sd-campana:hover {
-  border-color: var(--sd-card-color, #1B4B8F);
-  color: var(--sd-card-color, #1B4B8F);
-}
-
-.sd-campana__icono {
-  display: block;
-}
+/* La campana real vive en StaffCampanaNotificaciones (.snc-*) y trae
+   sus propios estilos; entra directo como hijo de .sd-topbar (flex,
+   align-items:center), así que no necesita reglas aquí. Las reglas
+   .sd-campana del botón decorativo anterior se eliminaron con el
+   componente. */
 
 .sd-instalar {
   position: relative;

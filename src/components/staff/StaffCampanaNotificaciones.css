@@ -1,0 +1,207 @@
+/* ---------------------------------------------------------------
+   Campana de notificaciones del personal interno (`.snc-*`).
+
+   Monta sobre el header de `LayoutDepartamento` (todas las páginas de
+   trabajo) y sobre el header standalone de `StaffDashboard`. Hereda el
+   color del departamento (`--ldep-color`) para el badge y el borde del
+   panel, y usa `z-index` alto porque el desplegable se abre sobre el
+   sidebar en móvil.
+   --------------------------------------------------------------- */
+
+.snc {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.snc-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid #e3e4e5;
+  border-radius: 10px;
+  background: #fff;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.snc-btn:hover,
+.snc-btn--abierto {
+  border-color: var(--ldep-color, #2563eb);
+  color: var(--ldep-color, #2563eb);
+  background: var(--ldep-color-soft, #eff6ff);
+}
+
+.snc-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 0 0 2px #fff;
+}
+
+/* ---------- Desplegable ---------- */
+.snc-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 60;
+  width: 320px;
+  max-width: calc(100vw - 24px);
+  background: #fff;
+  border: 1px solid #e3e4e5;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+  overflow: hidden;
+}
+
+.snc-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 11px 14px;
+  border-bottom: 1px solid #f1f3f5;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.snc-panel__n {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ldep-color, #2563eb);
+}
+
+.snc-panel__lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.snc-panel__lista li + li {
+  border-top: 1px solid #f4f5f7;
+}
+
+.snc-panel__cargando,
+.snc-panel__vacio {
+  padding: 18px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  color: #6b7280;
+  text-align: center;
+}
+
+.snc-panel__vacio p {
+  margin: 0;
+}
+
+.snc-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.snc-item:hover {
+  background: #f8fafc;
+}
+
+/* ---------- Icono del tipo ----------
+   Variantes propias (`.snc-item__icon--*`) y NO las `.notif-icon--*` de
+   pages/Notificaciones.css: la campana se monta en el layout de TODOS
+   los módulos staff, así que no puede depender del CSS de la página de
+   la bandeja (esa la carga su propio JSX). Mismos valores que el
+   cliente para que un tipo se vea igual en los dos lados. */
+.snc-item__icon {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.snc-item__icon--blue   { background: #E9EFFC; color: #0052DC; }
+.snc-item__icon--green  { background: #E6F7EC; color: #16a34a; }
+.snc-item__icon--purple { background: #F1EBFB; color: #7c3aed; }
+.snc-item__icon--orange { background: #FEF3E6; color: #ea580c; }
+.snc-item__icon--amber  { background: #FEF6E0; color: #b45309; }
+.snc-item__icon--gray   { background: #F1F1F2; color: #4b4d52; }
+.snc-item__icon--teal   { background: #E0F5F1; color: #0d9488; }
+.snc-item__icon--cyan   { background: #E0F4FE; color: #0891b2; }
+.snc-item__icon--red    { background: #FEE2E2; color: #dc2626; }
+
+.snc-item__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.snc-item__body strong {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #1f2937;
+  line-height: 1.3;
+}
+
+.snc-item__fecha {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.72rem;
+  color: #9ca3af;
+}
+
+.snc-panel__pie {
+  width: 100%;
+  padding: 10px 14px;
+  border: 0;
+  border-top: 1px solid #f1f3f5;
+  background: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ldep-color, #2563eb);
+  cursor: pointer;
+}
+
+.snc-panel__pie:hover {
+  background: #f8fafc;
+}
+
+@media (max-width: 640px) {
+  .snc-panel {
+    position: fixed;
+    top: 64px;
+    right: 8px;
+    left: 8px;
+    width: auto;
+    max-width: none;
+  }
+}

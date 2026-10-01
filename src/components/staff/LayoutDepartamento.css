@@ -267,6 +267,18 @@
   margin: 0;
 }
 
+/* Campana de notificaciones: vive en el header de la página
+   (escritorio, ≥1024px) y en la barra superior (móvil). El topbar se
+   oculta en escritorio y `.ldep-main__header` no existe en móvil, así
+   que se ve UNA sola vez en cualquier viewport. */
+.ldep-main__campana {
+  display: none;
+}
+
+.ldep-topbar__campana {
+  margin-left: auto;
+}
+
 /* -----------------------------------------------------------------
    Barra superior — SOLO móvil/tablet (<1024px)
    ----------------------------------------------------------------- */
@@ -452,6 +464,10 @@
   .ldep-topbar {
     display: none;
   }
+  /* En escritorio la campana se muda al header de la página. */
+  .ldep-main__campana {
+    display: block;
+  }
 }
 
 @media (max-width: 1023px) {
@@ -467,4 +483,44 @@
   .ldep-body {
     display: block;
   }
+}
+
+/* -----------------------------------------------------------------
+   Badge de trabajo accionable (GET /staff/badges)
+   Hereda el color del departamento; la variante --alerta
+   (incidencias) es roja porque es una cola de problemas.
+   ----------------------------------------------------------------- */
+.ldep-nav__badge {
+  margin-left: auto;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--ldep-color, #0052DC);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+}
+
+.ldep-nav__badge--alerta {
+  background: #DC2626;
+}
+
+/* El link activo ya pinta el fondo con el color del departamento: sin este
+   variante el badge se volvería invisible justo en la cola que estás viendo. */
+.ldep-nav__link--activo .ldep-nav__badge {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.ldep-nav__link--activo .ldep-nav__badge--alerta {
+  background: #FCA5A5;
+  color: #7F1D1D;
+}
+
+/* Cuando hay badge, él es el que empuja a la derecha: el chevron va pegado.
+   Sin badge el chevron conserva su `margin-left: auto` de siempre. */
+.ldep-nav__badge + .ldep-nav__chevron {
+  margin-left: 4px;
 }

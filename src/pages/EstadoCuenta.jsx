@@ -32,8 +32,8 @@ async function exportarFacturaPDF(factura, cliente) {
   await generarFacturaPDF({ factura, cliente })
 }
 
-async function exportarComprobantePago(pago, cliente) {
-  await generarComprobantePagoPDF({ pago, cliente })
+async function exportarComprobantePago(pago, cliente, facturas) {
+  await generarComprobantePagoPDF({ pago, cliente, facturas })
 }
 
 function formatearMonto(valor) {
@@ -92,16 +92,24 @@ export default function EstadoCuenta() {
   }
 
   async function exportarEstadoCompletoPDF() {
-    const { jsPDF } = await import('jspdf')
-    const doc = new jsPDF()
-    doc.setFontSize(16)
-    doc.text('Droguería Carrisan', 14, 20)
-    doc.setFontSize(11)
-    doc.text(`Cliente: ${datos.cliente?.nombre || ''}`, 14, 30)
-    doc.text(`Línea de crédito: ${formatearMonto(datos.resumen.linea_credito)}`, 14, 40)
-    doc.text(`Deuda actual: ${formatearMonto(datos.resumen.deuda_actual)}`, 14, 48)
-    doc.text(`Disponible: ${formatearMonto(datos.resumen.saldo)}`, 14, 56)
-    doc.save('estado-de-cuenta.pdf')
+    // Reporte completo: desde el primer movimiento registrado hasta hoy.
+    const fechas = [...datos.facturas, ...datos.pagos, ...datos.ordenes_pendientes]
+      .map((m) => m.created_at)
+      .filter(Boolean)
+      .sort()
+    const hoy = new Date().toISOString().split('T')[0]
+    const desde = fechas.length ? fechas[0].split('T')[0] : hoy
+    const { default: generarReporteEstadoCuentaPDF } = await import('../utils/generarReporteEstadoCuentaPDF')
+    await generarReporteEstadoCuentaPDF({
+      cliente: datos.cliente,
+      resumen: datos.resumen,
+      facturas: datos.facturas,
+      pagos: datos.pagos,
+      ordenes: datos.ordenes_pendientes,
+      vencimientos: datos.ordenes_pendientes,
+      desde,
+      hasta: hoy,
+    })
   }
 
   const historial = useMemo(() => {
@@ -185,13 +193,13 @@ export default function EstadoCuenta() {
             onSeleccionarPago={setPagoSeleccionado}
             onReportarPago={() => setModalPagoAbierto(true)}
             onExportarFactura={exportarFacturaPDF}
-            onExportarComprobante={exportarComprobantePago}
+            onExportarComprobante={(p, c) => exportarComprobantePago(p, c, datos?.facturas)}
           />
         )}
       </div>
 
       {ordenSeleccionada && <OrdenClienteModal orden={ordenSeleccionada} onClose={() => setOrdenSeleccionada(null)} />}
-      {pagoSeleccionado && <PagoClienteModal pago={pagoSeleccionado} cliente={datos?.cliente} onClose={() => setPagoSeleccionado(null)} />}
+      {pagoSeleccionado && <PagoClienteModal pago={pagoSeleccionado} cliente={datos?.cliente} facturas={datos?.facturas} onClose={() => setPagoSeleccionado(null)} />}
       
       {modalPagoAbierto && (
         <ModalReportarPago

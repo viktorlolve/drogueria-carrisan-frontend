@@ -64,6 +64,7 @@ export default function ReportesEstadoCuenta() {
       facturas: preview.facturas,
       pagos: preview.pagos,
       ordenes: preview.ordenes,
+      vencimientos: datos.ordenes_pendientes || [],
       desde,
       hasta,
     })

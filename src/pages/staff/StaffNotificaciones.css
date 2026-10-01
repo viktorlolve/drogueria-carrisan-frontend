@@ -1,0 +1,262 @@
+/* ---------------------------------------------------------------
+   Centro de notificaciones del personal interno (/staff/notificaciones).
+
+   Lo visual de las tarjetas, el sidebar de filtros, los tabs móviles y
+   la leyenda viene de `pages/Notificaciones.css` (importado por la
+   página, clases `.notif-*`). Este archivo solo añade lo propio de la
+   variante staff con prefijo `.snt-*`:
+     - barra de herramientas (buscador + filtro "solo no leídas")
+     - botón de silenciar categoría junto a cada categoría
+     - bloque de preferencias push
+     - pie de "cargar más" con paginación por offset
+
+   El acento de color lo aporta el departamento que inyecta
+   `LayoutDepartamento` (`--ldep-color`, `--ldep-color-strong`).
+   --------------------------------------------------------------- */
+
+/* ---------- Barra de herramientas ---------- */
+.snt-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.snt-toolbar__buscador {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 220px;
+  min-width: 0;
+  background: #fff;
+  border: 1px solid #e3e4e5;
+  border-radius: 10px;
+  padding: 8px 12px;
+  color: #6b7280;
+}
+
+.snt-toolbar__buscador:focus-within {
+  border-color: var(--ldep-color, #0052dc);
+  box-shadow: 0 0 0 3px rgba(0, 82, 220, 0.08);
+}
+
+.snt-toolbar__buscador input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.86rem;
+  color: #1f2937;
+}
+
+.snt-chip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid #e3e4e5;
+  border-radius: 10px;
+  background: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #4b4d52;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.snt-chip-btn:hover {
+  border-color: #c5c7ca;
+  background: #f9f9fa;
+}
+
+.snt-chip-btn--activo {
+  background: var(--ldep-color, #0052dc);
+  border-color: var(--ldep-color, #0052dc);
+  color: #fff;
+}
+
+.snt-chip-btn--activo:hover {
+  background: var(--ldep-color-strong, #0043b3);
+  border-color: var(--ldep-color-strong, #0043b3);
+}
+
+.snt-chip-btn__n {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+/* ---------- Categoría + botón de silenciar ---------- */
+.snt-fila-categoria {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.snt-fila-categoria .notif-sidebar__btn {
+  flex: 1;
+  min-width: 0;
+}
+
+.snt-silenciar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.snt-silenciar:hover {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.snt-silenciar--activo {
+  color: var(--ldep-color, #0052dc);
+  background: rgba(0, 82, 220, 0.07);
+}
+
+/* ---------- Preferencias push ---------- */
+.snt-push {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  background: #fff;
+  border: 1px solid #e3e4e5;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+
+.snt-push__texto {
+  flex: 1 1 260px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.snt-push__texto strong {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.88rem;
+  color: #1f2937;
+}
+
+.snt-push__texto span {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+.snt-push__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border: 1px solid var(--ldep-color, #0052dc);
+  border-radius: 9px;
+  background: var(--ldep-color, #0052dc);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.snt-push__btn:hover:not(:disabled) {
+  background: var(--ldep-color-strong, #0043b3);
+}
+
+.snt-push__btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.snt-push__btn--activo {
+  background: #fff;
+  color: #4b5563;
+  border-color: #e3e4e5;
+}
+
+.snt-push__btn--activo:hover:not(:disabled) {
+  background: #f9f9fa;
+}
+
+.snt-push__error {
+  flex-basis: 100%;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.76rem;
+  color: #dc2626;
+}
+
+/* ---------- Paginación por offset ---------- */
+.snt-mas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 0 8px;
+}
+
+.snt-mas__info {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.76rem;
+  color: #6b7280;
+}
+
+.snt-mas__btn {
+  padding: 8px 18px;
+  border: 1px solid #e3e4e5;
+  border-radius: 9px;
+  background: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #4b4d52;
+  cursor: pointer;
+}
+
+.snt-mas__btn:hover:not(:disabled) {
+  border-color: var(--ldep-color, #0052dc);
+  color: var(--ldep-color, #0052dc);
+}
+
+.snt-mas__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .snt-toolbar__buscador {
+    flex-basis: 100%;
+  }
+
+  .snt-chip-btn,
+  .snt-push__btn {
+    flex: 1;
+    justify-content: center;
+  }
+}

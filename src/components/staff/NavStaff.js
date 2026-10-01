@@ -9,10 +9,11 @@
 // Rol 'director' tiene acceso a TODOS los módulos staff.
 // ---------------------------------------------------------------
 import {
-  LayoutDashboard, PackageCheck, ClipboardList, ShoppingCart,
+  LayoutDashboard, PackageCheck, PackageOpen, ShoppingCart,
   Landmark, TrendingUp, Truck, Receipt, Banknote, CalendarX2,
   Inbox, FileText, Megaphone, MapPin, BadgeDollarSign, Users,
-  Shield, BarChart3, MessageSquare, Gift,
+  Shield, BarChart3, MessageSquare, Gift, AlertTriangle,
+  CheckCircle2, Bell,
 } from 'lucide-react'
 
 const ROLES_TODOS = ['vendedor', 'despachador', 'almacenista', 'contabilidad', 'administrador', 'director', 'admin']
@@ -49,6 +50,30 @@ export const DEPARTAMENTOS = [
     icono: Truck,
   },
 ]
+
+// -----------------------------------------------------------------
+// La bandeja de notificaciones es TRANSVERSAL: los 7 roles del staff
+// la ven. Se declara una vez aquí y se agrega a los 3 departamentos
+// (así cada sidebar muestra el acceso donde el staff está trabajando).
+// Las rutas se GENERAN desde `MODULOS` (ver `RutasStaff` en App.jsx),
+// y los 3 registros apuntan a la MISMA ruta `/staff/notificaciones`:
+// el primero que matchee gana, por eso `key` en la ruta lleva
+// `${deptoId}-${item.id}` y la página vuelve a derivar el departamento
+// del `staff.rol` (`deptoParaRol`) para pintar el sidebar correcto.
+// -----------------------------------------------------------------
+const GRUPO_NOTIFICACIONES = () => ({
+  titulo: 'General',
+  items: [
+    {
+      id: 'notificaciones',
+      to: '/staff/notificaciones',
+      icono: Bell,
+      texto: 'Notificaciones',
+      desc: 'Bandeja de avisos de tu área: pedidos, pagos, solicitudes y documentos',
+      roles: ROLES_TODOS,
+    },
+  ],
+})
 
 // -----------------------------------------------------------------
 // Módulos — items de navegación agrupados por departamento
@@ -99,7 +124,7 @@ export const MODULOS = {
           desc: 'Reportes de ingresos y egresos manuales del período',
           roles: ['contabilidad', 'administrador', 'director', 'admin'],
         },
-        {
+{
           id: 'reportes-financieros',
           to: '/staff/reportes-financieros',
           icono: BarChart3,
@@ -109,6 +134,7 @@ export const MODULOS = {
         },
       ],
     },
+    GRUPO_NOTIFICACIONES(),
   ],
   comercial: [
     {
@@ -188,26 +214,48 @@ export const MODULOS = {
         },
       ],
     },
+    GRUPO_NOTIFICACIONES(),
   ],
+  // Seis colas independientes en vez de un pipeline de 5 tabs. Cada cola es su
+  // propia página y su propio contador de trabajo (`contador` = clave del badge
+  // que devuelve GET /staff/badges). `direcciones` NO lleva contador (datos
+  // maestros, no trabajo pendiente) y `completadas` tampoco (es historial, no
+  // cola). El despachador ve SOLO `envios` (decisión del dueño 2026-09-30).
   logistica: [
     {
-      titulo: 'Logística',
+      titulo: 'Entrada',
       items: [
         {
-          id: 'pedidos',
-          to: '/staff/pedidos',
-          icono: PackageCheck,
-          texto: 'Pedidos',
-          desc: 'Pipeline completo: revisa, aprueba, prepara, retiros, incidencias y completadas',
+          id: 'nuevas',
+          to: '/staff/pedidos/nuevas',
+          icono: Inbox,
+          texto: 'Órdenes Nuevas',
+          desc: 'Órdenes recién recibidas: revisa, anula lo agotado y aprueba',
           roles: ['almacenista', 'administrador', 'director', 'admin'],
+          contador: 'nuevas',
+        },
+      ],
+    },
+    {
+      titulo: 'Preparación',
+      items: [
+        {
+          id: 'preparar',
+          to: '/staff/pedidos/preparar',
+          icono: PackageOpen,
+          texto: 'Preparar Órdenes',
+          desc: 'Verifica el paquete y despacha: enviado o listo para retiro',
+          roles: ['almacenista', 'administrador', 'director', 'admin'],
+          contador: 'preparar',
         },
         {
-          id: 'envios',
-          to: '/staff/envios',
-          icono: ClipboardList,
-          texto: 'Envíos',
-          desc: 'Cola de pedidos en ruta para el motorizado: dirección, contacto y entrega',
-          roles: ['despachador', 'administrador', 'director', 'admin'],
+          id: 'retiros',
+          to: '/staff/pedidos/retiros',
+          icono: PackageCheck,
+          texto: 'Retiros',
+          desc: 'Órdenes listas para retirar en el mostrador',
+          roles: ['almacenista', 'administrador', 'director', 'admin'],
+          contador: 'retiros',
         },
         {
           id: 'direcciones',
@@ -219,6 +267,43 @@ export const MODULOS = {
         },
       ],
     },
+    {
+      titulo: 'Despacho',
+      items: [
+        {
+          id: 'envios',
+          to: '/staff/envios',
+          icono: Truck,
+          texto: 'Envíos',
+          desc: 'Cola de pedidos en ruta para el motorizado: dirección, contacto y entrega',
+          roles: ['despachador', 'administrador', 'director', 'admin'],
+          contador: 'envios',
+        },
+        {
+          id: 'incidencias',
+          to: '/staff/pedidos/incidencias',
+          icono: AlertTriangle,
+          texto: 'Incidencias',
+          desc: 'Envíos que fallaron: reenvía o cancela la orden',
+          roles: ['almacenista', 'administrador', 'director', 'admin'],
+          contador: 'incidencias',
+        },
+      ],
+    },
+    {
+      titulo: 'Historial',
+      items: [
+        {
+          id: 'completadas',
+          to: '/staff/pedidos/completadas',
+          icono: CheckCircle2,
+          texto: 'Órdenes Completadas',
+          desc: 'Historial de pedidos entregados y retirados',
+          roles: ['almacenista', 'administrador', 'director', 'admin'],
+        },
+      ],
+    },
+    GRUPO_NOTIFICACIONES(),
   ],
 }
 

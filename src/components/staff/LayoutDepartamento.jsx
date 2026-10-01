@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { Menu, X, ChevronRight, LogOut, LayoutDashboard, ShieldCheck } from 'lucide-react'
 import { useStaffAuth } from '../../context/StaffAuthContext'
+import { useStaffBadges } from '../../context/StaffBadgesContext'
 import staffApi from '../../api/staffAxios'
 import { DEPARTAMENTOS, MODULOS, ROLES_BRIDGE_ADMIN } from './NavStaff'
 import { safeSetItem } from '../../utils/safeStorage'
+import StaffCampanaNotificaciones from './StaffCampanaNotificaciones'
 import './LayoutDepartamento.css'
 
 // ---------------------------------------------------------------
@@ -24,11 +26,21 @@ import './LayoutDepartamento.css'
 function ItemNav({ item, activo, onNavigate }) {
   const esActivo = item.id === activo
   const Icono = item.icono
+  // Contador de trabajo accionable (GET /staff/badges). Solo lo pintan los
+  // items que declaran `contador` en MODULOS (hoy, las colas de Logística), así
+  // que Finanzas y Comercial renderizan exactamente igual que antes.
+  const { conteos } = useStaffBadges()
+  const conteo = item.contador ? conteos[item.contador] || 0 : 0
 
   return (
     <NavLink to={item.to} onClick={onNavigate} className={`ldep-nav__link ${esActivo ? 'ldep-nav__link--activo' : ''}`}>
       {Icono && <Icono size={18} strokeWidth={esActivo ? 2.4 : 2} />}
       <span>{item.texto}</span>
+      {conteo > 0 && (
+        <span className={`ldep-nav__badge ${item.contador === 'incidencias' ? 'ldep-nav__badge--alerta' : ''}`}>
+          {conteo}
+        </span>
+      )}
       {esActivo && <ChevronRight size={16} className="ldep-nav__chevron" />}
     </NavLink>
   )
@@ -127,6 +139,12 @@ function LayoutDepartamento({ departamento, activo, titulo, children }) {
           </button>
           {IconoDepto && <IconoDepto size={18} className="ldep-topbar__depto-icono" />}
           <p className="ldep-topbar__titulo">{titulo}</p>
+          {/* La campana va en el topbar móvil y en el header de la
+              página (que se ve en escritorio): con los dos puntos de
+              montaje se ve una sola vez en cualquier viewport. */}
+          <div className="ldep-topbar__campana">
+            <StaffCampanaNotificaciones />
+          </div>
         </header>
 
         <div className="ldep-container">
@@ -153,6 +171,9 @@ function LayoutDepartamento({ departamento, activo, titulo, children }) {
             <main className="ldep-main">
               <div className="ldep-main__header">
                 <h1 className="ldep-main__titulo">{titulo}</h1>
+                <div className="ldep-main__campana">
+                  <StaffCampanaNotificaciones />
+                </div>
               </div>
               {children}
             </main>

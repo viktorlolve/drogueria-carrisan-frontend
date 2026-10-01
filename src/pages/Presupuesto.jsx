@@ -114,77 +114,8 @@ function PresupuestoModal({ presupuestoId, onClose, onRecotizado }) {
 
   async function exportarPDF() {
     if (!detalle) return
-    const { jsPDF } = await import('jspdf')
-    const doc = new jsPDF()
-
-    // Encabezado corporativo
-    doc.setFillColor(0, 82, 220)
-    doc.rect(0, 0, 210, 26, 'F')
-    doc.setTextColor(255, 255, 255)
-    doc.setFontSize(16)
-    doc.setFont(undefined, 'bold')
-    doc.text('Droguería Carrisan', 14, 13)
-    doc.setFontSize(10)
-    doc.setFont(undefined, 'normal')
-    doc.text(`Presupuesto #${detalle.numero}`, 14, 21)
-
-    doc.setTextColor(26, 26, 58)
-    doc.setFontSize(9)
-    doc.text(`Emitido: ${new Date(detalle.fecha_creacion).toLocaleString('es-VE')}`, 14, 34)
-    doc.text(`Válido hasta: ${new Date(detalle.fecha_expiracion).toLocaleString('es-VE')}`, 14, 40)
-
-    let y = 52
-    doc.setFontSize(9)
-    doc.setFont(undefined, 'bold')
-    doc.text('Producto', 14, y)
-    doc.text('Cant.', 122, y)
-    doc.text('Precio', 148, y)
-    doc.text('Subtotal', 175, y)
-    y += 3
-    doc.setDrawColor(220, 220, 220)
-    doc.line(14, y, 196, y)
-    y += 6
-    doc.setFont(undefined, 'normal')
-
-    const disponibles = detalle.items.filter((i) => i.disponible)
-    const noDisponibles = detalle.items.filter((i) => !i.disponible)
-
-    disponibles.forEach((item) => {
-      if (y > 270) { doc.addPage(); y = 20 }
-      const lineasNombre = doc.splitTextToSize(item.nombre_comercial, 100)
-      doc.text(lineasNombre, 14, y)
-      doc.text(String(item.cantidad), 122, y)
-      doc.text(`$${formatUSD(item.precio_unitario)}`, 148, y)
-      doc.text(`$${formatUSD(item.subtotal)}`, 175, y)
-      y += Math.max(6, lineasNombre.length * 5)
-    })
-
-    if (noDisponibles.length > 0) {
-      y += 4
-      doc.setFontSize(8)
-      doc.setTextColor(140, 140, 140)
-      doc.text('No disponibles (excluidos del total):', 14, y)
-      y += 5
-      noDisponibles.forEach((item) => {
-        if (y > 270) { doc.addPage(); y = 20 }
-        const lineasNombre = doc.splitTextToSize(`${item.nombre_comercial} — Cant. ${item.cantidad}`, 175)
-        doc.text(lineasNombre, 14, y)
-        y += Math.max(5, lineasNombre.length * 5)
-      })
-      doc.setTextColor(26, 26, 58)
-    }
-
-    y += 6
-    doc.setDrawColor(220, 220, 220)
-    doc.line(122, y, 196, y)
-    y += 7
-    doc.setFontSize(11)
-    doc.setFont(undefined, 'bold')
-    const totalDisponible = disponibles.reduce((acc, i) => acc + i.subtotal, 0)
-    doc.text('Total', 148, y)
-    doc.text(`$${formatUSD(totalDisponible)}`, 175, y)
-
-    doc.save(`presupuesto-${detalle.numero}.pdf`)
+    const { default: generarPresupuestoPDF } = await import('../utils/generarPresupuestoPDF')
+    await generarPresupuestoPDF({ detalle })
   }
 
   if (cargando || !detalle) {

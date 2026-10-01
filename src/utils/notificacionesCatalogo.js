@@ -17,6 +17,8 @@ import {
   Megaphone,
   Lock,
   LockOpen,
+  Tag,
+  BadgeDollarSign,
 } from 'lucide-react'
 
 export const CATEGORIAS = {
@@ -31,10 +33,13 @@ export const CATEGORIAS = {
       'orden_aprobada',
       'orden_enviada',
       'orden_entregada',
+      'orden_lista_retiro',
       'orden_cancelada',
       'estado_cambiado',
       'orden_actualizada',
       'orden_incidencia',
+      'paquete_verificado',
+      'reintento_envio',
     ],
   },
 
@@ -83,6 +88,7 @@ export const CATEGORIAS = {
       'documento_listo',
       'documento_aprobado',
       'documento_rechazado',
+      'documento_nuevo',
     ],
   },
 
@@ -95,6 +101,8 @@ export const CATEGORIAS = {
       'cotizacion_respondida',
       'cotizacion_rechazada',
       'requerimiento_respondido',
+      'requerimiento_nuevo',
+      'cotizacion_nueva',
     ],
   },
 
@@ -107,6 +115,7 @@ export const CATEGORIAS = {
       'producto_disponible',
       'factura_emitida',
       'sistema',
+      'producto_con_precio',
     ],
   },
 
@@ -115,7 +124,7 @@ export const CATEGORIAS = {
     nombre: 'Ofertas',
     color: 'red',
     icono: Megaphone,
-    tipos: ['oferta'],
+    tipos: ['oferta', 'promocion_enviada', 'cupon_generado'],
   },
 }
 
@@ -174,6 +183,12 @@ const ICONOS_POR_TIPO = {
   orden_actualizada: Package,
   orden_incidencia: AlertTriangle,
 
+  // Logística (staff) — la caja azul sigue siendo "la orden"; los dos
+  // hitos operativos que sí son señal de problema/avance llevan su ícono.
+  orden_lista_retiro: Package,
+  paquete_verificado: CheckCircle,
+  reintento_envio: AlertTriangle,
+
   // Pagos — el de pago solo para lo reportado, la tilde verde para verificado
   pago_reportado: DollarSign,
   pago_verificado: CheckCircle,
@@ -194,17 +209,24 @@ const ICONOS_POR_TIPO = {
   documento_listo: FileCheck,
   documento_aprobado: CheckCircle,
   documento_rechazado: FileX,
+  documento_nuevo: FileText,
 
   // Solicitudes
   cotizacion_respondida: CheckCircle,
   cotizacion_rechazada: Ban,
   requerimiento_respondido: CheckCircle,
+  requerimiento_nuevo: ClipboardList,
+  cotizacion_nueva: ClipboardList,
 
   // Sistema
   producto_disponible: Bell,
   factura_emitida: FileText,
+  producto_con_precio: BadgeDollarSign,
 
+  // Ofertas (staff)
   oferta: Megaphone,
+  promocion_enviada: Megaphone,
+  cupon_generado: Tag,
 }
 
 /**
@@ -223,6 +245,11 @@ const COLOR_POR_TIPO = {
   estado_cambiado: 'blue',
   orden_actualizada: 'blue',
   orden_incidencia: 'amber',
+
+  // Logística (staff)
+  orden_lista_retiro: 'blue',
+  paquete_verificado: 'green',
+  reintento_envio: 'amber',
 
   // Pagos: lo reportado espera (ámbar), lo verificado está listo (verde)
   pago_reportado: 'amber',
@@ -244,15 +271,23 @@ const COLOR_POR_TIPO = {
   documento_listo: 'teal',
   documento_aprobado: 'teal',
   documento_rechazado: 'red',
+  documento_nuevo: 'teal',
 
   // Solicitudes
   cotizacion_respondida: 'cyan',
   cotizacion_rechazada: 'red',
   requerimiento_respondido: 'cyan',
+  requerimiento_nuevo: 'cyan',
+  cotizacion_nueva: 'cyan',
 
   // Sistema
   producto_disponible: 'gray',
   factura_emitida: 'gray',
+  producto_con_precio: 'green',
+
+  // Ofertas (staff)
+  promocion_enviada: 'red',
+  cupon_generado: 'red',
 }
 
 export function getCategoriaDeTipo(tipo) {

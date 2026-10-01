@@ -15,8 +15,10 @@ import {
   ORDEN_CATEGORIAS,
   DESCRIPCION_CATEGORIA,
   getCategoriaDeTipo,
-  getConfigTipo,
 } from '../utils/notificacionesCatalogo'
+import { agruparPorFecha } from '../utils/notificacionesUI'
+import TarjetaNotificacion from '../components/notificaciones/TarjetaNotificacion'
+import NotifSkeleton from '../components/notificaciones/NotifSkeleton'
 import './Notificaciones.css'
 
 // ---------------------------------------------------------------
@@ -44,80 +46,6 @@ function leerSilenciadas() {
   } catch {
     return []
   }
-}
-
-function formatFecha(fechaISO) {
-  const fecha = new Date(fechaISO)
-  const ahora = new Date()
-  const diffMs = ahora - fecha
-  const diffMin = Math.floor(diffMs / 60000)
-  const diffHoras = Math.floor(diffMin / 60)
-
-  if (diffMin < 1) return 'Ahora'
-  if (diffMin < 60) return `Hace ${diffMin} min`
-  if (diffHoras < 24) return `Hace ${diffHoras} ${diffHoras === 1 ? 'hora' : 'horas'}`
-  return fecha.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })
-}
-
-// Agrupa una lista ya ordenada (desc) en baldes de fecha relativa
-function agruparPorFecha(lista) {
-  const hoy = new Date()
-  hoy.setHours(0, 0, 0, 0)
-  const ayer = new Date(hoy)
-  ayer.setDate(hoy.getDate() - 1)
-  const haceUnaSemana = new Date(hoy)
-  haceUnaSemana.setDate(hoy.getDate() - 7)
-
-  const baldes = { Hoy: [], Ayer: [], 'Esta semana': [], 'Más antiguas': [] }
-
-  for (const n of lista) {
-    const fecha = new Date(n.created_at)
-    if (fecha >= hoy) baldes['Hoy'].push(n)
-    else if (fecha >= ayer) baldes['Ayer'].push(n)
-    else if (fecha >= haceUnaSemana) baldes['Esta semana'].push(n)
-    else baldes['Más antiguas'].push(n)
-  }
-
-  return Object.entries(baldes).filter(([, items]) => items.length > 0)
-}
-
-function NotifSkeleton() {
-  return (
-    <div className="notif-card notif-card--skeleton">
-      <div className="notif-icon notif-icon--skeleton" />
-      <div className="notif-card__body">
-        <div className="skel-line skel-line--sm" />
-        <div className="skel-line skel-line--md" />
-      </div>
-    </div>
-  )
-}
-
-function TarjetaNotificacion({ notif, onClick }) {
-  const config = getConfigTipo(notif.tipo)
-  const Icono = config.icono
-  const esClickeable = !!notif.orden_id || notif.tipo === 'chat_mensaje'
-
-  return (
-    <div
-      className={`notif-card ${notif.leida ? '' : 'notif-card--no-leida'} ${esClickeable ? 'notif-card--clickeable' : ''}`}
-      onClick={() => onClick(notif)}
-      role={esClickeable ? 'button' : undefined}
-      tabIndex={esClickeable ? 0 : undefined}
-    >
-      <span className={`notif-icon notif-icon--${config.color}`}>
-        <Icono size={17} />
-      </span>
-      <div className="notif-card__body">
-        <div className="notif-card__top">
-          <strong className="notif-card__titulo">{notif.titulo}</strong>
-          <span className="notif-card__fecha">{formatFecha(notif.created_at)}</span>
-        </div>
-        <p className="notif-card__mensaje">{notif.mensaje}</p>
-        {!notif.leida && <span className="notif-badge-nueva">Nueva</span>}
-      </div>
-    </div>
-  )
 }
 
 function Notificaciones() {
@@ -361,7 +289,12 @@ function Notificaciones() {
                 <p className="notif-grupo__titulo">{grupo}</p>
                 <div className="notif-list">
                   {items.map((notif) => (
-                    <TarjetaNotificacion key={notif.id} notif={notif} onClick={handleClick} />
+                    <TarjetaNotificacion
+                      key={notif.id}
+                      notif={notif}
+                      onClick={handleClick}
+                      clickable={!!notif.orden_id || notif.tipo === 'chat_mensaje'}
+                    />
                   ))}
                 </div>
               </div>

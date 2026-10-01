@@ -101,72 +101,8 @@ function useEstadoRif(solicitudes, solicitarRif) {
 // el nombre y la cédula/RIF. jsPDF se importa dinámico (se descarga solo
 // al generar la referencia, no en el bundle inicial).
 async function generarReferenciaPDF({ nombre, identificacion }) {
-  const { jsPDF } = await import('jspdf')
-  const doc = new jsPDF({ unit: 'pt', format: 'letter' })
-  const margenX = 72
-  const anchoTexto = 468
-  let y = 90
-
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(13)
-  doc.text('DROGUERÍA CARRISAN, C.A.', margenX, y)
-
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(10)
-  y += 16
-  const fecha = new Date().toLocaleDateString('es-VE', { day: 'numeric', month: 'long', year: 'numeric' })
-  doc.text(`Caracas, ${fecha}`, margenX, y)
-
-  y += 50
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(12)
-  doc.text('REFERENCIA COMERCIAL', 306, y, { align: 'center' })
-
-  y += 30
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(11)
-  doc.text('A quien pueda interesar:', margenX, y)
-
-  y += 26
-  const parrafo1 =
-    `Por medio de la presente, Droguería Carrisan, C.A. hace constar que ${nombre}, ` +
-    `titular de la Cédula/RIF N.° ${identificacion}, es cliente comercial de nuestra empresa, ` +
-    `con quien mantenemos relaciones comerciales activas.`
-  const lineas1 = doc.splitTextToSize(parrafo1, anchoTexto)
-  doc.text(lineas1, margenX, y)
-  y += lineas1.length * 15 + 14
-
-  const parrafo2 =
-    'Durante este tiempo, el cliente ha manejado montos de siete (7) cifras o más de forma ' +
-    'trimestral, cumpliendo satisfactoriamente con sus compromisos comerciales.'
-  const lineas2 = doc.splitTextToSize(parrafo2, anchoTexto)
-  doc.text(lineas2, margenX, y)
-  y += lineas2.length * 15 + 14
-
-  const parrafo3 =
-    'La presente referencia se emite a solicitud del interesado, para los fines que estime conveniente.'
-  const lineas3 = doc.splitTextToSize(parrafo3, anchoTexto)
-  doc.text(lineas3, margenX, y)
-  y += lineas3.length * 15 + 36
-
-  doc.text('Sin otro particular,', margenX, y)
-  y += 24
-  doc.text('Atentamente,', margenX, y)
-
-  // Espacio para la firma
-  y += 70
-  doc.line(margenX, y, margenX + 220, y)
-  y += 16
-  doc.setFont('helvetica', 'bold')
-  doc.text('Victor H. Carrillo S.', margenX, y)
-  y += 14
-  doc.setFont('helvetica', 'normal')
-  doc.text('Director General', margenX, y)
-  y += 14
-  doc.text('Droguería Carrisan, C.A.', margenX, y)
-
-  const slug = nombre.trim().toLowerCase().replace(/\s+/g, '-')
-  doc.save(`referencia-comercial-${slug}.pdf`)
+  const { default: generarReferenciaComercialPDF } = await import('../utils/generarReferenciaComercialPDF')
+  await generarReferenciaComercialPDF({ nombre, identificacion })
 }
 
 function TarjetaTipo({ tipo, onSolicitar, enviando, rif }) {

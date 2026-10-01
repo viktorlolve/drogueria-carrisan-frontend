@@ -38,8 +38,6 @@
 }
 
 .promocard__image {
-  max-width: 82%;
-  max-height: 82%;
   object-fit: contain;
 }
 

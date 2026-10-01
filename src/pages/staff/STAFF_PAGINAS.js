@@ -32,6 +32,7 @@ const StaffClientes = lazy(() => import('./StaffClientes'))
 const StaffChat = lazy(() => import('./StaffChat'))
 const StaffCupones = lazy(() => import('./StaffCupones'))
 const StaffVitrina = lazy(() => import('./StaffVitrina'))
+const StaffNotificaciones = lazy(() => import('./StaffNotificaciones'))
 
 export const STAFF_PAGINAS = {
   pedidos: StaffPedidos,
@@ -52,4 +53,5 @@ export const STAFF_PAGINAS = {
   chat: StaffChat,
   cupones: StaffCupones,
   vitrina: StaffVitrina,
+  notificaciones: StaffNotificaciones,
 }

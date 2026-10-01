@@ -10,7 +10,7 @@ function formatBs(valor) {
   return Number(valor || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-export default function PagoClienteModal({ pago, cliente, onClose }) {
+export default function PagoClienteModal({ pago, cliente, facturas, onClose }) {
   if (!pago) return null
 
   // El equivalente en Bs solo existe cuando el pago viene de un reporte de
@@ -63,7 +63,7 @@ export default function PagoClienteModal({ pago, cliente, onClose }) {
         <button
           type="button"
           className="pcm-btn-descarga"
-          onClick={() => generarComprobantePagoPDF({ pago, cliente })}
+          onClick={() => generarComprobantePagoPDF({ pago, cliente, facturas })}
         >
           <Download size={16} />
           Descargar comprobante
