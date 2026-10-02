@@ -92,6 +92,42 @@
 ;
 }
 }
+/* ---------- Botón "Marcar todas leídas" en móvil ----------
+   El header de LayoutPaginaPrincipal (donde va la prop "acciones") se
+   oculta en <1024px, así que el botón se repite dentro de la página.
+   Acá es una fila completa, no un botón de icono: el texto se mantiene
+   visible aunque el breakpoint de 640px lo esconda. */
+.notif-mobile-acciones
+{
+  display: none
+;
+}
+@media (max-width: 1024px)
+{
+  .notif-mobile-acciones
+{
+    display: block
+;
+    margin-bottom: 12px
+;
+  }
+  .notif-mobile-acciones .notif-marcar-btn
+{
+    width: 100%
+;
+    justify-content: center
+;
+    padding: 10px 14px
+;
+    font-size: 0.85rem
+;
+  }
+  .notif-mobile-acciones .notif-marcar-btn__texto
+{
+    display: inline
+;
+  }
+}
 /* ---------- Layout general ---------- */.notif-page 
 {
   display: flex
@@ -267,17 +303,6 @@
   align-items: center
 ;
   gap: 10px
-;
-}
-.notif-leyenda__iconos 
-{
-  display: inline-flex
-;
-  align-items: center
-;
-  gap: 4px
-;
-  flex-shrink: 0
 ;
 }
 .notif-leyenda__texto

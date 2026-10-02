@@ -5,7 +5,7 @@ import {
   Badge,
   Text,
 } from '@chakra-ui/react'
-import { ChevronDown, Filter, CheckCheck, DollarSign, CheckCircle } from 'lucide-react'
+import { ChevronDown, Filter, CheckCheck } from 'lucide-react'
 import LayoutPaginaPrincipal from '../components/paginas-principales/Layoutpaginaprincipal'
 import { NAV_NOTIFICACIONES } from '../components/paginas-principales/NavNotificaciones'
 import api from '../api/axios'
@@ -29,17 +29,10 @@ import './Notificaciones.css'
 
 const CLAVE_SILENCIADAS = 'notif_categorias_silenciadas'
 
-// La leyenda tiene UNA fila por sección. Casi todas muestran el ícono de
-// la sección; Pagos es la excepción porque sus tarjetas usan dos íconos
-// (el de pago ámbar = reportaste y falta verificación, la tilde verde =
-// verificado).
-const ICONOS_LEYENDA = {
-  pagos: [
-    { icono: DollarSign, color: 'amber' },
-    { icono: CheckCircle, color: 'green' },
-  ],
-}
-
+// La leyenda tiene UNA fila por sección y muestra el ícono de la
+// sección (el mismo que usa el filtro). Antes Pagos pintaba además el
+// ícono del pago verificado (tilde verde); el dueño lo quitó porque
+// ensuciaba la lectura de la leyenda.
 function leerSilenciadas() {
   try {
     return JSON.parse(safeGetItem(CLAVE_SILENCIADAS)) || []
@@ -144,6 +137,19 @@ function Notificaciones() {
 
   const navConfig = NAV_NOTIFICACIONES({ silenciadas, onToggleSilenciar: toggleSilenciar })
 
+  // El header del layout (donde vive la prop "acciones") se oculta por
+  // completo en <1024px, así que el botón se pinta dos veces: arriba del
+  // todo en desktop y como fila propia dentro de la página en móvil.
+  const botonMarcarTodas = (
+    <>
+      <CheckCheck size={16} />
+      <span className="notif-marcar-btn__texto">Marcar todas leídas</span>
+      {noLeidas > 0 && (
+        <span className="notif-marcar-btn__badge">{noLeidas}</span>
+      )}
+    </>
+  )
+
   return (
     <LayoutPaginaPrincipal
       activo="notificaciones"
@@ -155,11 +161,7 @@ function Notificaciones() {
           onClick={marcarTodasLeidas}
           disabled={noLeidas === 0}
         >
-          <CheckCheck size={16} />
-          <span className="notif-marcar-btn__texto">Marcar todas leídas</span>
-          {noLeidas > 0 && (
-            <span className="notif-marcar-btn__badge">{noLeidas}</span>
-          )}
+          {botonMarcarTodas}
         </button>
       }
     >
@@ -201,6 +203,18 @@ function Notificaciones() {
         </aside>
 
         <div className="notif-container">
+          {/* Móvil: el header del layout no se ve, así que "Marcar todas
+              leídas" vive aquí como fila propia */}
+          <div className="notif-mobile-acciones">
+            <button
+              className="notif-marcar-btn"
+              onClick={marcarTodasLeidas}
+              disabled={noLeidas === 0}
+            >
+              {botonMarcarTodas}
+            </button>
+          </div>
+
           {/* Tabs móviles (solo visible en móvil via CSS) */}
           <div className="notif-tabs-mobile">
             <button
@@ -240,26 +254,12 @@ function Notificaciones() {
                 <Accordion.ItemBody className="notif-leyenda">
                   {ORDEN_CATEGORIAS.map((catId) => {
                     const cat = CATEGORIAS[catId]
-                    const special = ICONOS_LEYENDA[catId]
                     const IconoSeccion = cat.icono
                     return (
                       <div key={catId} className="notif-leyenda__item">
-                        {special ? (
-                          <span className="notif-leyenda__iconos">
-                            {special.map(({ icono: Icono, color }) => (
-                              <span
-                                key={color}
-                                className={`notif-icon notif-icon--${color} notif-icon--sm`}
-                              >
-                                <Icono size={13} />
-                              </span>
-                            ))}
-                          </span>
-                        ) : (
-                          <span className={`notif-icon notif-icon--${cat.color} notif-icon--sm`}>
-                            <IconoSeccion size={14} />
-                          </span>
-                        )}
+                        <span className={`notif-icon notif-icon--${cat.color} notif-icon--sm`}>
+                          <IconoSeccion size={14} />
+                        </span>
                         <span className="notif-leyenda__texto">
                           <strong>{cat.nombre}.</strong> {DESCRIPCION_CATEGORIA[catId]}
                         </span>

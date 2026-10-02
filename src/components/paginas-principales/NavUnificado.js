@@ -17,7 +17,7 @@
 // ---------------------------------------------------------------
 import {
   Package, ClipboardList, MessageCircle,
-  Star, MapPin, Settings, Bell,
+  Star, MapPin, User, Bell,
   Wallet, DollarSign, FileText, FileBarChart, TrendingUp,
   PackagePlus, FileCheck,
   HelpCircle, FileQuestion,
@@ -37,7 +37,7 @@ export const NAV_UNIFICADO = [
     items: [
       { id: 'mis-items', to: '/mis-items', icono: Star, texto: 'Mis items', soloCliente: true },
       { id: 'direcciones', to: '/direcciones', icono: MapPin, texto: 'Direcciones', soloCliente: true },
-      { id: 'cuenta', to: '/cuenta', icono: Settings, texto: 'Mi Cuenta' },
+      { id: 'cuenta', to: '/cuenta', icono: User, texto: 'Mi Cuenta' },
       { id: 'notificaciones', to: '/notificaciones', icono: Bell, texto: 'Notificaciones' },
     ],
   },
