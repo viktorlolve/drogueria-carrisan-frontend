@@ -44,6 +44,7 @@ src/
 │   ├── CartContext.jsx        # Carrito de compras
 │   ├── EnvioContext.jsx       # Gestion de envios/direcciones
 │   ├── FavoritosContext.jsx   # Lista de favoritos
+│   ├── NavBadgesContext.jsx   # Conteos del nav de cliente (GET /nav/badges, poll 60s, pausa con pestaña oculta)
 │   └── LoadingBarContext.jsx  # Barra de carga superior
 ├── hooks/                    # Custom hooks (useEsMobile, usePush)
 ├── pages/                    # Paginas (~50+ archivos)
@@ -63,6 +64,100 @@ src/
 4. FavoritosProvider — productos favoritos
 5. EnvioProvider — direcciones de envio
 6. LoadingBarProvider — barra de progreso superior
+7. NavBadgesProvider — conteos del nav de cliente (`useNavBadges()`); va dentro de `AuthProvider` porque usa el JWT de cliente
+
+## Nav unificado del cliente (IMPLEMENTADO — 2026-10-05)
+
+El sidebar de las páginas de cliente dejó de ser una lista plana con submenús de 2 niveles: ahora son
+**grupos en acordeón** (todos inline) + un grupo Ayuda al pie. Diseño y plan verbatim:
+`analisis/design-nav-unificado-2026-10-02.md` y `analisis/plan-nav-unificado-2026-10-02.md`.
+
+### Fuente única: `NAV_UNIFICADO` (`src/components/paginas-principales/NavUnificado.js`)
+
+```js
+export const NAV_UNIFICADO = {
+  grupos: [
+    { id: 'actividad', titulo: 'Mi actividad', items: [...] },
+    { id: 'cuenta',    titulo: 'Mi cuenta',    items: [...] },
+    { id: 'financiero',titulo: 'Estado de cuenta', items: [...] },
+    { id: 'solicitudes',titulo:'Solicitudes',  items: [...] },
+  ],
+  pie: { id: 'ayuda', titulo: 'Ayuda', items: [...] },   // se pinta con variante sin ícono
+}
+```
+
+- Cada item: `{ id, to, icono, texto }` + opcionales **`contador`** (clave del badge) y **`soloCliente`**.
+- Grupos: Mi actividad (Pedidos, Notificaciones, Chat, Presupuesto) · Mi cuenta (Mi cuenta, Mis
+  ítems, Direcciones, Sub-usuarios) · Estado de cuenta (Resumen, Pagos, Facturas, Reportes,
+  Ampliación) · Solicitudes (Cotizaciones, Requerimientos, Documentos) · Ayuda al pie (Preguntas
+  frecuentes, Cómo usar la plataforma, Contacto).
+- **El resaltado activo sale de la prop `activo` de cada página, NO de la ruta**: si una página pasa
+  un `activo` equivocado, el nav no lo detecta. El guard verifica rutas, no ids.
+- `NavAdmin.js`, el nav de staff (`NavStaff.js`) y `Navbar.jsx` quedan **fuera** de este rediseño.
+
+### Layout y helpers
+
+- `Layoutpaginaprincipal.jsx` (`ContenidoNav`) pinta los grupos como acordeón: header `<button>`
+  abre/cierra (no navega), los items se renderizan inline. Al cambiar la ruta con el layout ya
+  montado, el grupo del item activo se abre solo (patrón "ajustar estado durante el render" del
+  AGENTS, NO `setState` en `useEffect`). Cada `NavLink` lleva `onClick={onNavigate}` para cerrar el
+  drawer móvil; `drawerResetKey` remonta `ContenidoNav` al cerrar el drawer.
+- `navUnificadoHelpers.js` (funciones puras, testeadas): `normalizarNav` (tolerante a items sueltos),
+  `grupoDeItem`, `gruposAbiertosIniciales`.
+- `NavNotificaciones.js` **ya NO existe** (el submenú de 2 niveles se eliminó). No lo reintroduzcas.
+
+### Badges — `GET /nav/badges`
+
+- Backend: `src/controllers/nav.badges.controller.js` + `routes/nav.badges.routes.js` (`verifyJWT`),
+  montado como `/nav/badges`. Devuelve `{ conteos: { notificaciones, chat, cotizaciones, requerimientos, documentos }, actualizado_en }`.
+- Frontend: `useNavBadges()` de `src/context/NavBadgesContext.jsx` — poll 60 s, **pausa cuando la
+  pestaña está oculta** (`visibilitychange`), cancela peticiones con `CanceledError` al desmontar y
+  **conserva los valores anteriores si la petición falla**. Solo refresca con sesión de cliente.
+- El item del nav trae `contador: 'notificaciones'` etc.; `ItemNav` pinta `99+` a partir de 100.
+- **Deuda B5 (anotada a propósito)**: `Navbar.jsx` sigue llamando `GET /notifications/unread-count`
+  (mismo dato, otro endpoint) porque quedó fuera de alcance. Cuando se toque el Navbar, migrarlo a
+  `useNavBadges()`. Otra deuda: `Cotizaciones.jsx:23` calcula "vencida" en el cliente para su badge
+  interno; el badge del nav usa el filtro de servidor (B1) — están alineados, pero son dos lugares
+  que tocar si cambia la ventana de expiración.
+
+### Verificación
+
+```bash
+node scripts/verificar-nav.mjs                    # guard: 19/19 rutas del nav existen en App.jsx
+node --test scripts/navUnificadoHelpers.test.mjs  # 6 tests de los helpers
+npm run lint && npx vite build --mode development
+```
+
+Al **agregar un item al nav**, creá la ruta en `App.jsx` en el mismo commit o el guard falla.
+
+### Preferencias de notificación (2 cosas distintas — no las mezcles)
+
+`PreferenciasNotificaciones.jsx` (`.acu-*` no: clases `.notif-prefs-*`, dentro de
+`components/paginas-principales/`) vive en el centro de notificaciones y tiene **dos listas**:
+
+1. **Avisos push (backend)** — `GET/PUT /notifications/preferences`, columnas `push_*`, solo las
+   **6 claves de `CLAVES_PUSH`** (`notificacionesCatalogo.js`): ordenes, pagos, chat, credito,
+   sistema, ofertas. El maestro es `usePush` (suscripción del navegador).
+2. **Filtro de la lista (localStorage)** — las **8 categorías** de `ORDEN_CATEGORIAS`, clave
+   `notif_categorias_silenciadas`. Oculta de la lista, **no** deja de recibir los avisos.
+
+- **La firma del callback local es `onToggleSilenciar(catId, silenciar)`** (2º argumento = "silenciar",
+  NO "visible"): si la categoría está visible y apagás el switch, se manda `true`.
+- Deep link desde Mi Cuenta: `/notificaciones?preferencias=1` (el panel hace scroll al montar).
+- **`push_documentos` y `push_solicitudes` NO existen** en el backend y **no se crean**: los avisos de
+  documentos y solicitudes viajan por `push_sistema`. Un switch propio sería migración + `push.service.js`.
+- `MiCuenta.jsx` conserva **solo el interruptor maestro** de push + una fila que enlaza a
+  `/notificaciones?preferencias=1` (patrón `modal-permisos__fila--link` + `ChevronRight`, no clases
+  nuevas). El estado `prefs` y el GET de preferencias se fueron de ahí.
+
+### `/ayuda/como-usar`
+
+Página **pública** (como `/ayuda` y `/contacto`, sin `PrivateRoute`): `pages/AyudaComoUsar.jsx` +
+`AyudaComoUsar.css` (clases `.acu-*`). Guía en 8 secciones (primer ingreso, buscar productos, hacer un
+pedido, formas de pago, estado de cuenta, solicitudes, notificaciones, sub-usuarios y direcciones) con
+acordeón, chips de salto por ancla y bloque de contacto reusando `CONTACTO` de `src/config/contacto.js`.
+**El copy lo revisa el dueño**: no inventes precios, plazos ni políticas que no estén en el código; si
+cambia una regla, se edita la constante `SECCIONES` del archivo.
 
 ### Rutas protegidas
 - `<PrivateRoute>` — Requiere autenticacion (cualquier usuario logueado)
@@ -107,7 +202,7 @@ Cada formulario de registro es un archivo JSX autonomo con su propio estado loca
 | OrdenDetalle | /orders/:id | Si | Detalle de un pedido |
 | MiCuenta | /cuenta | Si | Perfil y configuracion |
 | MisItems | /mis-items | Si | Listas personalizadas de items |
-| EstadoCuenta | /estado-cuenta | Si+ | Estado de cuenta (sensible) |
+| EstadoCuenta | /estado-de-cuenta | Si+ | Estado de cuenta (sensible). Las pestañas cuelgan de la misma raíz: `/estado-de-cuenta/pagos`, `/estado-de-cuenta/facturas`, `/estado-de-cuenta/reportes`, `/estado-de-cuenta/ampliacion`. **OJO: la ruta es `/estado-de-cuenta`, no `/estado-cuenta`** |
 | Admin | /admin/* | Admin | Panel administrativo completo |
 | Chat | /chat | No | Chat con la empresa |
 | Notificaciones | /notificaciones | Si | Centro de notificaciones |
