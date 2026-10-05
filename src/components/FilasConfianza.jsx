@@ -1,4 +1,6 @@
-import { PackageX, ShieldCheck, MessageCircle, ChevronRight, RotateCcw } from 'lucide-react'
+import { BadgePercent, PackageCheck, ChevronRight, RotateCcw } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
+import { getCopyEtiqueta } from '../config/copyEtiqueta'
 import { BotonPoliticaDevolucion } from './ModalPoliticaDevolucion'
 import './FilasConfianza.css'
 
@@ -6,29 +8,26 @@ import './FilasConfianza.css'
 // Se viste con el className que le pase el contenedor (por ejemplo el
 // `pd-purchase__trust`, que la oculta en móvil).
 export default function FilasConfianza({ className = '' }) {
+  const { user } = useAuth()
+  const copyPrecio = getCopyEtiqueta(user)
+
   return (
     <div className={`fconf ${className}`.trim()}>
+      {/* El primer cuadro depende de la etiqueta de precio del cliente
+          (`users.etiqueta`): ver `config/copyEtiqueta.js`. */}
       <div className="fconf__fila">
-        <span className="fconf__icono"><ShieldCheck size={18} /></span>
+        <span className="fconf__icono"><BadgePercent size={18} /></span>
         <div className="fconf__texto">
-          <strong>Pago seguro</strong>
-          <span>Datos protegidos · Verificado por la empresa</span>
+          <strong>{copyPrecio.titulo}</strong>
+          <span>{copyPrecio.detalle}</span>
         </div>
       </div>
 
       <div className="fconf__fila">
-        <span className="fconf__icono"><PackageX size={18} /></span>
+        <span className="fconf__icono"><PackageCheck size={18} /></span>
         <div className="fconf__texto">
           <strong>Entrega revisada</strong>
           <span>Revisamos tu pedido antes de despacharlo</span>
-        </div>
-      </div>
-
-      <div className="fconf__fila">
-        <span className="fconf__icono"><MessageCircle size={18} /></span>
-        <div className="fconf__texto">
-          <strong>Soporte directo</strong>
-          <span>¿Necesitas ayuda? Escríbenos por el Centro de Ayuda</span>
         </div>
       </div>
 

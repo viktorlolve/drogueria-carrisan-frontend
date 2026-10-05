@@ -627,19 +627,23 @@ function ProductoDetalle() {
             <div className="pd-purchase__prices">
               {producto.precio_usd != null ? (
                 <>
-                  {producto.precio_original_usd && (
-                    <span className="pd-purchase__original">
-                      ${Number(producto.precio_original_usd).toFixed(2)}
+                  {/* Los montos en USD van en su propia fila; la referencia en Bs
+                      cae debajo (`.pd-purchase__ves`), no al lado del precio. */}
+                  <span className="pd-purchase__precio-fila">
+                    {producto.precio_original_usd && (
+                      <span className="pd-purchase__original">
+                        ${Number(producto.precio_original_usd).toFixed(2)}
+                      </span>
+                    )}
+                    <span className="pd-purchase__price">
+                      ${Number(producto.precio_usd).toFixed(2)}
                     </span>
-                  )}
-                  <span className="pd-purchase__price">
-                    ${Number(producto.precio_usd).toFixed(2)}
+                    {producto.precio_original_usd && (
+                      <span className="pd-purchase__savings">
+                        Ahorras ${(Number(producto.precio_original_usd) - Number(producto.precio_usd)).toFixed(2)}
+                      </span>
+                    )}
                   </span>
-                  {producto.precio_original_usd && (
-                    <span className="pd-purchase__savings">
-                      Ahorras ${(Number(producto.precio_original_usd) - Number(producto.precio_usd)).toFixed(2)}
-                    </span>
-                  )}
                   {precioVes && (
                     <span className="pd-purchase__ves">Bs. {precioVes}</span>
                   )}

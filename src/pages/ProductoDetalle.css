@@ -483,7 +483,15 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
+/* Columna: la fila de montos en USD arriba y la referencia en Bs debajo. */
 .pd-purchase__prices {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.pd-purchase__precio-fila {
   display: flex;
   align-items: baseline;
   gap: 10px;
@@ -1269,9 +1277,14 @@
     box-shadow: 0 -6px 24px rgba(26, 26, 46, 0.12), 0 2px 10px rgba(26, 26, 46, 0.08);
   }
 
+  /* En la barra compacta vuelve a ser una fila: la referencia en Bs ya está
+     en `display: none` más abajo, así que solo queda el precio y debe quedar
+     centrado verticalmente con el resto de la barra. */
   .pd-purchase__prices {
     flex: 1;
     min-width: 0;
+    flex-direction: row;
+    align-items: baseline;
     flex-wrap: nowrap;
     gap: 8px;
   }
