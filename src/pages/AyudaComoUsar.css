@@ -1,0 +1,298 @@
+/* AyudaComoUsar — /ayuda/como-usar
+   CSS plain (como el resto del sitio), clases propias `.acu-*`.
+   Mobile-first: el header, los chips de salto y los acordeones se
+   apilan; en desktop el container se centra y limita el ancho para
+   que las líneas no se vuelvan largas de leer. */
+
+.acu-page {
+  min-height: 100vh;
+  background: var(--color-bg, #f5f6fa);
+  padding-bottom: 48px;
+}
+
+/* ---------------- Header ---------------- */
+.acu-header {
+  background: linear-gradient(135deg, #1b4b8f 0%, #0052dc 100%);
+  color: #ffffff;
+  padding: 28px 16px 32px;
+  text-align: center;
+}
+
+.acu-header .pagina-titulo {
+  color: #ffffff;
+}
+
+.acu-header .pagina-volver--hero {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.acu-header .pagina-volver--hero:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.acu-header h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.acu-header > p {
+  margin: 10px auto 0;
+  max-width: 560px;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  opacity: 0.94;
+}
+
+.acu-header__acciones {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+/* ---------------- Botones ---------------- */
+.acu-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border: 1px solid var(--color-border, #d8dae3);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--color-text, #232b45);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.acu-btn:hover {
+  background: #f0f3fa;
+}
+
+.acu-btn--primario {
+  background: #0052dc;
+  border-color: #0052dc;
+  color: #ffffff;
+}
+
+.acu-btn--primario:hover {
+  background: #0a4fc4;
+}
+
+/* ---------------- Chips de salto ---------------- */
+.acu-jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 880px;
+  margin: 18px auto 0;
+  padding: 0 16px;
+}
+
+.acu-jump__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1px solid var(--color-border, #d8dae3);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--color-text-muted, #5c5f6e);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.acu-jump__chip:hover {
+  border-color: #0052dc;
+  color: #0052dc;
+}
+
+/* ---------------- Acordeones ---------------- */
+.acu-container {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.acu-card {
+  background: #ffffff;
+  border: 1px solid var(--color-border, #d8dae3);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.acu-card--abierta {
+  border-color: #b9c9ea;
+  box-shadow: 0 2px 10px rgba(27, 75, 143, 0.07);
+}
+
+.acu-card__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: var(--color-text, #232b45);
+}
+
+.acu-card__icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  background: #eaf1ff;
+  color: #0052dc;
+}
+
+.acu-card__titulo {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+.acu-card__chevron {
+  flex-shrink: 0;
+  color: var(--color-text-muted, #5c5f6e);
+  transition: transform 0.18s ease;
+}
+
+.acu-card__chevron--abierto {
+  transform: rotate(180deg);
+}
+
+.acu-card__body {
+  padding: 0 16px 18px;
+  border-top: 1px solid var(--color-border, #d8dae3);
+}
+
+.acu-card__resumen {
+  margin: 14px 0 12px;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--color-text-muted, #5c5f6e);
+}
+
+.acu-card__pasos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.acu-card__paso {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.acu-card__paso-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: #0052dc;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+/* ---------------- Contacto ---------------- */
+.acu-contacto {
+  margin-top: 8px;
+  padding: 20px 18px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1b4b8f 0%, #232b45 100%);
+  color: #ffffff;
+  text-align: center;
+}
+
+.acu-contacto__titulo {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.acu-contacto__texto {
+  margin: 8px auto 0;
+  max-width: 460px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  opacity: 0.92;
+}
+
+.acu-contacto__acciones {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.acu-contacto__datos {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.8rem;
+  opacity: 0.88;
+}
+
+.acu-contacto__datos li {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.acu-contacto__nota {
+  margin: 12px 0 0;
+  font-size: 0.78rem;
+  opacity: 0.78;
+}
+
+/* ---------------- Desktop ---------------- */
+@media (min-width: 900px) {
+  .acu-header {
+    padding: 36px 24px 40px;
+  }
+
+  .acu-header h1 {
+    font-size: 1.7rem;
+  }
+
+  .acu-card__head {
+    padding: 16px 20px;
+  }
+
+  .acu-card__body {
+    padding: 0 20px 20px;
+  }
+}

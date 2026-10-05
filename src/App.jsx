@@ -44,6 +44,7 @@ const MisOrdenes = lazy(() => import('./pages/MisOrdenes'))
 const Admin = lazy(() => import('./pages/Admin'))
 const QuienesSomos = lazy(() => import('./pages/QuienesSomos'))
 const Ayuda = lazy(() => import('./pages/Ayuda'))
+const AyudaComoUsar = lazy(() => import('./pages/AyudaComoUsar'))
 const Contacto = lazy(() => import('./pages/Contacto'))
 const MiCuenta = lazy(() => import('./pages/MiCuenta'))
 const MisItems = lazy(() => import('./pages/MisItems'))
@@ -197,6 +198,7 @@ function App() {
                       {RutasStaff()}
                       <Route path="/quienes-somos" element={<QuienesSomos />} />
                       <Route path="/ayuda" element={<Ayuda />} />
+      <Route path="/ayuda/como-usar" element={<AyudaComoUsar />} />
                       <Route path="/contacto" element={<Contacto />} />
                       <Route path="/cuenta" element={<PrivateRoute><MiCuenta /></PrivateRoute>} />
                       <Route path="/mis-items" element={<PrivateRoute><MisItems /></PrivateRoute>} />
