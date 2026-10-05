@@ -308,7 +308,7 @@ function BloqueEstadoCuenta({ resumen }) {
         </div>
       )}
 
-      <Link to="/estado-cuenta" className="bloque-credito__hero">
+      <Link to="/estado-de-cuenta" className="bloque-credito__hero">
         <div>
           <span className="bloque-credito__hero-label">Disponible para comprar</span>
           <strong className={`bloque-credito__hero-monto${resumen.saldo <= 0 ? ' bloque-credito__cifra--rojo' : ''}`}>

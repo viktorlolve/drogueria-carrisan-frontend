@@ -191,7 +191,7 @@ function ListaDetalle() {
 
   if (cargando) {
     return (
-      <LayoutPaginaPrincipal activo="items" titulo="Lista" nav={NAV_UNIFICADO}>
+      <LayoutPaginaPrincipal activo="mis-items" titulo="Lista" nav={NAV_UNIFICADO}>
         <div className="lista-detalle">
           <p className="lista-detalle-cargando">Cargando lista…</p>
         </div>
@@ -201,7 +201,7 @@ function ListaDetalle() {
 
   if (error) {
     return (
-      <LayoutPaginaPrincipal activo="items" titulo="Lista" nav={NAV_UNIFICADO}>
+      <LayoutPaginaPrincipal activo="mis-items" titulo="Lista" nav={NAV_UNIFICADO}>
         <div className="lista-detalle">
           <p className="lista-detalle-error">{error}</p>
           <Link to="/mis-items">← Volver a Mis Items</Link>
@@ -211,7 +211,7 @@ function ListaDetalle() {
   }
 
   return (
-    <LayoutPaginaPrincipal activo="items" titulo={lista?.nombre || 'Lista'} subtitulo={`${items.length} producto${items.length !== 1 ? 's' : ''}`} nav={NAV_UNIFICADO}>
+    <LayoutPaginaPrincipal activo="mis-items" titulo={lista?.nombre || 'Lista'} subtitulo={`${items.length} producto${items.length !== 1 ? 's' : ''}`} nav={NAV_UNIFICADO}>
       <div className="lista-detalle">
         <Link to="/mis-items" className="lista-detalle-volver">← Mis Items</Link>
 

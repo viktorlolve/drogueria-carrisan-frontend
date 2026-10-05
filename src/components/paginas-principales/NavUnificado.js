@@ -44,13 +44,13 @@ export const NAV_UNIFICADO = [
   {
     titulo: 'Estado de cuenta',
     tipo: 'submenu',
-    verTodoTo: '/estado-cuenta',
+    verTodoTo: '/estado-de-cuenta',
     items: [
-      { id: 'estado-cuenta', to: '/estado-cuenta', icono: Wallet, texto: 'Resumen' },
-      { id: 'pagos-ec', to: '/estado-cuenta/pagos', icono: DollarSign, texto: 'Historial de pagos' },
-      { id: 'facturas', to: '/estado-cuenta/facturas', icono: FileText, texto: 'Historial de facturas' },
-      { id: 'reportes', to: '/estado-cuenta/reportes', icono: FileBarChart, texto: 'Reportes' },
-      { id: 'ampliacion', to: '/estado-cuenta/ampliacion', icono: TrendingUp, texto: 'Solicitar ampliación' },
+      { id: 'estado-cuenta', to: '/estado-de-cuenta', icono: Wallet, texto: 'Resumen' },
+      { id: 'pagos-ec', to: '/estado-de-cuenta/pagos', icono: DollarSign, texto: 'Historial de pagos' },
+      { id: 'facturas', to: '/estado-de-cuenta/facturas', icono: FileText, texto: 'Historial de facturas' },
+      { id: 'reportes', to: '/estado-de-cuenta/reportes', icono: FileBarChart, texto: 'Reportes' },
+      { id: 'ampliacion', to: '/estado-de-cuenta/ampliacion', icono: TrendingUp, texto: 'Solicitar ampliación' },
     ],
   },
   {

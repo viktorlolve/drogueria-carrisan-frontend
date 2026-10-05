@@ -21,7 +21,7 @@ const COLUMNAS = [
     titulo: 'Mi cuenta',
     enlaces: [
       { texto: 'Mis órdenes', to: '/orders' },
-      { texto: 'Estado de cuenta', to: '/estado-cuenta' },
+      { texto: 'Estado de cuenta', to: '/estado-de-cuenta' },
       { texto: 'Direcciones', to: '/direcciones' },
       { texto: 'Ofertas', to: '/ofertas' },
       { texto: 'Presupuesto', to: '/presupuesto' },

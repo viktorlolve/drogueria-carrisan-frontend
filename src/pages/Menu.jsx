@@ -196,7 +196,7 @@ const LISTA_CATALOGO = [
 const LISTA_CUENTA = [
   { to: '/mis-items', titulo: 'Mis Items', descripcion: 'Tus listas personalizadas de productos.', icono: 'items' },
   { to: '/orders', titulo: 'Mis Órdenes', descripcion: 'Historial y seguimiento de tus pedidos.', icono: 'pedidos' },
-  { to: '/estado-cuenta', titulo: 'Mi Estado de Cuenta', descripcion: 'Saldo, facturas, reportes y más.', icono: 'estadoCuenta' },
+  { to: '/estado-de-cuenta', titulo: 'Mi Estado de Cuenta', descripcion: 'Saldo, facturas, reportes y más.', icono: 'estadoCuenta' },
   { to: '/cuenta', titulo: 'Mi Perfil', descripcion: 'Datos personales y configuración de tu cuenta.', icono: 'cuenta' },
   { to: '/notificaciones', titulo: 'Notificaciones', descripcion: 'Alertas de tus pedidos y tu cuenta.', icono: 'notificaciones' },
 ]

@@ -15,7 +15,7 @@ const RUTAS_SIN_NAVBAR = ['/login', '/registro', '/registro/invita', '/recuperar
 // Rutas donde SÍ debe verse la flecha "atrás" en móvil
 const RUTAS_CON_BACK_MOVIL_PREFIXES = [
   '/admin', '/cuenta', '/mis-items', '/orders',
-  '/estado-cuenta', '/notificaciones', '/producto', '/carrito',
+  '/estado-de-cuenta', '/notificaciones', '/producto', '/carrito',
   '/servicios'
 ]
 
@@ -609,7 +609,7 @@ function Navbar() {
                           <span className="action-dropdown-item__desc">Historial de pedidos</span>
                         </div>
                       </Link>
-                      <Link to="/estado-cuenta" className="action-dropdown-item" onClick={() => setShowAccountMenu(false)}>
+                      <Link to="/estado-de-cuenta" className="action-dropdown-item" onClick={() => setShowAccountMenu(false)}>
                         <span className="action-dropdown-item__icono">💳</span>
                         <div>
                           <span className="action-dropdown-item__label">Estado de Cuenta</span>

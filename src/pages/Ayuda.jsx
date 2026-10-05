@@ -144,7 +144,7 @@ const pasos = [
 
 const necesidades = [
   { titulo: 'Catálogo completo', desc: 'Explora todas nuestras líneas de farmacia y hospitalaria.', to: '/catalogo', boton: 'Ver catálogo', icono: 'catalogo' },
-  { titulo: 'Estado de cuenta', desc: 'Revisa tus facturas, pagos y línea de crédito disponible.', to: '/estado-cuenta', boton: 'Ver estado de cuenta', icono: 'cuenta' },
+  { titulo: 'Estado de cuenta', desc: 'Revisa tus facturas, pagos y línea de crédito disponible.', to: '/estado-de-cuenta', boton: 'Ver estado de cuenta', icono: 'cuenta' },
   { titulo: 'Línea Hospitalaria', desc: 'Insumos y productos para instituciones de salud.', to: '/hospitalaria', boton: 'Ver línea', icono: 'pedido' },
   { titulo: 'Mis Órdenes', desc: 'Consulta el historial y estado de tus pedidos.', to: '/orders', boton: 'Ver mis órdenes', icono: 'camion' },
 ]

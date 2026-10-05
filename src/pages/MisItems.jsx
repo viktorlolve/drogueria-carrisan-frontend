@@ -909,7 +909,7 @@ function MisItems() {
 
   return (
     <LayoutPaginaPrincipal
-      activo={tabActivo}
+      activo="mis-items"
       titulo="Mis Items"
       subtitulo="Tus favoritos, listas y compras frecuentes"
       nav={NAV_UNIFICADO}

@@ -400,7 +400,7 @@ function ResumenPedido({
             <div>
               <strong>Tenés {ordenesVencidas} {ordenesVencidas === 1 ? 'orden vencida' : 'órdenes vencidas'}</strong>
               <p>Tu línea de crédito está pausada hasta que regularices tu cuenta. Podés seguir comprando de contado.</p>
-              <Link to="/estado-cuenta" className="cart-alerta-vencidas__link">Ir a reportar pago →</Link>
+              <Link to="/estado-de-cuenta" className="cart-alerta-vencidas__link">Ir a reportar pago →</Link>
             </div>
           </div>
         )}

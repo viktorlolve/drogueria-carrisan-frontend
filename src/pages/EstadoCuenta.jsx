@@ -426,11 +426,11 @@ function ContenidoDashboard({
           <div className="ec-acceso__icono"><DollarSign size={20} /></div>
           <span>Reportar pago</span>
         </button>
-        <Link className="ec-acceso" to="/estado-cuenta/pagos">
+        <Link className="ec-acceso" to="/estado-de-cuenta/pagos">
           <div className="ec-acceso__icono"><History size={20} /></div>
           <span>Historial de pagos</span>
         </Link>
-        <Link className="ec-acceso" to="/estado-cuenta/facturas">
+        <Link className="ec-acceso" to="/estado-de-cuenta/facturas">
           <div className="ec-acceso__icono"><FileText size={20} /></div>
           <span>Ver facturas</span>
         </Link>
