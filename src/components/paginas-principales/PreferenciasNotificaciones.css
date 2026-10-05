@@ -1,0 +1,184 @@
+/* ---------------------------------------------------------------
+   Preferencias de notificación (.notif-prefs-*)
+
+   Autocontenido: NO depende de Notificaciones.css (los colores de los
+   chips de categoría se repiten aquí a propósito, para que este panel
+   se pueda montar en otra página sin arrastrar esa hoja entera).
+   Los valores son los mismos que las clases .notif-icon--* de
+   Notificaciones.css.
+   --------------------------------------------------------------- */
+.notif-prefs {
+  background: #fff;
+  border: 1px solid var(--ppal-border, #e5e7eb);
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 18px;
+}
+
+.notif-prefs__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding-bottom: 14px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--ppal-border, #e5e7eb);
+}
+
+.notif-prefs__header-icono {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #E9EFFC;
+  color: #0052DC;
+}
+
+.notif-prefs__titulo {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--ppal-text, #232b45);
+}
+
+.notif-prefs__subtitulo {
+  margin: 3px 0 0;
+  font-size: 0.82rem;
+  color: var(--ppal-text-muted, #6b6b7a);
+}
+
+.notif-prefs__fila {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 4px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.notif-prefs__fila:last-child {
+  border-bottom: none;
+}
+
+.notif-prefs__fila--maestro {
+  background: var(--ppal-brand-light, #eaf0ff);
+  border-radius: 10px;
+  padding: 12px;
+  border-bottom: none;
+  margin: 10px 0;
+}
+
+.notif-prefs__fila--error {
+  color: #dc2626;
+}
+
+.notif-prefs__icono {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notif-prefs__texto {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.notif-prefs__fila-titulo {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ppal-text, #232b45);
+}
+
+.notif-prefs__fila-descripcion {
+  font-size: 0.79rem;
+  color: var(--ppal-text-muted, #6b6b7a);
+}
+
+.notif-prefs__categorias {
+  display: flex;
+  flex-direction: column;
+}
+
+.notif-prefs__nota {
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+  color: var(--ppal-text-muted, #6b6b7a);
+}
+
+.notif-prefs__pie {
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--ppal-border, #e5e7eb);
+  font-size: 0.78rem;
+  color: var(--ppal-text-muted, #6b6b7a);
+}
+
+.notif-prefs__enlace {
+  color: var(--ppal-brand, #0052DC);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.notif-prefs__spinner {
+  flex-shrink: 0;
+  color: var(--ppal-text-muted, #6b6b7a);
+  animation: notif-prefs-spin 0.9s linear infinite;
+}
+
+@keyframes notif-prefs-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Colores de categoría (mismos valores que .notif-icon--* de Notificaciones.css) */
+.notif-prefs__icono--blue { background: #E9EFFC; color: #0052DC; }
+.notif-prefs__icono--green { background: #E6F7EC; color: #16a34a; }
+.notif-prefs__icono--purple { background: #F1EBFB; color: #7c3aed; }
+.notif-prefs__icono--orange { background: #FEF3E6; color: #ea580c; }
+.notif-prefs__icono--amber { background: #FEF6E0; color: #b45309; }
+.notif-prefs__icono--gray { background: #F1F1F2; color: #4b4d52; }
+.notif-prefs__icono--teal { background: #E0F5F1; color: #0d9488; }
+.notif-prefs__icono--cyan { background: #E0F4FE; color: #0891b2; }
+.notif-prefs__icono--red { background: #FEE2E2; color: #dc2626; }.notif-prefs__bloque {
+  margin-top: 16px;
+}
+
+.notif-prefs__bloque-titulo {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 4px;
+  padding: 0 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ppal-text-muted, #6b6b7a);
+}
+
+.notif-prefs__bloque-ayuda {
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--ppal-text-muted, #6b6b7a);
+  opacity: 0.8;
+}
+
+.notif-prefs__estado {
+  flex-shrink: 0;
+  color: var(--ppal-brand, #0052DC);
+}
+
+.notif-prefs__estado--off {
+  color: var(--ppal-text-muted, #6b6b7a);
+}

@@ -131,6 +131,19 @@ export const CATEGORIAS = {
 export const ORDEN_CATEGORIAS = Object.keys(CATEGORIAS)
 
 /**
+ * Categorías que el backend REALMENTE guarda como preferencia de push
+ * (columnas `push_*` de `notificacion_preferencias`).
+ *
+ * OJO: hay 8 categorías de notificación pero solo 6 son preferencias
+ * de push. `documentos` y `solicitudes` NO se pueden silenciar por
+ * separado — hay que usar el filtro de silencio del centro de
+ * notificaciones (localStorage), que es otra cosa. No inventar
+ * `push_documentos` / `push_solicitudes`: el PUT las ignora y el
+ * switch se revierte solo.
+ */
+export const CLAVES_PUSH = ['ordenes', 'pagos', 'chat', 'credito', 'sistema', 'ofertas']
+
+/**
  * Descripción general que se muestra dentro del acordeón
  * "¿Qué significa cada notificación?"
  *

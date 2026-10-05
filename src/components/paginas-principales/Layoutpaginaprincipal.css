@@ -177,7 +177,6 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--ppal-text-muted);
-  padding: 6px 10px 4px;
 }
 
 /* Grupo "pie" (footer del menú) — para cosas de soporte que no son el
@@ -209,15 +208,6 @@
   color: var(--ppal-text);
   text-decoration: none;
   transition: background 0.15s ease, color 0.15s ease;
-  /* Reset para cuando este mismo estilo se aplica a un <button>
-     (items tipo "accion", ej. "Crear lista nueva") en vez de a un
-     link — así se ven idénticos sin importar el elemento real. */
-  width: 100%;
-  border: none;
-  background: none;
-  font-family: inherit;
-  text-align: left;
-  cursor: pointer;
 }
 
 .ppal-nav__link svg {
@@ -279,83 +269,74 @@
 }
 
 /* -----------------------------------------------------------------
-   Grupo expandible (ej. "Ayuda >") — abre un submenú
+   Grupo plegable (acordeón) — el header despliega sus items en el
+   MIS panel. Reemplaza la vieja vista de submenú con botón "volver".
    ----------------------------------------------------------------- */
-.ppal-nav__grupo-btn {
+.ppal-nav__grupo-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   width: 100%;
-  padding: 11px 10px;
-  margin-bottom: 4px;
+  padding: 9px 10px;
   border: none;
   background: transparent;
   border-radius: 9px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--ppal-text);
+  font-family: inherit;
+  text-align: left;
   cursor: pointer;
   transition: background 0.15s ease;
 }
 
-.ppal-nav__grupo-btn:hover {
+.ppal-nav__grupo-head:hover {
   background: var(--ppal-brand-light);
 }
 
-.ppal-nav__grupo-btn--activo {
+.ppal-nav__grupo-head--activo .ppal-nav__grupo-titulo {
   color: var(--ppal-brand);
 }
 
-.ppal-nav__grupo-btn svg {
-  color: var(--ppal-text-muted);
+.ppal-nav__grupo-chevron {
   flex-shrink: 0;
-}
-
-/* -----------------------------------------------------------------
-   Vista de submenú — botón volver + header con "Ver todo" + lista
-   ----------------------------------------------------------------- */
-.ppal-nav__volver {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 6px;
-  margin-bottom: 10px;
-  border: none;
-  background: transparent;
   color: var(--ppal-text-muted);
-  font-size: 0.86rem;
-  font-weight: 600;
-  cursor: pointer;
+  transition: transform 0.2s ease, color 0.15s ease;
 }
 
-.ppal-nav__volver:hover {
-  color: var(--ppal-brand);
+.ppal-nav__grupo-head--abierto .ppal-nav__grupo-chevron {
+  transform: rotate(90deg);
 }
 
-.ppal-nav__submenu-header {
-  display: flex;
+.ppal-nav__grupo-items {
+  margin-bottom: 8px;
+}
+
+/* Badge de pendientes (notificaciones, chat, cotizaciones, pedidos de
+   requerimientos y documentos). Mismo color de marca del nav. */
+.ppal-nav__badge {
+  margin-left: auto;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 4px 10px 12px;
-  margin-bottom: 6px;
-  border-bottom: 1px solid var(--ppal-border);
-}
-
-.ppal-nav__submenu-titulo {
-  font-size: 1rem;
+  justify-content: center;
+  background: var(--ppal-brand);
+  color: #fff;
+  font-size: 0.7rem;
   font-weight: 700;
-  color: var(--ppal-text);
+  line-height: 1;
 }
 
-.ppal-nav__ver-todo {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--ppal-brand);
-  text-decoration: underline;
-  white-space: nowrap;
+.ppal-nav__link--activo .ppal-nav__badge {
+  background: var(--ppal-brand);
+  color: #fff;
 }
 
+.ppal-nav__sublink--activo .ppal-nav__badge {
+  background: var(--ppal-brand);
+  color: #fff;
+}
 .ppal-nav__sublink {
   display: flex;
   align-items: center;
@@ -368,15 +349,6 @@
   color: var(--ppal-text);
   text-decoration: none;
   transition: background 0.15s ease, color 0.15s ease;
-  /* Mismo reset que .ppal-nav__link, por si el item es "accion" */
-  width: 100%;
-  border-left: none;
-  border-right: none;
-  border-top: none;
-  background: none;
-  font-family: inherit;
-  text-align: left;
-  cursor: pointer;
 }
 
 .ppal-nav__sublink:last-child {
@@ -427,78 +399,6 @@
   margin: 4px 0 0;
   font-size: 0.9rem;
   color: var(--ppal-text-muted);
-}
-
-/* -----------------------------------------------------------------
-   Preferencias de notificación (submenu con toggles)
-   ----------------------------------------------------------------- */
-.ppal-nav__preferencias {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.ppal-nav__pref-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  transition: background 0.15s;
-}
-
-.ppal-nav__pref-item:hover {
-  background: rgba(0, 0, 0, 0.04);
-}
-
-.ppal-nav__pref-icono {
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.ppal-nav__pref-texto {
-  flex: 1;
-  font-family: 'Inter', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--ppal-text);
-}
-
-.ppal-nav__pref-toggle {
-  position: relative;
-  width: 38px;
-  height: 22px;
-  border: none;
-  border-radius: 11px;
-  background: #d1d5db;
-  cursor: pointer;
-  transition: background 0.2s;
-  flex-shrink: 0;
-}
-
-.ppal-nav__pref-toggle--on {
-  background: #12A594;
-}
-
-.ppal-nav__pref-toggle-thumb {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-  transition: transform 0.2s;
-}
-
-.ppal-nav__pref-toggle--on .ppal-nav__pref-toggle-thumb {
-  transform: translateX(16px);
 }
 
 /* -----------------------------------------------------------------

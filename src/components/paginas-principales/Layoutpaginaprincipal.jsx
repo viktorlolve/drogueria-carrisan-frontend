@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { Menu, X, ChevronRight, ChevronLeft, LogOut } from 'lucide-react'
+import { Menu, X, ChevronRight, LogOut } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import { useNavBadges } from '../../context/NavBadgesContext'
 import { NAV_UNIFICADO } from './NavUnificado'
+import { normalizarNav, grupoDeItem, gruposAbiertosIniciales } from './navUnificadoHelpers'
 import InstalarAppBtn from '../InstalarAppBtn'
 import './Layoutpaginaprincipal.css'
 
@@ -19,10 +21,9 @@ import './Layoutpaginaprincipal.css'
 // de la página (y el navbar) hacia la derecha con una transición
 // corta (efecto push, no overlay).
 //
-// El menú (prop "nav") es intercambiable: por defecto usa el menú de
-// cuenta (navPaginasPrincipales.js — Mis Órdenes, Estado de Cuenta,
-// Pagos, etc.), pero cualquier página puede pasarle otro array con la
-// misma forma para mostrar un menú totalmente distinto, por ejemplo:
+// El menú (prop "nav") es intercambiable: por defecto es
+// NAV_UNIFICADO, y cualquier página puede pasarle otro con la misma
+// forma { grupos, pie } para mostrar links distintos, por ejemplo:
 //
 //   <LayoutPaginaPrincipal activo="grocery" titulo="Grocery" nav={NAV_DEPARTAMENTOS}>
 //
@@ -30,146 +31,102 @@ import './Layoutpaginaprincipal.css'
 // van a necesitar links a categorías relacionadas (lo que el cliente
 // está explorando para comprar), no los links de cuenta de Mis
 // Órdenes/Pagos. Mismo componente, mismo drawer, mismo push del
-// navbar, mismos submenús — solo cambia qué lista de grupos renderiza.
+// navbar — solo cambia qué grupos renderiza.
 //
-// Los grupos con tipo: 'submenu' (ver navPaginasPrincipales.js) se
-// muestran como una sola fila que abre una segunda pantalla dentro
-// del mismo panel, con botón de volver y un link "Ver todo" — igual
-// al patrón "Browse Departments / See all" de Walmart.
+// Cada grupo se despliega como ACORDEÓN dentro del mismo panel (sin
+// pantalla secundaria ni botón de volver) y arranca abierto solo si
+// contiene el item activo. Los badges salen de `NavBadgesContext`
+// (GET /nav/badges) para los items que declaran `contador`.
 //
-// Nota: este componente usa elementos planos (div/nav/button) en vez
-// de <Box>/<Flex> de Chakra a propósito. Chakra inyecta su propio CSS
-// en runtime (vía Emotion) DESPUÉS de nuestros estilos estáticos, y
-// con especificidad empatada gana el que se inserta al final —
-// rompiendo nuestros media queries de display/flex-wrap responsivos.
-// Mismo criterio que ya usan MenuDrawer.jsx y EstadoCuenta.jsx.
+// Nota de arquitectura: este componente usa elementos planos (div/nav/
+// button) en vez de <Box>/<Flex> de Chakra a propósito. Chakra inyecta
+// su propio CSS en runtime (vía Emotion) DESPUÉS de nuestros estilos
+// estáticos, y con especificidad empatada gana el que se inserta al
+// final — rompiendo nuestros media queries de display/flex-wrap
+// responsivos. Mismo criterio que MenuDrawer.jsx y EstadoCuenta.jsx.
 // ---------------------------------------------------------------
-// Un solo link/botón de nav, reusado en el menú principal y en los
-// submenús. Si el item trae "accion" (en vez de "to") se renderiza
-// como botón y dispara onAccion — para casos como "Crear lista nueva"
-// que no navegan a ningún lado, solo abren algo en la página actual.
-function ItemNav({ item, activo, onNavigate, onAccion, variante }) {
+// Un solo link de nav, reusado en el grupo principal y en el pie. El
+// badge (número sin leer) se pinta a la derecha cuando el item
+// declara `contador` y el contexto trae un valor mayor a 0.
+function ItemNav({ item, activo, badge, variante }) {
   const esActivo = item.id === activo
   const Icono = item.icono
   const esSublink = variante === 'sublink'
   const clase = esSublink ? 'ppal-nav__sublink' : 'ppal-nav__link'
   const claseActivo = esSublink ? 'ppal-nav__sublink--activo' : 'ppal-nav__link--activo'
 
-  const contenido = (
-    <>
+  return (
+    <NavLink to={item.to} className={`${clase} ${esActivo ? claseActivo : ''}`}>
       {Icono && !esSublink && <Icono size={18} strokeWidth={esActivo ? 2.4 : 2} />}
       <span>{item.texto}</span>
-      {esSublink ? <ChevronRight size={16} /> : esActivo && <ChevronRight size={16} className="ppal-nav__chevron" />}
-    </>
-  )
-
-  if (item.accion) {
-    return (
-      <button
-        type="button"
-        className={`${clase} ${esActivo ? claseActivo : ''}`}
-        onClick={() => {
-          onAccion?.(item.accion)
-          onNavigate?.()
-        }}
-      >
-        {contenido}
-      </button>
-    )
-  }
-
-  return (
-    <NavLink to={item.to} onClick={onNavigate} className={`${clase} ${esActivo ? claseActivo : ''}`}>
-      {contenido}
+      {badge > 0 && (
+        <span className="ppal-nav__badge" aria-label={`${badge} sin resolver`}>
+          {badge > 99 ? '99+' : badge}
+        </span>
+      )}
+      {esActivo && <ChevronRight size={16} className="ppal-nav__chevron" />}
     </NavLink>
   )
 }
 
-function ContenidoNav({ nav, activo, titulo, esAdmin, onNavigate, onAccion }) {
-  // null = menú principal. Si no, es el grupo cuyo submenú está abierto.
-  const [grupoAbierto, setGrupoAbierto] = useState(null)
+function ContenidoNav({ nav, activo, titulo, esAdmin, onNavigate }) {
+  const { conteos } = useNavBadges()
+  const modelo = normalizarNav(nav)
 
-  if (grupoAbierto) {
-    const items = grupoAbierto.items.filter((item) => !esAdmin || !item.soloCliente)
-    const esPreferencias = items.some((item) => item.accion?.startsWith('toggle-preferencia-'))
+  const [gruposAbiertos, setGruposAbiertos] = useState(() => gruposAbiertosIniciales(modelo, activo))
 
-    return (
-      <nav className="ppal-nav" aria-label={`Submenú ${grupoAbierto.titulo}`}>
-        <button type="button" className="ppal-nav__volver" onClick={() => setGrupoAbierto(null)}>
-          <ChevronLeft size={17} />
-          Volver al menú principal
-        </button>
-
-        <div className="ppal-nav__submenu-header">
-          <span className="ppal-nav__submenu-titulo">{grupoAbierto.titulo}</span>
-          {grupoAbierto.verTodoTo && (
-            <Link to={grupoAbierto.verTodoTo} onClick={onNavigate} className="ppal-nav__ver-todo">
-              Ver todo
-            </Link>
-          )}
-        </div>
-
-        {esPreferencias ? (
-          <div className="ppal-nav__preferencias">
-            {items.map((item) => {
-              const Icono = item.icono
-              return (
-                <div key={item.id} className="ppal-nav__pref-item">
-                  <span className={`ppal-nav__pref-icono notif-icon--${item.color}`}>
-                    <Icono size={16} />
-                  </span>
-                  <span className="ppal-nav__pref-texto">{item.texto}</span>
-                  <button
-                    type="button"
-                    className={`ppal-nav__pref-toggle ${item.silenciada ? '' : 'ppal-nav__pref-toggle--on'}`}
-                    onClick={() => item.onToggle?.()}
-                    aria-label={`${item.silenciada ? 'Activar' : 'Desactivar'} notificaciones de ${item.texto}`}
-                  >
-                    <span className="ppal-nav__pref-toggle-thumb" />
-                  </button>
-                </div>
-              )
-            })}
-          </div>
-        ) : (
-          items.map((item) => (
-            <ItemNav key={item.id} item={item} activo={activo} onNavigate={onNavigate} onAccion={onAccion} variante="sublink" />
-          ))
-        )}
-      </nav>
-    )
+  // Si la ruta cambia con el layout ya montado, se abre el grupo del
+  // item nuevo. Es el patrón "ajustar estado durante el render" del
+  // AGENTS: un setState síncrono dentro de un useEffect dispara la
+  // regla react-hooks/set-state-in-effect.
+  const [activoAnterior, setActivoAnterior] = useState(activo)
+  if (activo !== activoAnterior) {
+    setActivoAnterior(activo)
+    const grupo = grupoDeItem(modelo, activo)
+    if (grupo) setGruposAbiertos((prev) => (prev.has(grupo) ? prev : new Set(prev).add(grupo)))
   }
 
-  const gruposPrincipales = nav.filter((g) => !g.pie)
-  const gruposPie = nav.filter((g) => g.pie)
+  function toggleGrupo(id) {
+    setGruposAbiertos((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
-  function renderGrupo(grupo) {
+  function renderGrupo(grupo, esPie = false) {
     const items = grupo.items.filter((item) => !esAdmin || !item.soloCliente)
     if (items.length === 0) return null
 
-    // Grupo expandible: una sola fila que abre el submenú
-    if (grupo.tipo === 'submenu') {
-      const grupoActivo = items.some((item) => item.id === activo)
-      return (
-        <button
-          key={grupo.titulo}
-          type="button"
-          className={`ppal-nav__grupo-btn ${grupoActivo ? 'ppal-nav__grupo-btn--activo' : ''}`}
-          onClick={() => setGrupoAbierto(grupo)}
-        >
-          <span>{grupo.titulo}</span>
-          <ChevronRight size={16} />
-        </button>
-      )
-    }
+    const abierto = gruposAbiertos.has(grupo.id)
+    const grupoActivo = items.some((item) => item.id === activo)
 
-    // Grupo normal: items listados directo
     return (
-      <div className={`ppal-nav__grupo ${grupo.pie ? 'ppal-nav__grupo--pie' : ''}`} key={grupo.titulo}>
-        <span className="ppal-nav__grupo-titulo">{grupo.titulo}</span>
-        {items.map((item) => (
-          <ItemNav key={item.id} item={item} activo={activo} onNavigate={onNavigate} onAccion={onAccion} />
-        ))}
+      <div className={`ppal-nav__grupo ${esPie ? 'ppal-nav__grupo--pie' : ''}`}>
+        <button
+          type="button"
+          className={`ppal-nav__grupo-head ${abierto ? 'ppal-nav__grupo-head--abierto' : ''} ${grupoActivo ? 'ppal-nav__grupo-head--activo' : ''}`}
+          onClick={() => toggleGrupo(grupo.id)}
+          aria-expanded={abierto}
+        >
+          <span className="ppal-nav__grupo-titulo">{grupo.titulo}</span>
+          <ChevronRight size={16} className="ppal-nav__grupo-chevron" />
+        </button>
+
+        {abierto && (
+          <div className="ppal-nav__grupo-items">
+            {items.map((item) => (
+              <ItemNav
+                key={item.id}
+                item={item}
+                activo={activo}
+                badge={item.contador ? conteos?.[item.contador] || 0 : 0}
+                variante={esPie ? undefined : 'sublink'}
+              />
+            ))}
+          </div>
+        )}
       </div>
     )
   }
@@ -184,18 +141,18 @@ function ContenidoNav({ nav, activo, titulo, esAdmin, onNavigate, onAccion }) {
         </div>
       )}
 
-      {gruposPrincipales.map(renderGrupo)}
-      {gruposPie.map(renderGrupo)}
+      {modelo.grupos.map((grupo) => renderGrupo(grupo))}
+      {modelo.pie && renderGrupo(modelo.pie, true)}
     </nav>
   )
 }
 
-function LayoutPaginaPrincipal({ activo, titulo, subtitulo, acciones, nav = NAV_UNIFICADO, onAccion, children }) {
+function LayoutPaginaPrincipal({ activo, titulo, subtitulo, acciones, nav = NAV_UNIFICADO, children }) {
   const { user, logout } = useAuth()
   const [drawerAbierto, setDrawerAbierto] = useState(false)
   // Se incrementa cada vez que el drawer se cierra, para forzar que
-  // ContenidoNav se remonte y vuelva al menú principal (no se queda
-  // "pegado" en un submenú la próxima vez que se abre)
+  // ContenidoNav se remonte y vuelva a su estado inicial (el grupo del
+  // item activo), en vez de quedarse "pegado" en otro accordion
   const [drawerResetKey, setDrawerResetKey] = useState(0)
 
   const cerrarDrawer = () => {
@@ -248,7 +205,7 @@ function LayoutPaginaPrincipal({ activo, titulo, subtitulo, acciones, nav = NAV_
         </div>
 
         <div className="ppal-drawer-panel__scroll">
-          <ContenidoNav key={drawerResetKey} nav={nav} activo={activo} titulo={titulo} esAdmin={user?.es_admin} onNavigate={cerrarDrawer} onAccion={onAccion} />
+          <ContenidoNav key={drawerResetKey} nav={nav} activo={activo} titulo={titulo} esAdmin={user?.es_admin} onNavigate={cerrarDrawer} />
         </div>
 
         {!user?.es_admin && (
@@ -294,7 +251,7 @@ function LayoutPaginaPrincipal({ activo, titulo, subtitulo, acciones, nav = NAV_
                     <p className="ppal-sidebar__email">{user?.email}</p>
                   </div>
                 </div>
-                <ContenidoNav nav={nav} activo={activo} titulo={titulo} esAdmin={user?.es_admin} onAccion={onAccion} />
+                <ContenidoNav nav={nav} activo={activo} titulo={titulo} esAdmin={user?.es_admin} />
                 {!user?.es_admin && <InstalarAppBtn />}
               </div>
             </aside>

@@ -5,7 +5,6 @@ import api from '../api/axios'
 import { useAuth } from '../context/AuthContext'
 import { useFavoritos } from '../context/FavoritosContext'
 import { usePush } from '../hooks/usePush'
-import { CATEGORIAS } from '../utils/notificacionesCatalogo'
 import {
   ChevronRight, ChevronDown, Loader2, AlertCircle, AlertTriangle,
   MessageCircle, ShieldCheck, Wallet, Bell, LogOut, Settings, Lock, Scale, Users,
@@ -115,23 +114,13 @@ function ContenidoModalCuenta({ user, inicial, onCerrar, onCambiarCuenta, onCerr
 
 // ---------------------------------------------------------
 // Contenido de "Permisos y notificaciones" — toggle principal
-// de push + toggles por categoría de notificación.
+// de push + enlace al panel de preferencias de Notificaciones.
 // ---------------------------------------------------------
 function ContenidoModalPermisos() {
   const { soportado, suscrito, permiso, pidiendoPermiso, error, activar, desactivar } = usePush()
-  const [prefs, setPrefs] = useState(null)
-  const [guardando, setGuardando] = useState('')
 
   const permisoBloqueado = permiso === 'denied'
 
-  useEffect(() => {
-    api.get('/notifications/preferences')
-      .then(({ data }) => setPrefs(data))
-      .catch(() => setPrefs({
-        push_activo: true, push_ordenes: true, push_pagos: true,
-        push_chat: true, push_credito: true, push_sistema: true, push_ofertas: true,
-      }))
-  }, [])
 
   function handleTogglePush() {
     if (pidiendoPermiso || permisoBloqueado) return
@@ -139,21 +128,6 @@ function ContenidoModalPermisos() {
       desactivar()
     } else {
       activar()
-    }
-  }
-
-  async function handleToggleCategoria(campo) {
-    if (!prefs) return
-    const nuevo = !prefs[campo]
-    const actualizadas = { ...prefs, [campo]: nuevo }
-    setPrefs(actualizadas)
-    setGuardando(campo)
-    try {
-      await api.put('/notifications/preferences', { [campo]: nuevo })
-    } catch {
-      setPrefs(prev => ({ ...prev, [campo]: !nuevo }))
-    } finally {
-      setGuardando('')
     }
   }
 
@@ -201,42 +175,18 @@ function ContenidoModalPermisos() {
         </div>
       )}
 
-      {suscrito && prefs && (
-        <div className="modal-permisos__categorias">
-          <span className="modal-permisos__categorias-titulo">¿Qué notificaciones querés recibir?</span>
-          {Object.values(CATEGORIAS).map(cat => {
-            const campo = `push_${cat.id}`
-            const Icono = cat.icono
-            return (
-              <div className="modal-permisos__fila" key={cat.id}>
-                <div
-                  className="modal-permisos__fila-icono"
-                  style={{
-                    background: `var(--color-${cat.color}-light, var(--color-bg))`,
-                    color: `var(--color-${cat.color}, var(--color-brand))`,
-                  }}
-                >
-                  <Icono size={17} />
-                </div>
-                <div className="modal-permisos__fila-texto">
-                  <span className="modal-permisos__fila-titulo">{cat.nombre}</span>
-                </div>
-                <Switch.Root
-                  checked={prefs[campo] !== false}
-                  disabled={guardando === campo}
-                  size="md"
-                  onCheckedChange={() => handleToggleCategoria(campo)}
-                >
-                  <Switch.HiddenInput />
-                  <Switch.Control>
-                    <Switch.Thumb />
-                  </Switch.Control>
-                </Switch.Root>
-              </div>
-            )
-          })}
+      <Link to="/notificaciones?preferencias=1" className="modal-permisos__fila modal-permisos__fila--link">
+        <div className="modal-permisos__fila-icono">
+          <Bell size={17} />
         </div>
-      )}
+        <div className="modal-permisos__fila-texto">
+          <span className="modal-permisos__fila-titulo">Preferencias de notificación</span>
+          <span className="modal-permisos__fila-descripcion">
+            Elegí qué avisos recibís (órdenes, pagos, chat, crédito, sistema y ofertas)
+          </span>
+        </div>
+        <ChevronRight size={18} className="modal-permisos__fila-flecha" />
+      </Link>
 
       <div className="modal-permisos__fila">
         <div className="modal-permisos__fila-icono">

@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Accordion,
   Badge,
@@ -7,7 +7,7 @@ import {
 } from '@chakra-ui/react'
 import { ChevronDown, Filter, CheckCheck } from 'lucide-react'
 import LayoutPaginaPrincipal from '../components/paginas-principales/Layoutpaginaprincipal'
-import { NAV_NOTIFICACIONES } from '../components/paginas-principales/NavNotificaciones'
+import PreferenciasNotificaciones from '../components/paginas-principales/PreferenciasNotificaciones'
 import api from '../api/axios'
 import { safeGetItem, safeSetItem } from '../utils/safeStorage'
 import {
@@ -48,6 +48,8 @@ function Notificaciones() {
   const [filtro, setFiltro] = useState('todas')
   const [silenciadas, setSilenciadas] = useState(leerSilenciadas)
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const refPreferencias = useRef(null)
 
   const cargarNotificaciones = useCallback(async () => {
     try {
@@ -94,6 +96,14 @@ function Notificaciones() {
     safeSetItem(CLAVE_SILENCIADAS, JSON.stringify(nuevas))
   }
 
+  // Deep link desde Mi Cuenta: "?preferencias=1" deja el panel a la vista.
+  useEffect(() => {
+    if (searchParams.get('preferencias') === '1') {
+      refPreferencias.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   function handleClick(notificacion) {
     if (!notificacion.leida) marcarLeida(notificacion.id)
     if (notificacion.tipo === 'chat_mensaje') {
@@ -129,13 +139,12 @@ function Notificaciones() {
 
   if (error) {
     return (
-      <LayoutPaginaPrincipal titulo="Notificaciones" nav={NAV_NOTIFICACIONES({ silenciadas, onToggleSilenciar: toggleSilenciar })}>
+      <LayoutPaginaPrincipal titulo="Notificaciones">
         <p className="notif-error">{error}</p>
       </LayoutPaginaPrincipal>
     )
   }
 
-  const navConfig = NAV_NOTIFICACIONES({ silenciadas, onToggleSilenciar: toggleSilenciar })
 
   // El header del layout (donde vive la prop "acciones") se oculta por
   // completo en <1024px, así que el botón se pinta dos veces: arriba del
@@ -154,7 +163,6 @@ function Notificaciones() {
     <LayoutPaginaPrincipal
       activo="notificaciones"
       titulo="Notificaciones"
-      nav={navConfig}
       acciones={
         <button
           className="notif-marcar-btn"
@@ -203,6 +211,9 @@ function Notificaciones() {
         </aside>
 
         <div className="notif-container">
+          <div ref={refPreferencias}>
+            <PreferenciasNotificaciones silenciadas={silenciadas} onToggleSilenciar={toggleSilenciar} />
+          </div>
           {/* Móvil: el header del layout no se ve, así que "Marcar todas
               leídas" vive aquí como fila propia */}
           <div className="notif-mobile-acciones">
