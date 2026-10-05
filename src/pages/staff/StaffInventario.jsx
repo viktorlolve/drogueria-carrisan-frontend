@@ -31,9 +31,10 @@ import './StaffComercial.css'
 import './StaffInventario.css'
 
 const POR_PAGINA = 20
-// Espejo de `URL_FOTO_MAX` del backend. Acá solo evita gastar un request; el
+// Espejo de los límites del backend. Acá solo evita gastar un request; el
 // mensaje que decide es el del servidor y se muestra tal cual.
 const URL_FOTO_MAX = 2000
+const MAX_FOTO_MB = 8
 
 // Los 4 valores del CHECK `productos_foto_estado_check`, con la explicación que
 // la section de estado del drawer muestra debajo del selector.
@@ -470,6 +471,10 @@ function StaffInventario() {
 
   async function subirArchivo() {
     if (!archivo) return
+    if (archivo.size > MAX_FOTO_MB * 1024 * 1024) {
+      setDrawerError(`La imagen pesa ${(archivo.size / 1024 / 1024).toFixed(1)} MB y el máximo son ${MAX_FOTO_MB} MB`)
+      return
+    }
     setSubiendoFoto(true)
     setDrawerError('')
     setFotoOk('')

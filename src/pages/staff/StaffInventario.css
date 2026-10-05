@@ -1,0 +1,443 @@
+/* src/pages/staff/StaffInventario.css
+ *
+ * Estilos PROPIOS de la consola de Inventario. Todo lo que ya existía en
+ * `StaffComercial.css` (`.sp-page`, `.sp-toolbar`, `.sp-input`, `.sp-table`,
+ * `.sp-paginacion`, `.sp-hint`, `.sp-importar__file`…) se REUSA y no se
+ * re-declara acá: lo propio de esta página lleva prefijo `.si-`.
+ *
+ * El color de acento nunca se fija: sale de `--ldep-color`, que inyecta
+ * `LayoutDepartamento` (Logística = naranja). Por eso la misma página se ve
+ * del color del departamento sin tocar el CSS.
+ */
+
+/* ---------------------------------------------------------------- botones */
+
+.si-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+.si-btn:hover:not(:disabled) { background: #f9fafb; }
+.si-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.si-btn--principal {
+  background: var(--ldep-color, #D97706);
+  border-color: var(--ldep-color, #D97706);
+  color: #fff;
+}
+.si-btn--principal:hover:not(:disabled) { filter: brightness(0.95); background: var(--ldep-color, #D97706); }
+
+.si-btn--peligro { background: #fee2e2; border-color: #fecaca; color: #b91c1c; }
+.si-btn--peligro:hover:not(:disabled) { background: #fecaca; }
+
+.si-btn--sutil { border-style: dashed; color: #475569; }
+
+/* Botón que abre la hoja de filtros en móvil. */
+.si-btn--filtros { width: 100%; }
+
+/* ------------------------------------------------- input de molécula (datalist) */
+
+.si-input-molecula { min-width: 180px; }
+
+/* ------------------------------------------------------- colas de trabajo */
+
+.si-queue {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex-basis: 100%;
+  margin-top: 4px;
+}
+.si-queue__titulo {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  font-weight: 700;
+}
+.si-queue__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #475569;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.si-queue__btn:hover { border-color: var(--ldep-color, #D97706); }
+.si-queue__conteo {
+  min-width: 22px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: center;
+}
+/* La cola activa se marca con el color del departamento (`.si-queue__btn--on`). */
+.si-queue__btn--on {
+  background: var(--ldep-color, #D97706);
+  border-color: var(--ldep-color, #D97706);
+  color: #fff;
+}
+.si-queue__btn--on .si-queue__conteo { background: rgba(255, 255, 255, 0.28); color: #fff; }
+
+/* ------------------------------------------------- estados de la foto (badge) */
+
+.si-estado {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.si-estado--sin_foto { background: #f1f5f9; color: #64748b; }
+.si-estado--dudosa { background: #fef3c7; color: #92400e; }
+.si-estado--ok { background: #dcfce7; color: #166534; }
+.si-estado--manual { background: #dbeafe; color: #1e40af; }
+
+/* ------------------------------------------------------------------ tabla */
+
+.si-fila { cursor: pointer; }
+.si-fila:hover { background: #f8fafc; }
+
+.si-nombre { font-weight: 600; }
+.si-col-costo { white-space: nowrap; }
+
+.si-mini-badge {
+  display: inline-block;
+  margin-top: 3px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.si-precio { font-weight: 700; white-space: nowrap; }
+.si-precio--vacio { color: #b45309; font-weight: 600; font-style: italic; }
+
+.si-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: #eef2f7;
+  border: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+.si-thumb--card { width: 56px; height: 56px; }
+
+/* Aviso de "seleccionados" + el por qué todavía no hay acciones en bloque. */
+.si-seleccion {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: baseline;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+  font-size: 0.85rem;
+}
+
+/* ----------------------------------------------- tarjetas (vista de móvil) */
+
+.si-tarjetas { display: flex; flex-direction: column; gap: 8px; }
+
+.si-tarjeta {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas:
+    'img texto precio'
+    'img estado estado';
+  align-items: center;
+  gap: 4px 10px;
+  padding: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+.si-tarjeta:hover { border-color: var(--ldep-color, #D97706); }
+
+.si-tarjeta > .si-thumb { grid-area: img; }
+.si-tarjeta__texto { grid-area: texto; min-width: 0; }
+.si-tarjeta__nombre {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+.si-tarjeta__mol {
+  display: block;
+  font-size: 0.72rem;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.si-tarjeta__precio {
+  grid-area: precio;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ldep-color-strong, #b45309);
+  white-space: nowrap;
+}
+.si-tarjeta .si-estado { grid-area: estado; justify-self: start; }
+
+/* ------------------------------------------------ hoja de filtros (móvil) */
+
+.si-sheet { position: fixed; inset: 0; z-index: 70; }
+.si-sheet__overlay { position: absolute; inset: 0; background: rgba(17, 24, 39, 0.5); }
+.si-sheet__panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 88vh;
+  padding: 14px;
+  border-radius: 16px 16px 0 0;
+  background: #fff;
+  overflow-y: auto;
+}
+.si-sheet__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.si-sheet__titulo { font-weight: 700; font-size: 1rem; }
+.si-sheet__cerrar {
+  border: none;
+  background: transparent;
+  color: #475569;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+/* Dentro de la hoja los controles van apilados y a lo ancho. */
+.si-sheet__panel .sp-toolbar { flex-direction: column; align-items: stretch; }
+.si-sheet__panel .sp-input,
+.si-sheet__panel .sp-select { width: 100%; }
+.si-sheet__panel .sp-check { padding: 4px 0; }
+
+/* ----------------------------------------------------------------- drawer */
+
+.si-drawer { position: fixed; inset: 0; z-index: 80; }
+.si-drawer__overlay { position: absolute; inset: 0; background: rgba(17, 24, 39, 0.55); }
+
+.si-drawer__panel {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  overflow: hidden;
+  /* Móvil: hoja a pantalla completa (el diseño pide hoja inferior en móvil). */
+  inset: 0;
+}
+
+/* Escritorio: panel lateral derecho. */
+@media (min-width: 768px) {
+  .si-drawer__panel {
+    inset: 0 0 0 auto;
+    width: min(460px, 100%);
+    box-shadow: -8px 0 24px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.si-drawer__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  background: var(--ldep-color-soft, #fffbeb);
+}
+.si-drawer__head-textos { min-width: 0; }
+.si-drawer__eyebrow {
+  margin: 0;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ldep-color, #D97706);
+  font-weight: 700;
+}
+.si-drawer__titulo {
+  margin: 2px 0 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #111827;
+  overflow-wrap: anywhere;
+}
+.si-drawer__sku { margin: 3px 0 0; font-size: 0.75rem; color: #64748b; }
+.si-drawer__cerrar {
+  border: none;
+  background: transparent;
+  color: #475569;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.si-drawer__cerrar:hover { background: rgba(0, 0, 0, 0.06); }
+
+.si-drawer__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* --------------------------------------------------------------- secciones */
+
+.si-fieldset { display: flex; flex-direction: column; gap: 8px; }
+.si-fieldset__titulo {
+  margin: 0;
+  padding-bottom: 5px;
+  border-bottom: 2px solid var(--ldep-color-soft, #fde68a);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1f2937;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.si-fila-botones { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+/* Label que hace de botón de "elegir archivo" (no hay input file estilizable). */
+.si-file {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px dashed #cbd5e1;
+  background: #fff;
+  color: #475569;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.si-file:hover { border-color: var(--ldep-color, #D97706); color: var(--ldep-color, #D97706); }
+.si-file input { display: none; }
+
+.si-input-url { flex: 1; min-width: 180px; }
+.si-input--readonly { background: #f8fafc; color: #64748b; }
+.si-select-estado { width: 100%; max-width: 280px; }
+
+.si-preview {
+  width: 100%;
+  max-width: 240px;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  object-fit: contain;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+/* ------------------------------------------------------------------ precio */
+
+.si-grid-precio {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+@media (min-width: 480px) {
+  .si-grid-precio { grid-template-columns: 1fr 1fr; }
+}
+.si-label { display: flex; flex-direction: column; gap: 4px; }
+.si-label > span { font-size: 0.78rem; font-weight: 700; color: #475569; }
+.si-label input { width: 100%; }
+
+.si-sin-permiso {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------- datos (lectura) */
+
+.si-datos {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+@media (min-width: 480px) {
+  .si-datos { grid-template-columns: 1fr 1fr; }
+}
+.si-dato {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 8px;
+  border: 1px solid #eef2f6;
+  border-radius: 6px;
+  background: #fbfdff;
+  min-width: 0;
+}
+.si-dato__k {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #64748b;
+  font-weight: 700;
+}
+.si-dato__v {
+  font-size: 0.82rem;
+  color: #1f2937;
+  overflow-wrap: anywhere;
+}
+.si-dato__v--mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.75rem; }
+
+/* ------------------------------------------------------------------ avisos */
+
+.si-nota {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.82rem;
+}
+.si-nota--ok { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
+.si-nota--error { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
