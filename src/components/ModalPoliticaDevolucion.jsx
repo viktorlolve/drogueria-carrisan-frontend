@@ -13,21 +13,21 @@ const SECCIONES = [
     titulo: 'Cuándo aplica',
     items: [
       'Producto dañado o con el empaque comprometido al recibirlo.',
-      'Producto distinto o en cantidad distinta a la de tu pedido.',
+      'Producto distinto laboratorio o presentación.',
       'Producto vencido o con fecha de vencimiento menor a la acordada.',
     ],
   },
   {
     Icono: Clock,
     titulo: 'Plazo para reportarlo',
-    items: ['Dentro de las 48 horas siguientes a la entrega o al retiro del pedido.'],
+    items: ['Dentro de las 24 horas siguientes a la entrega o al retiro del pedido.'],
   },
   {
     Icono: FileText,
     titulo: 'Condiciones',
     items: [
       'Empaque original, sin abrir y con lote y fecha visibles.',
-      'Número de orden o factura del pedido.',
+      'Número de orden.',
       'Fotos del producto y del empaque que muestren el problema.',
     ],
   },
@@ -35,7 +35,7 @@ const SECCIONES = [
     Icono: Ban,
     titulo: 'No aplica en',
     items: [
-      'Productos refrigerados o de cadena de frío una vez entregados.',
+      'Productos refrigerados una vez entregados.',
       'Medicamentos controlados.',
       'Productos abiertos, usados o con el empaque alterado.',
     ],
@@ -104,14 +104,14 @@ export default function ModalPoliticaDevolucion({ abierto, onCerrar }) {
               Cómo solicitarlo
             </h3>
             <p>
-              Escríbenos desde Ayuda con tu número de orden y las fotos. Revisamos el caso y
+              Escríbenos al whatsapp directamente con tu número de orden y las fotos. Revisamos el caso y
               resolvemos con reposición del producto o nota de crédito en tu cuenta.
             </p>
           </section>
         </div>
 
         <footer className="dev-modal__footer">
-          <Link to="/ayuda" className="dev-modal__btn dev-modal__btn--secundario" onClick={onCerrar}>
+          <Link to="/contacto" className="dev-modal__btn dev-modal__btn--secundario" onClick={onCerrar}>
             Contactar a la empresa
           </Link>
           <button type="button" className="dev-modal__btn dev-modal__btn--primario" onClick={onCerrar}>
