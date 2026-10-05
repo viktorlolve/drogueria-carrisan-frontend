@@ -36,6 +36,7 @@ rules: {
               'useFavoritos',
               'useStaffAuth',
               'useStaffBadges',
+              'useNavBadges',
               'formatUSD',
               'formatFecha',
               'etiquetaEnvio',
