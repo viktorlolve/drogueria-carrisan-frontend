@@ -22,7 +22,7 @@
 // `StaffComercial.css` (las mismas que usa /staff/precios); lo propio de esta
 // página lleva prefijo `.si-*` y vive en `StaffInventario.css`.
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import { useEsMobile } from '../../hooks/useEsMobile'
@@ -59,7 +59,7 @@ const PRESETS_COLA = [
   { texto: 'Dudosa', conteo: 'dudosa', campo: 'foto_estado', valor: 'dudosa' },
   { texto: 'Sin precio', conteo: 'sin_precio', campo: 'sin_precio', valor: true },
   { texto: 'Sin proveedor', conteo: 'sin_proveedor', campo: 'sin_proveedor', valor: true },
-  { texto: 'Manual', conteo: 'manual', campo: 'foto_estado', valor: 'manual' },
+  { texto: 'Asignadas a mano', conteo: 'manual', campo: 'foto_estado', valor: 'manual' },
 ]
 
 const FILTROS_INICIALES = {
@@ -272,7 +272,7 @@ function StaffInventario() {
   const [seleccion, setSeleccion] = useState([])
   const [recarga, setRecarga] = useState(0)
 
-  // Filtros. Los dos textos van aparte porque van con debounce (escrib them no
+  // Filtros. Los dos textos van aparte porque van con debounce (escribirlos no
   // puede disparar un request por tecla); el resto viaja en un objeto para que
   // el efecto de la lista tenga una sola dependencia.
   const [buscar, setBuscar] = useState('')
@@ -303,6 +303,13 @@ function StaffInventario() {
   const [guardandoFoto, setGuardandoFoto] = useState(false)
   const [guardandoPrecio, setGuardandoPrecio] = useState(false)
 
+  // Cuáles de los dos campos de edición tienen algo tecleado SIN guardar. Es un
+  // ref y no estado a propósito: el refetch del detalle (cada escritura bumpea
+  // `detalleRecarga`) repone los campos con lo que dice el servidor, y con estado
+  // estos flags irían en las deps del efecto → un request por tecla, que es lo
+  // que el debounce de las líneas de arriba existe para evitar.
+  const sucioRef = useRef({ url: false, precio: false })
+
   // --- debounce de los dos textos -----------------------------------------
   useEffect(() => {
     const t = setTimeout(() => setBuscarActivo(buscar.trim()), 300)
@@ -313,6 +320,20 @@ function StaffInventario() {
     const t = setTimeout(() => setMoleculaActiva(molecula.trim()), 300)
     return () => clearTimeout(t)
   }, [molecula])
+
+  // --- "seleccionar la página" refleja la selección parcial ----------------
+  // `indeterminate` es una propiedad del DOM, no una prop: React no la maneja y
+  // por eso va por ref. Sin `setState`, así que la regla
+  // `react-hooks/set-state-in-effect` no lo marca. Sin array de deps a propósito:
+  // tiene que quedar sincronizado en cada render (la lista puede cambiar por un
+  // refetch, no solo por un clic).
+  const checkTodosRef = useRef(null)
+  useEffect(() => {
+    const el = checkTodosRef.current
+    if (el) {
+      el.indeterminate = productos.length > 0 && seleccion.length > 0 && seleccion.length < productos.length
+    }
+  })
 
   // --- abrir/cerrar el drawer: se ajusta durante el render -----------------
   // Patrón "set state on prop change" del AGENTS: resetear con un efecto +
@@ -329,6 +350,9 @@ function StaffInventario() {
     setUrlFoto('')
     setPrecioTexto('')
     setDetalleCargando(drawerId != null)
+    // Un producto nuevo arranca limpio: si no, el refetch heredaría los flags
+    // "sucio" del producto anterior y no pondría los valores del servidor.
+    sucioRef.current = { url: false, precio: false }
   }
 
   // --- GET /staff/inventario/opciones --------------------------------------
@@ -344,7 +368,7 @@ function StaffInventario() {
       .catch((err) => {
         if (!activo) return
         setErrorOpciones('No se pudieron cargar los filtros de inventario')
-        console.error(err)
+        console.error('[inventario] error al cargar las opciones:', err?.response?.status, err?.message)
       })
     return () => { activo = false }
   }, [recarga])
@@ -393,7 +417,7 @@ function StaffInventario() {
       .catch((err) => {
         if (!activo) return
         setError('No se pudo cargar el inventario')
-        console.error(err)
+        console.error('[inventario] error al cargar el listado:', err?.response?.status, err?.message)
       })
       .finally(() => { if (activo) setCargando(false) })
 
@@ -403,6 +427,8 @@ function StaffInventario() {
   // --- GET /staff/inventario/:id (detalle del drawer) ----------------------
   // También se vuelve a correr con `detalleRecarga` después de cada escritura,
   // así el drawer muestra SIEMPRE lo que quedó guardado (el server manda).
+  // Salvo en los campos que el operador tiene a medio escribir: reponerlos acá
+  // borraría en silencio lo tecleado (precio o URL) sin avisar.
   useEffect(() => {
     if (drawerId == null) return undefined
     let activo = true
@@ -412,27 +438,33 @@ function StaffInventario() {
         if (!activo) return
         const data = res.data
         setDetalle(data)
-        setUrlFoto(data.producto.foto_url || '')
-        setPrecioTexto(
-          data.producto.precio_usd != null ? String(data.producto.precio_usd) : '',
-        )
+        if (!sucioRef.current.url) setUrlFoto(data.producto.foto_url || '')
+        if (!sucioRef.current.precio) {
+          setPrecioTexto(
+            data.producto.precio_usd != null ? String(data.producto.precio_usd) : '',
+          )
+        }
         setDetalleError('')
       })
       .catch((err) => {
         if (!activo) return
         setDetalleError(err.response?.data?.error || 'No se pudo cargar el producto')
-        console.error(err)
+        console.error('[inventario] error al cargar el detalle:', err?.response?.status, err?.message)
       })
       .finally(() => { if (activo) setDetalleCargando(false) })
 
     return () => { activo = false }
   }, [drawerId, detalleRecarga])
 
-  // --- cerrar el drawer con Escape + bloquear el scroll del body -----------
+  // --- cerrar los overlays con Escape + bloquear el scroll del body ---------
+  // Un SOLO efecto para el drawer y la hoja de filtros: con dos efectos, el
+  // cleanup de uno pondría `overflow = ''` mientras el otro sigue abierto.
   useEffect(() => {
-    if (drawerId == null) return undefined
+    if (drawerId == null && !filtrosAbiertos) return undefined
     function onKeyDown(e) {
-      if (e.key === 'Escape') setDrawerId(null)
+      if (e.key !== 'Escape') return
+      if (drawerId != null) setDrawerId(null)
+      else setFiltrosAbiertos(false)
     }
     document.addEventListener('keydown', onKeyDown)
     document.body.style.overflow = 'hidden'
@@ -440,7 +472,7 @@ function StaffInventario() {
       document.removeEventListener('keydown', onKeyDown)
       document.body.style.overflow = ''
     }
-  }, [drawerId])
+  }, [drawerId, filtrosAbiertos])
 
   // --- helpers de la UI ---------------------------------------------------
 
@@ -526,10 +558,13 @@ function StaffInventario() {
       // después de un cambio dispare el evento.
       setSubidaId((n) => n + 1)
       setFotoOk(`Foto subida. Quedó como "${data?.foto_estado || 'manual'}".`)
+      // No se limpia ningún flag "sucio": una URL o un precio a medio escribir
+      // sobreviven al refetch. Los que no había, el refetch los repone con el
+      // estado real del servidor.
       trasEscribir()
     } catch (err) {
       setDrawerError(err.response?.data?.error || 'No se pudo subir la imagen')
-      console.error(err)
+      console.error('[inventario] error al subir la imagen:', err?.response?.status, err?.message)
     } finally {
       setSubiendoFoto(false)
     }
@@ -561,10 +596,14 @@ function StaffInventario() {
         foto_url: valor,
       })
       setFotoOk(`URL guardada. Estado: "${data?.foto_estado || 'manual'}".`)
+      // Guardado = el input ya refleja al servidor (con su redondeo), así que
+      // el refetch posterior sí puede reponer este campo. El precio sucio NO se
+      // toca: sigue sin guardar y no se debe perder.
+      sucioRef.current.url = false
       trasEscribir()
     } catch (err) {
       setDrawerError(err.response?.data?.error || 'No se pudo guardar la URL de la foto')
-      console.error(err)
+      console.error('[inventario] error al guardar la URL de la foto:', err?.response?.status, err?.message)
     } finally {
       setGuardandoFoto(false)
     }
@@ -583,7 +622,7 @@ function StaffInventario() {
       trasEscribir()
     } catch (err) {
       setDrawerError(err.response?.data?.error || 'No se pudo cambiar el estado de la foto')
-      console.error(err)
+      console.error('[inventario] error al cambiar el estado de la foto:', err?.response?.status, err?.message)
     } finally {
       setGuardandoFoto(false)
     }
@@ -602,7 +641,7 @@ function StaffInventario() {
       trasEscribir()
     } catch (err) {
       setDrawerError(err.response?.data?.error || 'No se pudo quitar la foto')
-      console.error(err)
+      console.error('[inventario] error al quitar la foto:', err?.response?.status, err?.message)
     } finally {
       setGuardandoFoto(false)
     }
@@ -630,9 +669,10 @@ function StaffInventario() {
         partes.push(`Precio guardado: $${formato(data.precio_usd)}.`)
       }
       if (data.precio_aplicado === false && data.precio_usd != null) {
+        // Sin repetir el número: la primera parte de la nota ya lo dice.
         partes.push(
           'El número tecleado no sobrevive el redondeo precio → costo → precio ' +
-            `(difiere en un centavo como máximo); se guardó el que se ve ahora: $${formato(data.precio_usd)}.`,
+            '(difiere en un centavo como máximo); se guardó el que se ve ahora.',
         )
       }
       if (data.limitado_por_otro_proveedor) {
@@ -642,10 +682,13 @@ function StaffInventario() {
         )
       }
       setNotaPrecio(partes.join(' '))
+      // El input ya refleja al servidor (con su redondeo), así que el refetch
+      // posterior puede reponer este campo; la URL sucia NO se toca.
+      sucioRef.current.precio = false
       trasEscribir()
     } catch (err) {
       setDrawerError(err.response?.data?.error || 'No se pudo guardar el precio')
-      console.error(err)
+      console.error('[inventario] error al guardar el precio:', err?.response?.status, err?.message)
     } finally {
       setGuardandoPrecio(false)
     }
@@ -660,7 +703,12 @@ function StaffInventario() {
   const refs = (detalle?.moleculas || [])
     .map((m) => m.moleculas_referencias)
     .filter(Boolean)
-  const atcs = [...new Set(refs.map((r) => r.atc_id).filter((a) => a != null))]
+  // El código ATC (nivel 5), NO el `atc_id` de la FK: un bigint interno no le
+  // dice nada a quien lee. `refs` ya viene desempaquetado, así que el embed está
+  // en `refs[i].atc_clasificaciones`; es `null` en las 1.428 referencias sin ATC
+  // (y con el backend viejo no viene), y ahí el `—` de la fila es la respuesta
+  // honesta.
+  const atcs = [...new Set(refs.map((r) => r.atc_clasificaciones?.codigo).filter(Boolean))]
 
   const filtrosActivos =
     (buscar ? 1 : 0) +
@@ -687,7 +735,7 @@ function StaffInventario() {
   // El caso legítimo de "no hay nada que coincida" tiene `total === 0`, así que
   // este gate NO lo alcanza y el mensaje de vacío sigue siendo correcto ahí.
   const paginaVaciaFueraDeRango = productos.length === 0 && total > 0
-  const vacio = productos.length === 0 && !cargando && !paginaVaciaFueraDeRango
+  const vacio = productos.length === 0 && !cargando && !paginaVaciaFueraDeRango && !error
 
   return (
     <LayoutDepartamento departamento="logistica" activo="inventario" titulo="Inventario">
@@ -738,7 +786,7 @@ function StaffInventario() {
               <button key={p.id} type="button" className="si-tarjeta" onClick={() => setDrawerId(p.id)}>
                 <ImagenProducto
                   src={p.foto_url}
-                  alt={p.nombre_comercial}
+                  alt=""
                   className="si-thumb si-thumb--card"
                 />
                 <span className="si-tarjeta__texto">
@@ -758,14 +806,15 @@ function StaffInventario() {
               <thead>
                 <tr>
                   <th>
-                    <input
-                      type="checkbox"
-                      aria-label="Seleccionar la página"
-                      checked={productos.length > 0 && seleccion.length === productos.length}
-                      onChange={(e) =>
-                        setSeleccion(e.target.checked ? productos.map((p) => p.id) : [])
-                      }
-                    />
+<input
+                       type="checkbox"
+                       aria-label="Seleccionar la página"
+                       checked={productos.length > 0 && seleccion.length === productos.length}
+                       ref={checkTodosRef}
+                       onChange={(e) =>
+                         setSeleccion(e.target.checked ? productos.map((p) => p.id) : [])
+                       }
+                     />
                   </th>
                   <th />
                   <th aria-sort={ordenDe('nombre')}>
@@ -846,17 +895,20 @@ function StaffInventario() {
              el batching deja `pagina === totalPaginas`, así que esto nunca
              muestra "Página 7 de 6" ni advancement mal deshabilitado. */
           <div className="sp-paginacion">
-            <button disabled={pagina <= 1} onClick={() => setPagina(1)}>⏮️</button>
-            <button disabled={pagina <= 1} onClick={() => setPagina((p) => p - 1)}>◀️</button>
+            <button disabled={pagina <= 1} onClick={() => setPagina(1)} aria-label="Primera página">⏮️</button>
+            <button disabled={pagina <= 1} onClick={() => setPagina((p) => p - 1)} aria-label="Página anterior">◀️</button>
             <span>Página {pagina} de {totalPaginas}</span>
-            <button disabled={pagina >= totalPaginas} onClick={() => setPagina((p) => p + 1)}>▶️</button>
-            <button disabled={pagina >= totalPaginas} onClick={() => setPagina(totalPaginas)}>⏭️</button>
+            <button disabled={pagina >= totalPaginas} onClick={() => setPagina((p) => p + 1)} aria-label="Página siguiente">▶️</button>
+            <button disabled={pagina >= totalPaginas} onClick={() => setPagina(totalPaginas)} aria-label="Última página">⏭️</button>
           </div>
         )}
 
         {seleccion.length > 0 && (
           <div className="si-seleccion">
             <strong>{seleccion.length} marcados.</strong>{' '}
+            <button type="button" className="si-btn si-btn--sutil" onClick={() => setSeleccion([])}>
+              Limpiar
+            </button>
             <span className="sp-hint">
               Las acciones en bloque (precio o foto para varios productos) todavía no están en
               esta página: por ahora el checkbox solo lleva la cuenta.
@@ -868,7 +920,7 @@ function StaffInventario() {
         {esMobile && filtrosAbiertos && (
           <div className="si-sheet">
             <div className="si-sheet__overlay" onClick={() => setFiltrosAbiertos(false)} />
-            <div className="si-sheet__panel" role="dialog" aria-label="Filtros del inventario">
+            <div className="si-sheet__panel" role="dialog" aria-modal="true" aria-label="Filtros del inventario">
               <div className="si-sheet__header">
                 <span className="si-sheet__titulo">Filtros</span>
                 <button
@@ -922,10 +974,9 @@ function StaffInventario() {
               </div>
 
               <div className="si-drawer__body">
-                {detalleCargando && <div className="sp-loading">Cargando producto...</div>}
-                {detalleError && <p className="si-nota si-nota--error">{detalleError}</p>}
-                {drawerError && <p className="si-nota si-nota--error">{drawerError}</p>}
-                {fotoOk && <p className="si-nota si-nota--ok">{fotoOk}</p>}
+                {detalleError && <p className="si-nota si-nota--error" role="alert">{detalleError}</p>}
+{drawerError && <p className="si-nota si-nota--error" role="alert">{drawerError}</p>}
+{fotoOk && <p className="si-nota si-nota--ok" role="status">{fotoOk}</p>}
 
                 {producto && (
                   <>
@@ -1008,32 +1059,31 @@ function StaffInventario() {
 
                     {/* 2. Estado de la foto */}
                     <section className="si-fieldset">
-                      <h3 className="si-fieldset__titulo">Estado de la foto</h3>
-                      <p className="sp-hint">
-                        Sirve para cerrar la cola «dudosa»: si la foto está bien, márcala como OK;
-                        si no era esa, márcala como sin foto.
-                      </p>
-                      <select
-                        className="sp-select si-select-estado"
-                        value={producto.foto_estado || 'sin_foto'}
-                        disabled={guardandoFoto}
-                        onChange={(e) => cambiarEstadoFoto(e.target.value)}
-                      >
-                        {FOTO_ESTADOS.map((e) => {
-                          // Coherencia (la misma regla del server): con foto no se
-                          // puede elegir "sin foto", y sin foto no se puede elegir
-                          // "ok" ni "manual". Se deshabilitan en vez de dejar que
-                          // el servidor las rechace con un 400.
-                          const imposible = hayFoto
-                            ? e.valor === 'sin_foto'
-                            : (e.valor === 'ok' || e.valor === 'manual')
-                          return (
-                            <option key={e.valor} value={e.valor} disabled={imposible}>
-                              {e.etiqueta}
-                            </option>
-                          )
-                        })}
-                      </select>
+                      <label className="si-label" htmlFor="si-select-estado">
+                          <span>Estado de la foto</span>
+                          <select
+                            id="si-select-estado"
+                            className="sp-select si-select-estado"
+                            value={producto.foto_estado || 'sin_foto'}
+                            disabled={guardandoFoto}
+                            onChange={(e) => cambiarEstadoFoto(e.target.value)}
+                          >
+                            {FOTO_ESTADOS.map((e) => {
+                              // Coherencia (la misma regla del server): con foto no se
+                              // puede elegir "sin foto", y sin foto no se puede elegir
+                              // "ok" ni "manual". Se deshabilitan en vez de dejar que
+                              // el servidor las rechace con un 400.
+                              const imposible = hayFoto
+                                ? e.valor === 'sin_foto'
+                                : (e.valor === 'ok' || e.valor === 'manual')
+                              return (
+                                <option key={e.valor} value={e.valor} disabled={imposible}>
+                                  {e.etiqueta}
+                                </option>
+                              )
+                            })}
+                          </select>
+                        </label>
                       <p className="sp-hint">
                         {(FOTO_ESTADOS.find((e) => e.valor === producto.foto_estado)
                           || FOTO_ESTADOS[0]).ayuda}
@@ -1122,7 +1172,7 @@ function StaffInventario() {
                         Un precio de <strong>0</strong> no es un error: quita el precio y despublica
                         el producto.
                       </p>
-                      {notaPrecio && <p className="si-nota si-nota--ok">{notaPrecio}</p>}
+                      {notaPrecio && <p className="si-nota si-nota--ok" role="status">{notaPrecio}</p>}
                     </section>
 
                     {/* 4. Datos (solo lectura) */}
