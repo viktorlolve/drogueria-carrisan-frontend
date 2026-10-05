@@ -672,11 +672,22 @@ function StaffInventario() {
     (filtros.sin_precio ? 1 : 0) +
     (filtros.sin_proveedor ? 1 : 0)
 
-  // Página fuera de rango = el fetch correctivo del recorte todavía no volvió.
-  // Mientras dure, la tabla muestra spinner en vez de un "vacío" que miente.
-  const paginaFueraDeRango = pagina > totalPaginas
-  const paginaEfectiva = paginaFueraDeRango ? totalPaginas : pagina
-  const vacio = productos.length === 0 && !cargando && !paginaFueraDeRango
+  // Fuera de rango, por SÍNTOMA y no comparando páginas: `setTotalPaginas` y el
+  // `setPagina` del recorte viven en el mismo `.then`, así que React 18 los
+  // commitea juntos (batching) y en ese render `pagina === totalPaginas`
+  // siempre. Comparar las dos no da `true` nunca; lo que sí se ve en pantalla
+  // es la página vacía mientras llega la correcta.
+  //
+  // `total > 0 && productos.length === 0` = el filtro tiene coincidencias pero
+  // el offset pidió una página que ya no existe. Es el único caso en que el
+  // backend devuelve vacío con `total > 0`, así que no puede quedar prendido:
+  // es derivado del estado commiteado (sin flags que limpiar) y el fetch
+  // correctivo lo apaga al traer las filas.
+  //
+  // El caso legítimo de "no hay nada que coincida" tiene `total === 0`, así que
+  // este gate NO lo alcanza y el mensaje de vacío sigue siendo correcto ahí.
+  const paginaVaciaFueraDeRango = productos.length === 0 && total > 0
+  const vacio = productos.length === 0 && !cargando && !paginaVaciaFueraDeRango
 
   return (
     <LayoutDepartamento departamento="logistica" activo="inventario" titulo="Inventario">
@@ -712,8 +723,13 @@ function StaffInventario() {
 
         {error && <p className="sp-error">{error}</p>}
 
-        {cargando || paginaFueraDeRango ? (
-          <div className="sp-loading">Cargando inventario...</div>
+        {cargando || paginaVaciaFueraDeRango ? (
+          <div className="sp-loading">
+            {/* Si además falló el fetch correctivo, no hay carga en curso:
+                decirlo, en vez de un spinner que promete un progreso que no
+                va a llegar. El error real ya se muestra arriba con `sp-error`. */}
+            {error ? 'No se pudo mostrar esta página.' : 'Cargando inventario...'}
+          </div>
         ) : vacio ? (
           <div className="sp-loading">No hay productos con esos filtros.</div>
         ) : esMobile ? (
@@ -826,12 +842,15 @@ function StaffInventario() {
         )}
 
         {totalPaginas > 1 && (
+          /* Con `pagina` directo, no con una página "efectiva": al recortarse,
+             el batching deja `pagina === totalPaginas`, así que esto nunca
+             muestra "Página 7 de 6" ni advancement mal deshabilitado. */
           <div className="sp-paginacion">
-            <button disabled={paginaEfectiva <= 1} onClick={() => setPagina(1)}>⏮️</button>
-            <button disabled={paginaEfectiva <= 1} onClick={() => setPagina((p) => p - 1)}>◀️</button>
-            <span>Página {paginaEfectiva} de {totalPaginas}</span>
-            <button disabled={paginaEfectiva >= totalPaginas} onClick={() => setPagina((p) => p + 1)}>▶️</button>
-            <button disabled={paginaEfectiva >= totalPaginas} onClick={() => setPagina(totalPaginas)}>⏭️</button>
+            <button disabled={pagina <= 1} onClick={() => setPagina(1)}>⏮️</button>
+            <button disabled={pagina <= 1} onClick={() => setPagina((p) => p - 1)}>◀️</button>
+            <span>Página {pagina} de {totalPaginas}</span>
+            <button disabled={pagina >= totalPaginas} onClick={() => setPagina((p) => p + 1)}>▶️</button>
+            <button disabled={pagina >= totalPaginas} onClick={() => setPagina(totalPaginas)}>⏭️</button>
           </div>
         )}
 
