@@ -1,0 +1,45 @@
+.info-despacho {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #FFFFFF;
+  border: 1px solid #E7E5DE;
+  border-radius: 12px;
+  padding: 14px;
+  box-sizing: border-box;
+}
+
+.info-despacho__icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: rgba(0, 82, 220, 0.08);
+  color: #0052DC;
+}
+
+.info-despacho__cuerpo {
+  min-width: 0;
+}
+
+.info-despacho__titulo {
+  margin: 0 0 2px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #0052DC;
+}
+
+.info-despacho__texto {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #14182A;
+}
+
+.info-despacho__texto strong {
+  font-weight: 700;
+}

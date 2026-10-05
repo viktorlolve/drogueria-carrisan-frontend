@@ -442,6 +442,36 @@
   }
 }
 
+/* La tarjeta creció con la tarjeta de garantías (4 filas). Como `sticky` no
+   scrollea su propio contenido, si el alto supera el espacio visible el final
+   (botón de compra, vendedor, nota) queda inalcanzable. Se limita el alto y
+   se scrollea por dentro. Solo ≥768px: en móvil la tarjeta es la barra fija
+   de abajo, que no scrollea. */
+@media (min-width: 768px) {
+  .pd-purchase {
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: #D8D6CE transparent;
+  }
+}
+
+@media (min-width: 1024px) {
+  .pd-purchase {
+    max-height: calc(100vh - 150px);
+  }
+}
+
+.pd-purchase::-webkit-scrollbar {
+  width: 6px;
+}
+
+.pd-purchase::-webkit-scrollbar-thumb {
+  background: #D8D6CE;
+  border-radius: 3px;
+}
+
 .pd-purchase__card {
   background: #FFFFFF;
   border: 1px solid #E2E8F0;
@@ -490,26 +520,11 @@
   border-radius: 6px;
 }
 
+/* Wrapper de la tarjeta compartida de garantías (components/FilasConfianza).
+   Solo cumple una cosa: ocultarla en la barra compacta de móvil. El estilo de
+   las filas vive en FilasConfianza.css, no aquí. */
 .pd-purchase__trust {
-  list-style: none;
   margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.pd-purchase__trust li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.76rem;
-  color: #64748B;
-}
-
-.pd-purchase__trust svg {
-  color: #12A594;
-  flex-shrink: 0;
 }
 
 .pd-purchase__consultar {
@@ -669,20 +684,6 @@
 
 .pd-purchase__seller strong {
   color: #1A1A2E;
-}
-
-.pd-purchase__returns {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #0052DC;
-  text-decoration: none;
-}
-
-.pd-purchase__returns:hover {
-  text-decoration: underline;
 }
 
 /* ---------------------------------------------------------

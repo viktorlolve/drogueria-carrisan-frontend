@@ -1,0 +1,229 @@
+/* Modal de política de devolución — compartido (Carrito + Producto Detalle) */
+
+.dev-modal__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 24, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+  animation: devModalFadeIn 0.18s ease-out;
+}
+
+@keyframes devModalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.dev-modal {
+  background: #FFFFFF;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 64px rgba(20, 24, 42, 0.28);
+  animation: devModalSlideUp 0.22s ease-out;
+}
+
+@keyframes devModalSlideUp {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.dev-modal__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid #E7E5DE;
+}
+
+.dev-modal__header-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: rgba(0, 82, 220, 0.08);
+  color: #0052DC;
+}
+
+.dev-modal__titulo {
+  margin: 0;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: #14182A;
+}
+
+.dev-modal__subtitulo {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  color: #5C5F70;
+}
+
+.dev-modal__cerrar {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #5C5F70;
+  padding: 6px;
+  border-radius: 8px;
+  display: inline-flex;
+  transition: background 0.15s, color 0.15s;
+}
+
+.dev-modal__cerrar:hover {
+  background: #F3F2EE;
+  color: #14182A;
+}
+
+.dev-modal__cuerpo {
+  overflow-y: auto;
+  padding: 18px 20px;
+}
+
+.dev-modal__seccion {
+  margin-bottom: 20px;
+}
+
+.dev-modal__seccion:last-child {
+  margin-bottom: 0;
+}
+
+.dev-modal__seccion-titulo {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 8px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #0052DC;
+}
+
+.dev-modal__seccion ul {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: #3A3E52;
+}
+
+.dev-modal__seccion li {
+  margin-bottom: 4px;
+}
+
+.dev-modal__seccion p {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: #3A3E52;
+}
+
+.dev-modal__seccion--resolucion {
+  background: #F7F9FD;
+  border: 1px solid #E3EBF7;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.dev-modal__footer {
+  display: flex;
+  gap: 10px;
+  padding: 14px 20px 18px;
+  border-top: 1px solid #E7E5DE;
+}
+
+.dev-modal__btn {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: none;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  transition: filter 0.15s, background 0.15s;
+}
+
+.dev-modal__btn--primario {
+  background: #0052DC;
+  color: #FFFFFF;
+}
+
+.dev-modal__btn--primario:hover {
+  filter: brightness(1.1);
+}
+
+.dev-modal__btn--secundario {
+  background: #F3F2EE;
+  color: #14182A;
+}
+
+.dev-modal__btn--secundario:hover {
+  background: #E8E6DF;
+}
+
+/* Botón disparador (BotonPoliticaDevolucion) — sin estilo: cada página lo viste */
+.dev-trigger {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.dev-trigger:focus-visible {
+  outline: 2px solid #0052DC;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---- Móvil ---- */
+@media (max-width: 767px) {
+  .dev-modal__overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .dev-modal {
+    max-width: 100%;
+    max-height: 88vh;
+    border-radius: 18px 18px 0 0;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  @keyframes devModalSlideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .dev-modal__footer {
+    flex-direction: column-reverse;
+  }
+}

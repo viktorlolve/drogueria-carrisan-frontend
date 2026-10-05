@@ -329,7 +329,14 @@ function Navbar() {
   // Helper: mostrar flecha atrás solo en móvil y en ciertas rutas
   const mostrarBackMovil = RUTAS_CON_BACK_MOVIL_PREFIXES.some(p => location.pathname.startsWith(p))
 
-  if (RUTAS_SIN_NAVBAR.includes(location.pathname) || location.pathname.startsWith('/staff')) return null
+  // /verificar/* es pública y ya trae su propio shell de marca (vd__logo,
+  // tagline, footer). Con el navbar de la tienda encima quedaría duplicado.
+  if (
+    RUTAS_SIN_NAVBAR.includes(location.pathname) ||
+    location.pathname.startsWith('/staff') ||
+    location.pathname.startsWith('/verificar')
+  )
+    return null
 
   function handleBuscar(e) {
     e.preventDefault()

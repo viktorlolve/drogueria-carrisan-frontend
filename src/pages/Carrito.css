@@ -833,40 +833,7 @@ padding-bottom: 301px
   padding: 13px 24px
 ;
 }
-.cart-resumen-seguridad 
-{
-  display: flex
-;
-  flex-direction: column
-;
-  align-items: center
-;
-  gap: 2px
-;
-  margin-top: 14px
-;
-  text-align: center
-;
-}
-.cart-resumen-seguridad span 
-{
- font-size: 0.78rem
-;
- font-weight: 600
-;
- color: #14182A
-;
-}
-.cart-resumen-seguridad p 
-{
- font-size: 0.7rem
-;
- color: #5B6270
-;
- margin: 0
-;
-}
-/* ---------- Barra inferior sticky (mobile): resumen tipo Amazon ---------- */.carrito-bottombar 
+/* ---------- Barra inferior sticky (mobile): resumen tipo Amazon ---------- */.carrito-bottombar
 {
   position: fixed
 ;
@@ -1979,4 +1946,45 @@ padding-bottom: 301px
 }
 .carrito-bottombar__value--cupon {
   color: #0D9373;
+}
+
+/* ============================================
+   Ajustes del resumen lateral (sticky)
+   ============================================ */
+/* El resumen grew con el horario de despacho y la tarjeta de garantías: si su
+   alto supera el espacio visible, se corta y el final queda inalcanzable
+   (position: sticky no scrollea solo). Se limita el alto y se scrollea por
+   dentro, igual que hace la tarjeta de compra del detalle de producto. */
+@media (min-width: 1024px) {
+  .cart-resumen-sidebar {
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: #D8D6CE transparent;
+  }
+}
+
+.cart-resumen-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cart-resumen-sidebar::-webkit-scrollbar-thumb {
+  background: #D8D6CE;
+  border-radius: 3px;
+}
+
+.cart-resumen-divider-top {
+  height: 1px;
+  background: #E7E5DE;
+  margin: 16px 0;
+}
+
+/* InfoDespacho se pinta como una fila más dentro de .cart-benefits */
+.cart-benefits > .info-despacho {
+  margin-bottom: 2px;
+}
+
+.cart-benefits > .fconf {
+  margin-bottom: 0;
 }

@@ -2,8 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   Heart, Share2, Check, Stethoscope, Pill, ShieldCheck, Package, Thermometer,
-  FileCheck2, Building2, ReceiptText, CreditCard,
-  MapPin, FlaskConical, Layers, Tablet, Store, RotateCcw,
+  FileCheck2, Building2,
+  MapPin, FlaskConical, Layers, Tablet, Store,
 } from 'lucide-react'
 import api from '../api/axios'
 import { useCart } from '../context/CartContext'
@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext'
 import { useFavoritos } from '../context/FavoritosContext'
 import HomeCarrusel from '../components/HomeCarrusel'
 import Valoraciones from '../components/Valoraciones'
+import FilasConfianza from '../components/FilasConfianza'
 import { agruparPorLinea } from '../utils/agruparPorLinea'
 import Footer from '../components/Footer'
 import BottomNav from '../components/BottomNav'
@@ -648,11 +649,9 @@ function ProductoDetalle() {
               )}
             </div>
 
-            <ul className="pd-purchase__trust">
-              <li><ReceiptText size={14} aria-hidden="true" /> Factura fiscal incluida</li>
-              <li><CreditCard size={14} aria-hidden="true" /> Compra con línea de crédito</li>
-              <li><ShieldCheck size={14} aria-hidden="true" /> Pago 100% seguro</li>
-            </ul>
+            {/* Garantías + política de devoluciones (tarjeta compartida con el carrito).
+                El wrapper `pd-purchase__trust` solo la oculta en la barra compacta de móvil. */}
+            <FilasConfianza className="pd-purchase__trust" />
 
             {producto.disponible && (
               <div className="pd-purchase__actions">
@@ -722,11 +721,6 @@ function ProductoDetalle() {
               <Store size={14} aria-hidden="true" />
               <span>Vendido y enviado por <strong>Droguería Carrisan</strong></span>
             </div>
-
-            <Link to="/politica-devoluciones" className="pd-purchase__returns">
-              <RotateCcw size={14} aria-hidden="true" />
-              Política de devolución
-            </Link>
 
             <p className="pd-purchase__note">
               * Precios no incluyen IVA. Sujetos a cambios sin previo aviso.

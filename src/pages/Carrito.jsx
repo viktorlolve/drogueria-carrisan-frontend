@@ -6,6 +6,8 @@ import { useEnvio } from '../context/EnvioContext'
 import { useAuth } from '../context/AuthContext'
 import HomeCarrusel from '../components/HomeCarrusel'
 import ConfirmarPedidoModal from '../components/ConfirmarPedidoModal'
+import InfoDespacho from '../components/InfoDespacho'
+import FilasConfianza from '../components/FilasConfianza'
 import './Carrito.css'
 
 function formatUSD(valor) {
@@ -309,11 +311,27 @@ function ResumenPedido({
   aplicarCupon,
   quitarCupon,
   error,
-  handleConfirmar
+  handleConfirmar,
+  tipoEnvio
 }) {
   return (
     <div className="cart-resumen-sidebar">
       <div className="cart-resumen-sticky">
+        {/* El CTA va primero: es lo único accionable del resumen y así queda
+            siempre visible aunque la tarjeta scrollee por dentro. */}
+        <button
+          type="button"
+          className="carrito-bottombar__cta carrito-bottombar__cta--sidebar"
+          onClick={handleConfirmar}
+          disabled={superaLineaCredito}
+        >
+          Confirmar pedido
+        </button>
+
+        {error && <p className="carrito-error carrito-error--sidebar">{error}</p>}
+
+        <div className="cart-resumen-divider-top" />
+
         <h2 className="cart-summary__title">Resumen del pedido</h2>
 
         <div className="cart-summary__row">
@@ -404,22 +422,6 @@ function ResumenPedido({
           </div>
         </div>
 
-        {error && <p className="carrito-error carrito-error--sidebar">{error}</p>}
-
-        <button
-          type="button"
-          className="carrito-bottombar__cta carrito-bottombar__cta--sidebar"
-          onClick={handleConfirmar}
-          disabled={superaLineaCredito}
-        >
-          Confirmar pedido
-        </button>
-
-        <div className="cart-resumen-seguridad">
-          <span>🔒 Compra segura</span>
-          <p>Tus datos están protegidos</p>
-        </div>
-
         {/* Cupón de descuento */}
         <div className="cart-cupon">
           {cuponAplicado ? (
@@ -457,15 +459,10 @@ function ResumenPedido({
           )}
         </div>
 
-        {/* Beneficios */}
+        {/* Beneficios + horario estimado de despacho/retiro */}
         <div className="cart-benefits">
-          <div className="cart-benefits__item">
-            <span className="cart-benefits__icon">🚚</span>
-            <div className="cart-benefits__text">
-              <strong>Envío prioritario</strong>
-              Despacho el mismo día para pedidos antes de las 2:00 PM.
-            </div>
-          </div>
+          <InfoDespacho tipoEnvio={tipoEnvio} />
+
           <div className="cart-benefits__item">
             <span className="cart-benefits__icon">🛡️</span>
             <div className="cart-benefits__text">
@@ -474,6 +471,9 @@ function ResumenPedido({
             </div>
           </div>
         </div>
+
+        {/* Garantías + política de devoluciones */}
+        <FilasConfianza />
       </div>
     </div>
   )
@@ -831,6 +831,7 @@ function Carrito() {
             quitarCupon={quitarCupon}
             error={error}
             handleConfirmar={handleConfirmar}
+            tipoEnvio={tipoEnvio}
           />
         </div>
       </div>
