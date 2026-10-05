@@ -13,7 +13,7 @@ import {
   Landmark, TrendingUp, Truck, Receipt, Banknote, CalendarX2,
   Inbox, FileText, Megaphone, MapPin, BadgeDollarSign, Users,
   Shield, BarChart3, MessageSquare, Gift, AlertTriangle,
-  CheckCircle2, Bell,
+  CheckCircle2, Bell, Images,
 } from 'lucide-react'
 
 const ROLES_TODOS = ['vendedor', 'despachador', 'almacenista', 'contabilidad', 'administrador', 'director', 'admin']
@@ -300,6 +300,19 @@ export const MODULOS = {
           texto: 'Órdenes Completadas',
           desc: 'Historial de pedidos entregados y retirados',
           roles: ['almacenista', 'administrador', 'director', 'admin'],
+        },
+      ],
+    },
+    {
+      titulo: 'Catálogo',
+      items: [
+        {
+          id: 'inventario',
+          to: '/staff/inventario',
+          icono: Images,
+          texto: 'Inventario y fotos',
+          desc: 'Completa las fotos que faltan del catálogo y revisa los precios',
+          roles: ['almacenista', 'despachador', 'administrador', 'director', 'admin'],
         },
       ],
     },
