@@ -48,7 +48,7 @@ import './Layoutpaginaprincipal.css'
 // Un solo link de nav, reusado en el grupo principal y en el pie. El
 // badge (número sin leer) se pinta a la derecha cuando el item
 // declara `contador` y el contexto trae un valor mayor a 0.
-function ItemNav({ item, activo, badge, variante }) {
+function ItemNav({ item, activo, badge, variante, onNavigate }) {
   const esActivo = item.id === activo
   const Icono = item.icono
   const esSublink = variante === 'sublink'
@@ -56,7 +56,11 @@ function ItemNav({ item, activo, badge, variante }) {
   const claseActivo = esSublink ? 'ppal-nav__sublink--activo' : 'ppal-nav__link--activo'
 
   return (
-    <NavLink to={item.to} className={`${clase} ${esActivo ? claseActivo : ''}`}>
+    <NavLink
+      to={item.to}
+      className={`${clase} ${esActivo ? claseActivo : ''}`}
+      onClick={onNavigate}
+    >
       {Icono && !esSublink && <Icono size={18} strokeWidth={esActivo ? 2.4 : 2} />}
       <span>{item.texto}</span>
       {badge > 0 && (
@@ -103,7 +107,10 @@ function ContenidoNav({ nav, activo, titulo, esAdmin, onNavigate }) {
     const grupoActivo = items.some((item) => item.id === activo)
 
     return (
-      <div className={`ppal-nav__grupo ${esPie ? 'ppal-nav__grupo--pie' : ''}`}>
+      <div
+        key={grupo.id}
+        className={`ppal-nav__grupo ${esPie ? 'ppal-nav__grupo--pie' : ''}`}
+      >
         <button
           type="button"
           className={`ppal-nav__grupo-head ${abierto ? 'ppal-nav__grupo-head--abierto' : ''} ${grupoActivo ? 'ppal-nav__grupo-head--activo' : ''}`}
@@ -123,6 +130,7 @@ function ContenidoNav({ nav, activo, titulo, esAdmin, onNavigate }) {
                 activo={activo}
                 badge={item.contador ? conteos?.[item.contador] || 0 : 0}
                 variante={esPie ? undefined : 'sublink'}
+                onNavigate={onNavigate}
               />
             ))}
           </div>

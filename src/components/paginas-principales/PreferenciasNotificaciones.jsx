@@ -205,7 +205,11 @@ export default function PreferenciasNotificaciones({ silenciadas = [], onToggleS
                   <Switch.Root
                     checked={visible}
                     size="md"
-                    onCheckedChange={() => onToggleSilenciar(catId, visible)}
+                    // El 2º parámetro de `onToggleSilenciar` es
+                    // "silenciar", NO "visible": si la categoría se ve y
+                    // apagás el switch → silenciar=true. Por eso se pasa
+                    // el valor NUEVO del switch, no el de `visible`.
+                    onCheckedChange={(nuevo) => onToggleSilenciar(catId, nuevo)}
                   >
                     <Switch.HiddenInput />
                     <Switch.Control>

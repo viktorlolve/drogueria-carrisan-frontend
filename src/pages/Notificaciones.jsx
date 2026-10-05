@@ -139,7 +139,7 @@ function Notificaciones() {
 
   if (error) {
     return (
-      <LayoutPaginaPrincipal titulo="Notificaciones">
+      <LayoutPaginaPrincipal activo="notificaciones" titulo="Notificaciones">
         <p className="notif-error">{error}</p>
       </LayoutPaginaPrincipal>
     )
