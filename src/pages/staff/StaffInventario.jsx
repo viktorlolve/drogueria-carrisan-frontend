@@ -374,9 +374,19 @@ function StaffInventario() {
       .then((res) => {
         if (!activo) return
         const filas = res.data.productos || []
+        // Nunca 0: con 0 páginas el recorte de abajo dispararía un fetch
+        // infinito, porque la página 1 siempre es > 0.
+        const totalPaginasNuevo = Math.max(1, Number(res.data.total_paginas) || 1)
         setProductos(filas)
         setTotal(res.data.total || 0)
-        setTotalPaginas(res.data.total_paginas || 1)
+        setTotalPaginas(totalPaginasNuevo)
+        // Recorta la página si el conjunto se achicó mientras estábamos en una
+        // alta: guardar un precio saca el producto del filtro "sin precio" (o
+        // "sin proveedor"), `total_paginas` baja y `pagina` se quedaba por
+        // encima. Sin esto la tabla queda vacía y "No hay productos con esos
+        // filtros" miente. `setPagina` cambia una dependencia del efecto, así
+        // que dispara UN fetch más y ahí termina (ya recortada).
+        if (pagina > totalPaginasNuevo) setPagina(totalPaginasNuevo)
         setError('')
         setSeleccion((prev) => prev.filter((id) => filas.some((p) => p.id === id)))
       })
@@ -458,8 +468,34 @@ function StaffInventario() {
     return sort === `${campo}_asc` ? '↑' : sort === `${campo}_desc` ? '↓' : ''
   }
 
+  // `aria-sort` va en el <th>, no en el botón: es el estado de orden de la
+  // columna, y es lo que anuncia el lector de pantalla.
+  function ordenDe(campo) {
+    if (sort === `${campo}_asc`) return 'ascending'
+    if (sort === `${campo}_desc`) return 'descending'
+    return 'none'
+  }
+
   function toggleSeleccion(id) {
     setSeleccion((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+  }
+
+  /**
+   * Abre el drawer con Enter o Space, para que la fila sea alcanzable por
+   * teclado. La fila es un `<tr>` (no un botón) porque dentro hay un checkbox,
+   * así que el papel de tabla se conserva y solo se le agrega el tab stop.
+   *
+   * El guard `e.target !== e.currentTarget` es lo importante: si el foco está
+   * en el checkbox de la fila y el usuario aprieta Espacio, el evento sale de la
+   * fila y lo maneja el checkbox, no el drawer (y al revés tampoco: abrir la
+   * fila no tilda la selección). `preventDefault` evita que Espacio haga scroll.
+   */
+  function abrirFilaConTecla(e, id) {
+    if (e.target !== e.currentTarget) return
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+      e.preventDefault()
+      setDrawerId(id)
+    }
   }
 
   function trasEscribir() {
@@ -636,7 +672,11 @@ function StaffInventario() {
     (filtros.sin_precio ? 1 : 0) +
     (filtros.sin_proveedor ? 1 : 0)
 
-  const vacio = productos.length === 0 && !cargando
+  // Página fuera de rango = el fetch correctivo del recorte todavía no volvió.
+  // Mientras dure, la tabla muestra spinner en vez de un "vacío" que miente.
+  const paginaFueraDeRango = pagina > totalPaginas
+  const paginaEfectiva = paginaFueraDeRango ? totalPaginas : pagina
+  const vacio = productos.length === 0 && !cargando && !paginaFueraDeRango
 
   return (
     <LayoutDepartamento departamento="logistica" activo="inventario" titulo="Inventario">
@@ -672,7 +712,7 @@ function StaffInventario() {
 
         {error && <p className="sp-error">{error}</p>}
 
-        {cargando ? (
+        {cargando || paginaFueraDeRango ? (
           <div className="sp-loading">Cargando inventario...</div>
         ) : vacio ? (
           <div className="sp-loading">No hay productos con esos filtros.</div>
@@ -712,21 +752,39 @@ function StaffInventario() {
                     />
                   </th>
                   <th />
-                  <th onClick={() => toggleSort('nombre')} className="sp-sortable">
-                    Nombre {flechaSort('nombre')}
+                  <th aria-sort={ordenDe('nombre')}>
+                    <button
+                      type="button"
+                      className="sp-sortable si-th-sort"
+                      onClick={() => toggleSort('nombre')}
+                    >
+                      Nombre {flechaSort('nombre')}
+                    </button>
                   </th>
                   <th>Laboratorio</th>
                   <th>Molécula</th>
                   <th className="si-col-costo">Costo</th>
-                  <th onClick={() => toggleSort('precio')} className="sp-sortable">
-                    Precio USD {flechaSort('precio')}
+                  <th aria-sort={ordenDe('precio')}>
+                    <button
+                      type="button"
+                      className="sp-sortable si-th-sort"
+                      onClick={() => toggleSort('precio')}
+                    >
+                      Precio USD {flechaSort('precio')}
+                    </button>
                   </th>
                   <th>Foto</th>
                 </tr>
               </thead>
               <tbody>
                 {productos.map((p) => (
-                  <tr key={p.id} onClick={() => setDrawerId(p.id)} className="si-fila">
+                  <tr
+                    key={p.id}
+                    tabIndex={0}
+                    onClick={() => setDrawerId(p.id)}
+                    onKeyDown={(e) => abrirFilaConTecla(e, p.id)}
+                    className="si-fila"
+                  >
                     <td onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
@@ -769,11 +827,11 @@ function StaffInventario() {
 
         {totalPaginas > 1 && (
           <div className="sp-paginacion">
-            <button disabled={pagina === 1} onClick={() => setPagina(1)}>⏮️</button>
-            <button disabled={pagina === 1} onClick={() => setPagina((p) => p - 1)}>◀️</button>
-            <span>Página {pagina} de {totalPaginas}</span>
-            <button disabled={pagina === totalPaginas} onClick={() => setPagina((p) => p + 1)}>▶️</button>
-            <button disabled={pagina === totalPaginas} onClick={() => setPagina(totalPaginas)}>⏭️</button>
+            <button disabled={paginaEfectiva <= 1} onClick={() => setPagina(1)}>⏮️</button>
+            <button disabled={paginaEfectiva <= 1} onClick={() => setPagina((p) => p - 1)}>◀️</button>
+            <span>Página {paginaEfectiva} de {totalPaginas}</span>
+            <button disabled={paginaEfectiva >= totalPaginas} onClick={() => setPagina((p) => p + 1)}>▶️</button>
+            <button disabled={paginaEfectiva >= totalPaginas} onClick={() => setPagina(totalPaginas)}>⏭️</button>
           </div>
         )}
 

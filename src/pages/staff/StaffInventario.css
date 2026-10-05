@@ -118,6 +118,38 @@
 .si-fila { cursor: pointer; }
 .si-fila:hover { background: #f8fafc; }
 
+/* Fila enfocable (teclado). `:focus-visible` y no `:focus` a propósito: el
+   anillo aparece al navegar con Tab y no al hacer clic con el mouse, que ya
+   tiene su propio hover. `outline-offset` negativo para no recortar el anillo
+   contra el borde de la tabla. */
+.si-fila:focus-visible {
+  outline: 2px solid var(--ldep-color, #d97706);
+  outline-offset: -2px;
+  background: #f8fafc;
+}
+.si-fila:focus:not(:focus-visible) { outline: none; }
+
+/* Cabeceras ordenables: el <button> real da Enter/Espacio gratis; esto solo le
+   quita el chrome de botón para que se lea como un encabezado de tabla. */
+.si-th-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 5px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+}
+.si-th-sort:hover { color: var(--ldep-color, #d97706); }
+.si-th-sort:focus-visible {
+  outline: 2px solid var(--ldep-color, #d97706);
+  outline-offset: 1px;
+}
+
 .si-nombre { font-weight: 600; }
 .si-col-costo { white-space: nowrap; }
 
