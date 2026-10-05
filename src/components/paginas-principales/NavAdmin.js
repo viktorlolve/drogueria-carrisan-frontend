@@ -11,11 +11,14 @@
 import {
   LayoutDashboard, Package, ShoppingCart, Users, Wallet, CreditCard,
   Tag, FileText, Inbox, MessagesSquare, DollarSign, Files, ReceiptText, Megaphone, Truck, FlaskConical, KeyRound, Activity,
+  Settings, ClipboardList,
 } from 'lucide-react'
 
 export const NAV_ADMIN = [
   {
+    id: 'general',
     titulo: 'General',
+    icono: Settings,
     items: [
       { id: 'dashboard', to: '/admin', icono: LayoutDashboard, texto: 'Dashboard' },
       { id: 'tasa', to: '/admin/tasa', icono: DollarSign, texto: 'Tasa de cambio' },
@@ -23,7 +26,9 @@ export const NAV_ADMIN = [
     ],
   },
   {
+    id: 'ventas',
     titulo: 'Ventas',
+    icono: ShoppingCart,
     items: [
       { id: 'ordenes', to: '/admin/ordenes', icono: ShoppingCart, texto: 'Órdenes' },
       { id: 'nuevaOrden', to: '/admin/nueva-orden', icono: ReceiptText, texto: 'Nueva orden rápida' },
@@ -35,14 +40,18 @@ export const NAV_ADMIN = [
     ],
   },
   {
+    id: 'cobranza',
     titulo: 'Cobranza',
+    icono: Wallet,
     items: [
       { id: 'estadoCuenta', to: '/admin/estado-cuenta', icono: Wallet, texto: 'Estado de cuenta' },
       { id: 'pagos', to: '/admin/pagos', icono: CreditCard, texto: 'Pagos' },
     ],
   },
   {
+    id: 'solicitudes',
     titulo: 'Solicitudes',
+    icono: ClipboardList,
     items: [
       { id: 'cotizaciones', to: '/admin/cotizaciones', icono: FileText, texto: 'Cotizaciones' },
       { id: 'requerimientos', to: '/admin/requerimientos', icono: Inbox, texto: 'Requerimientos' },
@@ -50,7 +59,9 @@ export const NAV_ADMIN = [
     ],
   },
   {
+    id: 'cuenta',
     titulo: 'Cuenta',
+    icono: Users,
     pie: true,
     items: [
       { id: 'usuarios', to: '/admin/usuarios', icono: Users, texto: 'Usuarios' },

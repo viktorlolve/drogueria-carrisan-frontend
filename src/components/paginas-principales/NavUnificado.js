@@ -17,11 +17,11 @@
 // la página que lo renderiza, si no el link no se resalta.
 // ---------------------------------------------------------------
 import {
-  Package, ClipboardList, MessageCircle,
+  Package, ClipboardList, MessageCircle, ListChecks,
   Star, MapPin, User, Bell, Users,
   Wallet, DollarSign, FileText, FileBarChart, TrendingUp,
   PackagePlus, FileCheck,
-  HelpCircle, FileQuestion,
+  HelpCircle, FileQuestion, LifeBuoy,
 } from 'lucide-react'
 
 export const NAV_UNIFICADO = {
@@ -29,6 +29,7 @@ export const NAV_UNIFICADO = {
     {
       id: 'actividad',
       titulo: 'Mi actividad',
+      icono: ListChecks,
       items: [
         { id: 'ordenes', to: '/orders', icono: Package, texto: 'Mis órdenes' },
         {
@@ -45,6 +46,7 @@ export const NAV_UNIFICADO = {
     {
       id: 'cuenta',
       titulo: 'Mi cuenta',
+      icono: User,
       items: [
         { id: 'cuenta', to: '/cuenta', icono: User, texto: 'Mi Cuenta' },
         { id: 'mis-items', to: '/mis-items', icono: Star, texto: 'Mis items', soloCliente: true },
@@ -55,6 +57,7 @@ export const NAV_UNIFICADO = {
     {
       id: 'estado-cuenta',
       titulo: 'Estado de cuenta',
+      icono: Wallet,
       items: [
         { id: 'estado-cuenta', to: '/estado-de-cuenta', icono: Wallet, texto: 'Resumen' },
         { id: 'pagos-ec', to: '/estado-de-cuenta/pagos', icono: DollarSign, texto: 'Historial de pagos' },
@@ -66,6 +69,7 @@ export const NAV_UNIFICADO = {
     {
       id: 'solicitudes',
       titulo: 'Solicitudes',
+      icono: ClipboardList,
       items: [
         { id: 'cotizaciones', to: '/mis-solicitudes/cotizaciones', icono: FileText, texto: 'Cotizaciones', contador: 'cotizaciones' },
         { id: 'requerimientos', to: '/mis-solicitudes/requerimientos', icono: PackagePlus, texto: 'Requerimientos', contador: 'requerimientos' },
@@ -76,6 +80,7 @@ export const NAV_UNIFICADO = {
   pie: {
     id: 'ayuda',
     titulo: 'Ayuda',
+    icono: LifeBuoy,
     items: [
       { id: 'faq', to: '/ayuda', icono: FileQuestion, texto: 'Preguntas frecuentes' },
       { id: 'como-usar', to: '/ayuda/como-usar', icono: HelpCircle, texto: 'Cómo usar la plataforma' },

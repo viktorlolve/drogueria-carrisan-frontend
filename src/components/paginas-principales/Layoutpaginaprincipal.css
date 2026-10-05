@@ -220,18 +220,27 @@
   background: var(--ppal-brand-light);
 }
 
+/* Item activo: barrita azul a la izquierda (inset = no mueve el
+   layout) + fondo claro. El item activo NO lleva flecha: la chevron
+   es solo del acordeon, si no se confunden (2026-10-05). */
 .ppal-nav__link--activo {
   background: var(--ppal-brand-light);
   color: var(--ppal-brand);
   font-weight: 700;
+  box-shadow: inset 3px 0 0 var(--ppal-brand);
 }
 
 .ppal-nav__link--activo svg {
   color: var(--ppal-brand);
 }
 
-.ppal-nav__chevron {
-  margin-left: auto;
+.ppal-nav__grupo--pie .ppal-nav__link--activo {
+  background: var(--ppal-brand-light);
+  color: var(--ppal-brand);
+}
+
+.ppal-nav__grupo--pie .ppal-nav__link--activo svg {
+  color: var(--ppal-brand);
 }
 
 /* -----------------------------------------------------------------
@@ -275,8 +284,7 @@
 .ppal-nav__grupo-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 9px;
   width: 100%;
   padding: 9px 10px;
   border: none;
@@ -288,6 +296,18 @@
   transition: background 0.15s ease;
 }
 
+/* Icono del grupo: plano, del mismo tamano que el de los enlaces
+   (sin caja) para no competir con el peso de los enlaces. */
+.ppal-nav__grupo-icono {
+  flex-shrink: 0;
+  color: var(--ppal-text-muted);
+  transition: color 0.15s ease;
+}
+
+.ppal-nav__grupo-head--activo .ppal-nav__grupo-icono {
+  color: var(--ppal-brand);
+}
+
 .ppal-nav__grupo-head:hover {
   background: var(--ppal-brand-light);
 }
@@ -296,8 +316,10 @@
   color: var(--ppal-brand);
 }
 
+/* La chevron queda al extremo derecho: abre/cierra, y solo eso. */
 .ppal-nav__grupo-chevron {
   flex-shrink: 0;
+  margin-left: auto;
   color: var(--ppal-text-muted);
   transition: transform 0.2s ease, color 0.15s ease;
 }
@@ -306,8 +328,13 @@
   transform: rotate(90deg);
 }
 
+/* Los items cuelgan del grupo: sangrados y con una guia vertical
+   tenue a la izquierda, para que se lea de un vistazo que son
+   subordinados y no grupos. */
 .ppal-nav__grupo-items {
-  margin-bottom: 8px;
+  margin: 0 0 8px 12px;
+  padding-left: 8px;
+  border-left: 1px solid var(--ppal-border);
 }
 
 /* Badge de pendientes (notificaciones, chat, cotizaciones, pedidos de
@@ -340,7 +367,7 @@
 .ppal-nav__sublink {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 10px;
   padding: 11px 10px;
   border-bottom: 1px solid var(--ppal-border);
@@ -367,6 +394,12 @@
 .ppal-nav__sublink--activo {
   color: var(--ppal-brand);
   font-weight: 700;
+  background: var(--ppal-brand-light);
+  box-shadow: inset 3px 0 0 var(--ppal-brand);
+}
+
+.ppal-nav__sublink--activo svg {
+  color: var(--ppal-brand);
 }
 
 /* -----------------------------------------------------------------

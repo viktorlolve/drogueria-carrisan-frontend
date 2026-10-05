@@ -53,3 +53,56 @@ test('gruposAbiertosIniciales abre solo el grupo del activo', () => {
   assert.deepEqual([...gruposAbiertosIniciales(MODELO, 'cotizaciones')], ['solicitudes'])
   assert.deepEqual([...gruposAbiertosIniciales(MODELO, undefined)], [])
 })
+
+// ---------------------------------------------------------------
+// Regresión del bug real (2026-10-05): NAV_ADMIN es un array cuyos
+// grupos NO tenían `id`. Todos quedaban con id undefined, el Set de
+// grupos abiertos tenía una sola clave y por eso TODOS los grupos se
+// veían abiertos y un click los cerraba todos.
+// ---------------------------------------------------------------
+
+const ADMIN_SIN_ID = [
+  { titulo: 'General', items: [{ id: 'dashboard', to: '/admin' }] },
+  { titulo: 'Ventas', items: [{ id: 'ordenes', to: '/admin/ordenes' }] },
+  { titulo: 'Cobranza', items: [{ id: 'pagos', to: '/admin/pagos' }] },
+  { titulo: 'Cuenta', pie: true, items: [{ id: 'usuarios', to: '/admin/usuarios' }] },
+]
+
+test('normalizarNav deriva un id por grupo cuando el grupo no trae id', () => {
+  const r = normalizarNav(ADMIN_SIN_ID)
+  const ids = r.grupos.map((g) => g.id)
+  assert.equal(ids.length, 3)
+  assert.ok(ids.every(Boolean), 'ningun grupo puede quedar sin id')
+  assert.equal(new Set(ids).size, ids.length, 'los ids tienen que ser distintos entre grupos')
+})
+
+test('el grupo con pie:true del array se mueve a pie', () => {
+  const r = normalizarNav(ADMIN_SIN_ID)
+  assert.equal(r.pie.titulo, 'Cuenta')
+  assert.equal(r.pie.items[0].id, 'usuarios')
+  assert.ok(!r.grupos.some((g) => g.titulo === 'Cuenta'))
+})
+
+test('normalizarNav conserva el icono del grupo y de los items', () => {
+  const r = normalizarNav([
+    { titulo: 'Ventas', icono: 'ShoppingCart', items: [{ id: 'ordenes', icono: 'Tag' }] },
+  ])
+  assert.equal(r.grupos[0].icono, 'ShoppingCart')
+  assert.equal(r.grupos[0].items[0].icono, 'Tag')
+})
+
+test('grupoDeItem y gruposAbiertosIniciales funcionan con grupos sin id', () => {
+  const modelo = normalizarNav(ADMIN_SIN_ID)
+  assert.equal(grupoDeItem(modelo, 'pagos'), modelo.grupos[2].id)
+  // El bug: antes el item activo daba grupoId undefined y ningun grupo
+  // abria, y al primer click se abrian todos (misma clave undefined).
+  const abiertos = gruposAbiertosIniciales(modelo, 'pagos')
+  assert.equal(abiertos.size, 1)
+  assert.equal([...abiertos][0], modelo.grupos[2].id)
+})
+
+test('el id derivado es estable entre llamadas', () => {
+  const a = normalizarNav(ADMIN_SIN_ID).grupos.map((g) => g.id)
+  const b = normalizarNav(ADMIN_SIN_ID).grupos.map((g) => g.id)
+  assert.deepEqual(a, b)
+})

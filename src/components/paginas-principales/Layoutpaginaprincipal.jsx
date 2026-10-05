@@ -61,14 +61,13 @@ function ItemNav({ item, activo, badge, variante, onNavigate }) {
       className={`${clase} ${esActivo ? claseActivo : ''}`}
       onClick={onNavigate}
     >
-      {Icono && !esSublink && <Icono size={18} strokeWidth={esActivo ? 2.4 : 2} />}
+      {Icono && <Icono size={18} strokeWidth={esActivo ? 2.4 : 2} />}
       <span>{item.texto}</span>
       {badge > 0 && (
         <span className="ppal-nav__badge" aria-label={`${badge} sin resolver`}>
           {badge > 99 ? '99+' : badge}
         </span>
       )}
-      {esActivo && <ChevronRight size={16} className="ppal-nav__chevron" />}
     </NavLink>
   )
 }
@@ -103,6 +102,7 @@ function ContenidoNav({ nav, activo, titulo, esAdmin, onNavigate }) {
     const items = grupo.items.filter((item) => !esAdmin || !item.soloCliente)
     if (items.length === 0) return null
 
+    const IconoGrupo = grupo.icono
     const abierto = gruposAbiertos.has(grupo.id)
     const grupoActivo = items.some((item) => item.id === activo)
 
@@ -117,6 +117,7 @@ function ContenidoNav({ nav, activo, titulo, esAdmin, onNavigate }) {
           onClick={() => toggleGrupo(grupo.id)}
           aria-expanded={abierto}
         >
+          {IconoGrupo && <IconoGrupo size={18} className="ppal-nav__grupo-icono" />}
           <span className="ppal-nav__grupo-titulo">{grupo.titulo}</span>
           <ChevronRight size={16} className="ppal-nav__grupo-chevron" />
         </button>

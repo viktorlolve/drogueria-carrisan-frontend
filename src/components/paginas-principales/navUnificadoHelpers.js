@@ -8,16 +8,37 @@
 // recibe la forma { grupos, pie }.
 // ---------------------------------------------------------------
 
+// id estable para grupos que llegan sin `id`. Sin esto TODOS los
+// grupos comparten la clave `undefined`, el Set de grupos abiertos se
+// reduce a una entrada y el acordeón abre/cierra entero (bug real del
+// admin el 2026-10-05: un click abria los 5 grupos).
+function idDeGrupo(grupo, indice) {
+  if (grupo.id) return grupo.id
+  const base = String(grupo.titulo || grupo.texto || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return base || `grupo-${indice + 1}`
+}
+
 export function normalizarNav(nav) {
   if (!nav) return { grupos: [], pie: null }
   if (Array.isArray(nav)) {
+    const grupos = nav.map((g, i) => ({
+      ...g,
+      id: idDeGrupo(g, i),
+      titulo: g.titulo || g.texto,
+      items: g.items || [],
+    }))
+    // El grupo marcado `pie: true` viaja aparte (asi el layout le puede
+    // dar el tratamiento de pie). Si ninguno lo pide, no hay pie.
+    const indicePie = nav.findIndex((g) => g.pie)
+    if (indicePie === -1) return { grupos, pie: null }
     return {
-      grupos: nav.map((g) => ({
-        id: g.id,
-        titulo: g.titulo || g.texto,
-        items: g.items || [],
-      })),
-      pie: null,
+      grupos: grupos.filter((_, i) => i !== indicePie),
+      pie: grupos[indicePie],
     }
   }
   return { grupos: nav.grupos || [], pie: nav.pie || null }
