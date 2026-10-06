@@ -29,7 +29,17 @@ function Catalogo() {
   const [cargandoMas, setCargandoMas] = useState(false)
   const [error, setError] = useState('')
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false)
-  const [sort, setSort] = useState('nombre_asc')
+  // Con búsqueda (?search=) el orden por defecto es "Mejor coincidencia"
+  // (RPC buscar_productos ordena por tier); navegando sin búsqueda se mantiene
+  // el histórico nombre_asc. El componente no se remonta entre cambios de
+  // query del mismo path, así que al cambiar searchTerm se reajusta aquí
+  // (patrón "set state on prop change" — ver AGENTS frontend, sección Lint).
+  const [sort, setSort] = useState(searchTerm ? 'relevancia' : 'nombre_asc')
+  const [searchTermAnterior, setSearchTermAnterior] = useState(searchTerm)
+  if (searchTerm !== searchTermAnterior) {
+    setSearchTermAnterior(searchTerm)
+    setSort(searchTerm ? 'relevancia' : 'nombre_asc')
+  }
   const [categoriaActiva, setCategoriaActiva] = useState(categoriaParam || 'todos')
   const [laboratoriosActivos, setLaboratoriosActivos] = useState(
     laboratorioParam ? [laboratorioParam] : []
