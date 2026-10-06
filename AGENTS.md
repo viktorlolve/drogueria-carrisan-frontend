@@ -220,6 +220,15 @@ Cada formulario de registro es un archivo JSX autonomo con su propio estado loca
 
 **Nota — el catálogo comercial exige sesión (2026-09-30).** `/catalogo` y `/producto/:id` van envueltos en `<ConSesionCatalogo>` (`src/components/`), no en `PrivateRoute`: sin sesión se muestra `CatalogoAcceso` **en el mismo lugar y con la misma URL** (para que un enlace de WhatsApp siga sirviendo y, tras loguearse, vuelva al mismo producto), y con sesión renderiza los hijos. El backend exige JWT en `GET /products`, `GET /products/:id` y las rutas de `moleculas` del producto. **El nombre del producto sigue siendo público**: por `GET /products/buscar?q=` (payload mínimo `id, nombre_comercial, sku, laboratorio, linea`; con sesión agrega `foto_url` y `precio_usd` — lo usan el navbar, `BuscadorMovil` y `/presupuesto`) y por `/registro-inhrr` + `/vademecum`.
 
+## Avísame cuando llegue unificado (IMPLEMENTADO - 2026-10-06)
+
+Unifica el card de producto sin precio y el botón "Avísame". Plan/spec en la raíz: `analisis/plan-avisame-unificado-2026-10-06.md` + `design-avisame-unificado-2026-10-06.md`.
+
+- `FilasConfianza` recibe `sinPrecio` (derivado de `ProductoDetalle`; Carrito no la pasa → intacto). Con `sinPrecio`: fila 1 "Consultar precio"/"Solicita el precio y te respondemos con la disponibilidad" (`Tag`), fila 2 "Respuesta de asesor"/"Un asesor te contacta para darte el precio" (`Clock`), devolución idéntica; NO muestra "Entrega revisada".
+- `ProductoDetalle` tiene UN solo CTA `Avisame cuando llegue` / `Te avisaremos` / `Consultando...` (antes dos botones: "Solicitar precio" + "Avísame"). Sin sesión: "Inicia sesion" + " para avisarte cuando llegue" (sinPrecio) o " para comprar". Se eliminó el navigate a `/mis-solicitudes/requerimientos?producto=` (el import `navigate` sigue, usado en el error). `getCopyEtiqueta(user)`/badges intactos para productos con precio.
+- `Notificaciones.jsx` `handleClick`: prioridad `chat_mensaje` → `notif.url` → `orden_id`; `clickable = !!notif.url || !!notif.orden_id || tipo==='chat_mensaje'`. `notif.url` llega por `GET /notifications` (select(*) ya incluye la columna 047).
+- Modales de responder (staff `StaffComercialModals.jsx` `FilaRequerimiento`/`ModalRequerimientoDetalle`; admin `RequerimientosAdmin.jsx` `FilaItem`/`ModalRequerimiento`): si `item.producto_id != null` el nombre es `item.productos?.nombre_comercial || item.nombre_solicitado`, el input "Nombre final" se sustituye por un span "Producto existente — solo precio", y en `handleGuardar` solo exige precio (payload idéntico `{ id, nombre_final: <nombre>, precio_unitario }`; el backend decide por DB). Items sin producto: UI previa intacta.
+
 ## Notificaciones — ícono y color por tipo (2026-10-01)
 
 `src/utils/notificacionesCatalogo.js` es la **única fuente** de ícono/color de cada notificación. La resolución es `getConfigTipo(tipo)` = **categoría + override por tipo** (`COLOR_POR_TIPO` / `ICONOS_POR_TIPO`); si el tipo no está en el override se cae al ícono/color de su categoría. `getIconoTipo()` delega en `getConfigTipo()`. Reglas del dueño (no re-debatar):
