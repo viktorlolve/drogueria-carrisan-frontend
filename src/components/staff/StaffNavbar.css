@@ -1,0 +1,425 @@
+/* =================================================================
+   STAFF NAVBAR — barra superior del área staff (`.snb-*`)
+   Full-width, sticky, azul de marca (#0052dc, mismo valor que el
+   Navbar de la tienda). Se monta en LayoutDepartamento y en
+   StaffDashboard; la campana (.snc-*) vive solo aquí.
+   ================================================================= */
+
+.snb,
+.snb *::before,
+.snb *::after {
+  box-sizing: border-box;
+}
+
+.snb {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 60px;
+  padding: 0 16px;
+  background: #0052dc;
+  color: #fff;
+  font-family: 'Figtree', 'Inter', system-ui, -apple-system, sans-serif;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* -----------------------------------------------------------------
+   Botón menú (drawer) — solo móvil/tablet
+   ----------------------------------------------------------------- */
+.snb-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.snb-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* -----------------------------------------------------------------
+   Logo → dashboard staff. Sin URL configurada: placeholder con el
+   nombre de la empresa en texto (empresaInfo.logoStaffUrl vacío).
+   ----------------------------------------------------------------- */
+.snb-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex-shrink: 1;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 10px;
+  padding: 4px;
+  margin-left: -4px;
+}
+
+.snb-logo__img {
+  height: 34px;
+  max-width: 160px;
+  object-fit: contain;
+}
+
+.snb-logo__ph {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.snb-logo__texto {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Título de la página: solo móvil (el h1 del contenido también lo
+   muestra; en el navbar evita perder la referencia al abrir el drawer). */
+.snb-titulo {
+  display: none;
+  margin: 0;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* -----------------------------------------------------------------
+   Bloque derecho
+   ----------------------------------------------------------------- */
+.snb-derecha {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  min-width: 0;
+}
+
+/* ---------- Selector de departamento (≥1024px) ---------- */
+.snb-depto {
+  position: relative;
+}
+
+.snb-depto__btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.snb-depto__btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.snb-depto__btn svg:last-child,
+.snb-usuario__btn svg:last-child {
+  transition: transform 0.15s ease;
+}
+
+.snb-depto__chevron--abajo,
+.snb-usuario__chevron--abajo {
+  transform: rotate(180deg);
+}
+
+.snb-depto__panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 70;
+  min-width: 200px;
+  background: #fff;
+  border: 1px solid #e3e4e5;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
+  overflow: hidden;
+  padding: 6px;
+}
+
+.snb-depto__link {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #1f2937;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.snb-depto__link:hover {
+  background: #f3f4f6;
+}
+
+.snb-depto__link--activo {
+  background: #eff6ff;
+  color: #0052dc;
+}
+
+/* ---------- Campana: variante sobre fondo azul ----------
+   Los estilos base de .snc-* están pensados para fondo claro; aquí se
+   re-muestran como botón translúcido. El panel blanco del desplegable
+   no se toca. */
+.snb .snc-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #fff;
+}
+
+.snb .snc-btn:hover,
+.snb .snc-btn--abierto {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: #fff;
+  color: #fff;
+}
+
+.snb .snc-badge {
+  box-shadow: 0 0 0 2px #0052dc;
+}
+
+/* ---------- Menú de usuario ---------- */
+.snb-usuario {
+  position: relative;
+}
+
+.snb-usuario__btn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 40px;
+  padding: 0 10px 0 6px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  max-width: 210px;
+}
+
+.snb-usuario__btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.snb-usuario__avatar {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1B4B8F, #12A594);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.snb-usuario__textos {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.15;
+  min-width: 0;
+}
+
+.snb-usuario__nombre {
+  max-width: 110px;
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: capitalize;
+}
+
+.snb-usuario__rol {
+  max-width: 110px;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.75);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: capitalize;
+}
+
+.snb-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 70;
+  min-width: 230px;
+  background: #fff;
+  border: 1px solid #e3e4e5;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
+  overflow: hidden;
+  padding: 6px;
+}
+
+.snb-menu__header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f3f5;
+  margin-bottom: 4px;
+}
+
+.snb-menu__nombre {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #1f2937;
+  text-transform: capitalize;
+}
+
+.snb-menu__rol {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: capitalize;
+}
+
+.snb-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #1f2937;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.snb-menu__item:hover {
+  background: #f3f4f6;
+}
+
+.snb-menu__item:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.snb-menu__item--peligro {
+  color: #dc2626;
+}
+
+.snb-menu__item--peligro:hover {
+  background: #fef2f2;
+}
+
+.snb-menu__error {
+  margin: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #dc2626;
+}
+
+/* Botón "Instalar app" dentro del menú de usuario. Autocontenido a
+   propósito: el componente trae la clase base .sd-instalar (estilos en
+   StaffDashboard.css) y aquí se gana con mayor especificidad para que se
+   vea igual aunque esa hoja no esté cargada. */
+.snb .snb-instalar-btn,
+.snb-instalar-btn {
+  width: 100%;
+  height: auto;
+  justify-content: flex-start;
+  gap: 9px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #1f2937;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.snb .snb-instalar-btn:hover,
+.snb-instalar-btn:hover {
+  border: 0;
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+/* -----------------------------------------------------------------
+   Responsive
+   ----------------------------------------------------------------- */
+@media (min-width: 1024px) {
+  .snb-menu-btn {
+    display: none;
+  }
+}
+
+@media (max-width: 1023px) {
+  .snb-depto {
+    display: none;
+  }
+  .snb-titulo {
+    display: block;
+  }
+  .snb-usuario__textos {
+    display: none;
+  }
+  .snb-usuario__btn {
+    padding: 0;
+    width: 40px;
+    justify-content: center;
+    border-radius: 50%;
+  }
+}
+
+@media (max-width: 480px) {
+  .snb-logo__texto {
+    display: none;
+  }
+}

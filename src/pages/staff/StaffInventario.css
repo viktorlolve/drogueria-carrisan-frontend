@@ -290,7 +290,7 @@
   flex-direction: column;
   background: #fff;
   overflow: hidden;
-  .inset: 0;
+  inset: 0;
 }
 
 /* Escritorio: panel lateral derecho. */
@@ -384,7 +384,6 @@
   white-space: nowrap;
 }
 .si-file:hover { border-color: var(--ldep-color, #D97706); color: var(--ldep-color, #D97706); }
-}
 
 .si-input-url { flex: 1; min-width: 180px; }
 .si-input--readonly { background: #f8fafc; color: #64748b; }

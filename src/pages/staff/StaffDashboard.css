@@ -29,126 +29,6 @@
 }
 
 /* -----------------------------------------------------------------
-   Barra superior
-   ----------------------------------------------------------------- */
-.sd-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 18px clamp(16px, 4vw, 40px);
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--sd-border);
-  position: sticky;
-  top: 0;
-  z-index: 20;
-}
-
-.sd-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.sd-brand__logo {
-  width: 38px;
-  height: 38px;
-  border-radius: 11px;
-  background: linear-gradient(135deg, #1B4B8F, #2563EB);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.sd-usuario {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.sd-usuario__avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #1B4B8F, #12A594);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 16px;
-}
-
-.sd-usuario__texto {
-  text-align: right;
-  line-height: 1.2;
-}
-
-.sd-usuario__nombre {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--sd-text);
-  text-transform: capitalize;
-}
-
-.sd-usuario__rol {
-  margin: 2px 0 0;
-  font-size: 12px;
-  color: var(--sd-text-muted);
-  text-transform: capitalize;
-}
-
-.sd-logout {
-  border: 1.5px solid var(--sd-border);
-  background: #fff;
-  color: #64748b;
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s ease;
-}
-
-.sd-logout:hover {
-  border-color: #DC2626;
-  color: #DC2626;
-  background: rgba(220, 38, 38, 0.05);
-}
-
-.sd-bridge {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  border: 0;
-  background: #1e293b;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 700;
-  padding: 9px 14px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background 0.15s ease, transform 0.15s ease;
-  white-space: nowrap;
-}
-
-.sd-bridge:hover {
-  background: #334155;
-  transform: translateY(-1px);
-}
-
-.sd-bridge:disabled {
-  opacity: 0.6;
-  cursor: default;
-  transform: none;
-}
-
-/* -----------------------------------------------------------------
    Hero
    ----------------------------------------------------------------- */
 .sd-hero {
@@ -327,26 +207,9 @@
 }
 
 /* -----------------------------------------------------------------
-   Error
-   ----------------------------------------------------------------- */
-.sd-error {
-  margin: 16px clamp(16px, 4vw, 40px) 0;
-  color: #DC2626;
-  background: rgba(220, 38, 38, 0.08);
-  border: 1px solid rgba(220, 38, 38, 0.2);
-  border-radius: 10px;
-  padding: 10px 14px;
-  font-size: 14px;
-}
-
-/* -----------------------------------------------------------------
    Móvil
    ----------------------------------------------------------------- */
 @media (max-width: 480px) {
-  .sd-usuario__texto {
-    display: none;
-  }
-
   .sd-hero {
     padding: 32px 22px;
   }
@@ -363,12 +226,10 @@
   color: #a9f3e6;
 }
 
-/* La campana real vive en StaffCampanaNotificaciones (.snc-*) y trae
-   sus propios estilos; entra directo como hijo de .sd-topbar (flex,
-   align-items:center), así que no necesita reglas aquí. Las reglas
-   .sd-campana del botón decorativo anterior se eliminaron con el
-   componente. */
-
+/* El botón "Instalar app" (.sd-instalar) lo pinta BotonInstalarStaff;
+   aquí vive su estilo base porque el componente se creó para el
+   dashboard. StaffNavbar lo re-muestra dentro de su menú de usuario y
+   lo sobreescribe con `.snb .snb-instalar-btn`. */
 .sd-instalar {
   position: relative;
   display: inline-flex;
@@ -389,23 +250,6 @@
   border-style: solid;
   color: #1B4B8F;
   background: rgba(27, 75, 143, 0.04);
-}
-
-.sd-badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  min-width: 18px;
-  height: 18px;
-  border-radius: 999px;
-  background: #DC2626;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 5px;
 }
 
 /* -----------------------------------------------------------------

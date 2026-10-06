@@ -29,6 +29,12 @@ const empresaInfo = {
   // Ejemplo: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...'
   logoBase64: null,
 
+  // Logo del área staff (navbar superior de /staff/*). URL pública de la
+  // imagen (png/jpg o svg). Vacío ('') = se pinta el placeholder con el
+  // nombre de la empresa en texto.
+  // Pendiente del dueño: pegar aquí la URL del logo.
+  logoStaffUrl: '',
+
   // Datos para que el cliente pague. Solo se imprimen si están completos.
   // Mientras no se confirmen más cuentas, deja solo lo verificado arriba:
   // NUNCA se inventan datos bancarios (si no hay lista, el bloque no se dibuja).

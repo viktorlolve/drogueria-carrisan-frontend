@@ -231,7 +231,7 @@ export default function StaffNotificaciones({ departamento }) {
   const hayMas = offset + items.length < total
 
   return (
-    <LayoutDepartamento departamento={deptos} activo="notificaciones" titulo="Notificaciones">
+    <LayoutDepartamento departamento={deptos} activo="" titulo="Notificaciones">
       <div className="snt-toolbar">
         <div className="snt-toolbar__buscador">
           <Search size={16} aria-hidden="true" />

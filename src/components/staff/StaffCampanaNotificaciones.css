@@ -1,11 +1,11 @@
 /* ---------------------------------------------------------------
    Campana de notificaciones del personal interno (`.snc-*`).
 
-   Monta sobre el header de `LayoutDepartamento` (todas las páginas de
-   trabajo) y sobre el header standalone de `StaffDashboard`. Hereda el
-   color del departamento (`--ldep-color`) para el badge y el borde del
-   panel, y usa `z-index` alto porque el desplegable se abre sobre el
-   sidebar en móvil.
+   Vive en el StaffNavbar (barra superior azul del área staff). Hereda
+   el color del departamento (`--ldep-color`) para el badge y el borde
+   del panel, y usa `z-index` alto porque el desplegable se abre sobre
+   el sidebar en móvil. StaffNavbar.css re-muestra el botón en su
+   variante de fondo azul (`.snb .snc-btn`).
    --------------------------------------------------------------- */
 
 .snc {

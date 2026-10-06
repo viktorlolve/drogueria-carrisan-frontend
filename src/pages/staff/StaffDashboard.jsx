@@ -1,12 +1,8 @@
 import { Link } from 'react-router-dom'
-import { useState } from 'react'
-import { LogOut, ShieldCheck, ArrowRight, Landmark } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { useStaffAuth } from '../../context/StaffAuthContext'
-import staffApi from '../../api/staffAxios'
-import { DEPARTAMENTOS, MODULOS, ROLES_BRIDGE_ADMIN } from '../../components/staff/NavStaff'
-import BotonInstalarStaff from '../../components/staff/BotonInstalarStaff'
-import StaffCampanaNotificaciones from '../../components/staff/StaffCampanaNotificaciones'
-import { safeSetItem } from '../../utils/safeStorage'
+import { DEPARTAMENTOS, MODULOS } from '../../components/staff/NavStaff'
+import StaffNavbar from '../../components/staff/StaffNavbar'
 import './StaffDashboard.css'
 
 const ICONOS_MAPA = {}
@@ -19,12 +15,8 @@ for (const depto of DEPARTAMENTOS) {
 }
 
 function StaffDashboard() {
-  const { staff, logoutStaff } = useStaffAuth()
-  const [entrandoAAdmin, setEntrandoAAdmin] = useState(false)
-  const [errorBridge, setErrorBridge] = useState('')
+  const { staff } = useStaffAuth()
   const rol = staff?.rol
-
-  const puedeBridge = ROLES_BRIDGE_ADMIN.includes(rol)
 
   // Departamentos con módulos visibles para el rol (para filtrar tarjetas).
   const departamentos = DEPARTAMENTOS
@@ -42,59 +34,10 @@ function StaffDashboard() {
   const esJornadaEnfocada = departamentos.length === 1
   const deptoFoco = departamentos[0] || null
 
-  const iniciales = (staff?.nombre || staff?.email || '?').trim().charAt(0).toUpperCase()
-
-  async function entrarAAdmin() {
-    setErrorBridge('')
-    setEntrandoAAdmin(true)
-    try {
-      const { data } = await staffApi.post('/staff/admin-bridge')
-      safeSetItem('token', data.token)
-      safeSetItem('user', JSON.stringify(data.user))
-      window.location.href = '/admin'
-    } catch (err) {
-      setErrorBridge(err.response?.data?.error || 'No se pudo entrar al panel administrativo')
-      setEntrandoAAdmin(false)
-    }
-  }
-
-  // La campana real (contador + previas + deep-links). El dashboard es
-// standalone (no usa LayoutDepartamento), así que se monta aquí.
-const campana = <StaffCampanaNotificaciones />
-
   if (esJornadaEnfocada) {
     return (
       <div className="sd-wrap">
-        <header className="sd-topbar">
-          <div className="sd-brand">
-            <span className="sd-brand__logo"><Landmark size={20} /></span>
-          </div>
-          <div className="sd-usuario">
-            <span className="sd-usuario__avatar">{iniciales}</span>
-            <div className="sd-usuario__texto">
-              <p className="sd-usuario__nombre">{staff?.nombre || 'Staff'}</p>
-              <p className="sd-usuario__rol">{rol}</p>
-            </div>
-            <BotonInstalarStaff />
-            {campana}
-            {puedeBridge && (
-              <button
-                type="button"
-                className="sd-bridge"
-                onClick={entrarAAdmin}
-                disabled={entrandoAAdmin}
-                aria-label="Panel administrativo"
-                title="Panel administrativo"
-              >
-                <ShieldCheck size={17} />
-                <span>{entrandoAAdmin ? 'Entrando...' : 'Admin'}</span>
-              </button>
-            )}
-            <button className="sd-logout" onClick={logoutStaff} aria-label="Cerrar sesión">
-              <LogOut size={17} />
-            </button>
-          </div>
-        </header>
+        <StaffNavbar />
 
         <div className="sd-hero sd-hero--foco">
           <div className="sd-hero__glow" aria-hidden="true" />
@@ -106,8 +49,6 @@ const campana = <StaffCampanaNotificaciones />
             <p className="sd-hero__sub">Tu jornada de hoy está lista. ¿Por dónde empezamos?</p>
           </div>
         </div>
-
-        {errorBridge && <p className="sd-error">{errorBridge}</p>}
 
         <main className="sd-main">
           <div className="sd-foco">
@@ -154,36 +95,7 @@ const campana = <StaffCampanaNotificaciones />
 
   return (
     <div className="sd-wrap">
-      <header className="sd-topbar">
-        <div className="sd-brand">
-          <span className="sd-brand__logo"><Landmark size={20} /></span>
-        </div>
-        <div className="sd-usuario">
-          <span className="sd-usuario__avatar">{iniciales}</span>
-          <div className="sd-usuario__texto">
-            <p className="sd-usuario__nombre">{staff?.nombre || 'Staff'}</p>
-            <p className="sd-usuario__rol">{rol}</p>
-          </div>
-          <BotonInstalarStaff />
-          {campana}
-          {puedeBridge && (
-            <button
-              type="button"
-              className="sd-bridge"
-              onClick={entrarAAdmin}
-              disabled={entrandoAAdmin}
-              aria-label="Panel administrativo"
-              title="Panel administrativo"
-            >
-              <ShieldCheck size={17} />
-              <span>{entrandoAAdmin ? 'Entrando...' : 'Admin'}</span>
-            </button>
-          )}
-          <button className="sd-logout" onClick={logoutStaff} aria-label="Cerrar sesión">
-            <LogOut size={17} />
-          </button>
-        </div>
-      </header>
+      <StaffNavbar />
 
       <div className="sd-hero">
         <div className="sd-hero__glow" aria-hidden="true" />
@@ -195,8 +107,6 @@ const campana = <StaffCampanaNotificaciones />
           <p className="sd-hero__sub">Elige un departamento para comenzar tu jornada.</p>
         </div>
       </div>
-
-      {errorBridge && <p className="sd-error">{errorBridge}</p>}
 
       <main className="sd-main">
         <div className="sd-grid">

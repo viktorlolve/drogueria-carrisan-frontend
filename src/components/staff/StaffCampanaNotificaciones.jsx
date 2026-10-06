@@ -17,8 +17,8 @@ import './StaffCampanaNotificaciones.css'
 //   1. la marca leída (`PATCH /staff/notificaciones/:id`), y
 //   2. navega al módulo donde hay que trabajar (`urlDestinoStaff`).
 //
-// Va en el header de `LayoutDepartamento` y en el de `StaffDashboard`
-// (que es standalone, sin layout). Nunca se montan los dos a la vez.
+// Va en el StaffNavbar (barra superior del área staff): se monta UNA
+// sola vez allí, tanto en LayoutDepartamento como en StaffDashboard.
 //
 // Patrón de polling: idéntico al de `StaffBadgesContext.jsx` —
 // peticiones encadenadas con AbortController, sin superponer, y un

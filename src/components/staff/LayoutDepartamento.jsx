@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { Menu, X, ChevronRight, LogOut, LayoutDashboard, ShieldCheck } from 'lucide-react'
+import { X, ChevronRight, LogOut, LayoutDashboard, ShieldCheck } from 'lucide-react'
 import { useStaffAuth } from '../../context/StaffAuthContext'
 import { useStaffBadges } from '../../context/StaffBadgesContext'
 import staffApi from '../../api/staffAxios'
 import { DEPARTAMENTOS, MODULOS, ROLES_BRIDGE_ADMIN } from './NavStaff'
 import { safeSetItem } from '../../utils/safeStorage'
-import StaffCampanaNotificaciones from './StaffCampanaNotificaciones'
+import StaffNavbar from './StaffNavbar'
 import './LayoutDepartamento.css'
 
 // ---------------------------------------------------------------
@@ -18,6 +18,8 @@ import './LayoutDepartamento.css'
 // A diferencia de LayoutStaff, el sidebar muestra SOLO los módulos
 // del departamento actual, con los colores propios de ese depto
 // (variables CSS --ldep-*). Incluye:
+//   - StaffNavbar (barra superior full-width: logo, selector de
+//     depto, campana de notificaciones y menú de usuario)
 //   - Header del departamento (icono + nombre + color)
 //   - Link "Volver al dashboard"
 //   - Enlace al panel administrativo (solo roles bridge)
@@ -130,22 +132,11 @@ function LayoutDepartamento({ departamento, activo, titulo, children }) {
       <div className={`ldep-shift ${drawerAbierto ? 'ldep-shift--empujado' : ''}`}>
         {drawerAbierto && <div className="ldep-shift__catcher" onClick={cerrarDrawer} aria-hidden="true" />}
 
-        <header className="ldep-topbar">
-          <Link to="/staff/dashboard" className="ldep-topbar__dashboard-btn" aria-label="Ir al dashboard">
-            <LayoutDashboard size={20} />
-          </Link>
-          <button type="button" className="ldep-topbar__menu-btn" onClick={() => setDrawerAbierto(true)} aria-label="Abrir menú de departamento">
-            <Menu size={22} />
-          </button>
-          {IconoDepto && <IconoDepto size={18} className="ldep-topbar__depto-icono" />}
-          <p className="ldep-topbar__titulo">{titulo}</p>
-          {/* La campana va en el topbar móvil y en el header de la
-              página (que se ve en escritorio): con los dos puntos de
-              montaje se ve una sola vez en cualquier viewport. */}
-          <div className="ldep-topbar__campana">
-            <StaffCampanaNotificaciones />
-          </div>
-        </header>
+        <StaffNavbar
+          departamento={departamento}
+          titulo={titulo}
+          onAbrirMenu={() => setDrawerAbierto(true)}
+        />
 
         <div className="ldep-container">
           <div className="ldep-body">
@@ -155,7 +146,6 @@ function LayoutDepartamento({ departamento, activo, titulo, children }) {
                   {IconoDepto && <span className="ldep-sidebar__brand-icono"><IconoDepto size={20} /></span>}
                   <div>
                     <p className="ldep-sidebar__brand-nombre">{depto?.nombre}</p>
-                    <p className="ldep-sidebar__brand-sub">{staff?.nombre || 'Staff'} · {rol}</p>
                   </div>
                 </div>
 
@@ -171,9 +161,6 @@ function LayoutDepartamento({ departamento, activo, titulo, children }) {
             <main className="ldep-main">
               <div className="ldep-main__header">
                 <h1 className="ldep-main__titulo">{titulo}</h1>
-                <div className="ldep-main__campana">
-                  <StaffCampanaNotificaciones />
-                </div>
               </div>
               {children}
             </main>

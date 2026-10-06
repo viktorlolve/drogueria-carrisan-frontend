@@ -267,74 +267,6 @@
   margin: 0;
 }
 
-/* Campana de notificaciones: vive en el header de la página
-   (escritorio, ≥1024px) y en la barra superior (móvil). El topbar se
-   oculta en escritorio y `.ldep-main__header` no existe en móvil, así
-   que se ve UNA sola vez en cualquier viewport. */
-.ldep-main__campana {
-  display: none;
-}
-
-.ldep-topbar__campana {
-  margin-left: auto;
-}
-
-/* -----------------------------------------------------------------
-   Barra superior — SOLO móvil/tablet (<1024px)
-   ----------------------------------------------------------------- */
-.ldep-topbar {
-  display: none;
-  align-items: center;
-  gap: 12px;
-  margin: 0;
-  padding: 12px 16px;
-  background: var(--ldep-surface);
-  border-bottom: 1px solid var(--ldep-border);
-}
-
-.ldep-topbar__depto-icono {
-  color: var(--ldep-color);
-}
-
-.ldep-topbar__dashboard-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: 0;
-  color: var(--ldep-text-muted);
-  padding: 4px;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: background 0.12s ease, color 0.12s ease;
-  text-decoration: none;
-}
-
-.ldep-topbar__dashboard-btn:hover {
-  background: var(--ldep-color-soft);
-  color: var(--ldep-color-strong);
-}
-
-.ldep-topbar__menu-btn {
-  background: transparent;
-  border: 0;
-  color: var(--ldep-text);
-  cursor: pointer;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-}
-
-.ldep-topbar__titulo {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--ldep-text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 /* -----------------------------------------------------------------
    Drawer — móvil/tablet
    ----------------------------------------------------------------- */
@@ -460,20 +392,7 @@
 /* -----------------------------------------------------------------
    Responsive
    ----------------------------------------------------------------- */
-@media (min-width: 1024px) {
-  .ldep-topbar {
-    display: none;
-  }
-  /* En escritorio la campana se muda al header de la página. */
-  .ldep-main__campana {
-    display: block;
-  }
-}
-
 @media (max-width: 1023px) {
-  .ldep-topbar {
-    display: flex;
-  }
   .ldep-sidebar {
     display: none;
   }

@@ -527,8 +527,8 @@ function Presupuesto() {
       <div className="pres-page">
         <div className="pres-cta">
           <div className="pres-cta__texto">
-            <h2>¿Necesitas una cotización?</h2>
-            <p>Arma tu listado de productos y te lo enviamos con los precios bloqueados por 24 horas.</p>
+            <h2>Genera un presupuesto en minutos</h2>
+            <p>Arma tu lista de productos y podras agregarlo al carrito cuando quieras.</p>
           </div>
           <button type="button" className="pres-cta__btn" onClick={abrirCreacion}>
             <Plus size={18} /> Crear presupuesto

@@ -13,7 +13,7 @@ import {
   Landmark, TrendingUp, Truck, Receipt, Banknote, CalendarX2,
   Inbox, FileText, Megaphone, MapPin, BadgeDollarSign, Users,
   Shield, BarChart3, MessageSquare, Gift, AlertTriangle,
-  CheckCircle2, Bell, Images,
+  CheckCircle2, Images,
 } from 'lucide-react'
 
 const ROLES_TODOS = ['vendedor', 'despachador', 'almacenista', 'contabilidad', 'administrador', 'director', 'admin']
@@ -52,32 +52,12 @@ export const DEPARTAMENTOS = [
 ]
 
 // -----------------------------------------------------------------
-// La bandeja de notificaciones es TRANSVERSAL: los 7 roles del staff
-// la ven. Se declara una vez aquí y se agrega a los 3 departamentos
-// (así cada sidebar muestra el acceso donde el staff está trabajando).
-// Las rutas se GENERAN desde `MODULOS` (ver `RutasStaff` en App.jsx),
-// y los 3 registros apuntan a la MISMA ruta `/staff/notificaciones`:
-// el primero que matchee gana, por eso `key` en la ruta lleva
-// `${deptoId}-${item.id}` y la página vuelve a derivar el departamento
-// del `staff.rol` (`deptoParaRol`) para pintar el sidebar correcto.
-// -----------------------------------------------------------------
-const GRUPO_NOTIFICACIONES = () => ({
-  titulo: 'General',
-  items: [
-    {
-      id: 'notificaciones',
-      to: '/staff/notificaciones',
-      icono: Bell,
-      texto: 'Notificaciones',
-      desc: 'Bandeja de avisos de tu área: pedidos, pagos, solicitudes y documentos',
-      roles: ROLES_TODOS,
-    },
-  ],
-})
-
-// -----------------------------------------------------------------
 // Módulos — items de navegación agrupados por departamento
 // (usados por el sidebar del LayoutDepartamento)
+//
+// OJO: la bandeja de notificaciones (`/staff/notificaciones`) NO es un
+// item de navegación: se accede desde la campana del StaffNavbar. La
+// ruta se declara a mano en App.jsx (antes se generaba desde MODULOS).
 // -----------------------------------------------------------------
 export const MODULOS = {
   finanzas: [
@@ -134,7 +114,6 @@ export const MODULOS = {
         },
       ],
     },
-    GRUPO_NOTIFICACIONES(),
   ],
   comercial: [
     {
@@ -214,7 +193,6 @@ export const MODULOS = {
         },
       ],
     },
-    GRUPO_NOTIFICACIONES(),
   ],
   // Seis colas independientes en vez de un pipeline de 5 tabs. Cada cola es su
   // propia página y su propio contador de trabajo (`contador` = clave del badge
@@ -316,7 +294,6 @@ export const MODULOS = {
         },
       ],
     },
-    GRUPO_NOTIFICACIONES(),
   ],
 }
 

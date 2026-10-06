@@ -82,6 +82,7 @@ const StaffDashboard = lazy(() => import('./pages/staff/StaffDashboard'))
 const StaffDepartamento = lazy(() => import('./pages/staff/StaffDepartamento'))
 const StaffModuloPlaceholder = lazy(() => import('./pages/staff/StaffModuloPlaceholder'))
 const StaffClienteFicha = lazy(() => import('./pages/staff/StaffClienteFicha'))
+const StaffNotificaciones = lazy(() => import('./pages/staff/StaffNotificaciones'))
 
 function PageLoading() {
   return (
@@ -107,9 +108,6 @@ function LoadingBarBridge() {
 // Agregar un módulo nuevo = agregarlo a MODULOS (+STAFF_PAGINAS si
 // tiene página real). Nada más que cambiar aquí.
 // ---------------------------------------------------------------
-// La key de cada ruta lleva el depto porque un módulo transversal (hoy
-// `notificaciones`) se declara en los 3 departamentos apuntando a la
-// MISMA ruta: sin el prefijo, 3 <Route> con la misma key.
 function RutasStaff() {
   const rutas = []
   for (const depto of DEPARTAMENTOS) {
@@ -147,6 +145,21 @@ function RutasStaff() {
       element={
         <PrivateRouteStaff rolesPermitidos={['vendedor', 'administrador', 'director', 'admin']}>
           <StaffClienteFicha />
+        </PrivateRouteStaff>
+      }
+    />
+  )
+  // Ruta manual: bandeja de notificaciones del staff. Transversal a los
+  // 7 roles y accedida desde la campana del StaffNavbar ("Ver todas");
+  // el item de sidebar se quitó el 2026-10-06, así que ya no se genera
+  // desde MODULOS.
+  rutas.push(
+    <Route
+      key="staff-notificaciones"
+      path="/staff/notificaciones"
+      element={
+        <PrivateRouteStaff>
+          <StaffNotificaciones />
         </PrivateRouteStaff>
       }
     />

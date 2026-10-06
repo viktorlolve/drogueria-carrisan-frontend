@@ -19,45 +19,45 @@
 export const COPY_ETIQUETA = {
   // --- Etiquetas de precio ---
   institucional: {
-    titulo: 'Precio institucional',
+    titulo: 'Descuento institucional',
     detalle: 'Precios de distribución para clínicas, consultorios y centros de salud',
   },
   distribuidor: {
-    titulo: 'Precio institucional',
+    titulo: 'Descuento institucional',
     detalle: 'Precios de distribución para clínicas, consultorios y centros de salud',
   },
   profesional: {
-    titulo: 'Precio profesional',
+    titulo: 'Descuento profesional',
     detalle: 'Precios mayoristas para médicos, enfermeros y profesionales de la salud',
   },
   medico: {
-    titulo: 'Precio profesional',
+    titulo: 'Descuento profesional',
     detalle: 'Precios mayoristas para médicos, enfermeros y profesionales de la salud',
   },
   honorifico: {
-    titulo: 'Precio comunidad',
+    titulo: 'Descuento comunidad',
     detalle: 'Precio especial para miembros de la comunidad Carrisan',
   },
   contado: {
-    titulo: 'Precio contado',
+    titulo: 'Descuento contado',
     detalle: 'El descuento por pagar al contado ya está aplicado',
   },
   credito: {
-    titulo: 'Precio crédito',
+    titulo: 'Descuento crédito',
     detalle: 'El descuento de tu línea de crédito ya está aplicado',
   },
 }
 
 // Respaldo para cualquier etiqueta que el dueño cree y todavía no esté en el mapa.
 const COPY_ETIQUETA_CON_SESION = {
-  titulo: 'Precio de tu cuenta',
+  titulo: 'Descuento unico',
   detalle: 'El precio que ves ya incluye el descuento de tu perfil de cliente',
 }
 
 // Respaldo para el visitante sin sesión (el cuadro se sigue pintando).
 const COPY_SIN_SESION = {
   titulo: 'Precio de droguería',
-  detalle: 'Precios mayoristas para profesionales e instituciones',
+  detalle: 'Precios mayoristas para instituciones',
 }
 
 const norm = (valor) => String(valor || '').trim().toLowerCase()

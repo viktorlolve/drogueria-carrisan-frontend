@@ -16,7 +16,7 @@ function estaInstalado() {
   return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true
 }
 
-function BotonInstalarStaff() {
+function BotonInstalarStaff({ className = '' }) {
   const [deferredPrompt, setDeferredPrompt] = useState(null)
   const [instalado, setInstalado] = useState(estaInstalado)
   const [modalAbierto, setModalAbierto] = useState(false)
@@ -62,7 +62,7 @@ function BotonInstalarStaff() {
     <>
       <button
         type="button"
-        className="sd-instalar"
+        className={`sd-instalar ${className}`.trim()}
         onClick={handleInstalar}
         aria-label="Instalar app"
         title="Instalar app"

@@ -289,7 +289,6 @@ function StaffInventario() {
   // Drawer
   const [drawerId, setDrawerId] = useState(null)
   const [detalle, setDetalle] = useState(null)
-  const [detalleCargando, setDetalleCargando] = useState(false)
   const [detalleError, setDetalleError] = useState('')
   const [drawerError, setDrawerError] = useState('')
   const [fotoOk, setFotoOk] = useState('')
@@ -337,7 +336,8 @@ function StaffInventario() {
 
   // --- abrir/cerrar el drawer: se ajusta durante el render -----------------
   // Patrón "set state on prop change" del AGENTS: resetear con un efecto +
-  // setState dispara `react-hooks/set-state-in-effect`.
+  // setState dispara `react-hooks/set-state-in-effect`. No se escriben refs
+  // durante el render (la regla react-hooks/refs lo prohíbe).
   const [drawerIdAnterior, setDrawerIdAnterior] = useState(drawerId)
   if (drawerId !== drawerIdAnterior) {
     setDrawerIdAnterior(drawerId)
@@ -349,10 +349,7 @@ function StaffInventario() {
     setArchivo(null)
     setUrlFoto('')
     setPrecioTexto('')
-    setDetalleCargando(drawerId != null)
-    // Un producto nuevo arranca limpio: si no, el refetch heredaría los flags
-    // "sucio" del producto anterior y no pondría los valores del servidor.
-    sucioRef.current = { url: false, precio: false }
+    
   }
 
   // --- GET /staff/inventario/opciones --------------------------------------
@@ -429,21 +426,26 @@ function StaffInventario() {
   // así el drawer muestra SIEMPRE lo que quedó guardado (el server manda).
   // Salvo en los campos que el operador tiene a medio escribir: reponerlos acá
   // borraría en silencio lo tecleado (precio o URL) sin avisar.
-  useEffect(() => {
+    useEffect(() => {
     if (drawerId == null) return undefined
     let activo = true
+    Promise.resolve().then(() => {
+      if (!activo) return
+      
+    })
     staffApi
       .get(`/staff/inventario/${drawerId}`)
       .then((res) => {
         if (!activo) return
         const data = res.data
         setDetalle(data)
-        if (!sucioRef.current.url) setUrlFoto(data.producto.foto_url || '')
-        if (!sucioRef.current.precio) {
-          setPrecioTexto(
-            data.producto.precio_usd != null ? String(data.producto.precio_usd) : '',
-          )
-        }
+        // Al abrir/cambiar de producto, el ref debe estar limpio antes de aplicar
+        // lo que manda el servidor.
+        sucioRef.current = { url: false, precio: false }
+        setUrlFoto(data.producto.foto_url || '')
+        setPrecioTexto(
+          data.producto.precio_usd != null ? String(data.producto.precio_usd) : '',
+        )
         setDetalleError('')
       })
       .catch((err) => {
@@ -451,7 +453,10 @@ function StaffInventario() {
         setDetalleError(err.response?.data?.error || 'No se pudo cargar el producto')
         console.error('[inventario] error al cargar el detalle:', err?.response?.status, err?.message)
       })
-      .finally(() => { if (activo) setDetalleCargando(false) })
+      .finally(() => {
+        if (!activo) return
+        
+      })
 
     return () => { activo = false }
   }, [drawerId, detalleRecarga])
