@@ -8,7 +8,7 @@
 // `factura` = registro de GET /clientes/:id/estado-cuenta (incluye codigo_verificacion).
 
 import {
-  C, PAG, usd, fechaLarga, fechaCorta,
+  C, PAG, usd, usdCode, fechaLarga, fechaCorta,
   nuevoDoc, dibujarMembrete, dibujarPie, dibujarSeccion, dibujarTarjetaCliente,
   dibujarTarjetaDatos, dibujarTabla, dibujarTotal, dibujarVerificacion, dibujarDatosPago,
 } from './pdf/pdfBase'
@@ -72,10 +72,10 @@ export default async function generarFacturaPDF({ factura, cliente }) {
     doc.text('Subtotal de productos', PAG.margen + PAG.contenido - 38, y, { align: 'right' })
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(...C.texto)
-    doc.text(usd(sumaItems), PAG.margen + PAG.contenido, y, { align: 'right' })
+    doc.text(usdCode(sumaItems), PAG.margen + PAG.contenido, y, { align: 'right' })
     y += 7
   }
-  y = dibujarTotal(doc, y, 'Total facturado', usd(total))
+  y = dibujarTotal(doc, y, 'Total facturado', usdCode(total))
 
   if (factura.nota) {
     y = dibujarSeccion(doc, y, 'Nota')

@@ -6,6 +6,7 @@ import api from '../api/axios'
 import LayoutPaginaPrincipal from '../components/paginas-principales/Layoutpaginaprincipal'
 import { NAV_UNIFICADO } from '../components/paginas-principales/NavUnificado'
 import generarFacturaPDF from '../utils/generarFacturaPDF'
+import { formatearUSD } from '../utils/formato'
 import './EstadoCuenta.css'
 
 // ---------------------------------------------------------------
@@ -19,10 +20,6 @@ import './EstadoCuenta.css'
 // cuenta, no de contar facturas por estado — inventar un estado por
 // factura acá sería mostrar algo que el backend no respalda.
 // ---------------------------------------------------------------
-
-function formatUSD(valor) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(valor || 0)
-}
 
 function claveGrupoFecha(fecha) {
   const hoy = new Date()
@@ -97,7 +94,7 @@ export default function FacturasEstadoCuenta() {
             <section className="ec-kpis">
               <Stat.Root className="ec-kpi">
                 <Stat.Label className="ec-kpi__label">Total facturado</Stat.Label>
-                <Stat.ValueText className="ec-kpi__valor">{formatUSD(kpis.total)}</Stat.ValueText>
+                <Stat.ValueText className="ec-kpi__valor">{formatearUSD(kpis.total)}</Stat.ValueText>
               </Stat.Root>
               <Stat.Root className="ec-kpi">
                 <Stat.Label className="ec-kpi__label">Facturas emitidas</Stat.Label>
@@ -106,7 +103,7 @@ export default function FacturasEstadoCuenta() {
               <Stat.Root className="ec-kpi">
                 <Stat.Label className="ec-kpi__label">Deuda actual</Stat.Label>
                 <Stat.ValueText className={`ec-kpi__valor ${deudaActual > 0 ? 'ec-kpi__valor--negativo' : ''}`}>
-                  {formatUSD(deudaActual)}
+                  {formatearUSD(deudaActual)}
                 </Stat.ValueText>
               </Stat.Root>
             </section>
@@ -141,7 +138,7 @@ export default function FacturasEstadoCuenta() {
                             <span className="ec-badge ec-badge--registrado">emitida</span>
                           </div>
                           <strong className="ec-movimiento__monto ec-movimiento__monto--rojo">
-                            {formatUSD(factura.monto_facturado)}
+                            {formatearUSD(factura.monto_facturado)}
                           </strong>
                           <button
                             className="ec-movimiento__descarga"

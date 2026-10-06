@@ -2000,3 +2000,76 @@ body
   white-space: nowrap
 ;
 }
+
+/* ============================================================
+   ÍCONOS (lucide-react) — reemplazo de emojis
+   ============================================================ */
+
+/* Cuadrito redondeado con tinte de marca: dropdowns y sidebar */
+.nav-ico {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(0, 82, 220, 0.08);
+  color: var(--wm-blue);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+/* Gana a `.deptos-dropdown__depto-btn svg` (margin-left:auto, opacity,
+   translateX) que estaba pensada solo para el chevron del botón. */
+header.navbar-container .nav-ico svg {
+  margin: 0;
+  opacity: 1;
+  transform: none;
+  color: inherit;
+}
+
+.deptos-dropdown__depto-btn:hover .nav-ico,
+.deptos-dropdown__depto-btn.active .nav-ico,
+.action-dropdown-item:hover .nav-ico {
+  background: var(--wm-blue);
+  color: #fff;
+}
+
+.nav-ico--peligro {
+  background: rgba(220, 38, 38, 0.08);
+  color: #dc2626;
+}
+.action-dropdown-item:hover .nav-ico--peligro {
+  background: #dc2626;
+  color: #fff;
+}
+
+/* Botón Retiro/Delivery del header (círculo blanco, ícono azul) */
+.pickup-btn__icon {
+  color: var(--wm-blue);
+}
+
+/* Panel de envío */
+.envio-circle svg {
+  display: block;
+}
+.envio-oficina-ubicacion {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.envio-direccion-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.envio-direccion-item__pin {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--wm-blue);
+}
+.close-panel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

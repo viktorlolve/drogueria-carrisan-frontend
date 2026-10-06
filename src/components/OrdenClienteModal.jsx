@@ -1,10 +1,7 @@
 import { X, Package } from 'lucide-react'
 import { getEtapas, getLabelEstado, normalizarEstado } from '../config/estadosOrden'
+import { formatearUSD } from '../utils/formato'
 import './OrdenClienteModal.css'
-
-function formatUSD(valor) {
-  return Number(valor || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
 
 export default function OrdenClienteModal({ orden, onClose }) {
   if (!orden) return null
@@ -72,7 +69,7 @@ export default function OrdenClienteModal({ orden, onClose }) {
 
         <div className="ocm-total-row">
           <span>Total</span>
-          <strong>${formatUSD(orden.total_usd)}</strong>
+          <strong>{formatearUSD(orden.total_usd)}</strong>
         </div>
 
         <p className="ocm-estado-pago-nota">

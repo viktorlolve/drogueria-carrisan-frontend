@@ -1,14 +1,7 @@
 import { X, CheckCircle2, Download } from 'lucide-react'
 import generarComprobantePagoPDF from '../utils/generarComprobantePagoPDF'
+import { formatearUSD, formatearVES } from '../utils/formato'
 import './OrdenClienteModal.css' // reutiliza overlay/content/close/divider
-
-function formatUSD(valor) {
-  return Number(valor || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
-
-function formatBs(valor) {
-  return Number(valor || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
 
 export default function PagoClienteModal({ pago, cliente, facturas, onClose }) {
   if (!pago) return null
@@ -34,14 +27,14 @@ export default function PagoClienteModal({ pago, cliente, facturas, onClose }) {
         </div>
 
         <div className="pcm-monto-hero">
-          <span className="pcm-monto-hero__valor">${formatUSD(pago.monto)}</span>
+          <span className="pcm-monto-hero__valor">{formatearUSD(pago.monto)}</span>
           {tieneConversionBs && (
-            <span className="pcm-monto-hero__bs">Bs. {formatBs(pago.monto_bs)}</span>
+            <span className="pcm-monto-hero__bs">VES {formatearVES(pago.monto_bs)}</span>
           )}
         </div>
         {tieneConversionBs && (
           <p className="pcm-tasa">
-            Tasa aplicada: <strong>Bs. {formatBs(pago.tasa_usada)}</strong> / $
+            Tasa aplicada: <strong>VES {formatearVES(pago.tasa_usada)}</strong> / USD
           </p>
         )}
 

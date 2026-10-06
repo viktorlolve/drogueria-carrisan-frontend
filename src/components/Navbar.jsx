@@ -8,6 +8,12 @@ import logoBlanco from '../assets/minilogo blanco sin fondo.png'
 import api from '../api/axios'
 import BuscadorMovil from './BuscadorMovil'
 import { ProductoImagen } from './icons/ProductoImagen'
+import {
+  Store, Bike, Package, MapPin, Hospital, Pill, Stethoscope, Sparkles,
+  BookOpenText, FileText, Newspaper, MessageCircle, Microscope, Gift,
+  Heart, ClipboardList, RefreshCw, User, CreditCard, Bell, Settings,
+  LogOut, LogIn, UserPlus, X,
+} from 'lucide-react'
 import './Navbar.css'
 
 const RUTAS_SIN_NAVBAR = ['/login', '/registro', '/registro/invita', '/recuperar', '/registro/institucional', '/registro/profesional', '/registro/honorifico', '/mantenimiento']
@@ -19,12 +25,23 @@ const RUTAS_CON_BACK_MOVIL_PREFIXES = [
   '/servicios'
 ]
 
-const EMOJIS_ENVIO = {
-  retiro: '🏪',
-  delivery: '🛵',
-  envio_nacional: '📦',
-  default: '📲'
+const ICONOS_ENVIO = {
+  retiro: Store,
+  delivery: Bike,
+  envio_nacional: Package,
+  default: MapPin
 };
+
+// Ícono dentro de un cuadrito redondeado con tinte de marca (estilo
+// Amazon/Walmart). Los colores y estados hover/activo viven en Navbar.css
+// (.nav-ico). `variante="peligro"` lo tiñe de rojo (cerrar sesión).
+function IconoCaja({ icono: Icono, tamano = 18, variante }) {
+  return (
+    <span className={`nav-ico${variante ? ` nav-ico--${variante}` : ''}`} aria-hidden="true">
+      <Icono size={tamano} strokeWidth={2} />
+    </span>
+  )
+}
 
 // Datos de departamentos y sus subcategorías.
 // Línea Farmacia y Cuidado Personal usan las categorías reales de la tienda
@@ -35,7 +52,7 @@ const DEPARTAMENTOS = [
   {
     id: 'hospitalaria',
     nombre: 'Línea Hospitalaria',
-    icono: '🏥',
+    icono: Hospital,
     subcategorias: [
       { nombre: 'Anestesia', ruta: '/catalogo?departamento=hospitalaria&categoria=anestesia' },
       { nombre: 'Antibióticos', ruta: '/catalogo?departamento=hospitalaria&categoria=antibioticos' },
@@ -46,7 +63,7 @@ const DEPARTAMENTOS = [
   {
     id: 'farmacia',
     nombre: 'Línea Farmacia',
-    icono: '💊',
+    icono: Pill,
     subcategorias: [
       { nombre: 'Analgésicos y antiinflamatorios', ruta: '/catalogo?categoria=analgesicos' },
       { nombre: 'Cardiovascular', ruta: '/catalogo?categoria=cardiovascular' },
@@ -64,7 +81,7 @@ const DEPARTAMENTOS = [
   {
     id: 'material-medico',
     nombre: 'Material Médico',
-    icono: '🩺',
+    icono: Stethoscope,
     subcategorias: [
       { nombre: 'Descartables', ruta: '/catalogo?departamento=material-medico&categoria=descartables' },
       { nombre: 'Adhesivos', ruta: '/catalogo?departamento=material-medico&categoria=adhesivos' },
@@ -74,7 +91,7 @@ const DEPARTAMENTOS = [
   {
     id: 'cuidado-personal',
     nombre: 'Cuidado Personal',
-    icono: '🧴',
+    icono: Sparkles,
     subcategorias: [
       { nombre: 'Salud femenina', ruta: '/catalogo?categoria=salud-femenina' },
       { nombre: 'Salud masculina y urológico', ruta: '/catalogo?categoria=salud-masculina' },
@@ -92,7 +109,7 @@ const SERVICIOS_PROPIOS = [
   {
     id: 'informacion-clinica',
     nombre: 'Información clínica',
-    icono: '💊',
+    icono: BookOpenText,
     descripcion: 'Consulta sanitaria oficial y fichas clínicas de medicamentos. Abiertas al público, sin costo y sin registro.',
     subcategorias: [
       { nombre: 'Vademécum clínico', ruta: '/vademecum' },
@@ -102,7 +119,7 @@ const SERVICIOS_PROPIOS = [
   {
     id: 'solicitudes',
     nombre: 'Solicitudes y documentos',
-    icono: '📄',
+    icono: FileText,
     descripcion: 'Cuéntanos qué necesitas y te respondemos con precios, cotizaciones o la documentación para tu institución.',
     subcategorias: [
       { nombre: 'Solicitar documentos', ruta: '/mis-solicitudes/documentos' },
@@ -114,7 +131,7 @@ const SERVICIOS_PROPIOS = [
   {
     id: 'noticias',
     nombre: 'Noticias',
-    icono: '📰',
+    icono: Newspaper,
     descripcion: 'Novedades, alertas y comunicados del sector farmacéutico.',
     subcategorias: [
       { nombre: 'Noticias del sector', ruta: '/noticias' },
@@ -123,7 +140,7 @@ const SERVICIOS_PROPIOS = [
   {
     id: 'ayuda-contacto',
     nombre: 'Ayuda y contacto',
-    icono: '💬',
+    icono: MessageCircle,
     descripcion: 'Habla con alguien de nuestro equipo o resuelve tus dudas de compra y cuenta.',
     subcategorias: [
       { nombre: 'Chat con la empresa', ruta: '/chat' },
@@ -143,7 +160,7 @@ const SERVICIOS_ALIADOS = [
   {
     id: 'consulta-medica',
     nombre: 'Consulta Médica',
-    icono: '🩺',
+    icono: Stethoscope,
     descripcion: 'Atención médica con especialistas aliados de la comunidad.',
     subcategorias: [
       { nombre: 'Cardiología', proximamente: true },
@@ -154,7 +171,7 @@ const SERVICIOS_ALIADOS = [
   {
     id: 'laboratorio-clinico',
     nombre: 'Laboratorio Clínico',
-    icono: '🔬',
+    icono: Microscope,
     descripcion: 'Análisis clínicos de laboratorio con aliados.',
     subcategorias: [
       { nombre: 'Análisis de sangre', proximamente: true },
@@ -165,7 +182,7 @@ const SERVICIOS_ALIADOS = [
   {
     id: 'detalles-disenos',
     nombre: 'Detalles & Diseños',
-    icono: '🎁',
+    icono: Gift,
     descripcion: 'Arreglos, cestas y decoración para regalar a empresas y personas.',
     subcategorias: [
       { nombre: 'Arreglos florales', proximamente: true },
@@ -383,7 +400,7 @@ function Navbar() {
   // Grupo de servicios hovered (o clickeado) en el sidebar del dropdown.
   const servicioSeleccionado = SERVICIOS.find(s => s.id === servicioActivo) || null
 
-  const emojiActual = EMOJIS_ENVIO[tipoEnvio] || EMOJIS_ENVIO.default;
+  const IconoEnvioActual = ICONOS_ENVIO[tipoEnvio] || ICONOS_ENVIO.default
 
   return (
     <>
@@ -397,7 +414,7 @@ function Navbar() {
           <div className="navbar__desktop-pickup-wrapper desktop-only" ref={panelRef}>
             <button className="navbar__pickup-btn" onClick={() => setShowEnvioPanel(!showEnvioPanel)}>
               <div className="pickup-btn__icon">
-                {emojiActual}
+                <IconoEnvioActual size={15} strokeWidth={2.25} aria-hidden="true" />
               </div>
               <div className="pickup-btn__text">
                 <span className="pickup-btn__title">
@@ -471,7 +488,7 @@ function Navbar() {
             <form className="navbar__search" onSubmit={handleBuscar}>
               <input
                 type="text"
-                placeholder="Buscar en Drogueria Carrisan"
+                placeholder="Buscar en Droguería Carrisan"
                 value={busqueda}
                 onChange={(e) => {
                   busquedaUrlSyncRef.current = false
@@ -540,21 +557,21 @@ function Navbar() {
               {showMyItemsMenu && (
                 <div className="action-dropdown-menu">
                   <Link to="/mis-items" className="action-dropdown-item" onClick={() => setShowMyItemsMenu(false)}>
-                    <span className="action-dropdown-item__icono">❤️</span>
+                    <IconoCaja icono={Heart} />
                     <div>
                       <span className="action-dropdown-item__label">Favoritos</span>
                       <span className="action-dropdown-item__desc">Productos que te gustan</span>
                     </div>
                   </Link>
-                  <Link to="/mis-items?tab=favoritos" className="action-dropdown-item" onClick={() => setShowMyItemsMenu(false)}>
-                    <span className="action-dropdown-item__icono">📋</span>
+                  <Link to="/mis-items" className="action-dropdown-item" onClick={() => setShowMyItemsMenu(false)}>
+                    <IconoCaja icono={ClipboardList} />
                     <div>
                       <span className="action-dropdown-item__label">Mis Listas</span>
                       <span className="action-dropdown-item__desc">Listas de compras</span>
                     </div>
                   </Link>
                   <Link to="/mis-items?tab=recomprar" className="action-dropdown-item" onClick={() => setShowMyItemsMenu(false)}>
-                    <span className="action-dropdown-item__icono">🔄</span>
+                    <IconoCaja icono={RefreshCw} />
                     <div>
                       <span className="action-dropdown-item__label">Frecuentes</span>
                       <span className="action-dropdown-item__desc">Compras recurrentes</span>
@@ -596,43 +613,45 @@ function Navbar() {
                   {user ? (
                     <>
                       <Link to="/cuenta" className="action-dropdown-item" onClick={() => setShowAccountMenu(false)}>
-                        <span className="action-dropdown-item__icono">👤</span>
+                        <IconoCaja icono={User} />
                         <div>
                           <span className="action-dropdown-item__label">Mi Cuenta</span>
                           <span className="action-dropdown-item__desc">Información personal</span>
                         </div>
                       </Link>
                       <Link to="/orders" className="action-dropdown-item" onClick={() => setShowAccountMenu(false)}>
-                        <span className="action-dropdown-item__icono">📦</span>
+                        <IconoCaja icono={Package} />
                         <div>
                           <span className="action-dropdown-item__label">Mis Órdenes</span>
                           <span className="action-dropdown-item__desc">Historial de pedidos</span>
                         </div>
                       </Link>
                       <Link to="/estado-de-cuenta" className="action-dropdown-item" onClick={() => setShowAccountMenu(false)}>
-                        <span className="action-dropdown-item__icono">💳</span>
+                        <IconoCaja icono={CreditCard} />
                         <div>
                           <span className="action-dropdown-item__label">Estado de Cuenta</span>
                           <span className="action-dropdown-item__desc">Historial de facturación</span>
                         </div>
                       </Link>
                       <Link to="/notificaciones" className="action-dropdown-item" onClick={() => setShowAccountMenu(false)}>
-                        <span className="action-dropdown-item__icono">🔔</span>
+                        <IconoCaja icono={Bell} />
                         <div>
                           <span className="action-dropdown-item__label">Notificaciones</span>
                           <span className="action-dropdown-item__desc">Alertas y avisos</span>
                         </div>
                       </Link>
-                      <Link to="/admin" className="action-dropdown-item" onClick={() => setShowAccountMenu(false)}>
-                        <span className="action-dropdown-item__icono">⚙️</span>
-                        <div>
-                          <span className="action-dropdown-item__label">Administracion</span>
-                          <span className="action-dropdown-item__desc">Acceso solo para trabajadores</span>
-                        </div>
-                      </Link>
+                      {user.es_admin && (
+                        <Link to="/admin" className="action-dropdown-item" onClick={() => setShowAccountMenu(false)}>
+                          <IconoCaja icono={Settings} />
+                          <div>
+                            <span className="action-dropdown-item__label">Administración</span>
+                            <span className="action-dropdown-item__desc">Panel de control</span>
+                          </div>
+                        </Link>
+                      )}
                       <div className="action-dropdown-divider"></div>
                       <button className="action-dropdown-item action-dropdown-item--danger" onClick={() => { logout(); setShowAccountMenu(false); }}>
-                        <span className="action-dropdown-item__icono">🚪</span>
+                        <IconoCaja icono={LogOut} variante="peligro" />
                         <div>
                           <span className="action-dropdown-item__label">Cerrar Sesión</span>
                         </div>
@@ -641,14 +660,14 @@ function Navbar() {
                   ) : (
                     <>
                       <Link to="/login" className="action-dropdown-item" onClick={() => setShowAccountMenu(false)}>
-                        <span className="action-dropdown-item__icono">🔑</span>
+                        <IconoCaja icono={LogIn} />
                         <div>
                           <span className="action-dropdown-item__label">Iniciar Sesión</span>
                           <span className="action-dropdown-item__desc">Accede a tu cuenta</span>
                         </div>
                       </Link>
                       <Link to="/registro" className="action-dropdown-item" onClick={() => setShowAccountMenu(false)}>
-                        <span className="action-dropdown-item__icono">📝</span>
+                        <IconoCaja icono={UserPlus} />
                         <div>
                           <span className="action-dropdown-item__label">Crear Cuenta</span>
                           <span className="action-dropdown-item__desc">Regístrate gratis</span>
@@ -714,11 +733,9 @@ function Navbar() {
                         key={depto.id}
                         className={`deptos-dropdown__depto-btn ${deptoActivo === depto.id ? 'active' : ''}`}
                         onMouseEnter={() => setDeptoActivo(depto.id)}
-                        onClick={() => {
-                          setDeptoActivo(deptoActivo === depto.id ? null : depto.id)
-                        }}
+                        onClick={() => setDeptoActivo(depto.id)}
                       >
-                        <span className="deptos-dropdown__depto-icono">{depto.icono}</span>
+                        <IconoCaja icono={depto.icono} />
                         <span className="deptos-dropdown__depto-nombre">{depto.nombre}</span>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <polyline points="9 18 15 12 9 6"></polyline>
@@ -796,7 +813,7 @@ function Navbar() {
                         key={servicio.id}
                         servicio={servicio}
                         activo={servicioActivo === servicio.id}
-                        onActivar={() => setServicioActivo(servicioActivo === servicio.id ? null : servicio.id)}
+                        onActivar={() => setServicioActivo(servicio.id)}
                       />
                     ))}
 
@@ -807,7 +824,7 @@ function Navbar() {
                         key={servicio.id}
                         servicio={servicio}
                         activo={servicioActivo === servicio.id}
-                        onActivar={() => setServicioActivo(servicioActivo === servicio.id ? null : servicio.id)}
+                        onActivar={() => setServicioActivo(servicio.id)}
                       />
                     ))}
                   </div>
@@ -879,7 +896,7 @@ function ItemSidebarServicios({ servicio, activo, onActivar }) {
       onMouseEnter={onActivar}
       onClick={onActivar}
     >
-      <span className="deptos-dropdown__depto-icono">{servicio.icono}</span>
+      <IconoCaja icono={servicio.icono} />
       <span className="deptos-dropdown__depto-nombre">{servicio.nombre}</span>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <polyline points="9 18 15 12 9 6"></polyline>
@@ -906,7 +923,7 @@ function PanelEnvio({
   return (
     <div className="envio-panel-content">
       <div className="envio-panel-header mobile-only">
-        <button onClick={onClose} className="close-panel-btn">✕</button>
+        <button onClick={onClose} className="close-panel-btn" aria-label="Cerrar"><X size={20} /></button>
       </div>
 
       {/* Selectores Superiores */}
@@ -915,7 +932,7 @@ function PanelEnvio({
           className={`envio-type-btn ${tipoEnvio === 'retiro' ? 'active' : ''}`}
           onClick={() => cambiarTipoEnvio('retiro')}
         >
-          <div className="envio-circle">🏪</div>
+          <div className="envio-circle"><Store size={22} /></div>
           <span className="envio-label">Retiro</span>
           <span className="envio-costo">Gratis</span>
         </button>
@@ -923,7 +940,7 @@ function PanelEnvio({
           className={`envio-type-btn ${tipoEnvio === 'delivery' ? 'active' : ''}`}
           onClick={() => cambiarTipoEnvio('delivery')}
         >
-          <div className="envio-circle">🛵</div>
+          <div className="envio-circle"><Bike size={22} /></div>
           <span className="envio-label">Delivery</span>
           <span className="envio-costo">{user?.delivery_gratis ? 'Gratis' : '$8.00'}</span>
         </button>
@@ -931,7 +948,7 @@ function PanelEnvio({
           className={`envio-type-btn ${tipoEnvio === 'envio_nacional' ? 'active' : ''}`}
           onClick={() => cambiarTipoEnvio('envio_nacional')}
         >
-          <div className="envio-circle">📦</div>
+          <div className="envio-circle"><Package size={22} /></div>
           <span className="envio-label">Nacional</span>
           <span className="envio-costo">Cobro Destino</span>
         </button>
@@ -945,7 +962,7 @@ function PanelEnvio({
           <div className="envio-card-info" style={{ width: '100%', textAlign: 'center', padding: '10px' }}>
             <strong>Nuestra Oficina</strong>
             <p>Av Urdaneta (99) Urb. El Recreo, Qta Mirabal Local 04C</p>
-            <small>📍 Valencia, Carabobo</small>
+            <small className="envio-oficina-ubicacion"><MapPin size={13} /> Valencia, Carabobo</small>
             <button className="btn-guardar" style={{ marginTop: '12px', width: '100%' }} onClick={onClose}>
               Confirmar Retiro
             </button>
@@ -965,7 +982,8 @@ function PanelEnvio({
                   className={`envio-direccion-item ${direccionSeleccionada?.id === dir.id ? 'active' : ''}`}
                   onClick={() => setDireccionSeleccionada(dir)}
                 >
-                  📍 {dir.direccion}, {dir.ciudad}
+                  <MapPin size={15} className="envio-direccion-item__pin" />
+                <span>{dir.direccion}, {dir.ciudad}</span>
                 </button>
               ))}
             </div>

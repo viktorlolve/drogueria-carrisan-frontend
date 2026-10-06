@@ -8,7 +8,7 @@
 // N.º de factura en vez del id interno en "Aplicado a".
 
 import {
-  C, PAG, usd, bs, fechaLarga, fechaHora, conOpacidad,
+  C, PAG, usdCode, bs, fechaLarga, fechaHora, conOpacidad,
   nuevoDoc, dibujarMembrete, dibujarPie, dibujarSeccion, dibujarTarjetaCliente,
   dibujarTarjetaDatos, dibujarPildora, dibujarTabla, dibujarVerificacion,
 } from './pdf/pdfBase'
@@ -48,7 +48,7 @@ export default async function generarComprobantePagoPDF({ pago, cliente, factura
   doc.text('MONTO RECIBIDO', PAG.margen + 10, y + 11, { charSpace: 1 })
   doc.setFontSize(26)
   doc.setTextColor(...C.blanco)
-  doc.text(usd(pago.monto), PAG.margen + 10, y + 25)
+  doc.text(usdCode(pago.monto), PAG.margen + 10, y + 25)
   dibujarPildora(doc, PAG.margen + PAG.contenido - 10, y + 12, 'PAGO REGISTRADO', {
     fondo: C.blanco, color: C.verde, align: 'right',
   })
@@ -84,7 +84,7 @@ export default async function generarComprobantePagoPDF({ pago, cliente, factura
         return [
           f ? `N.º ${f.numero_factura}` : `Factura #${pf.factura_id}`,
           f ? fechaLarga(f.created_at) : '—',
-          f ? usd(f.monto_facturado) : '—',
+          f ? usdCode(f.monto_facturado) : '—',
         ]
       })
     )

@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext'
 import './OrdenDetalle.css'
 import { MessageCircle } from 'lucide-react'
 import { getEtapas, getEstadoConfig, getLabelEstado, normalizarEstado } from '../config/estadosOrden'
+import { formatearUSD } from '../utils/formato'
 
 // Órdenes viejas sin tipo_envio se tratan como delivery (línea histórica).
 const fulfillmentDe = (orden) => orden?.tipo_envio || 'delivery'
@@ -196,7 +197,7 @@ function OrdenDetalle() {
           <div className="od-totales">
             <div className="od-total-final">
               <span>Total</span>
-              <span className="od-total-valor">${formatUSD(orden.total_usd)}</span>
+              <span className="od-total-valor">{formatearUSD(orden.total_usd)}</span>
             </div>
           </div>
         </section>

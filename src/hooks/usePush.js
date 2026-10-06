@@ -45,9 +45,6 @@ function claveDeSuscripcionCoincide(suscripcion) {
   return base64url === VAPID_KEY
 }
 
-const VAPID_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY
-const PUSH_ENABLED = !!VAPID_KEY
-
 // iOS (Safari/Chrome) no expone la API de notificaciones fuera de un PWA
 // instalado: `Notification` es un global NO declarado y `Notification?.x` lanza
 // ReferenceError igual (el optional chaining no protege identificadores
@@ -55,7 +52,9 @@ const PUSH_ENABLED = !!VAPID_KEY
 const API_NOTIFICACIONES = typeof Notification !== 'undefined' ? Notification : null
 
 if (!PUSH_ENABLED) {
-  console.error('🚨  VITE_VAPID_PUBLIC_KEY no está definida. Las notificaciones push están deshabilitadas.')
+  console.error(
+    '🚨  VITE_VAPID_PUBLIC_KEY no está definida o quedó vacía tras sanearla. Las notificaciones push están deshabilitadas.'
+  )
 }
 
 function esperarServiceWorker(timeout = 5000) {
@@ -162,8 +161,11 @@ export function usePush() {
       }
 
       const claveVapid = convertirClaveVapid(VAPID_KEY)
-      if (!claveVapid) {
-        setError('Error de configuración de notificaciones.')
+      // Una clave pública VAPID válida decodifica a 65 bytes (P-256 sin
+      // comprimir). Otra longitud es la clave equivocada —p. ej. la privada—
+      // y el error del navegador sería críptico, así que lo decimos acá.
+      if (!claveVapid || claveVapid.length !== 65) {
+        setError('La clave VAPID pública no es válida. Revisá VITE_VAPID_PUBLIC_KEY en el deploy.')
         return
       }
 
@@ -180,6 +182,9 @@ export function usePush() {
       const msg = err?.response?.data?.error
       if (msg) {
         setError(msg)
+      } else if (err?.name === 'InvalidCharacterError') {
+        // atob() rechazó la clave: quedó un carácter inválido pese al saneado.
+        setError('La clave VAPID pública no es válida. Revisá VITE_VAPID_PUBLIC_KEY en el deploy.')
       } else if (err.message?.includes('Service Worker')) {
         setError('El service worker no está listo. Recargá la página e intentá de nuevo.')
       } else {

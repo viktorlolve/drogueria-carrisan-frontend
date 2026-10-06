@@ -11,7 +11,7 @@
 //   })
 
 import {
-  C, PAG, Y_LIMITE, usd, fechaCorta, fechaLarga, fechaHora,
+  C, PAG, Y_LIMITE, usdCode, fechaCorta, fechaLarga, fechaHora,
   nuevoDoc, dibujarMembrete, dibujarPie, dibujarSeccion, dibujarTarjetaCliente,
   dibujarPildora, dibujarTabla,
 } from './pdf/pdfBase'
@@ -72,7 +72,7 @@ function dibujarResumen(doc, y, r = {}) {
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(11.5)
     doc.setTextColor(...t.color)
-    doc.text(usd(t.valor), x + 5, y + 17.5)
+    doc.text(usdCode(t.valor), x + 5, y + 17.5)
   })
   y += 23 + 6
 
@@ -157,7 +157,7 @@ function dibujarGraficoMensual(doc, y, facturas, pagos) {
   doc.setFillColor(...C.teal); doc.roundedRect(PAG.margen + 32, ly - 2.6, 3.4, 3.4, 0.8, 0.8, 'F')
   doc.text('Pagado', PAG.margen + 37.5, ly)
   doc.setTextColor(...C.muted)
-  doc.text(`Máximo del gráfico: ${usd(max)}`, PAG.margen + PAG.contenido, ly, { align: 'right' })
+  doc.text(`Máximo del gráfico: ${usdCode(max)}`, PAG.margen + PAG.contenido, ly, { align: 'right' })
 
   return ly + 9
 }
@@ -191,7 +191,7 @@ function dibujarVencimientos(doc, y, ordenes) {
       { label: 'Estado', ancho: 56 },
       { label: 'Monto', ancho: 34, align: 'right', bold: true },
     ],
-    lista.map((o) => [`#${o.id}`, fechaLarga(o.fecha_vencimiento), '', usd(o.total_usd)]),
+    lista.map((o) => [`#${o.id}`, fechaLarga(o.fecha_vencimiento), '', usdCode(o.total_usd)]),
     {
       onFila: (d, { y: yy, idx, cols }) => {
         const e = estado(lista[idx])
@@ -229,7 +229,7 @@ function dibujarMovimientos(doc, y, facturas, pagos) {
       { label: 'Referencia', ancho: 28, color: C.muted },
       { label: 'Monto', ancho: 34, align: 'right', bold: true, color: (v) => (String(v).startsWith('+') ? C.verde : C.rojo) },
     ],
-    movs.map((m) => [fechaCorta(m.fecha), m.tipo, m.desc, m.ref, `${m.signo > 0 ? '+' : '-'} ${usd(m.monto)}`]),
+    movs.map((m) => [fechaCorta(m.fecha), m.tipo, m.desc, m.ref, `${m.signo > 0 ? '+' : '-'} ${usdCode(m.monto)}`]),
     { vacio: 'No hay movimientos registrados en este período.' }
   )
   if (!movs.length) return y
@@ -251,10 +251,10 @@ function dibujarMovimientos(doc, y, facturas, pagos) {
     doc.setFont('helvetica', 'bold'); doc.setTextColor(...color)
     doc.text(valor, x + ancho - 5, yy, { align: 'right' })
   }
-  fila('Total facturado', usd(tf), C.rojo, y + 5)
-  fila('Total pagado', usd(tp), C.verde, y + 11.5)
+  fila('Total facturado', usdCode(tf), C.rojo, y + 5)
+  fila('Total pagado', usdCode(tp), C.verde, y + 11.5)
   doc.setDrawColor(...C.borde); doc.line(x + 5, y + 14.5, x + ancho - 5, y + 14.5)
-  fila('Diferencia neta del período', `${neto >= 0 ? '+' : '-'} ${usd(Math.abs(neto))}`, neto >= 0 ? C.verde : C.rojo, y + 21, true)
+  fila('Diferencia neta del período', `${neto >= 0 ? '+' : '-'} ${usdCode(Math.abs(neto))}`, neto >= 0 ? C.verde : C.rojo, y + 21, true)
   return y + 34
 }
 
@@ -270,6 +270,6 @@ function dibujarOrdenesPendientes(doc, y, ordenes) {
       { label: 'Fecha', ancho: 50 },
       { label: 'Total', ancho: 40, align: 'right', bold: true },
     ],
-    ordenes.map((o) => [`#${o.id}`, o.forma_pago === 'credito' ? 'Crédito' : 'Contado', fechaCorta(o.created_at), usd(o.total_usd)])
+    ordenes.map((o) => [`#${o.id}`, o.forma_pago === 'credito' ? 'Crédito' : 'Contado', fechaCorta(o.created_at), usdCode(o.total_usd)])
   )
 }

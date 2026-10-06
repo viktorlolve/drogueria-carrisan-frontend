@@ -14,6 +14,7 @@ import { NAV_UNIFICADO } from '../components/paginas-principales/NavUnificado'
 import './EstadoCuenta.css'
 import generarFacturaPDF from '../utils/generarFacturaPDF'
 import generarComprobantePagoPDF from '../utils/generarComprobantePagoPDF'
+import { formatearUSD } from '../utils/formato'
 
 // ---------------------------------------------------------------
 // Estado de Cuenta — ahora migrada a <LayoutPaginaPrincipal> (mismo
@@ -34,10 +35,6 @@ async function exportarFacturaPDF(factura, cliente) {
 
 async function exportarComprobantePago(pago, cliente, facturas) {
   await generarComprobantePagoPDF({ pago, cliente, facturas })
-}
-
-function formatearMonto(valor) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(valor || 0)
 }
 
 function claveGrupoFecha(fecha) {
@@ -283,7 +280,7 @@ function ModalReportarPago({ ordenesDisponibles, onCerrar, onEnviar }) {
                         checked={seleccionadas.includes(o.id)}
                         onChange={() => alternarOrden(o.id)}
                       />
-                      <span>Orden #{o.id} — {formatearMonto(o.total_usd)}</span>
+                      <span>Orden #{o.id} — {formatearUSD(o.total_usd)}</span>
                     </label>
                   </li>
                 ))}
@@ -291,7 +288,7 @@ function ModalReportarPago({ ordenesDisponibles, onCerrar, onEnviar }) {
 
               {seleccionadas.length > 0 && (
                 <p className="modal__total-seleccionado">
-                  Total a reportar: <strong>{formatearMonto(totalSeleccionado)}</strong>
+                  Total a reportar: <strong>{formatearUSD(totalSeleccionado)}</strong>
                 </p>
               )}
 
@@ -358,7 +355,7 @@ function ContenidoDashboard({
             {tieneVencidas ? (
               <>
                 <strong>Tenés {resumen.cantidad_ordenes_vencidas} {resumen.cantidad_ordenes_vencidas === 1 ? 'orden vencida' : 'órdenes vencidas'}</strong>
-                <p>Suman {formatearMonto(resumen.deuda_vencida)}. Reportá el pago para evitar que se pause tu cuenta.</p>
+                <p>Suman {formatearUSD(resumen.deuda_vencida)}. Reportá el pago para evitar que se pause tu cuenta.</p>
               </>
             ) : (
               <>
@@ -375,16 +372,16 @@ function ContenidoDashboard({
         <div className="ec-kpi">
           <span className="ec-kpi__label">Disponible</span>
           <strong className={`ec-kpi__valor ${resumen.saldo < 0 ? 'ec-kpi__valor--negativo' : ''}`}>
-            {formatearMonto(resumen.saldo)}
+            {formatearUSD(resumen.saldo)}
           </strong>
         </div>
         <div className="ec-kpi">
           <span className="ec-kpi__label">Deuda actual</span>
-          <strong className="ec-kpi__valor">{formatearMonto(resumen.deuda_actual)}</strong>
+          <strong className="ec-kpi__valor">{formatearUSD(resumen.deuda_actual)}</strong>
         </div>
         <div className="ec-kpi">
           <span className="ec-kpi__label">Línea total</span>
-          <strong className="ec-kpi__valor">{formatearMonto(resumen.linea_credito)}</strong>
+          <strong className="ec-kpi__valor">{formatearUSD(resumen.linea_credito)}</strong>
         </div>
       </section>
 
@@ -409,7 +406,7 @@ function ContenidoDashboard({
             <span className="ec-proximamente__titulo">Órdenes vencidas</span>
             {resumen.cantidad_ordenes_vencidas > 0 ? (
               <span className="ec-proximamente__valor ec-proximamente__valor--alerta">
-                {resumen.cantidad_ordenes_vencidas} · {formatearMonto(resumen.deuda_vencida)}
+                {resumen.cantidad_ordenes_vencidas} · {formatearUSD(resumen.deuda_vencida)}
               </span>
             ) : (
               <span className="ec-proximamente__etiqueta">Al día</span>
@@ -499,7 +496,7 @@ function ContenidoDashboard({
                       </span>
                     </div>
                     <strong className={`ec-movimiento__monto ${mov.tipo === 'pago' ? 'ec-movimiento__monto--verde' : 'ec-movimiento__monto--rojo'}`}>
-                      {mov.tipo === 'pago' ? '+' : '-'}{formatearMonto(mov.monto_facturado || mov.monto || mov.total_usd)}
+                      {mov.tipo === 'pago' ? '+' : '-'}{formatearUSD(mov.monto_facturado || mov.monto || mov.total_usd)}
                     </strong>
                     
                     <div className="movimiento__acciones" onClick={(e) => e.stopPropagation()}>
@@ -586,7 +583,7 @@ function GaugeCredito({ resumen, porcentajeUsado }) {
         <div className="ec-gauge__centro">
           <span className="ec-gauge__centro-label">Disponible</span>
           <strong className={`ec-gauge__centro-monto ${resumen.saldo < 0 ? 'ec-gauge__centro-monto--negativo' : ''}`}>
-            {formatearMonto(resumen.saldo)}
+            {formatearUSD(resumen.saldo)}
           </strong>
         </div>
       </div>
@@ -594,11 +591,11 @@ function GaugeCredito({ resumen, porcentajeUsado }) {
       <div className="ec-gauge-card__cifras">
         <div className="ec-gauge-card__cifra">
           <span className="ec-gauge-card__punto" style={{ background: colorArco }} />
-          <span>Deuda: <strong>{formatearMonto(resumen.deuda_actual)}</strong></span>
+          <span>Deuda: <strong>{formatearUSD(resumen.deuda_actual)}</strong></span>
         </div>
         <div className="ec-gauge-card__cifra">
           <span className="ec-gauge-card__punto ec-gauge-card__punto--fondo" />
-          <span>Línea: <strong>{formatearMonto(resumen.linea_credito)}</strong></span>
+          <span>Línea: <strong>{formatearUSD(resumen.linea_credito)}</strong></span>
         </div>
       </div>
     </section>
@@ -642,14 +639,14 @@ function ComparativaMensual({ comparativa }) {
           <div className="ec-comparativa__barra-wrap">
             <div className="ec-comparativa__barra ec-comparativa__barra--actual" style={{ height: `${Math.max((mes_actual / max) * 100, mes_actual > 0 ? 6 : 0)}%` }} />
           </div>
-          <span className="ec-comparativa__valor">{formatearMonto(mes_actual)}</span>
+          <span className="ec-comparativa__valor">{formatearUSD(mes_actual)}</span>
           <span className="ec-comparativa__mes-label">Este mes</span>
         </div>
         <div className="ec-comparativa__columna">
           <div className="ec-comparativa__barra-wrap">
             <div className="ec-comparativa__barra ec-comparativa__barra--pasado" style={{ height: `${Math.max((mes_pasado / max) * 100, mes_pasado > 0 ? 6 : 0)}%` }} />
           </div>
-          <span className="ec-comparativa__valor">{formatearMonto(mes_pasado)}</span>
+          <span className="ec-comparativa__valor">{formatearUSD(mes_pasado)}</span>
           <span className="ec-comparativa__mes-label">Mes pasado</span>
         </div>
       </div>

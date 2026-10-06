@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useLocation, Link } from 'react-router-dom'
 import api from '../api/axios'
+import { formatearUSD, formatearVES } from '../utils/formato'
 import './Pagos.css'
 
 // ---------------------------------------------------------------
@@ -13,14 +14,6 @@ const DATOS_BANCARIOS = [
   { banco: 'Banesco', tipo: 'Cuenta Corriente', numero: '0134-XXXX-XX-XXXXXXXXXX', titular: 'Droguería Carrisan, C.A.', rif: 'J-XXXXXXXX-X' },
   { banco: 'Pago Móvil', tipo: '', numero: 'Tel: 0414-XXXXXXX', titular: 'Droguería Carrisan, C.A.', rif: 'J-XXXXXXXX-X' },
 ]
-
-function formatUSD(valor) {
-  return Number(valor || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
-
-function formatVES(valor) {
-  return Number(valor || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
 
 function PasoIndicador({ pasoActual }) {
   const pasos = ['Monto y datos', 'Confirmar pago', 'Subir comprobante']
@@ -139,7 +132,7 @@ function Pagos() {
           <div className="pagos-exito__icon">📨</div>
           <h1>¡Pago reportado!</h1>
           <p>
-            Reportaste tu pago por <strong>Bs. {formatVES(reporteCreado.monto_bs)}</strong>.
+            Reportaste tu pago por <strong>VES {formatearVES(reporteCreado.monto_bs)}</strong>.
             Lo verificaremos pronto y te avisaremos.
           </p>
           <Link to="/orders" className="pagos-exito__cta">Volver a mis órdenes</Link>
@@ -176,7 +169,7 @@ function Pagos() {
                       <span className="pagos-orden-item__badge">Rechazado — reintentar</span>
                     )}
                   </div>
-                  <span className="pagos-orden-item__monto">${formatUSD(orden.total_usd)}</span>
+                  <span className="pagos-orden-item__monto">{formatearUSD(orden.total_usd)}</span>
                 </label>
               ))}
             </div>
@@ -184,13 +177,13 @@ function Pagos() {
             <div className="pagos-resumen-monto">
               <div className="pagos-resumen-monto__row">
                 <span>Total en dólares</span>
-                <span>${formatUSD(totalUsd)}</span>
+                <span>{formatearUSD(totalUsd)}</span>
               </div>
               <div className="pagos-resumen-monto__row pagos-resumen-monto__row--destacado">
                 <span>Total a pagar en bolívares</span>
-                <span>Bs. {formatVES(totalVes)}</span>
+                <span>VES {formatearVES(totalVes)}</span>
               </div>
-              {tasaVes && <p className="pagos-tasa-nota">Tasa aplicada: {formatVES(tasaVes)} Bs/USD</p>}
+              {tasaVes && <p className="pagos-tasa-nota">Tasa aplicada: {formatearVES(tasaVes)} VES/USD</p>}
             </div>
 
             <button
@@ -209,7 +202,7 @@ function Pagos() {
           <section className="pagos-seccion">
             <h2 className="pagos-seccion__titulo">Datos para tu pago</h2>
             <p className="pagos-monto-recordatorio">
-              Debes transferir <strong>Bs. {formatVES(totalVes)}</strong>
+              Debes transferir <strong>VES {formatearVES(totalVes)}</strong>
             </p>
 
             <div className="pagos-datos-bancarios">
@@ -240,7 +233,7 @@ function Pagos() {
           <section className="pagos-seccion">
             <h2 className="pagos-seccion__titulo">Sube tu comprobante</h2>
             <p className="pagos-seccion__desc">
-              Adjunta la foto o captura del comprobante de tu pago por Bs. {formatVES(totalVes)}.
+              Adjunta la foto o captura del comprobante de tu pago por VES {formatearVES(totalVes)}.
             </p>
 
             <label className="pagos-upload">

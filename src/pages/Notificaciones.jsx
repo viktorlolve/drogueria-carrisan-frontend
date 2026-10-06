@@ -9,7 +9,6 @@ import { ChevronDown, Filter, CheckCheck } from 'lucide-react'
 import LayoutPaginaPrincipal from '../components/paginas-principales/Layoutpaginaprincipal'
 import PreferenciasNotificaciones from '../components/paginas-principales/PreferenciasNotificaciones'
 import api from '../api/axios'
-import { safeGetItem, safeSetItem } from '../utils/safeStorage'
 import {
   CATEGORIAS,
   ORDEN_CATEGORIAS,
@@ -22,34 +21,30 @@ import NotifSkeleton from '../components/notificaciones/NotifSkeleton'
 import './Notificaciones.css'
 
 // ---------------------------------------------------------------
-// Notificaciones: filtro por categoría (Tabs), agrupado por fecha,
-// preferencias de silencio por categoría (localStorage, sin
-// backend) y una leyenda explicando qué significa cada tipo.
+// Notificaciones: el sidebar izquierdo es el ÚNICO mecanismo de
+// filtrado (una vista reversible, sin persistencia), las preferencias
+// de avisos push viven en un acordeón colapsado por defecto, y abajo
+// hay una leyenda explicando qué significa cada tipo.
+//
+// Antes había además una segunda lista ("Qué se ve en esta lista")
+// que escondía categorías de forma permanente en
+// `notif_categorias_silenciadas`. Se eliminó: el usuario la confundía
+// con el filtro del sidebar y perdía notificaciones sin aviso.
 // ---------------------------------------------------------------
-
-const CLAVE_SILENCIADAS = 'notif_categorias_silenciadas'
-
-// La leyenda tiene UNA fila por sección y muestra el ícono de la
-// sección (el mismo que usa el filtro). Antes Pagos pintaba además el
-// ícono del pago verificado (tilde verde); el dueño lo quitó porque
-// ensuciaba la lectura de la leyenda.
-function leerSilenciadas() {
-  try {
-    return JSON.parse(safeGetItem(CLAVE_SILENCIADAS)) || []
-  } catch {
-    return []
-  }
-}
 
 function Notificaciones() {
   const [notificaciones, setNotificaciones] = useState([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
   const [filtro, setFiltro] = useState('todas')
-  const [silenciadas, setSilenciadas] = useState(leerSilenciadas)
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const refPreferencias = useRef(null)
+  // Se deriva de la URL en el primer render (inicializador perezoso), no en
+  // un useEffect: el deep link "?preferencias=1" ya abre el acordeón desde
+  // el primer pintado. El efecto de abajo se queda SOLO con el scroll, que
+  // sí es una operación de DOM.
+  const [prefsAbiertas, setPrefsAbiertas] = useState(() => searchParams.get('preferencias') === '1')
 
   const cargarNotificaciones = useCallback(async () => {
     try {
@@ -88,19 +83,17 @@ function Notificaciones() {
     }
   }
 
-  function toggleSilenciar(categoriaId, silenciar) {
-    const nuevas = silenciar
-      ? [...silenciadas, categoriaId]
-      : silenciadas.filter((c) => c !== categoriaId)
-    setSilenciadas(nuevas)
-    safeSetItem(CLAVE_SILENCIADAS, JSON.stringify(nuevas))
-  }
-
-  // Deep link desde Mi Cuenta: "?preferencias=1" deja el panel a la vista.
+  // Deep link desde Mi Cuenta: "?preferencias=1" hace scroll al acordeón.
+  // El estado ya está abierto desde el primer render (inicializador de
+  // arriba); acá solo se espera a que el DOM tenga su altura final.
+  // Dos frames: uno para el pintado y otro para el layout estable.
   useEffect(() => {
-    if (searchParams.get('preferencias') === '1') {
-      refPreferencias.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-    }
+    if (searchParams.get('preferencias') !== '1') return
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        refPreferencias.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      })
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -113,26 +106,20 @@ function Notificaciones() {
     }
   }
 
-  // Visibles = todo lo que no pertenece a una categoría silenciada
-  const visibles = useMemo(
-    () => notificaciones.filter((n) => !silenciadas.includes(getCategoriaDeTipo(n.tipo))),
-    [notificaciones, silenciadas]
-  )
-
   const conteosPorCategoria = useMemo(() => {
-    const conteo = { todas: visibles.length }
+    const conteo = { todas: notificaciones.length }
     for (const cat of ORDEN_CATEGORIAS) conteo[cat] = 0
-    for (const n of visibles) {
+    for (const n of notificaciones) {
       const cat = getCategoriaDeTipo(n.tipo)
       conteo[cat] = (conteo[cat] || 0) + 1
     }
     return conteo
-  }, [visibles])
+  }, [notificaciones])
 
   const filtradas = useMemo(() => {
-    if (filtro === 'todas') return visibles
-    return visibles.filter((n) => getCategoriaDeTipo(n.tipo) === filtro)
-  }, [visibles, filtro])
+    if (filtro === 'todas') return notificaciones
+    return notificaciones.filter((n) => getCategoriaDeTipo(n.tipo) === filtro)
+  }, [notificaciones, filtro])
 
   const gruposPorFecha = useMemo(() => agruparPorFecha(filtradas), [filtradas])
   const noLeidas = notificaciones.filter((n) => !n.leida).length
@@ -211,8 +198,28 @@ function Notificaciones() {
         </aside>
 
         <div className="notif-container">
+          {/* Preferencias de push: acordeón colapsado por defecto para no
+              saturar la página al entrar. El sidebar de la izquierda es el
+              filtro visible; esto solo configura qué avisos manda el servidor. */}
           <div ref={refPreferencias}>
-            <PreferenciasNotificaciones silenciadas={silenciadas} onToggleSilenciar={toggleSilenciar} />
+            <Accordion.Root
+              collapsible
+              className="notif-accordion notif-accordion--prefs"
+              value={prefsAbiertas ? ['preferencias'] : []}
+              onValueChange={(det) => setPrefsAbiertas((det?.value?.length ?? 0) > 0)}
+            >
+              <Accordion.Item value="preferencias">
+                <Accordion.ItemTrigger className="notif-accordion__trigger">
+                  <Text>Preferencias de notificación</Text>
+                  <ChevronDown size={16} className="notif-accordion__chevron" />
+                </Accordion.ItemTrigger>
+                <Accordion.ItemContent>
+                  <Accordion.ItemBody>
+                    <PreferenciasNotificaciones />
+                  </Accordion.ItemBody>
+                </Accordion.ItemContent>
+              </Accordion.Item>
+            </Accordion.Root>
           </div>
           {/* Móvil: el header del layout no se ve, así que "Marcar todas
               leídas" vive aquí como fila propia */}
@@ -254,7 +261,10 @@ function Notificaciones() {
             })}
           </div>
 
-          {/* Leyenda */}
+          {/* Leyenda. Tiene UNA fila por sección y muestra el ícono de la
+              sección (el mismo que usa el filtro). Antes Pagos pintaba
+              además el ícono del pago verificado (tilde verde); el dueño lo
+              quitó porque ensuciaba la lectura. */}
           <Accordion.Root collapsible className="notif-accordion">
             <Accordion.Item value="leyenda">
               <Accordion.ItemTrigger className="notif-accordion__trigger">

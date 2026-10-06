@@ -24,9 +24,7 @@ import './EstadoCuenta.css'
 // promedio de compra (decisión explícita, no cambiar sin avisar).
 // ---------------------------------------------------------------
 
-function formatUSD(valor) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(valor || 0)
-}
+import { formatearUSD } from '../utils/formato'
 
 export default function AmpliacionEstadoCuenta() {
   const { user } = useAuth()
@@ -106,15 +104,15 @@ export default function AmpliacionEstadoCuenta() {
             <section className="ec-kpis">
               <div className="ec-kpi">
                 <span className="ec-kpi__label">Línea actual</span>
-                <strong className="ec-kpi__valor">{formatUSD(elegibilidad.linea_actual)}</strong>
+                <strong className="ec-kpi__valor">{formatearUSD(elegibilidad.linea_actual)}</strong>
               </div>
               <div className="ec-kpi">
                 <span className="ec-kpi__label">Compra del trimestre</span>
-                <strong className="ec-kpi__valor">{formatUSD(elegibilidad.total_trimestre)}</strong>
+                <strong className="ec-kpi__valor">{formatearUSD(elegibilidad.total_trimestre)}</strong>
               </div>
               <div className="ec-kpi">
                 <span className="ec-kpi__label">Promedio mensual</span>
-                <strong className="ec-kpi__valor">{formatUSD(elegibilidad.promedio_mensual)}</strong>
+                <strong className="ec-kpi__valor">{formatearUSD(elegibilidad.promedio_mensual)}</strong>
               </div>
             </section>
 
@@ -127,7 +125,7 @@ export default function AmpliacionEstadoCuenta() {
                     {resumenCuenta.cantidad_ordenes_vencidas === 1 ? 'orden vencida' : 'órdenes vencidas'}
                   </strong>
                   <p>
-                    Suman {formatUSD(resumenCuenta.deuda_vencida)}. Ponerte al día ayuda a mantener tu cuenta en
+                    Suman {formatearUSD(resumenCuenta.deuda_vencida)}. Ponerte al día ayuda a mantener tu cuenta en
                     buen estado.
                   </p>
                 </div>
@@ -139,18 +137,18 @@ export default function AmpliacionEstadoCuenta() {
                 <TrendingUp size={28} />
                 <h2>Calificas para una ampliación</h2>
                 <p className="ec-amp-hero__texto">
-                  Según tu promedio de compra de los últimos 3 meses ({formatUSD(elegibilidad.promedio_mensual)}
+                  Según tu promedio de compra de los últimos 3 meses ({formatearUSD(elegibilidad.promedio_mensual)}
                   /mes), puedes ampliar tu línea actual en un <strong>{elegibilidad.porcentaje_disponible}%</strong>.
                 </p>
                 <div className="ec-amp-hero__comparacion">
                   <div>
                     <span>Línea actual</span>
-                    <strong>{formatUSD(elegibilidad.linea_actual)}</strong>
+                    <strong>{formatearUSD(elegibilidad.linea_actual)}</strong>
                   </div>
                   <span className="ec-amp-hero__flecha">→</span>
                   <div>
                     <span>Línea nueva</span>
-                    <strong className="ec-amp-hero__monto--verde">{formatUSD(elegibilidad.nueva_linea)}</strong>
+                    <strong className="ec-amp-hero__monto--verde">{formatearUSD(elegibilidad.nueva_linea)}</strong>
                   </div>
                 </div>
                 {error && <p className="ec-amp-hero__error">{error}</p>}
@@ -163,11 +161,11 @@ export default function AmpliacionEstadoCuenta() {
                 <XCircle size={28} />
                 <h2>Aún no calificas</h2>
                 <p className="ec-amp-hero__texto">
-                  Tu promedio de compra mensual es {formatUSD(elegibilidad.promedio_mensual)}.
+                  Tu promedio de compra mensual es {formatearUSD(elegibilidad.promedio_mensual)}.
                   {proximoNivel && (
                     <>
                       {' '}
-                      Te faltan <strong>{formatUSD(proximoNivel.faltante)}</strong> en tu promedio mensual para
+                      Te faltan <strong>{formatearUSD(proximoNivel.faltante)}</strong> en tu promedio mensual para
                       calificar a una ampliación de <strong>+{proximoNivel.porcentaje}%</strong>.
                     </>
                   )}
@@ -191,9 +189,9 @@ function ResultadoAprobado({ resultado }) {
       <CheckCircle2 size={40} color="#059669" />
       <h2>¡Ampliación aprobada!</h2>
       <p className="ec-amp-hero__texto">Tu nueva línea de crédito es</p>
-      <strong className="ec-amp-hero__monto-grande">{formatUSD(resultado.linea_nueva)}</strong>
+      <strong className="ec-amp-hero__monto-grande">{formatearUSD(resultado.linea_nueva)}</strong>
       <p className="ec-amp-hero__detalle">
-        +{resultado.porcentaje_aplicado}% sobre {formatUSD(resultado.linea_anterior)}
+        +{resultado.porcentaje_aplicado}% sobre {formatearUSD(resultado.linea_anterior)}
       </p>
     </section>
   )
@@ -224,7 +222,7 @@ function NivelesAmpliacion({ elegibilidad }) {
               <div className="ec-tiers__nivel-info">
                 <div>
                   <span className="ec-tiers__nivel-porcentaje">+{nivel.porcentaje}%</span>
-                  <span className="ec-tiers__nivel-umbral">Promedio mensual ≥ {formatUSD(umbral)}</span>
+                  <span className="ec-tiers__nivel-umbral">Promedio mensual ≥ {formatearUSD(umbral)}</span>
                 </div>
                 {alcanzado && <CheckCircle2 size={16} className="ec-tiers__check" />}
               </div>

@@ -15,40 +15,6 @@
   margin-bottom: 18px;
 }
 
-.notif-prefs__header {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding-bottom: 14px;
-  margin-bottom: 6px;
-  border-bottom: 1px solid var(--ppal-border, #e5e7eb);
-}
-
-.notif-prefs__header-icono {
-  flex-shrink: 0;
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #E9EFFC;
-  color: #0052DC;
-}
-
-.notif-prefs__titulo {
-  margin: 0;
-  font-size: 0.98rem;
-  font-weight: 700;
-  color: var(--ppal-text, #232b45);
-}
-
-.notif-prefs__subtitulo {
-  margin: 3px 0 0;
-  font-size: 0.82rem;
-  color: var(--ppal-text-muted, #6b6b7a);
-}
-
 .notif-prefs__fila {
   display: flex;
   align-items: center;
@@ -147,7 +113,9 @@
 .notif-prefs__icono--gray { background: #F1F1F2; color: #4b4d52; }
 .notif-prefs__icono--teal { background: #E0F5F1; color: #0d9488; }
 .notif-prefs__icono--cyan { background: #E0F4FE; color: #0891b2; }
-.notif-prefs__icono--red { background: #FEE2E2; color: #dc2626; }.notif-prefs__bloque {
+.notif-prefs__icono--red { background: #FEE2E2; color: #dc2626; }
+
+.notif-prefs__bloque {
   margin-top: 16px;
 }
 
@@ -162,23 +130,5 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--ppal-text-muted, #6b6b7a);
-}
-
-.notif-prefs__bloque-ayuda {
-  font-size: 0.72rem;
-  font-weight: 500;
-  text-transform: none;
-  letter-spacing: 0;
-  color: var(--ppal-text-muted, #6b6b7a);
-  opacity: 0.8;
-}
-
-.notif-prefs__estado {
-  flex-shrink: 0;
-  color: var(--ppal-brand, #0052DC);
-}
-
-.notif-prefs__estado--off {
   color: var(--ppal-text-muted, #6b6b7a);
 }

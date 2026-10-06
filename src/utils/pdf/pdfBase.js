@@ -38,8 +38,13 @@ export const Y_LIMITE = PAG.alto - 26 // bajo este punto se salta de página
 export const usd = (v) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(v) || 0)
 
+// Monto con el código ISO al inicio (moneda referencial de la cuenta):
+// "USD 1,234.56". El símbolo $ queda reservado solo para precios de productos.
+export const usdCode = (v) =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', currencyDisplay: 'code' }).format(Number(v) || 0)
+
 export const bs = (v) =>
-  `Bs. ${Number(v || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  `VES ${Number(v || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
 export const fechaCorta = (f) =>
   new Date(f).toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric' })

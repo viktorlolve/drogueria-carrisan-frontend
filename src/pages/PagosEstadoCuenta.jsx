@@ -14,9 +14,7 @@ import './EstadoCuenta.css'
 // LayoutPaginaPrincipal + clases .ec-* compartidas con EstadoCuenta.jsx.
 // ---------------------------------------------------------------
 
-function formatUSD(valor) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(valor || 0)
-}
+import { formatearUSD } from '../utils/formato'
 
 function claveGrupoFecha(fecha) {
   const hoy = new Date()
@@ -92,7 +90,7 @@ export default function PagosEstadoCuenta() {
             <section className="ec-kpis">
               <Stat.Root className="ec-kpi">
                 <Stat.Label className="ec-kpi__label">Total pagado</Stat.Label>
-                <Stat.ValueText className="ec-kpi__valor">{formatUSD(kpis.total)}</Stat.ValueText>
+                <Stat.ValueText className="ec-kpi__valor">{formatearUSD(kpis.total)}</Stat.ValueText>
               </Stat.Root>
               <Stat.Root className="ec-kpi">
                 <Stat.Label className="ec-kpi__label">Pagos registrados</Stat.Label>
@@ -134,7 +132,7 @@ export default function PagosEstadoCuenta() {
                             <span className="ec-badge ec-badge--registrado">registrado</span>
                           </div>
                           <strong className="ec-movimiento__monto ec-movimiento__monto--verde">
-                            +{formatUSD(pago.monto)}
+                            +{formatearUSD(pago.monto)}
                           </strong>
                           <button
                             className="ec-movimiento__descarga"

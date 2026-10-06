@@ -4,9 +4,22 @@
 // los mismos números y fechas: si cada uno tiene su copia, el mismo dato
 // aparece con dos formatos distintos según por dónde se mire.
 
-// Monto en USD con el formato de Venezuela. `valor` nulo/vacío → $0,00.
+// Monto en USD con el código ISO al inicio (moneda referencial de la cuenta):
+// "USD 1,234.56". El símbolo $ queda reservado solo para precios de productos.
+// `valor` nulo/vacío → "USD 0.00".
+export function formatearUSD(valor) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', currencyDisplay: 'code' }).format(valor || 0)
+}
+
+// Monto en bolívares con el código ISO al inicio (área bancaria): "VES 1.234,56".
+// En los precios de productos se sigue usando "Bs." aparte.
+export function formatearVES(valor) {
+  return `VES ${Number(valor || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
+// Monto en USD con el formato de Venezuela. `valor` nulo/vacío → "USD 0.00".
 export function formatearMonto(valor) {
-  return new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'USD' }).format(valor || 0)
+  return formatearUSD(valor)
 }
 
 // Fecha corta dd/mm/aa → "15/08/26". Formato a mano (no toLocaleDateString)
