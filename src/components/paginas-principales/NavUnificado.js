@@ -21,7 +21,7 @@ import {
   Star, MapPin, User, Bell, Users,
   Wallet, DollarSign, FileText, FileBarChart, TrendingUp,
   PackagePlus, FileCheck,
-  HelpCircle, FileQuestion, LifeBuoy,
+  HelpCircle, FileQuestion, LifeBuoy, RotateCcw,
 } from 'lucide-react'
 
 export const NAV_UNIFICADO = {
@@ -49,9 +49,23 @@ export const NAV_UNIFICADO = {
       icono: User,
       items: [
         { id: 'cuenta', to: '/cuenta', icono: User, texto: 'Mi Cuenta' },
-        { id: 'mis-items', to: '/mis-items', icono: Star, texto: 'Mis items', soloCliente: true },
         { id: 'direcciones', to: '/direcciones', icono: MapPin, texto: 'Direcciones', soloCliente: true },
         { id: 'sub-usuarios', to: '/subusuarios', icono: Users, texto: 'Sub-usuarios' },
+      ],
+    },
+    {
+      id: 'favoritos',
+      titulo: 'Favoritos',
+      icono: Star,
+      items: [
+        { id: 'mis-items', to: '/mis-items', icono: Star, texto: 'Mis items', soloCliente: true },
+        {
+          id: 'comprar-nuevo',
+          to: '/mis-items?tab=recomprar',
+          icono: RotateCcw,
+          texto: 'Comprar de nuevo',
+          soloCliente: true,
+        },
       ],
     },
     {

@@ -5,6 +5,7 @@
 // existe — la ruta real es `/estado-de-cuenta` (App.jsx:209,217-220).
 //
 // Uso: node scripts/verificar-nav.mjs   (exit 1 si hay rutas rotas)
+// Un `to` con query (?tab=recomprar) se compara por su ruta base.
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
@@ -26,8 +27,11 @@ const normalizadas = new Set(rutasApp.map((p) => (p.startsWith('/') ? p : `/${p}
 const ok = []
 const rotas = []
 for (const to of rutasNav) {
+  // Un `to` con query (?tab=recomprar) o hash es la MISMA ruta: el
+  // guard verifica que el enlace apunte a un <Route>, no el query.
+  const ruta = to.split(/[?#]/)[0]
   const coincide = [...normalizadas].some(
-    (ruta) => ruta === to || (ruta.endsWith('*') && to.startsWith(ruta.slice(0, -1)))
+    (r) => r === ruta || (r.endsWith('*') && ruta.startsWith(r.slice(0, -1)))
   )
   ;(coincide ? ok : rotas).push(to)
 }

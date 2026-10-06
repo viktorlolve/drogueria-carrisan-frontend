@@ -909,7 +909,7 @@ function MisItems() {
 
   return (
     <LayoutPaginaPrincipal
-      activo="mis-items"
+      activo={tabActivo === 'recomprar' ? 'comprar-nuevo' : 'mis-items'}
       titulo="Mis Items"
       subtitulo="Tus favoritos, listas y compras frecuentes"
       nav={NAV_UNIFICADO}
