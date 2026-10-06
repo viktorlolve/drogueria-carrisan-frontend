@@ -134,3 +134,11 @@
 .sp-acciones > .sp-incidencia {
   flex: 1 0 100%;
 }
+
+/* Mismo caso para los avisos de Preparar Órdenes (pendiente de pago y
+   productos agotados): van dentro de AccionesPreparar, envueltos en
+   .sp-acciones, y deben ocupar su propia linea completa. */
+.sp-acciones > .sp-aviso,
+.sp-acciones > .sp-ajuste {
+  flex: 1 0 100%;
+}
