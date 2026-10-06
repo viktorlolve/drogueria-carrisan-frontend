@@ -11,7 +11,8 @@
 // cotizaciones, requerimientos, documentos.
 //
 // `soloCliente: true` oculta el item al admin (que usa este mismo
-// layout desde el bridge).
+// layout desde el bridge). Hoy NINGÚN item lo usa: el admin ve todo
+// (el dueño testea la plataforma completa con su sesión).
 //
 // El `id` de cada item debe coincidir con la prop `activo` que pasa
 // la página que lo renderiza, si no el link no se resalta.
@@ -49,7 +50,7 @@ export const NAV_UNIFICADO = {
       icono: User,
       items: [
         { id: 'cuenta', to: '/cuenta', icono: User, texto: 'Mi Cuenta' },
-        { id: 'direcciones', to: '/direcciones', icono: MapPin, texto: 'Direcciones', soloCliente: true },
+        { id: 'direcciones', to: '/direcciones', icono: MapPin, texto: 'Direcciones' },
         { id: 'sub-usuarios', to: '/subusuarios', icono: Users, texto: 'Sub-usuarios' },
       ],
     },
@@ -58,13 +59,12 @@ export const NAV_UNIFICADO = {
       titulo: 'Favoritos',
       icono: Star,
       items: [
-        { id: 'mis-items', to: '/mis-items', icono: Star, texto: 'Mis items', soloCliente: true },
+        { id: 'mis-items', to: '/mis-items', icono: Star, texto: 'Mis items' },
         {
           id: 'comprar-nuevo',
           to: '/mis-items?tab=recomprar',
           icono: RotateCcw,
           texto: 'Comprar de nuevo',
-          soloCliente: true,
         },
       ],
     },
