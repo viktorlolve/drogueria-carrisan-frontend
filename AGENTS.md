@@ -87,13 +87,19 @@ export const NAV_UNIFICADO = {
 ```
 
 - Cada item: `{ id, to, icono, texto }` + opcionales **`contador`** (clave del badge) y **`soloCliente`**.
-- Grupos: Mi actividad (Pedidos, Notificaciones, Chat, Presupuesto) · Mi cuenta (Mi cuenta, Mis
-  ítems, Direcciones, Sub-usuarios) · Estado de cuenta (Resumen, Pagos, Facturas, Reportes,
-  Ampliación) · Solicitudes (Cotizaciones, Requerimientos, Documentos) · Ayuda al pie (Preguntas
-  frecuentes, Cómo usar la plataforma, Contacto).
-- **El resaltado activo sale de la prop `activo` de cada página, NO de la ruta**: si una página pasa
-  un `activo` equivocado, el nav no lo detecta. El guard verifica rutas, no ids.
-- `NavAdmin.js`, el nav de staff (`NavStaff.js`) y `Navbar.jsx` quedan **fuera** de este rediseño.
+- Grupos: Mi actividad (Pedidos, Notificaciones, Chat, Presupuesto) · Mi cuenta (Mi cuenta, Direcciones,
+  Sub-usuarios) · **Favoritos** (Mis items, Comprar de nuevo → `/mis-items?tab=recomprar`, ambos
+  `soloCliente`) · Estado de cuenta (Resumen, Pagos, Facturas, Reportes, Ampliación) · Solicitudes
+  (Cotizaciones, Requerimientos, Documentos) · Ayuda al pie (Preguntas frecuentes, Cómo usar la
+  plataforma, Contacto).
+- **Cada grupo declara `id`** (y `icono` plano, el mismo estilo que los enlaces). El `id` del grupo es
+  la clave del Set de grupos abiertos del acordeón: sin `id` todos los grupos comparten la clave
+  `undefined` y se abren/cierran de una — `normalizarNav` deriva uno estable desde el título si falta
+  (`navUnificadoHelpers.js`, con test de regresión).
+- El **item activo se marca con una barrita azul de 3px** a la izquierda (`box-shadow: inset`), nunca
+  con una flecha: la chevron es solo para abrir/cerrar el grupo.
+- `NavAdmin.js` usa el MISMO layout y ya comparte este acordeón (grupos con `id` e `icono`).
+  `NavStaff.js` y `Navbar.jsx` siguen **fuera** de este rediseño.
 
 ### Layout y helpers
 
@@ -123,12 +129,13 @@ export const NAV_UNIFICADO = {
 ### Verificación
 
 ```bash
-node scripts/verificar-nav.mjs                    # guard: 19/19 rutas del nav existen en App.jsx
-node --test scripts/navUnificadoHelpers.test.mjs  # 6 tests de los helpers
+node scripts/verificar-nav.mjs                    # guard: 20/20 rutas del nav existen en App.jsx
+node --test scripts/navUnificadoHelpers.test.mjs  # 11 tests de los helpers
 npm run lint && npx vite build --mode development
 ```
 
 Al **agregar un item al nav**, creá la ruta en `App.jsx` en el mismo commit o el guard falla.
+Un `to` con query (`?tab=`) se compara por su **ruta base** (`scripts/verificar-nav.mjs`).
 
 ### Preferencias de notificación (2 cosas distintas — no las mezcles)
 
