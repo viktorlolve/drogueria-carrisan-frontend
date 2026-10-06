@@ -199,21 +199,29 @@ export function FilaRequerimiento({ item, valores, onChange, soloLectura }) {
     )
   }
 
+  const nombreOriginal = item.producto_id != null
+    ? (item.productos?.nombre_comercial || item.nombre_solicitado)
+    : item.nombre_solicitado
+
   return (
     <div className={`ra-fila ${rechazado ? 'ra-fila--rechazada' : ''}`}>
       <div className="ra-fila__original">
-        <span>{item.nombre_solicitado}</span>
+        <span>{nombreOriginal}</span>
         <span className="ra-fila__cantidad">x{item.cantidad}</span>
         {item.nota_usuario && <span className="ra-fila__nota">{item.nota_usuario}</span>}
       </div>
-      <input
-        type="text"
-        placeholder="Nombre final"
-        value={valores.nombre_final}
-        onChange={(e) => onChange({ ...valores, nombre_final: e.target.value })}
-        disabled={rechazado}
-        className="ra-fila__input ra-fila__input--nombre"
-      />
+      {item.producto_id != null ? (
+        <span className="ra-fila__input ra-fila__input--nombre">Producto existente — solo precio</span>
+      ) : (
+        <input
+          type="text"
+          placeholder="Nombre final"
+          value={valores.nombre_final}
+          onChange={(e) => onChange({ ...valores, nombre_final: e.target.value })}
+          disabled={rechazado}
+          className="ra-fila__input ra-fila__input--nombre"
+        />
+      )}
       <input
         type="number"
         step="0.01"
@@ -265,6 +273,16 @@ export function ModalRequerimientoDetalle({ requerimiento, onClose, onResponder 
       const v = valores[item.id]
       if (v.rechazado) {
         items_rechazados.push(item.id)
+        continue
+      }
+      const nombreVisible = item.productos?.nombre_comercial || item.nombre_solicitado
+      if (item.producto_id != null) {
+        // Producto existente (creado por "Avísame"): solo se pide precio.
+        if (!v.precio_unitario || Number(v.precio_unitario) <= 0) {
+          setError(`Falta precio para "${nombreVisible}" — o márcalo como rechazado`)
+          return
+        }
+        items.push({ id: item.id, nombre_final: nombreVisible, precio_unitario: Number(v.precio_unitario) })
         continue
       }
       if (!v.nombre_final.trim() || !v.precio_unitario || Number(v.precio_unitario) <= 0) {
