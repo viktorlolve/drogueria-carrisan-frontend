@@ -19,7 +19,7 @@
 // ---------------------------------------------------------------
 import {
   Package, ClipboardList, MessageCircle, ListChecks,
-  Star, MapPin, User, Bell, Users,
+  Heart, MapPin, User, Bell, Users,
   Wallet, DollarSign, FileText, FileBarChart, TrendingUp,
   PackagePlus, FileCheck,
   HelpCircle, FileQuestion, LifeBuoy, RotateCcw,
@@ -57,9 +57,9 @@ export const NAV_UNIFICADO = {
     {
       id: 'favoritos',
       titulo: 'Favoritos',
-      icono: Star,
+      icono: Heart,
       items: [
-        { id: 'mis-items', to: '/mis-items', icono: Star, texto: 'Mis items' },
+        { id: 'mis-items', to: '/mis-items', icono: Heart, texto: 'Mis items' },
         {
           id: 'comprar-nuevo',
           to: '/mis-items?tab=recomprar',

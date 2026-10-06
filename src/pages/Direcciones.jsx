@@ -3,6 +3,8 @@ import api from '../api/axios'
 import { useAuth } from '../context/AuthContext'
 import SelectorHorarioSemanal from '../components/registro/SelectorHorarioSemanal'
 import { resumirHorario } from '../utils/horario'
+import LayoutPaginaPrincipal from '../components/paginas-principales/Layoutpaginaprincipal'
+import { NAV_UNIFICADO } from '../components/paginas-principales/NavUnificado'
 import './Direcciones.css'
 
 const CIUDADES_DELIVERY = ['Valencia', 'Naguanagua', 'San Diego', 'Guacara', 'Los Guayos']
@@ -220,15 +222,14 @@ function Direcciones() {
   }
 
   return (
-    <div className="direcciones-page">
-      <div className="direcciones-container">
-        <div className="direcciones-contenido">
-          <header className="direcciones-header">
-            <h1>Mis Direcciones</h1>
-            <p>Gestiona tus direcciones de entrega para delivery y envío nacional</p>
-          </header>
-
-          {mensaje && (
+    <LayoutPaginaPrincipal
+      activo="direcciones"
+      titulo="Mis Direcciones"
+      subtitulo="Gestiona tus direcciones de entrega para delivery y envío nacional"
+      nav={NAV_UNIFICADO}
+    >
+      <div className="direcciones-contenido">
+        {mensaje && (
             <div className={`direccion-mensaje direccion-mensaje--${mensaje.tipo}`}>
               {mensaje.texto}
             </div>
@@ -351,7 +352,6 @@ function Direcciones() {
             </>
           )}
         </div>
-      </div>
 
       {mostrarForm && (
         <div className="direccion-overlay" onClick={() => setMostrarForm(false)}>
@@ -472,7 +472,7 @@ function Direcciones() {
           </form>
         </div>
       )}
-    </div>
+    </LayoutPaginaPrincipal>
   )
 }
 
