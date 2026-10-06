@@ -101,6 +101,8 @@ function Notificaciones() {
     if (!notificacion.leida) marcarLeida(notificacion.id)
     if (notificacion.tipo === 'chat_mensaje') {
       navigate(notificacion.orden_id ? `/chat/orden/${notificacion.orden_id}` : '/chat')
+    } else if (notificacion.url) {
+      navigate(notificacion.url)
     } else if (notificacion.orden_id) {
       navigate('/orders')
     }
@@ -314,7 +316,7 @@ function Notificaciones() {
                       key={notif.id}
                       notif={notif}
                       onClick={handleClick}
-                      clickable={!!notif.orden_id || notif.tipo === 'chat_mensaje'}
+                      clickable={!!notif.url || !!notif.orden_id || notif.tipo === 'chat_mensaje'}
                     />
                   ))}
                 </div>
