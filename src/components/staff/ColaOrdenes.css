@@ -110,3 +110,27 @@
   font-size: 12px;
   font-weight: 600;
 }
+
+/* El `<select>` de Completadas lleva un nombre scoped: la clase global
+   .sp-select ya existe en StaffComercial.css con otros valores y, al ser CSS
+   plano, la hoja cargada al final pisaria la otra. */
+.sp-select--rango {
+  padding: 6px 10px;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  font-size: 13px;
+  background: #fff;
+}
+
+.sp-badge--alerta {
+  background: #FEF2F2;
+  color: #991B1B;
+  border: 1px solid #FECACA;
+}
+
+/* El banner de incidencia viaja DENTRO de renderAcciones, que ColaOrdenes
+   envuelve en .sp-acciones (flex). Sin esto el <p> se encoge al lado de los
+   botones en vez de ocupar su propia linea, como en el monolito viejo. */
+.sp-acciones > .sp-incidencia {
+  flex: 1 0 100%;
+}

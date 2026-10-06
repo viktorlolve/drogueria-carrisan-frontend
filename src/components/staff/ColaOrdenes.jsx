@@ -102,6 +102,7 @@ export default function ColaOrdenes({
               <p className="sp-card-cliente">
                 {orden.users?.nombre} {orden.users?.telefono ? `— ${orden.users.telefono}` : ''}
                 {orden.estado ? ` · ${getLabelEstado(orden.estado, { rol: 'staff' })}` : ''}
+                {orden.created_at ? ` · ${formatFecha(orden.created_at)}` : ''}
               </p>
               {(orden.direcciones_envio || orden.agencia_envio) && (
                 <p className="sp-card-meta"><strong>Envío:</strong> {direccion(orden)}</p>

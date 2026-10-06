@@ -15,6 +15,9 @@
 import { lazy } from 'react'
 
 const StaffPedidos = lazy(() => import('./StaffPedidos'))
+const StaffPedidosRetiros = lazy(() => import('./StaffPedidosRetiros'))
+const StaffPedidosIncidencias = lazy(() => import('./StaffPedidosIncidencias'))
+const StaffPedidosCompletadas = lazy(() => import('./StaffPedidosCompletadas'))
 const StaffEnvios = lazy(() => import('./StaffEnvios'))
 const StaffOrdenes = lazy(() => import('./StaffOrdenes'))
 const StaffSolicitudes = lazy(() => import('./StaffSolicitudes'))
@@ -37,6 +40,9 @@ const StaffInventario = lazy(() => import('./StaffInventario'))
 
 export const STAFF_PAGINAS = {
   pedidos: StaffPedidos,
+  retiros: StaffPedidosRetiros,
+  incidencias: StaffPedidosIncidencias,
+  completadas: StaffPedidosCompletadas,
   envios: StaffEnvios,
   ordenes: StaffOrdenes,
   ventas: StaffFacturacion,
