@@ -655,7 +655,7 @@ function ProductoDetalle() {
 
             {/* Garantías + política de devoluciones (tarjeta compartida con el carrito).
                 El wrapper `pd-purchase__trust` solo la oculta en la barra compacta de móvil. */}
-            <FilasConfianza className="pd-purchase__trust" />
+            <FilasConfianza className="pd-purchase__trust" sinPrecio={sinPrecio} />
 
             {producto.disponible && (
               <div className="pd-purchase__actions">
@@ -686,36 +686,26 @@ function ProductoDetalle() {
               </div>
             )}
 
-            {sinPrecio && (
+            {sinPrecio && user && (
               <div className="pd-purchase__actions">
                 <button
-                  className="pd-purchase__cta pd-purchase__cta--teal"
-                  onClick={() =>
-                    navigate(`/mis-solicitudes/requerimientos?producto=${encodeURIComponent(producto.nombre_comercial)}`)
-                  }
+                  className={`pd-purchase__btn-outline ${suscripcion ? 'subscribed' : ''}`}
+                  onClick={toggleAvisame}
+                  disabled={suscripcion === null || procesandoToggle}
                 >
-                  Solicitar precio
+                  {suscripcion === null || procesandoToggle
+                    ? 'Consultando...'
+                    : suscripcion
+                      ? 'Te avisaremos'
+                      : 'Avisame cuando llegue'}
                 </button>
-
-                {user && (
-                  <button
-                    className={`pd-purchase__btn-outline ${suscripcion ? 'subscribed' : ''}`}
-                    onClick={toggleAvisame}
-                    disabled={suscripcion === null || procesandoToggle}
-                  >
-                    {suscripcion === null || procesandoToggle
-                      ? 'Consultando...'
-                      : suscripcion
-                        ? 'Te avisaremos'
-                        : 'Avisame cuando llegue'}
-                  </button>
-                )}
               </div>
             )}
 
             {!user && (
               <p className="pd-purchase__login">
-                <Link to="/login">Inicia sesion</Link> para comprar
+                <Link to="/login">Inicia sesion</Link>
+                {sinPrecio ? ' para avisarte cuando llegue' : ' para comprar'}
               </p>
             )}
 
