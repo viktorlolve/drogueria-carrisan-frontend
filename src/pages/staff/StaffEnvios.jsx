@@ -2,8 +2,11 @@ import { useEffect, useState } from 'react'
 import { Phone, MessageCircle } from 'lucide-react'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
+import AgenciasEnvioModal from '../../components/staff/AgenciasEnvioModal'
+import { ItemsOrden, formatUSD } from '../../components/staff/ColaOrdenes'
 import { exportarGuiaDespacho } from '../../utils/exportUtils'
 import { resumirHorario } from '../../utils/horario'
+import '../../components/staff/ColaOrdenes.css'
 import './StaffEnvios.css'
 
 function telAEnlace(tel) {
@@ -70,7 +73,10 @@ function StaffEnvios() {
   return (
     <LayoutDepartamento departamento="logistica" activo="envios" titulo="Envíos">
       <div className="se-page">
-        <p className="se-intro">Pedidos en ruta — entrega hoy y confirma.</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <p className="se-intro">Pedidos en ruta — entrega hoy y confirma.</p>
+          <AgenciasEnvioModal />
+        </div>
 
         {cargando && <p>Cargando...</p>}
         {error && <p className="se-error">{error}</p>}
@@ -91,7 +97,7 @@ function StaffEnvios() {
                 </div>
 
                 <p className="se-card-cliente">
-                  {orden.users?.nombre} — ${Number(orden.total_usd || 0).toFixed(2)}
+                  {orden.users?.nombre} — ${formatUSD(orden.total_usd)}
                 </p>
 
                 <div className="se-card-contacto">
@@ -124,11 +130,7 @@ function StaffEnvios() {
                   )}
                 </div>
 
-                <ul className="se-card-items">
-                  {(orden.ordenes_items || []).map((item) => (
-                    <li key={item.id}>{item.cantidad}x {item.productos?.nombre_comercial}</li>
-                  ))}
-                </ul>
+                <ItemsOrden items={orden.ordenes_items || []} />
 
                 <div className="se-card-acciones">
                   <button className="se-btn-main" onClick={() => marcarEntregado(orden.id)} disabled={procesando === orden.id}>
