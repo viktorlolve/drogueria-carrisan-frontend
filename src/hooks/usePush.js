@@ -1,6 +1,24 @@
 import { useState, useCallback, useEffect } from 'react'
 import api from '../api/axios'
 
+// La clave llega del entorno y se pega a mano en el dashboard de Vercel. Un
+// solo carácter fuera de lugar —el `\r` de un CRLF de Windows, unas comillas,
+// espacios— hace fallar atob() con un DOMException críptico ("String contains
+// an invalid character"). Peor todavía: si la clave está sucia,
+// `claveDeSuscripcionCoincide` nunca coincide, entonces cada montaje desuscribe
+// la suscripción buena e intenta rehacerla (y vuelve a fallar) — o sea que el
+// usuario pierde el push que ya tenía funcionando, sin avisar. Por eso se
+// sanea UNA vez acá y el resultado se usa en todos lados.
+function sanitizarClaveVapid(clave) {
+  if (!clave) return null
+  const limpia = String(clave).replace(/[^A-Za-z0-9\-_=+/]/g, '')
+  return limpia || null
+}
+
+// Clave VAPID pública, ya sin suciedad de entorno.
+const VAPID_KEY = sanitizarClaveVapid(import.meta.env.VITE_VAPID_PUBLIC_KEY)
+const PUSH_ENABLED = !!VAPID_KEY
+
 function convertirClaveVapid(claveBase64) {
   if (!claveBase64) return null
   const padding = '='.repeat((4 - (claveBase64.length % 4)) % 4)
