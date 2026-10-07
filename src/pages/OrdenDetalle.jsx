@@ -195,6 +195,22 @@ function OrdenDetalle() {
         {/* Totales */}
         <section className="od-seccion">
           <div className="od-totales">
+            <div className="od-totales__fila">
+              <span>Subtotal</span>
+              <span>${formatUSD(orden.subtotal_usd || (Number(orden.total_usd || 0) + Number(orden.descuento_cupon || 0)))}</span>
+            </div>
+            {orden.descuento_cupon > 0 && (
+              <div className="od-totales__fila od-totales__fila--descuento">
+                <span>Descuento cupón{orden.cupon_codigo ? ` (${orden.cupon_codigo})` : ''}</span>
+                <span>-${formatUSD(orden.descuento_cupon)}</span>
+              </div>
+            )}
+            {orden.costo_envio > 0 && (
+              <div className="od-totales__fila">
+                <span>Envío</span>
+                <span>${formatUSD(orden.costo_envio)}</span>
+              </div>
+            )}
             <div className="od-total-final">
               <span>Total</span>
               <span className="od-total-valor">{formatearUSD(orden.total_usd)}</span>
