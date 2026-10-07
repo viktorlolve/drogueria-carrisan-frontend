@@ -1,6 +1,7 @@
 import { Link, Navigate } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { useStaffAuth } from '../../context/StaffAuthContext'
+import { useStaffBadges } from '../../context/StaffBadgesContext'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import { DEPARTAMENTOS, MODULOS } from '../../components/staff/NavStaff'
 import './StaffDepartamento.css'
@@ -20,6 +21,8 @@ function StaffDepartamento({ departamento }) {
   const modulos = (MODULOS[departamento] || [])
     .flatMap((grupo) => grupo.items)
     .filter((item) => item.roles.includes(rol))
+
+  const { conteos } = useStaffBadges()
 
   // Sin módulos visibles → no tiene acceso a este departamento.
   if (!depto || modulos.length === 0) {
@@ -49,6 +52,9 @@ function StaffDepartamento({ departamento }) {
               </div>
               <p className="sdpto-card__titulo">{m.texto}</p>
               {m.desc && <p className="sdpto-card__desc">{m.desc}</p>}
+              {m.contador && conteos[m.contador] > 0 && (
+                <p className="sdpto-card__conteo">{conteos[m.contador]}</p>
+              )}
             </Link>
           )
         })}

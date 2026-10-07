@@ -138,9 +138,23 @@
   color: var(--ldep-text-muted, #64748b);
 }
 
+/* Conteo de trabajo en tarjetas del hub */
+.sdpto-card__conteo {
+  margin: 4px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ldep-color, #2563EB);
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--ldep-color-soft, #eef4fd);
+  width: fit-content;
+}
+
 /* -----------------------------------------------------------------
-   Móvil
-   ----------------------------------------------------------------- */
+    Móvil
+    ----------------------------------------------------------------- */
 @media (max-width: 480px) {
   .sdpto-hero {
     padding: 22px 20px;

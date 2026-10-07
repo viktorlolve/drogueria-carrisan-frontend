@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { useStaffAuth } from '../../context/StaffAuthContext'
+import { useStaffBadges } from '../../context/StaffBadgesContext'
 import { DEPARTAMENTOS, MODULOS } from '../../components/staff/NavStaff'
 import StaffNavbar from '../../components/staff/StaffNavbar'
 import './StaffDashboard.css'
@@ -33,6 +34,14 @@ function StaffDashboard() {
   //  - más de 1                  -> panorámica (tarjetas de departamento, como hoy).
   const esJornadaEnfocada = departamentos.length === 1
   const deptoFoco = departamentos[0] || null
+
+  const { conteos } = useStaffBadges()
+  // Chips y total solo con los módulos que el rol realmente ve (mismo filtro
+  // que ya usa `departamentos`): si algún rol cruza departamentos, no se le
+  // muestran colas inalcanzables ni se infla el "N pendientes".
+  const modulosLogistica = departamentos.find((d) => d.id === 'logistica')?.modulos || []
+  const totalLogistica = modulosLogistica
+    .reduce((s, item) => s + (item.contador ? conteos[item.contador] || 0 : 0), 0)
 
   if (esJornadaEnfocada) {
     return (
@@ -113,9 +122,11 @@ function StaffDashboard() {
           {departamentos.map((depto) => {
             const Icono = depto.icono
             return (
-              <Link
+              // La tarjeta es un <div> (no un Link): dentro hay chips-enlaces,
+              // y un <a> anidado en otro <a> es HTML inválido. La cabecera con
+              // el título y la flecha es el enlace al hub del departamento.
+              <div
                 key={depto.id}
-                to={`/staff/${depto.id}`}
                 className="sd-card"
                 style={{
                   '--sd-card-color': depto.color,
@@ -123,24 +134,42 @@ function StaffDashboard() {
                 }}
               >
                 <div className="sd-card__fondo" aria-hidden="true" />
-                <div className="sd-card__cab">
-                  <span className="sd-card__icono"><Icono size={26} /></span>
-                  <ArrowRight size={18} className="sd-card__flecha" />
-                </div>
-                <h2 className="sd-card__nombre">{depto.nombre}</h2>
+                <Link to={`/staff/${depto.id}`} className="sd-card__link">
+                  <div className="sd-card__cab">
+                    <span className="sd-card__icono"><Icono size={26} /></span>
+                    <ArrowRight size={18} className="sd-card__flecha" />
+                  </div>
+                  <h2 className="sd-card__nombre">{depto.nombre}</h2>
+                </Link>
                 <p className="sd-card__desc">{depto.descripcion}</p>
                 <div className="sd-card__menu">
                   {depto.modulos.map((m) => {
                     const IconoModulo = ICONOS_MAPA[m.id]
+                    if (!m.contador) {
+                      return (
+                        <span key={m.id} className="sd-card__chip">
+                          {IconoModulo && <IconoModulo size={13} />}
+                          {m.texto}
+                        </span>
+                      )
+                    }
                     return (
-                      <span key={m.id} className="sd-card__chip">
+                      <Link key={m.id} to={m.to} className="sd-card__chip sd-card__chip--link">
                         {IconoModulo && <IconoModulo size={13} />}
                         {m.texto}
-                      </span>
+                        {conteos[m.contador] > 0 && (
+                          <span className="sd-card__chip-badge">{conteos[m.contador]}</span>
+                        )}
+                      </Link>
                     )
                   })}
+                  {depto.id === 'logistica' && totalLogistica > 0 && (
+                    <span className="sd-card__chip sd-card__chip--pendientes">
+                      {totalLogistica} pendientes
+                    </span>
+                  )}
                 </div>
-              </Link>
+              </div>
             )
           })}
         </div>

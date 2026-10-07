@@ -150,6 +150,14 @@
   margin-bottom: 6px;
 }
 
+/* Cabecera+título de la tarjeta es el enlace al hub (los chips-enlaces son
+   hermanos suyos: no puede haber <a> dentro de <a>). */
+.sd-card__link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
 .sd-card__icono {
   width: 50px;
   height: 50px;
@@ -204,6 +212,37 @@
   background: var(--sd-card-color-soft);
   padding: 5px 9px;
   border-radius: 999px;
+  text-decoration: none;
+}
+
+.sd-card__chip--link {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sd-card__chip--link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px -10px rgba(15, 23, 42, 0.5);
+}
+
+.sd-card__chip-badge {
+  margin-left: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--sd-card-color, #2563EB);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.sd-card__chip--pendientes {
+  background: rgba(217, 119, 6, 0.15);
+  color: #92400e;
+  font-weight: 700;
 }
 
 /* -----------------------------------------------------------------
