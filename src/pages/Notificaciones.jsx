@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Accordion,
   Badge,
@@ -7,7 +7,6 @@ import {
 } from '@chakra-ui/react'
 import { ChevronDown, Filter, CheckCheck } from 'lucide-react'
 import LayoutPaginaPrincipal from '../components/paginas-principales/Layoutpaginaprincipal'
-import PreferenciasNotificaciones from '../components/paginas-principales/PreferenciasNotificaciones'
 import api from '../api/axios'
 import {
   CATEGORIAS,
@@ -22,14 +21,16 @@ import './Notificaciones.css'
 
 // ---------------------------------------------------------------
 // Notificaciones: el sidebar izquierdo es el ÚNICO mecanismo de
-// filtrado (una vista reversible, sin persistencia), las preferencias
-// de avisos push viven en un acordeón colapsado por defecto, y abajo
-// hay una leyenda explicando qué significa cada tipo.
+// filtrado (una vista reversible, sin persistencia) y abajo hay una
+// leyenda explicando qué significa cada tipo.
 //
-// Antes había además una segunda lista ("Qué se ve en esta lista")
+// Antes había además (a) una segunda lista "Qué se ve en esta lista"
 // que escondía categorías de forma permanente en
-// `notif_categorias_silenciadas`. Se eliminó: el usuario la confundía
-// con el filtro del sidebar y perdía notificaciones sin aviso.
+// `notif_categorias_silenciadas` — se eliminó porque el usuario la
+// confundía con el filtro del sidebar — y (b) un acordeón de
+// preferencias de avisos push, que el dueño quitó por pesado
+// visualmente. Las preferencias siguen existiendo como componente
+// (`PreferenciasNotificaciones.jsx`) pero ya no se pintan aquí.
 // ---------------------------------------------------------------
 
 function Notificaciones() {
@@ -38,13 +39,6 @@ function Notificaciones() {
   const [error, setError] = useState('')
   const [filtro, setFiltro] = useState('todas')
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const refPreferencias = useRef(null)
-  // Se deriva de la URL en el primer render (inicializador perezoso), no en
-  // un useEffect: el deep link "?preferencias=1" ya abre el acordeón desde
-  // el primer pintado. El efecto de abajo se queda SOLO con el scroll, que
-  // sí es una operación de DOM.
-  const [prefsAbiertas, setPrefsAbiertas] = useState(() => searchParams.get('preferencias') === '1')
 
   const cargarNotificaciones = useCallback(async () => {
     try {
@@ -82,20 +76,6 @@ function Notificaciones() {
       console.error('Error al marcar todas:', err)
     }
   }
-
-  // Deep link desde Mi Cuenta: "?preferencias=1" hace scroll al acordeón.
-  // El estado ya está abierto desde el primer render (inicializador de
-  // arriba); acá solo se espera a que el DOM tenga su altura final.
-  // Dos frames: uno para el pintado y otro para el layout estable.
-  useEffect(() => {
-    if (searchParams.get('preferencias') !== '1') return
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        refPreferencias.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      })
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   function handleClick(notificacion) {
     if (!notificacion.leida) marcarLeida(notificacion.id)
@@ -200,29 +180,6 @@ function Notificaciones() {
         </aside>
 
         <div className="notif-container">
-          {/* Preferencias de push: acordeón colapsado por defecto para no
-              saturar la página al entrar. El sidebar de la izquierda es el
-              filtro visible; esto solo configura qué avisos manda el servidor. */}
-          <div ref={refPreferencias}>
-            <Accordion.Root
-              collapsible
-              className="notif-accordion notif-accordion--prefs"
-              value={prefsAbiertas ? ['preferencias'] : []}
-              onValueChange={(det) => setPrefsAbiertas((det?.value?.length ?? 0) > 0)}
-            >
-              <Accordion.Item value="preferencias">
-                <Accordion.ItemTrigger className="notif-accordion__trigger">
-                  <Text>Preferencias de notificación</Text>
-                  <ChevronDown size={16} className="notif-accordion__chevron" />
-                </Accordion.ItemTrigger>
-                <Accordion.ItemContent>
-                  <Accordion.ItemBody>
-                    <PreferenciasNotificaciones />
-                  </Accordion.ItemBody>
-                </Accordion.ItemContent>
-              </Accordion.Item>
-            </Accordion.Root>
-          </div>
           {/* Móvil: el header del layout no se ve, así que "Marcar todas
               leídas" vive aquí como fila propia */}
           <div className="notif-mobile-acciones">

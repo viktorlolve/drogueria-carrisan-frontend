@@ -175,19 +175,6 @@ function ContenidoModalPermisos() {
         </div>
       )}
 
-      <Link to="/notificaciones?preferencias=1" className="modal-permisos__fila modal-permisos__fila--link">
-        <div className="modal-permisos__fila-icono">
-          <Bell size={17} />
-        </div>
-        <div className="modal-permisos__fila-texto">
-          <span className="modal-permisos__fila-titulo">Preferencias de notificación</span>
-          <span className="modal-permisos__fila-descripcion">
-            Elegí qué avisos recibís (órdenes, pagos, chat, crédito, sistema y ofertas)
-          </span>
-        </div>
-        <ChevronRight size={18} className="modal-permisos__fila-flecha" />
-      </Link>
-
       <div className="modal-permisos__fila">
         <div className="modal-permisos__fila-icono">
           <Lock size={17} />
