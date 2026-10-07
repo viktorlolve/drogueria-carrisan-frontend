@@ -140,8 +140,14 @@ Un `to` con query (`?tab=`) se compara por su **ruta base** (`scripts/verificar-
 
 ### Preferencias de notificación (2 cosas distintas — no las mezcles)
 
+> **2026-10-07 — fuera de la UI**: el dueño quitó el acordeón de preferencias del centro de
+> notificaciones por pesado visualmente, y con él la fila equivalente de `MiCuenta.jsx`.
+> `PreferenciasNotificaciones.jsx` **sigue existiendo pero ya no se renderiza en ninguna parte**
+> (el endpoint `GET/PUT /notifications/preferences` y `usePush` siguen intactos; si se
+> re-inserta en algún sitio, mantener estas reglas).
+
 `PreferenciasNotificaciones.jsx` (`.acu-*` no: clases `.notif-prefs-*`, dentro de
-`components/paginas-principales/`) vive en el centro de notificaciones y tiene **dos listas**:
+`components/paginas-principales/`) tenía **dos listas**:
 
 1. **Avisos push (backend)** — `GET/PUT /notifications/preferences`, columnas `push_*`, solo las
    **6 claves de `CLAVES_PUSH`** (`notificacionesCatalogo.js`): ordenes, pagos, chat, credito,
@@ -151,12 +157,12 @@ Un `to` con query (`?tab=`) se compara por su **ruta base** (`scripts/verificar-
 
 - **La firma del callback local es `onToggleSilenciar(catId, silenciar)`** (2º argumento = "silenciar",
   NO "visible"): si la categoría está visible y apagás el switch, se manda `true`.
-- Deep link desde Mi Cuenta: `/notificaciones?preferencias=1` (el panel hace scroll al montar).
+- El deep link `/notificaciones?preferencias=1` **ya no hace nada** (el parámetro se ignora).
 - **`push_documentos` y `push_solicitudes` NO existen** en el backend y **no se crean**: los avisos de
   documentos y solicitudes viajan por `push_sistema`. Un switch propio sería migración + `push.service.js`.
-- `MiCuenta.jsx` conserva **solo el interruptor maestro** de push + una fila que enlaza a
-  `/notificaciones?preferencias=1` (patrón `modal-permisos__fila--link` + `ChevronRight`, no clases
-  nuevas). El estado `prefs` y el GET de preferencias se fueron de ahí.
+- `MiCuenta.jsx` conserva **solo el interruptor maestro** de push (la fila "Preferencias de
+  notificación" se eliminó junto con el acordeón). El estado `prefs` y el GET de preferencias se
+  fueron de ahí.
 
 ### `/ayuda/como-usar`
 
