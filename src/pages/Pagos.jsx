@@ -132,7 +132,7 @@ function Pagos() {
           <div className="pagos-exito__icon">📨</div>
           <h1>¡Pago reportado!</h1>
           <p>
-            Reportaste tu pago por <strong>VES {formatearVES(reporteCreado.monto_bs)}</strong>.
+            Reportaste tu pago por <strong>{formatearVES(reporteCreado.monto_bs)}</strong>.
             Lo verificaremos pronto y te avisaremos.
           </p>
           <Link to="/orders" className="pagos-exito__cta">Volver a mis órdenes</Link>
@@ -181,9 +181,9 @@ function Pagos() {
               </div>
               <div className="pagos-resumen-monto__row pagos-resumen-monto__row--destacado">
                 <span>Total a pagar en bolívares</span>
-                <span>VES {formatearVES(totalVes)}</span>
+                <span>{formatearVES(totalVes)}</span>
               </div>
-              {tasaVes && <p className="pagos-tasa-nota">Tasa aplicada: {formatearVES(tasaVes)} VES/USD</p>}
+              {tasaVes && <p className="pagos-tasa-nota">Tasa aplicada: {formatearVES(tasaVes)} / USD</p>}
             </div>
 
             <button
@@ -202,7 +202,7 @@ function Pagos() {
           <section className="pagos-seccion">
             <h2 className="pagos-seccion__titulo">Datos para tu pago</h2>
             <p className="pagos-monto-recordatorio">
-              Debes transferir <strong>VES {formatearVES(totalVes)}</strong>
+              Debes transferir <strong>{formatearVES(totalVes)}</strong>
             </p>
 
             <div className="pagos-datos-bancarios">
@@ -233,7 +233,7 @@ function Pagos() {
           <section className="pagos-seccion">
             <h2 className="pagos-seccion__titulo">Sube tu comprobante</h2>
             <p className="pagos-seccion__desc">
-              Adjunta la foto o captura del comprobante de tu pago por VES {formatearVES(totalVes)}.
+              Adjunta la foto o captura del comprobante de tu pago por {formatearVES(totalVes)}.
             </p>
 
             <label className="pagos-upload">

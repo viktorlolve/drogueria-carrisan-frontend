@@ -190,8 +190,8 @@ function SubUsuarios() {
     >
       <div className="su-intro">
         Cada sub-usuario tiene un nombre y un PIN propio. Al confirmar un pedido, quien compra
-        ingresa su PIN y su nombre queda registrado en esa orden — vos podés verlo en todo momento
-        desde "Mis órdenes". Si no creás ninguno, el checkout sigue funcionando igual que hoy.
+        ingresa su PIN y su nombre queda registrado en esa orden — puede ver el nombre en todo momento
+        desde "Mis órdenes". Si no creás ninguno, el checkout sigue funcionando igual que hoy sin PIN.
       </div>
 
       {cargando ? (

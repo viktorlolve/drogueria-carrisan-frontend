@@ -29,12 +29,12 @@ export default function PagoClienteModal({ pago, cliente, facturas, onClose }) {
         <div className="pcm-monto-hero">
           <span className="pcm-monto-hero__valor">{formatearUSD(pago.monto)}</span>
           {tieneConversionBs && (
-            <span className="pcm-monto-hero__bs">VES {formatearVES(pago.monto_bs)}</span>
+            <span className="pcm-monto-hero__bs">{formatearVES(pago.monto_bs)}</span>
           )}
         </div>
         {tieneConversionBs && (
           <p className="pcm-tasa">
-            Tasa aplicada: <strong>VES {formatearVES(pago.tasa_usada)}</strong> / USD
+            Tasa aplicada: <strong>{formatearVES(pago.tasa_usada)}</strong> / USD
           </p>
         )}
 

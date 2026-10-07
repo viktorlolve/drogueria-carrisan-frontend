@@ -18,11 +18,11 @@ export default function CatalogoAcceso() {
         <span className="catalogo-acceso__icon"><ShieldCheck size={30} /></span>
         <h1 className="catalogo-acceso__titulo">Catálogo para clientes registrados</h1>
         <p className="catalogo-acceso__texto">
-          Somos una plataforma B2B para clínicas, consultorios y profesionales de la salud.
-          El catálogo con precios solo está disponible para clientes registrados.
+          Somos una plataforma B2B para clínicas, centros quirurgicos y farmacias.
+          El catálogo con precios solo está disponible para clientes institucionales registrados.
         </p>
         <p className="catalogo-acceso__texto catalogo-acceso__texto--muted">
-          ¿Buscas un insumo específico? Escríbenos y te cotizamos por WhatsApp.
+          ¿Quieres formar parte de este sistema de abastecimiento? Contactanos.
         </p>
         <div className="catalogo-acceso__acciones">
           <Link
@@ -33,7 +33,7 @@ export default function CatalogoAcceso() {
             <LogIn size={18} /> Iniciar sesión
           </Link>
           <Link className="btn-catalogo-acceso" to="/registro">
-            Solicitar registro
+            Crear Cuenta B2B
           </Link>
         </div>
       </div>
