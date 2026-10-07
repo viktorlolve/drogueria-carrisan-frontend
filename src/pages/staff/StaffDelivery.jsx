@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Phone, MessageCircle } from 'lucide-react'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
-import AgenciasEnvioModal from '../../components/staff/AgenciasEnvioModal'
 import { ItemsOrden, formatUSD } from '../../components/staff/ColaOrdenes'
 import { useColaStaff } from '../../hooks/useColaStaff'
 import { exportarGuiaDespacho } from '../../utils/exportUtils'
@@ -22,9 +21,12 @@ const MOTIVOS = [
   'Otro',
 ]
 
-function StaffEnvios() {
+// Cola de Delivery (tipo_envio='delivery'), separada de Envíos por agencia.
+// Misma cola que StaffEnvios pero sin la rama de agencia: aquí solo hay
+// direcciones físicas y entrega del día por moto.
+function StaffDelivery() {
   const { datos: ordenes, cargando, error, recargarTodo } = useColaStaff('/staff/despacho', {
-    params: { tipo: 'envio_nacional' },
+    params: { tipo: 'delivery' },
   })
   const [procesando, setProcesando] = useState(null)
   const [incidenciaDe, setIncidenciaDe] = useState(null)
@@ -57,16 +59,13 @@ function StaffEnvios() {
   }
 
   return (
-    <LayoutDepartamento departamento="logistica" activo="envios" titulo="Envíos por agencia">
+    <LayoutDepartamento departamento="logistica" activo="delivery" titulo="Delivery">
       <div className="se-page">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          <p className="se-intro">Envíos por agencia — prepara la guía y despacha.</p>
-          <AgenciasEnvioModal />
-        </div>
+        <p className="se-intro">Pedidos en ruta en moto — entrega hoy y confirma.</p>
 
         {cargando && <p>Cargando...</p>}
         {error && <p className="se-error">{error}</p>}
-        {!cargando && !error && ordenes.length === 0 && <p>No hay envíos por agencia pendientes ahora mismo.</p>}
+        {!cargando && !error && ordenes.length === 0 && <p>No hay deliveries por entregar ahora mismo.</p>}
 
         <div className="se-list">
           {ordenes.map((orden) => {
@@ -76,7 +75,7 @@ function StaffEnvios() {
               <div key={orden.id} className="se-card">
                 <div className="se-card-head">
                   <p className="se-card-orden">Orden #{orden.id}</p>
-                  <span className="se-tag se-tag--nacional">Envío nacional</span>
+                  <span className="se-tag se-tag--delivery">Delivery</span>
                 </div>
 
                 <p className="se-card-cliente">
@@ -95,8 +94,13 @@ function StaffEnvios() {
                 </div>
 
                 <div className="se-card-direccion">
-                  <p>Enviar por agencia — <strong>{orden.agencia_envio || 'sin agencia'}</strong></p>
+                  {dir ? (
+                    <p>{dir.direccion}, {dir.ciudad} {dir.estado}</p>
+                  ) : (
+                    <p>Sin dirección</p>
+                  )}
                   {dir?.nota_entrega && <p className="se-nota">Nota: {dir.nota_entrega}</p>}
+                  {dir?.telefono_contacto && <p className="se-num-ausente">Contacto: {dir.telefono_contacto}</p>}
                   {resumirHorario(orden.horario_recepcion).length > 0 && (
                     <div className="se-horario">
                       {resumirHorario(orden.horario_recepcion).map((linea) => (
@@ -110,7 +114,7 @@ function StaffEnvios() {
 
                 <div className="se-card-acciones">
                   <button className="se-btn-main" onClick={() => marcarEntregado(orden.id)} disabled={procesando === orden.id}>
-                    {procesando === orden.id ? 'Procesando...' : 'Marcar entregado a la agencia'}
+                    {procesando === orden.id ? 'Procesando...' : 'Marcar entregado'}
                   </button>
                   <button className="se-btn-sec" onClick={() => exportarGuiaDespacho(orden)} disabled={procesando === orden.id}>Guía</button>
                   <button className="se-btn-inc" onClick={() => setIncidenciaDe(orden.id)} disabled={procesando === orden.id}>Incidencia</button>
@@ -142,4 +146,4 @@ function StaffEnvios() {
   )
 }
 
-export default StaffEnvios
+export default StaffDelivery

@@ -163,8 +163,8 @@ function OrdenDetalle() {
 
         {/* Descripción explicativa */}
         <div className="od-intro">
-          Tu pedido pasa por varias etapas antes de llegar a tus manos. Acá podés seguir su
-          progreso — cada etapa muestra la fecha y hora en que ocurrió.
+          Tu pedido pasa por varias etapas antes de llegar a tus manos. Aqui puedes seguir su
+          progreso por etapas.
         </div>
 
         {/* Timeline */}

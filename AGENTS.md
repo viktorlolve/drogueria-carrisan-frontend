@@ -48,7 +48,7 @@ src/
 │   └── LoadingBarContext.jsx  # Barra de carga superior
 ├── hooks/                    # Custom hooks (useEsMobile, usePush, useColaStaff)
 ├── pages/                    # Paginas (~50+ archivos)
-│   └── staff/                # StaffLogin, StaffRegistro, StaffDashboard (panel sin sidebar), StaffDepartamento (hub), StaffPedidosNuevas, StaffPedidosPreparar, StaffPedidosRetiros, StaffPedidosIncidencias, StaffPedidosCompletadas, StaffEnvios, StaffOrdenes, StaffSolicitudes, StaffPresupuestos, StaffFacturacion, StaffCuentasPorCobrar, StaffOrdenesPorCancelar, StaffCredito, StaffTesoreria, StaffReportesFinancieros, StaffClientes, StaffClienteFicha, StaffChat, StaffCupones, StaffPromociones, StaffPrecios, StaffDirecciones, StaffModuloPlaceholder (+ CSS por página)
+│   └── staff/                # StaffLogin, StaffRegistro, StaffDashboard (panel sin sidebar), StaffDepartamento (hub), StaffPedidosNuevas, StaffPedidosPreparar, StaffPedidosRetiros, StaffPedidosIncidencias, StaffPedidosCompletadas, StaffEnvios, StaffDelivery, StaffOrdenes, StaffSolicitudes, StaffPresupuestos, StaffFacturacion, StaffCuentasPorCobrar, StaffOrdenesPorCancelar, StaffCredito, StaffTesoreria, StaffReportesFinancieros, StaffClientes, StaffClienteFicha, StaffChat, StaffCupones, StaffPromociones, StaffPrecios, StaffDirecciones, StaffModuloPlaceholder (+ CSS por página)
 ├── utils/                    # Helpers (validadores, generadores de PDF, etc.)
 ├── App.jsx                   # Router principal (Routes)
 ├── main.jsx                  # Entry point (BrowserRouter + Provider Chakra)
@@ -398,7 +398,8 @@ Desde 2026-09-04 el módulo staff se organiza en **3 departamentos**: `finanzas`
 | `/staff/cupones` | LayoutDepartamento | `comercial` | `cupones` (StaffCupones) |
 | `/staff/pedidos/nuevas` | LayoutDepartamento | `logistica` | `nuevas` (StaffPedidosNuevas — órdenes por revisar) |
 | `/staff/pedidos/preparar` | LayoutDepartamento | `logistica` | `preparar` (StaffPedidosPreparar — aprobar/preparar) |
-| `/staff/envios` | LayoutDepartamento | `logistica` | `envios` (StaffEnvios — despacho) |
+| `/staff/delivery` | LayoutDepartamento | `logistica` | `delivery` (StaffDelivery — cola moto) |
+| `/staff/envios` | LayoutDepartamento | `logistica` | `envios` (StaffEnvios — envíos por agencia) |
 | `/staff/pedidos/retiros` | LayoutDepartamento | `logistica` | `retiros` (StaffPedidosRetiros) |
 | `/staff/pedidos/incidencias` | LayoutDepartamento | `logistica` | `incidencias` (StaffPedidosIncidencias) |
 | `/staff/pedidos/completadas` | LayoutDepartamento | `logistica` | `completadas` (StaffPedidosCompletadas) |
@@ -443,7 +444,8 @@ Desde 2026-09-04 el módulo staff se organiza en **3 departamentos**: `finanzas`
 | /staff/pedidos/retiros | roles: almacenista/administrador/director/admin | Logística | funcional | **Retiros** (`StaffPedidosRetiros.jsx`): órdenes `listo_para_retiro` + marcar `retirado` |
 | /staff/pedidos/incidencias | roles: almacenista/administrador/director/admin | Logística | funcional | **Incidencias** (`StaffPedidosIncidencias.jsx`): órdenes con `incidencia_motivo` + resolver/reintentar |
 | /staff/pedidos/completadas | roles: almacenista/administrador/director/admin | Logística | funcional | **Completadas** (`StaffPedidosCompletadas.jsx`): historial de entregadas/retiradas + verificar paquete pendiente |
-| /staff/envios | roles: despachador/administrador/director/admin | Logística | funcional | **Despacho** (`StaffEnvios.jsx`): cola de órdenes `enviado` + marcar `entregado`. Sustituye a StaffDespacho |
+| /staff/delivery | roles: despachador/administrador/director/admin | Logística | funcional | **Delivery** (`StaffDelivery.jsx`, icono Scooter): cola de órdenes `enviado` con `tipo_envio='delivery'` (legacy sin tipo cae aquí) + marcar entregado/guía/incidencia. Sin agencias |
+| /staff/envios | roles: despachador/administrador/director/admin | Logística | funcional | **Envíos por agencia** (`StaffEnvios.jsx`): cola `enviado` + `tipo_envio='envio_nacional'` (`?tipo=envio_nacional` en `GET /staff/despacho`) + marcar entregado + CRUD de agencias. Sustituye a StaffDespacho. Ambas colas de Despacho usan `useColaStaff` |
 | /staff/direcciones | roles: despachador/administrador/director/admin | Logística | funcional | Direcciones de envío de clientes + dirección de un cliente (`GET /staff/direcciones/cliente/:id`) para planificar despachos |
 
 **Migración Admin → Staff (IMPLEMENTADA — 2026-09-07):** los módulos copiados del admin (cotizaciones, requerimientos, documentos, promociones, direcciones) están **funcionales** (ver tabla de arriba). Las UIs se adaptaron de `src/components/admin/` (mismos patrones Kanban `kb-*`, modales `odm-*`) pero sobre **staffApi** y endpoints **NUEVOS `/staff/*`** (sesión staff, `verifyStaffJWT` + `checkRolStaff`). NO se reutiliza `api` de clientes ni los endpoints admin. El panel `/admin` queda completo solo para el dueño vía bridge. La auditoría de acciones staff la registra el backend con `staff_id` (migración `015_staff_auditoria.sql`, ejecutar a mano en Supabase). Detalle en el AGENTS del backend.
@@ -452,7 +454,7 @@ Desde 2026-09-04 el módulo staff se organiza en **3 departamentos**: `finanzas`
 
 La pagina de crear orden a cliente (StaffOrdenes) usa **staffApi** (no el `api` de clientes) y los endpoints `/staff/*`: `GET /staff/clientes?buscar=`, `GET /staff/clientes/:id/direcciones`, `POST /staff/ordenes`. El campo `creado_por_staff_id` lo agrega el backend, no el frontend. Los errores de validacion llegan estructurados (credito/stock) y se muestran como toast en pantalla.
 
-`StaffPedidosNuevas.jsx`, `StaffPedidosPreparar.jsx`, `StaffPedidosRetiros.jsx`, `StaffPedidosIncidencias.jsx`, `StaffPedidosCompletadas.jsx`, `StaffEnvios.jsx` (Logística), `StaffFacturacion.jsx`, `StaffCuentasPorCobrar.jsx`, `StaffOrdenesPorCancelar.jsx`, `StaffCredito.jsx`, `StaffTesoreria.jsx`, `StaffReportesFinancieros.jsx` (Finanzas) usan **staffApi** (endpoints `/staff/*`). Patrón compartido: helpers de formato (`formatUSD`, `formatFecha`) definidos al inicio del archivo, tabs con estado local en el componente padre, y un subcomponente por tab (`TabPorRevisar`, `TabPorPreparar`, `TabFacturas`, `TabAbonos`, etc.). Los "cancelar"/"destructivos" usan `window.confirm` (mismo patrón que el resto del staff). CSS plain por página (`StaffFinanzas.css` compartido por los módulos de Finanzas).
+`StaffPedidosNuevas.jsx`, `StaffPedidosPreparar.jsx`, `StaffPedidosRetiros.jsx`, `StaffPedidosIncidencias.jsx`, `StaffPedidosCompletadas.jsx`, `StaffEnvios.jsx`, `StaffDelivery.jsx` (Logística), `StaffFacturacion.jsx`, `StaffCuentasPorCobrar.jsx`, `StaffOrdenesPorCancelar.jsx`, `StaffCredito.jsx`, `StaffTesoreria.jsx`, `StaffReportesFinancieros.jsx` (Finanzas) usan **staffApi** (endpoints `/staff/*`). Patrón compartido: helpers de formato (`formatUSD`, `formatFecha`) definidos al inicio del archivo, tabs con estado local en el componente padre, y un subcomponente por tab (`TabPorRevisar`, `TabPorPreparar`, `TabFacturas`, `TabAbonos`, etc.). Los "cancelar"/"destructivos" usan `window.confirm` (mismo patrón que el resto del staff). CSS plain por página (`StaffFinanzas.css` compartido por los módulos de Finanzas).
 
 ## Estados de órdenes — fuente única de verdad
 

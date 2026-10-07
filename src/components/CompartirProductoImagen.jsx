@@ -23,7 +23,6 @@ const PAD = 72
 const AZUL = '#0052DC'
 const INDIGO = '#1A1A3A'
 const TEAL = '#12A594'
-const PAPER = '#FBFAF7'
 const ORO = '#F59E0B'
 
 // ── Pendientes de marca ──────────────────────────────────────────────────

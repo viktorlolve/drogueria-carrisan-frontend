@@ -13,7 +13,7 @@ import {
   Landmark, TrendingUp, Truck, Receipt, Banknote, CalendarX2,
   Inbox, FileText, Megaphone, MapPin, BadgeDollarSign, Users,
   Shield, BarChart3, MessageSquare, Gift, AlertTriangle,
-  CheckCircle2, Images,
+  CheckCircle2, Images, Scooter,
 } from 'lucide-react'
 
 const ROLES_TODOS = ['vendedor', 'despachador', 'almacenista', 'contabilidad', 'administrador', 'director', 'admin']
@@ -194,11 +194,13 @@ export const MODULOS = {
       ],
     },
   ],
-  // Seis colas independientes en vez de un pipeline de 5 tabs. Cada cola es su
+  // Colas independientes en vez de un pipeline de 5 tabs. Cada cola es su
   // propia página y su propio contador de trabajo (`contador` = clave del badge
   // que devuelve GET /staff/badges). `direcciones` NO lleva contador (datos
   // maestros, no trabajo pendiente) y `completadas` tampoco (es historial, no
-  // cola). El despachador ve SOLO `envios` (decisión del dueño 2026-09-30).
+  // cola). Despacho se partió en dos colas disjuntas por tipo_envio (2026-10-07):
+  // `delivery` (moto) y `envios` (agencia). El despachador ve SOLO las de
+  // Despacho (decisión del dueño 2026-09-30, confirmada 2026-10-07).
   logistica: [
     {
       titulo: 'Entrada',
@@ -249,11 +251,20 @@ export const MODULOS = {
       titulo: 'Despacho',
       items: [
         {
+          id: 'delivery',
+          to: '/staff/delivery',
+          icono: Scooter,
+          texto: 'Delivery',
+          desc: 'Pedidos en moto: dirección, contacto y entrega del día',
+          roles: ['despachador', 'administrador', 'director', 'admin'],
+          contador: 'delivery',
+        },
+        {
           id: 'envios',
           to: '/staff/envios',
           icono: Truck,
-          texto: 'Envíos',
-          desc: 'Cola de pedidos en ruta para el motorizado: dirección, contacto y entrega',
+          texto: 'Envíos por agencia',
+          desc: 'Envíos nacionales por agencia: prepara la guía y despacha',
           roles: ['despachador', 'administrador', 'director', 'admin'],
           contador: 'envios',
         },
