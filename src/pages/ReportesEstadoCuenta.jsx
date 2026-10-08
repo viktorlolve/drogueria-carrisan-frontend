@@ -17,6 +17,7 @@ import LayoutPaginaPrincipal from '../components/paginas-principales/Layoutpagin
 import { NAV_UNIFICADO } from '../components/paginas-principales/NavUnificado'
 import { formatearUSD } from '../utils/formato'
 // Base visual compartida con el resto del estado de cuenta (clases ecb-*)
+import './EstadoCuenta.css'
 import './ReportesEstadoCuenta.css'
 
 // ---------------------------------------------------------------

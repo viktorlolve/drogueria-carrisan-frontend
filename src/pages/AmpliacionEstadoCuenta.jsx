@@ -23,6 +23,7 @@ import { NAV_UNIFICADO } from '../components/paginas-principales/NavUnificado'
 import financiamientoInfo, { UMBRALES_AMPLIACION } from '../data/financiamiento'
 import { formatearUSD } from '../utils/formato'
 // Base visual compartida con el resto del estado de cuenta (clases ecb-*)
+import './EstadoCuenta.css'
 import './AmpliacionEstadoCuenta.css'
 
 // ---------------------------------------------------------------

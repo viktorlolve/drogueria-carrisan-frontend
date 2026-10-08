@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { formatearUSD } from '../../utils/formato'
 // Base visual compartida con la página principal de Estado de cuenta (clases ecb-*)
+import '../../pages/EstadoCuenta.css'
 import './HistorialBancario.css'
 
 // ---------------------------------------------------------------
