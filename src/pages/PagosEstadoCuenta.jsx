@@ -1,30 +1,35 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Stat } from '@chakra-ui/react'
-import { DollarSign, Download, Search } from 'lucide-react'
+import { Banknote, CalendarClock } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/axios'
 import LayoutPaginaPrincipal from '../components/paginas-principales/Layoutpaginaprincipal'
 import { NAV_UNIFICADO } from '../components/paginas-principales/NavUnificado'
+import HistorialBancario from '../components/estado-cuenta/HistorialBancario'
 import PagoClienteModal from '../components/PagoClienteModal'
 import generarComprobantePagoPDF from '../utils/generarComprobantePagoPDF'
-import './EstadoCuenta.css'
+import { formatearFechaCorta } from '../utils/formato'
 
 // ---------------------------------------------------------------
-// Historial de pagos — mismo tratamiento que FacturasEstadoCuenta.jsx:
-// LayoutPaginaPrincipal + clases .ec-* compartidas con EstadoCuenta.jsx.
+// Historial de pagos — interfaz estilo banca en línea.
+// La UI vive en HistorialBancario (compartida con FacturasEstadoCuenta);
+// acá solo se cargan y normalizan los datos.
 // ---------------------------------------------------------------
 
-import { formatearUSD } from '../utils/formato'
+// Los pagos del historial ya pasaron verificación (PagoClienteModal los
+// presenta como "Pago verificado"), así que ese es el estado por defecto.
+const ESTADOS_PAGO = {
+  verificado: { label: 'Verificado', tono: 'ok' },
+  registrado: { label: 'Registrado', tono: 'neutro' },
+}
 
-function claveGrupoFecha(fecha) {
-  const hoy = new Date()
-  const d = new Date(fecha)
-  const esMismoDia = (a, b) => a.toDateString() === b.toDateString()
-  const ayer = new Date(hoy)
-  ayer.setDate(hoy.getDate() - 1)
-  if (esMismoDia(d, hoy)) return 'Hoy'
-  if (esMismoDia(d, ayer)) return 'Ayer'
-  return d.toLocaleDateString('es-VE', { day: '2-digit', month: 'long', year: 'numeric' })
+function chipDePago(estado) {
+  const clave = estado || 'verificado'
+  return (
+    ESTADOS_PAGO[clave] || {
+      label: String(clave).charAt(0).toUpperCase() + String(clave).slice(1),
+      tono: 'neutro',
+    }
+  )
 }
 
 export default function PagosEstadoCuenta() {
@@ -33,45 +38,57 @@ export default function PagosEstadoCuenta() {
   const [cliente, setCliente] = useState(null)
   const [facturas, setFacturas] = useState([])
   const [cargando, setCargando] = useState(true)
-  const [busqueda, setBusqueda] = useState('')
+  const [error, setError] = useState(false)
+  const [intento, setIntento] = useState(0)
   const [pagoSeleccionado, setPagoSeleccionado] = useState(null)
 
   useEffect(() => {
-    api.get(`/clientes/${user.id}/estado-cuenta`)
-      .then(({ data }) => {
+    let cancelado = false
+
+    async function cargar() {
+      try {
+        const { data } = await api.get(`/clientes/${user.id}/estado-cuenta`)
+        if (cancelado) return
         setPagos(data.pagos || [])
         setCliente(data.cliente || null)
         setFacturas(data.facturas || [])
-      })
-      .finally(() => setCargando(false))
-  }, [user.id])
+      } catch (err) {
+        console.error(err)
+        if (!cancelado) setError(true)
+      } finally {
+        if (!cancelado) setCargando(false)
+      }
+    }
 
-  const pagosFiltrados = useMemo(() => {
-    if (!busqueda.trim()) return pagos
-    const termino = busqueda.trim().toLowerCase()
-    return pagos.filter((p) =>
-      `${p.id}`.toLowerCase().includes(termino) || `${p.monto}`.includes(termino)
-    )
-  }, [pagos, busqueda])
+    cargar()
+    return () => { cancelado = true }
+  }, [user.id, intento])
 
-  const gruposPorFecha = useMemo(() => {
-    const grupos = {}
-    pagosFiltrados.forEach((p) => {
-      const clave = claveGrupoFecha(p.created_at)
-      if (!grupos[clave]) grupos[clave] = []
-      grupos[clave].push(p)
-    })
-    return grupos
-  }, [pagosFiltrados])
-
-  const kpis = useMemo(() => {
-    const total = pagos.reduce((sum, p) => sum + Number(p.monto), 0)
-    return { total, cantidad: pagos.length }
-  }, [pagos])
-
-  async function exportarPDF(pago) {
-    await generarComprobantePagoPDF({ pago, cliente, facturas })
+  function reintentar() {
+    setError(false)
+    setCargando(true)
+    setIntento((n) => n + 1)
   }
+
+  const items = useMemo(
+    () =>
+      pagos.map((p) => ({
+        key: `pago-${p.id}`,
+        raw: p,
+        fecha: p.created_at,
+        titulo: `Pago #${p.id}`,
+        extra: null,
+        monto: Number(p.monto || 0),
+        chip: chipDePago(p.estado),
+        textoBusqueda: `pago ${p.id} ${p.monto}`.toLowerCase(),
+      })),
+    [pagos]
+  )
+
+  const ultimoPago = useMemo(() => {
+    const fechas = pagos.map((p) => p.created_at).filter(Boolean).sort()
+    return fechas.length ? fechas[fechas.length - 1] : null
+  }, [pagos])
 
   return (
     <LayoutPaginaPrincipal
@@ -80,80 +97,40 @@ export default function PagosEstadoCuenta() {
       subtitulo="Todos los pagos registrados en tu cuenta"
       nav={NAV_UNIFICADO}
     >
-      <div className="ec-dashboard">
-        {cargando ? (
-          <div className="ec-estado-cargando">
-            <p>Cargando pagos…</p>
-          </div>
-        ) : (
-          <>
-            <section className="ec-kpis">
-              <Stat.Root className="ec-kpi">
-                <Stat.Label className="ec-kpi__label">Total pagado</Stat.Label>
-                <Stat.ValueText className="ec-kpi__valor">{formatearUSD(kpis.total)}</Stat.ValueText>
-              </Stat.Root>
-              <Stat.Root className="ec-kpi">
-                <Stat.Label className="ec-kpi__label">Pagos registrados</Stat.Label>
-                <Stat.ValueText className="ec-kpi__valor">{kpis.cantidad}</Stat.ValueText>
-              </Stat.Root>
-            </section>
-
-            <section className="ec-movimientos">
-              <div className="ec-movimientos__toolbar">
-                <div className="ec-buscador">
-                  <Search size={18} />
-                  <input
-                    type="text"
-                    placeholder="Buscar por # o monto"
-                    value={busqueda}
-                    onChange={(e) => setBusqueda(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {Object.keys(gruposPorFecha).length === 0 ? (
-                <p className="ec-movimientos__vacio">Aún no tienes pagos registrados</p>
-              ) : (
-                Object.entries(gruposPorFecha).map(([fechaLabel, items]) => (
-                  <div key={fechaLabel} className="ec-grupo-fecha">
-                    <p className="ec-grupo-fecha__titulo">{fechaLabel}</p>
-                    <ul className="ec-movimientos__lista">
-                      {items.map((pago) => (
-                        <li
-                          key={pago.id}
-                          className="ec-movimiento"
-                          onClick={() => setPagoSeleccionado(pago)}
-                        >
-                          <div className="ec-movimiento__icono ec-movimiento__icono--pago">
-                            <DollarSign size={18} />
-                          </div>
-                          <div className="ec-movimiento__info">
-                            <span className="ec-movimiento__titulo">Pago #{pago.id}</span>
-                            <span className="ec-badge ec-badge--registrado">registrado</span>
-                          </div>
-                          <strong className="ec-movimiento__monto ec-movimiento__monto--verde">
-                            +{formatearUSD(pago.monto)}
-                          </strong>
-                          <button
-                            className="ec-movimiento__descarga"
-                            onClick={(e) => { e.stopPropagation(); exportarPDF(pago) }}
-                            aria-label="Descargar comprobante"
-                          >
-                            <Download size={16} />
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))
-              )}
-            </section>
-          </>
-        )}
-      </div>
+      <HistorialBancario
+        tipo="pago"
+        items={items}
+        cargando={cargando}
+        error={error}
+        onReintentar={reintentar}
+        hero={{
+          etiqueta: 'Total pagado',
+          Icono: Banknote,
+          singular: 'pago',
+          plural: 'pagos',
+          listaLabel: 'Pagos',
+          errorTitulo: 'No pudimos cargar tus pagos',
+          extras: ultimoPago
+            ? [{ Icono: CalendarClock, texto: `Último pago: ${formatearFechaCorta(ultimoPago)}` }]
+            : [],
+          cta: { to: '/pagos', label: 'Reportar pago' },
+        }}
+        vacio={{
+          titulo: 'Aún no tienes pagos registrados',
+          texto: 'Tus pagos aparecerán aquí una vez que los verifiquemos.',
+          cta: { to: '/pagos', label: 'Reportar un pago' },
+        }}
+        onAbrir={setPagoSeleccionado}
+        onDescargar={(pago) => generarComprobantePagoPDF({ pago, cliente, facturas })}
+      />
 
       {pagoSeleccionado && (
-        <PagoClienteModal pago={pagoSeleccionado} cliente={cliente} facturas={facturas} onClose={() => setPagoSeleccionado(null)} />
+        <PagoClienteModal
+          pago={pagoSeleccionado}
+          cliente={cliente}
+          facturas={facturas}
+          onClose={() => setPagoSeleccionado(null)}
+        />
       )}
     </LayoutPaginaPrincipal>
   )

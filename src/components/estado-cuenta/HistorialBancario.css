@@ -1,0 +1,53 @@
+/* Historial bancario (Facturas / Pagos). Extiende las clases ecb-* de EstadoCuentaPrincipal.css */
+
+.ech-hero { gap: 14px; padding: 18px 18px 16px; }
+.ech-hero .ecb-cifra { font-size: 2.2rem; }
+
+.ech-hero__pie {
+  gap: 12px;
+  padding-top: 12px;
+}
+.ech-hero__extras { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.ech-hero__cta {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 10px;
+  background: #fff;
+  color: #1A1A3A;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform 0.14s ease, background 0.14s ease;
+}
+.ech-hero__cta:hover { background: #EAF1FF; }
+.ech-hero__cta:active { transform: scale(0.97); }
+
+/* Encabezado de mes con subtotal */
+.ech-mes {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.8rem;
+}
+.ech-mes__subtotal {
+  font-weight: 800;
+  color: #1A1A3A;
+  font-size: 0.8rem;
+}
+
+.ech-btn-link { text-decoration: none; margin-top: 4px; }
+
+.ech-skel-hero { height: 190px; border-radius: 22px; }
+
+@media (min-width: 640px) {
+  .ech-hero { padding: 22px 26px 18px; }
+  .ech-hero .ecb-cifra { font-size: 2.7rem; }
+  .ech-hero__pie { flex-direction: row; align-items: center; justify-content: space-between; }
+}

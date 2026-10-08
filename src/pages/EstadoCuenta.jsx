@@ -25,6 +25,7 @@ import { useAuth } from '../context/AuthContext'
 import api from '../api/axios'
 import OrdenClienteModal from '../components/OrdenClienteModal'
 import PagoClienteModal from '../components/PagoClienteModal'
+import FacturaClienteModal from '../components/FacturaClienteModal'
 import LayoutPaginaPrincipal from '../components/paginas-principales/Layoutpaginaprincipal'
 import { NAV_UNIFICADO } from '../components/paginas-principales/NavUnificado'
 import generarFacturaPDF from '../utils/generarFacturaPDF'
@@ -297,7 +298,7 @@ function AccionRapida({ icono: Icono, label, to, onClick, primaria = false, badg
 // ---------------------------------------------------------------
 // Extracto de movimientos
 // ---------------------------------------------------------------
-function Extracto({ movimientos, ocultar, onVerOrden, onVerPago, onExportarFactura, onExportarComprobante, onPagarOrden }) {
+function Extracto({ movimientos, ocultar, onVerOrden, onVerFactura, onVerPago, onExportarFactura, onExportarComprobante, onPagarOrden }) {
   const [filtro, setFiltro] = useState('todos')
   const [busqueda, setBusqueda] = useState('')
   const [visibles, setVisibles] = useState(PASO_EXTRACTO)
@@ -352,6 +353,7 @@ function Extracto({ movimientos, ocultar, onVerOrden, onVerPago, onExportarFactu
 
   function abrir(m) {
     if (m.tipo === 'pago') onVerPago(m.raw)
+    else if (m.tipo === 'factura') onVerFactura(m.raw)
     else onVerOrden(m.raw)
   }
 
@@ -546,6 +548,7 @@ export default function EstadoCuenta() {
   const [intento, setIntento] = useState(0)
   const [ordenSeleccionada, setOrdenSeleccionada] = useState(null)
   const [pagoSeleccionado, setPagoSeleccionado] = useState(null)
+  const [facturaSeleccionada, setFacturaSeleccionada] = useState(null)
   const [exportando, setExportando] = useState(false)
   const [errorPdf, setErrorPdf] = useState('')
   const [ocultar, setOcultar] = useState(() => {
@@ -678,7 +681,7 @@ export default function EstadoCuenta() {
       subtitulo: formatearHora(p.created_at),
       monto: Number(p.monto || p.monto_facturado || p.total_usd || 0),
       signo: '+',
-      chip: chipDeEstado(p.estado),
+      chip: chipDeEstado(p.estado || 'verificado'),
       pagable: false,
     }))
 
@@ -781,6 +784,7 @@ export default function EstadoCuenta() {
               movimientos={movimientos}
               ocultar={ocultar}
               onVerOrden={setOrdenSeleccionada}
+              onVerFactura={setFacturaSeleccionada}
               onVerPago={setPagoSeleccionado}
               onExportarFactura={(f) => exportarFacturaPDF(f, datos.cliente)}
               onExportarComprobante={(p) => exportarComprobantePago(p, datos.cliente, datos.facturas)}
@@ -801,6 +805,13 @@ export default function EstadoCuenta() {
       )}
 
       {ordenSeleccionada && <OrdenClienteModal orden={ordenSeleccionada} onClose={() => setOrdenSeleccionada(null)} />}
+      {facturaSeleccionada && (
+        <FacturaClienteModal
+          factura={facturaSeleccionada}
+          cliente={datos?.cliente}
+          onClose={() => setFacturaSeleccionada(null)}
+        />
+      )}
       {pagoSeleccionado && (
         <PagoClienteModal
           pago={pagoSeleccionado}

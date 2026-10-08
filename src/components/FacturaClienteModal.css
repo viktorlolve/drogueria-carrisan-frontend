@@ -1,0 +1,125 @@
+/* Detalle de factura. Reutiliza ocm-overlay / ocm-content / ocm-close / ocm-header de OrdenClienteModal.css */
+
+.fcm-monto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 16px;
+  margin-bottom: 18px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #1A1A3A 0%, #272757 100%);
+  color: #fff;
+}
+.fcm-monto__label {
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.68);
+}
+.fcm-monto__valor {
+  font-size: 1.9rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.fcm-bloque { margin-bottom: 18px; }
+.fcm-titulo {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.fcm-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.fcm-chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #EAF1FF;
+  color: #0052DC;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.fcm-items { list-style: none; margin: 0; padding: 0; }
+.fcm-items li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #F0F1F6;
+  font-size: 0.88rem;
+}
+.fcm-items li:last-child { border-bottom: 0; }
+.fcm-items__nombre { color: #1A1A3A; font-weight: 600; min-width: 0; }
+.fcm-items__nombre small { margin-left: 6px; color: #64748b; font-weight: 600; }
+.fcm-items__monto {
+  flex-shrink: 0;
+  font-weight: 700;
+  color: #1A1A3A;
+  font-variant-numeric: tabular-nums;
+}
+
+.fcm-vacio {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: #F6F7FB;
+  color: #5B6178;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+.fcm-vacio svg { flex-shrink: 0; margin-top: 1px; }
+
+.fcm-nota { margin: 0; font-size: 0.88rem; line-height: 1.5; color: #475569; }
+
+.fcm-verificacion {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 18px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #F6F7FB;
+  font-size: 0.74rem;
+  color: #5B6178;
+}
+.fcm-verificacion code {
+  font-family: 'Courier New', monospace;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #1A1A3A;
+  word-break: break-all;
+}
+
+.fcm-error { margin: 0 0 10px; font-size: 0.82rem; font-weight: 600; color: #B3261E; }
+
+.fcm-btn {
+  width: 100%;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 12px;
+  background: #0052DC;
+  color: #fff;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+.fcm-btn:hover:not(:disabled) { background: #0046BD; }
+.fcm-btn:disabled { opacity: 0.7; cursor: progress; }
+.fcm-btn:focus-visible { outline: 2px solid #0052DC; outline-offset: 2px; }
+
+.fcm-giro { animation: fcm-giro 0.8s linear infinite; }
+@keyframes fcm-giro { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .fcm-giro { animation: none; } }
