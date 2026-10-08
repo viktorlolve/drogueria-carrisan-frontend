@@ -31,7 +31,6 @@ import { NAV_UNIFICADO } from '../components/paginas-principales/NavUnificado'
 import generarFacturaPDF from '../utils/generarFacturaPDF'
 import generarComprobantePagoPDF from '../utils/generarComprobantePagoPDF'
 import { formatearUSD, formatearFechaCorta } from '../utils/formato'
-import './EstadoCuentaPrincipal.css'
 
 // ---------------------------------------------------------------
 // Estado de Cuenta — interfaz estilo banca en línea.
@@ -44,7 +43,6 @@ import './EstadoCuentaPrincipal.css'
 //   3. Extracto de movimientos agrupado por fecha, con buscador y filtros.
 //   4. Columna lateral (desktop): ficha de la cuenta + comparativa mensual.
 //
-// Usa EstadoCuentaPrincipal.css (prefijo ecb-). EstadoCuenta.css sigue
 // existiendo porque Facturas/Pagos/Reportes/Ampliación todavía lo usan
 // y se rediseñan una por una después.
 // ---------------------------------------------------------------
