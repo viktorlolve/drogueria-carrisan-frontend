@@ -1,0 +1,397 @@
+/* Ampliación de línea de crédito. Extiende las clases ecb-* de EstadoCuentaPrincipal.css
+   Los modales se montan en document.body (portal), por eso .eca-portal declara sus propias variables. */
+
+.eca-portal {
+  --eca-azul: #0052DC;
+  --eca-azul-suave: #EAF1FF;
+  --eca-indigo: #1A1A3A;
+  --eca-teal: #12A594;
+  --eca-borde: #E6E8F0;
+  --eca-apagado: #5B6178;
+  --eca-error: #B3261E;
+  --eca-error-suave: #FDECEC;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: var(--eca-indigo);
+}
+
+/* ---------- Tarjeta ---------- */
+.eca-hero { gap: 16px; }
+
+.eca-oportunidad {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(94, 224, 206, 0.14);
+  border: 1px solid rgba(94, 224, 206, 0.35);
+}
+.eca-oportunidad__texto { display: flex; flex-direction: column; gap: 4px; }
+.eca-oportunidad__texto > span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+.eca-oportunidad .eca-oportunidad__cifra { font-size: 1.9rem; color: #5EE0CE; }
+.eca-oportunidad .ecb-cifra__moneda,
+.eca-oportunidad .ecb-cifra__dec { color: rgba(94, 224, 206, 0.8); }
+.eca-oportunidad__texto small { font-size: 0.78rem; color: rgba(255, 255, 255, 0.78); line-height: 1.4; }
+
+.eca-hero__cta {
+  align-self: stretch;
+  height: 46px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 12px;
+  background: #fff;
+  color: #1A1A3A;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.14s ease, background 0.14s ease;
+}
+.eca-hero__cta:hover { background: #EAF1FF; }
+.eca-hero__cta:active { transform: scale(0.98); }
+.ecb-root .eca-hero__cta:focus-visible { outline-color: #fff; }
+
+.eca-nota-hero {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.88);
+}
+.eca-nota-hero strong { color: #fff; }
+
+.eca-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+.eca-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+}
+.eca-stat__label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.66);
+}
+.eca-stat__valor { font-size: 0.98rem; font-weight: 800; overflow-wrap: anywhere; }
+
+/* ---------- Grid de tarjetas ---------- */
+.eca-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.eca-lateral { display: flex; flex-direction: column; gap: 16px; }
+
+.eca-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 16px;
+  background: #fff;
+  border: 1px solid var(--ecb-borde);
+  border-radius: 18px;
+  box-shadow: 0 1px 2px rgba(26, 26, 58, 0.04);
+}
+.eca-card__titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1.02rem;
+  font-weight: 800;
+}
+.eca-card__titulo svg { color: var(--ecb-azul); }
+.eca-card__intro { margin: 0; font-size: 0.84rem; line-height: 1.5; color: var(--ecb-apagado); }
+
+/* ---------- Niveles ---------- */
+.eca-niveles { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+
+.eca-nivel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 13px 14px;
+  border: 1.5px solid var(--ecb-borde);
+  border-radius: 14px;
+  background: #fff;
+}
+.eca-nivel--alcanzado { background: #F4FBF9; border-color: #BFE6DF; }
+.eca-nivel--actual { border-color: var(--ecb-teal); box-shadow: 0 0 0 3px var(--ecb-teal-suave); }
+
+.eca-nivel__cab { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.eca-nivel__badge {
+  min-width: 54px;
+  padding: 5px 10px;
+  border-radius: 10px;
+  background: var(--ecb-azul-suave);
+  color: var(--ecb-azul);
+  font-size: 0.92rem;
+  font-weight: 800;
+  text-align: center;
+}
+.eca-nivel--alcanzado .eca-nivel__badge { background: var(--ecb-teal-suave); color: var(--ecb-ok); }
+.eca-nivel__umbral { flex: 1; min-width: 150px; font-size: 0.82rem; color: var(--ecb-apagado); }
+.eca-nivel__umbral strong { color: var(--ecb-indigo); }
+.eca-nivel__cab .ecb-chip { gap: 4px; }
+
+.eca-nivel__pista { height: 8px; border-radius: 999px; background: #EEF0F6; overflow: hidden; }
+.eca-nivel__relleno {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2B77F0, var(--ecb-azul));
+  transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.eca-nivel--alcanzado .eca-nivel__relleno { background: linear-gradient(90deg, #34D3BE, var(--ecb-teal)); }
+
+/* ---------- Requisitos ---------- */
+.eca-requisitos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.eca-requisitos li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid #F0F1F6;
+}
+.eca-requisitos li:first-child { border-top: 0; padding-top: 2px; }
+.eca-requisitos svg { flex-shrink: 0; margin-top: 1px; }
+.eca-requisitos__ok { color: var(--ecb-teal); }
+.eca-requisitos__pendiente { color: #C4CADB; }
+.eca-requisitos strong { display: block; font-size: 0.9rem; font-weight: 700; }
+.eca-requisitos small { display: block; margin-top: 2px; font-size: 0.78rem; line-height: 1.4; color: var(--ecb-apagado); }
+
+/* ---------- FAQ (details/summary nativos) ---------- */
+.eca-faq { display: flex; flex-direction: column; }
+.eca-faq__item { border-top: 1px solid #F0F1F6; }
+.eca-faq__item:first-child { border-top: 0; }
+.eca-faq__item summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 0;
+  list-style: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.eca-faq__item summary::-webkit-details-marker { display: none; }
+.eca-faq__item summary svg { flex-shrink: 0; color: var(--ecb-apagado); transition: transform 0.2s ease; }
+.eca-faq__item[open] summary svg { transform: rotate(180deg); }
+.eca-faq__item summary:focus-visible { outline: 2px solid var(--ecb-azul); outline-offset: 2px; border-radius: 6px; }
+.eca-faq__item p { margin: 0 0 14px; font-size: 0.84rem; line-height: 1.55; color: var(--ecb-apagado); }
+
+/* ---------- Botones ---------- */
+.eca-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 20px;
+  border-radius: 12px;
+  border: 1.5px solid transparent;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.12s ease, opacity 0.18s ease;
+}
+.eca-btn:active:not(:disabled) { transform: scale(0.985); }
+.eca-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.eca-btn--primario { background: var(--ecb-azul, #0052DC); color: #fff; }
+.eca-btn--primario:hover:not(:disabled) { background: #0046BD; }
+.eca-btn--secundario { background: #fff; color: #1A1A3A; border-color: #E6E8F0; }
+.eca-btn--secundario:hover:not(:disabled) { border-color: #B9C2DB; }
+.eca-btn:focus-visible { outline: 2px solid #0052DC; outline-offset: 2px; }
+
+/* ---------- Confirmación (portal) ---------- */
+.eca-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(26, 26, 58, 0.5);
+  backdrop-filter: blur(2px);
+  animation: eca-fundido 0.2s ease both;
+}
+.eca-modal {
+  position: relative;
+  width: 100%;
+  max-height: 92vh;
+  max-height: 92dvh;
+  overflow-y: auto;
+  padding: 28px 22px calc(22px + env(safe-area-inset-bottom, 0px));
+  text-align: center;
+  background: #fff;
+  border-radius: 22px 22px 0 0;
+  box-shadow: 0 -8px 40px rgba(26, 26, 58, 0.25);
+  animation: eca-sheet 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.eca-modal__cerrar {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: #F1F3F8;
+  color: var(--eca-apagado);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.eca-modal__cerrar:hover:not(:disabled) { background: #E4E7F0; }
+.eca-modal__cerrar:disabled { opacity: 0.5; cursor: not-allowed; }
+.eca-modal__cerrar:focus-visible { outline: 2px solid var(--eca-azul); outline-offset: 2px; }
+
+.eca-modal__icono {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  background: var(--eca-azul-suave);
+  color: var(--eca-azul);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.eca-modal__titulo { margin: 0 0 8px; font-size: 1.2rem; font-weight: 800; }
+.eca-modal__texto { margin: 0 0 18px; font-size: 0.88rem; line-height: 1.5; color: var(--eca-apagado); }
+.eca-modal__texto strong { color: var(--eca-indigo); }
+
+.eca-comparacion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px 10px;
+  border-radius: 16px;
+  background: #F6F7FB;
+}
+.eca-comparacion > div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.eca-comparacion span { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--eca-apagado); }
+.eca-comparacion strong { font-size: 1.05rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.eca-comparacion__nueva { color: var(--eca-teal); }
+.eca-comparacion__flecha { flex-shrink: 0; color: #8A90A8; }
+.eca-modal__aumento { margin: 10px 0 0; font-size: 0.82rem; font-weight: 700; color: var(--eca-teal); }
+
+.eca-modal__error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--eca-error-suave);
+  color: var(--eca-error);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: left;
+  line-height: 1.4;
+}
+.eca-modal__error svg { flex-shrink: 0; margin-top: 1px; }
+
+.eca-modal__acciones { display: flex; gap: 10px; margin-top: 20px; }
+.eca-modal__acciones .eca-btn { flex: 1; }
+
+/* ---------- Resultado ---------- */
+.eca-resultado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 34px 20px 26px;
+  background: #fff;
+  border: 1px solid var(--ecb-borde);
+  border-radius: 22px;
+  box-shadow: 0 1px 2px rgba(26, 26, 58, 0.04);
+  max-width: 520px;
+  width: 100%;
+  margin: 0 auto;
+}
+.eca-resultado__check { width: 76px; height: 76px; }
+.eca-resultado__circulo {
+  stroke: var(--ecb-teal);
+  stroke-width: 3;
+  stroke-dasharray: 151;
+  stroke-dashoffset: 151;
+  animation: eca-trazo 0.6s ease forwards;
+}
+.eca-resultado__tilde {
+  stroke: var(--ecb-teal);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: eca-trazo 0.4s ease 0.5s forwards;
+}
+.eca-resultado h2 { margin: 14px 0 6px; font-size: 1.4rem; font-weight: 800; }
+.eca-resultado__texto { margin: 0 0 6px; font-size: 0.88rem; color: var(--ecb-apagado); }
+.eca-resultado .eca-resultado__cifra { font-size: 2.6rem; color: var(--ecb-indigo); }
+.eca-resultado .eca-resultado__cifra .ecb-cifra__moneda,
+.eca-resultado .eca-resultado__cifra .ecb-cifra__dec { color: var(--ecb-apagado); }
+.eca-resultado__detalle { margin: 8px 0 22px; font-size: 0.84rem; font-weight: 600; color: var(--ecb-teal); }
+.eca-resultado__cta { width: 100%; }
+
+.eca-skel-hero { height: 300px; border-radius: 22px; }
+
+@keyframes eca-fundido { from { opacity: 0; } to { opacity: 1; } }
+@keyframes eca-sheet { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes eca-pop { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: none; } }
+@keyframes eca-trazo { to { stroke-dashoffset: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .eca-overlay, .eca-modal { animation: none; }
+  .eca-resultado__circulo, .eca-resultado__tilde { animation: none; stroke-dashoffset: 0; }
+  .eca-nivel__relleno, .eca-faq__item summary svg { transition: none; }
+}
+
+/* ---------- Tablet / Desktop ---------- */
+@media (min-width: 640px) {
+  .eca-oportunidad { flex-direction: row; align-items: center; justify-content: space-between; }
+  .eca-hero__cta { align-self: center; flex-shrink: 0; }
+  .eca-oportunidad .eca-oportunidad__cifra { font-size: 2.2rem; }
+  .eca-card { padding: 22px; }
+  .eca-stat__valor { font-size: 1.1rem; }
+
+  .eca-overlay { align-items: center; padding: 24px; }
+  .eca-modal {
+    max-width: 440px;
+    border-radius: 22px;
+    padding-bottom: 22px;
+    box-shadow: 0 24px 60px rgba(26, 26, 58, 0.3);
+    animation: eca-pop 0.22s ease both;
+  }
+  .eca-resultado { padding: 42px 36px 32px; }
+}
+
+@media (min-width: 1000px) {
+  .eca-grid { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 20px; }
+}
