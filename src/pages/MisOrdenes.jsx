@@ -8,20 +8,7 @@ import { OrdenCard, OrdenCardSkeleton } from '../components/OrdenCard'
 import { normalizarEstado } from '../config/estadosOrden'
 import './MisOrdenes.css'
 
-// ---------------------------------------------------------------
-// Mis Órdenes — dos niveles:
-//   1. Grupos: Activos (pedido_creado, preparando, listo_para_retiro,
-//      enviado) vs Historial (entregado, retirado, cancelado).
-//   2. Dentro de cada grupo, pills de filtro sobre esas ordenes.
-// "Pendiente de Pago" es una CONDICIÓN del pago (contado no verificado),
-// no un order.status — por eso no vive en estadosOrden.js (ver la regla
-// ORDER STATUS ≠ PAYMENT STATUS en el AGENTS raíz).
-//
-// Cada orden se pinta con <OrdenCard>, la MISMA tarjeta del carrusel de
-// Mi Cuenta (src/components/OrdenCard.jsx): aquí en grid, allá en fila
-// horizontal. Solo esta página le pasa `aviso` — el pill "Pago
-// pendiente" — porque el pago es su dimensión propia y la card no la
-// conoce. Los labels y colores del estado salen de estadosOrden.js.
+
 // ---------------------------------------------------------------
 
 // Estados que ya cerraron su ciclo: viven en la pestaña Historial.
