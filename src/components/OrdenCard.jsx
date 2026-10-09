@@ -4,24 +4,6 @@ import { getEstadoVisual } from '../config/estadosOrden'
 import { formatearMonto, formatearFechaCorta } from '../utils/formato'
 import './OrdenCard.css'
 
-// ---------------------------------------------------------------
-// OrdenCard — la tarjeta de un pedido, compartida por el carrusel de
-// "Tus pedidos" (Mi Cuenta) y el grid de "Mis Órdenes".
-//
-// Cuatro rangos, un trabajo cada uno:
-//   1. identidad → "Orden #123" + fecha de creación (sello dd/mm/yy)
-//   2. hechos    → envío · artículos válidos · última actualización · quién
-//   3. dinero    → el total, en línea propia (nunca compite con el estado)
-//   4. estado    → banda a sangre con el label de estadosOrden.js
-//
-// El label y los colores del estado SIEMPRE salen de getEstadoVisual()
-// (fuente única: src/config/estadosOrden.js). Nada de "pago pendiente":
-// es una condición de estado_pago, no un estado logístico — por eso el
-// consumidor la pasa como `aviso` y la card no sabe de pagos.
-//
-// La card NO trae ancho: el contenedor decide (carrusel horizontal en
-// Mi Cuenta, grid en Mis Órdenes). Solo define su propia caja.
-// ---------------------------------------------------------------
 
 const ETIQUETAS_ENVIO = {
   delivery: 'Delivery',
