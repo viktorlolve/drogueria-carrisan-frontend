@@ -2,7 +2,19 @@ import { useState, useEffect, useMemo } from 'react'
 import api from '../api/axios'
 import { useAuth } from '../context/AuthContext'
 import { Link, useNavigate } from 'react-router-dom'
-import { Package, ArrowRight } from 'lucide-react'
+import {
+  Package,
+  ArrowRight,
+  History,
+  LayoutGrid,
+  ClipboardList,
+  Wallet,
+  Boxes,
+  Truck,
+  Store,
+  CheckCircle,
+  XCircle,
+} from 'lucide-react'
 import LayoutPaginaPrincipal from '../components/paginas-principales/Layoutpaginaprincipal'
 import { OrdenCard, OrdenCardSkeleton } from '../components/OrdenCard'
 import { normalizarEstado } from '../config/estadosOrden'
@@ -27,21 +39,21 @@ function requierePago(orden) {
 // Pills por grupo. El orden de definición es el orden de la UI y religa el
 // ciclo de vida (todas la tests se evalúan sobre el estado NORMALIZADO).
 const FILTROS_ACTIVOS = [
-  { id: 'pedido_creado', label: 'Orden Creada', test: (o) => normalizarEstado(o.estado) === 'pedido_creado' },
-  { id: 'pendiente_pago', label: 'Pendiente de Pago', test: requierePago },
-  { id: 'preparando', label: 'Preparando', test: (o) => normalizarEstado(o.estado) === 'preparando' },
-  { id: 'enviado', label: 'Enviados', test: (o) => normalizarEstado(o.estado) === 'enviado' },
-  { id: 'listo_para_retiro', label: 'Listo para retiro', test: (o) => normalizarEstado(o.estado) === 'listo_para_retiro' },
+  { id: 'pedido_creado', label: 'Orden Creada', icono: ClipboardList, test: (o) => normalizarEstado(o.estado) === 'pedido_creado' },
+  { id: 'pendiente_pago', label: 'Pendiente de Pago', icono: Wallet, test: requierePago },
+  { id: 'preparando', label: 'Preparando', icono: Boxes, test: (o) => normalizarEstado(o.estado) === 'preparando' },
+  { id: 'enviado', label: 'Enviados', icono: Truck, test: (o) => normalizarEstado(o.estado) === 'enviado' },
+  { id: 'listo_para_retiro', label: 'Listo para retiro', icono: Store, test: (o) => normalizarEstado(o.estado) === 'listo_para_retiro' },
 ]
 
 const FILTROS_HISTORIAL = [
-  { id: 'entregado', label: 'Entregados', test: (o) => ['entregado', 'retirado'].includes(normalizarEstado(o.estado)) },
-  { id: 'cancelado', label: 'Cancelados', test: (o) => normalizarEstado(o.estado) === 'cancelado' },
+  { id: 'entregado', label: 'Entregados', icono: CheckCircle, test: (o) => ['entregado', 'retirado'].includes(normalizarEstado(o.estado)) },
+  { id: 'cancelado', label: 'Cancelados', icono: XCircle, test: (o) => normalizarEstado(o.estado) === 'cancelado' },
 ]
 
 const GRUPOS = [
-  { id: 'activos', label: 'Activos', esDeGrupo: (o) => !esHistorial(o) },
-  { id: 'historial', label: 'Historial', esDeGrupo: esHistorial },
+  { id: 'activos', label: 'Activos', icono: Package, esDeGrupo: (o) => !esHistorial(o) },
+  { id: 'historial', label: 'Historial', icono: History, esDeGrupo: esHistorial },
 ]
 
 function MisOrdenes() {
@@ -136,6 +148,7 @@ function MisOrdenes() {
             <div className="mo-grupos">
               {GRUPOS.map((g) => {
                 const conteo = ordenes.filter(g.esDeGrupo).length
+                const Icono = g.icono
                 return (
                   <button
                     key={g.id}
@@ -143,6 +156,7 @@ function MisOrdenes() {
                     className={`mo-grupo ${grupo === g.id ? 'mo-grupo--activo' : ''}`}
                     onClick={() => cambiarGrupo(g.id)}
                   >
+                    <Icono size={16} className="mo-icono" aria-hidden="true" />
                     {g.label}
                     <span className="mo-grupo__count">{conteo}</span>
                   </button>
@@ -157,11 +171,13 @@ function MisOrdenes() {
                   className={`mo-filtro ${filtro === 'todos' ? 'mo-filtro--activo' : ''}`}
                   onClick={() => setFiltro('todos')}
                 >
+                  <LayoutGrid size={14} className="mo-icono" aria-hidden="true" />
                   Todos
                   <span className="mo-filtro__count">{ordenesDelGrupo.length}</span>
                 </button>
                 {filtrosDelGrupo.map((f) => {
                   const conteo = ordenesDelGrupo.filter(f.test).length
+                  const Icono = f.icono
                   return (
                     <button
                       key={f.id}
@@ -169,6 +185,7 @@ function MisOrdenes() {
                       className={`mo-filtro ${filtro === f.id ? 'mo-filtro--activo' : ''}`}
                       onClick={() => setFiltro(f.id)}
                     >
+                      <Icono size={14} className="mo-icono" aria-hidden="true" />
                       {f.label}
                       <span className="mo-filtro__count">{conteo}</span>
                     </button>
@@ -191,7 +208,6 @@ function MisOrdenes() {
                   <OrdenCard
                     key={orden.id}
                     orden={orden}
-                    mostrarCliente={!!user?.es_admin}
                     aviso={
                       requierePago(orden) && (
                         <span className="orden-card__alerta">Pago pendiente</span>

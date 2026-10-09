@@ -106,6 +106,18 @@
   background: rgba(255, 255, 255, 0.25);
 }
 
+/* --- Iconos de pestañas y filtros: cambian de color según activo --- */
+.mo-icono {
+  flex-shrink: 0;
+  color: var(--mo-brand);
+  transition: color 0.15s ease;
+}
+
+.mo-grupo--activo .mo-icono,
+.mo-filtro--activo .mo-icono {
+  color: #fff;
+}
+
 /* --- Pills de filtro dentro de cada tab --- */
 .mo-filtros {
   display: flex;

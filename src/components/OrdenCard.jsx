@@ -1,45 +1,36 @@
 import { Link } from 'react-router-dom'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Scooter, Store, Truck } from 'lucide-react'
 import { getEstadoVisual } from '../config/estadosOrden'
 import { formatearMonto, formatearFechaCorta } from '../utils/formato'
 import './OrdenCard.css'
 
 
-const ETIQUETAS_ENVIO = {
-  delivery: 'Delivery',
-  envio_nacional: 'Envío nacional',
-  retiro: 'Retiro en tienda',
-}
-
-// Última actualización SOLO si cae en otro día calendario que la creación:
-// el updated_at se toca al crear la orden, así que el mismo día es ruido.
-function fechaActualizacion(orden) {
-  const creada = orden.created_at ? new Date(orden.created_at) : null
-  const actualizada = orden.updated_at ? new Date(orden.updated_at) : null
-  if (!creada || Number.isNaN(creada.getTime())) return null
-  if (!actualizada || Number.isNaN(actualizada.getTime())) return null
-  const dia = (f) => `${f.getFullYear()}-${f.getMonth() + 1}-${f.getDate()}`
-  return dia(actualizada) === dia(creada) ? null : formatearFechaCorta(orden.updated_at)
+// Tipo de envío → etiqueta con icono y color (ver .orden-card__envio--<id>).
+const ENVIO_META = {
+  delivery: { label: 'Delivery', icono: Scooter },
+  envio_nacional: { label: 'Envío nacional', icono: Truck },
+  retiro: { label: 'Retiro en tienda', icono: Store },
 }
 
 // props:
-//   orden           — la orden de GET /orders
-//   mostrarCliente  — admin: agrega el nombre del titular como hecho
-//                     (para un cliente normal sería "vos misma", o sea ruido)
-//   aviso           — nodo opcional a la derecha del monto (ej. "Pago pendiente")
-export function OrdenCard({ orden, mostrarCliente = false, aviso = null }) {
+//   orden — la orden de GET /orders
+//   aviso — nodo opcional a la derecha del monto (ej. "Pago pendiente")
+export function OrdenCard({ orden, aviso = null }) {
   const estado = getEstadoVisual(orden.estado)
 
   const fechaCreacion = formatearFechaCorta(orden.created_at)
-  const fechaCambio = fechaActualizacion(orden)
 
   // Los ítems anulados no cuentan para la orden.
   const items = (orden.ordenes_items || []).filter((item) => item.anulado !== true)
   const itemsTexto = items.length === 1 ? '1 artículo' : `${items.length} artículos`
 
   const comprador = orden.sub_usuarios?.nombre
-  const cliente = mostrarCliente ? orden.users?.nombre : null
   const hayMonto = orden.total_usd !== null && orden.total_usd !== undefined
+
+  // Sin tipo_envio reconocido se asume retiro (mismo fallback que la UI previa).
+  const envioId = ENVIO_META[orden.tipo_envio] ? orden.tipo_envio : 'retiro'
+  const envio = ENVIO_META[envioId]
+  const EnvioIcono = envio.icono
 
   return (
     <Link to={`/orders/${orden.id}`} className="orden-card">
@@ -56,13 +47,16 @@ export function OrdenCard({ orden, mostrarCliente = false, aviso = null }) {
         </span>
       </div>
 
+      {/* 1b · tipo de envío — etiqueta debajo de la identidad */}
+      <span className={`orden-card__envio orden-card__envio--${envioId}`}>
+        <EnvioIcono size={13} aria-hidden="true" />
+        {envio.label}
+      </span>
+
       {/* 2 · hechos */}
       <div className="orden-card__facts">
-        <span>{ETIQUETAS_ENVIO[orden.tipo_envio] || ETIQUETAS_ENVIO.retiro}</span>
         {items.length > 0 && <span>{itemsTexto}</span>}
-        {fechaCambio && <span>Cambió {fechaCambio}</span>}
         {comprador && <span>Realizado por: {comprador}</span>}
-        {cliente && <span>Cliente: {cliente}</span>}
       </div>
 
       {/* 3 · dinero — línea propia, nunca recortada */}
