@@ -19,8 +19,18 @@ npm run preview  # Preview del build
 - Leaflet para mapas
 - Recharts para graficos/analytics
 - jsPDF + jspdf-autotable para PDFs de facturas/reportes
-- xlsx para exportar Excel
+- xlsx para exportar Excel (pinneado al CDN parcheado de SheetJS — ver abajo)
 - @dnd-kit para drag-and-drop (orden de prioridades, etc.)
+
+## Dependencias — seguridad (2026-10-12)
+
+Auditoría de `npm audit` tras el reporte de vulnerabilidades de Render. Cambios en `package.json` (**working tree, no commiteado**):
+
+- **`xlsx` pinneado** a `"https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"` (antes `^0.18.5`). La 0.18.5 de npm arrastra Prototype Pollution + ReDoS **sin fix publicado** en npm; la distribución oficial parcheada solo existe en el CDN de SheetJS (mismo pin que el backend). La API de lectura/escritura usada es idéntica.
+- **`overrides`: `{ "braces": "^3.0.3" }`** — fuerza `braces` parcheado en toda la cadena transitiva de build (`@chakra-ui/cli → globby → fast-glob → micromatch → braces`).
+- `npm audit` baja de **12 → 5** (todas high). Las 5 restantes son **`braces *` (GHSA-vfj7-8cjw-p6xm, stack-exhaustion DoS)** sin versión parcheada upstream y **solo deps de desarrollo/build** (`@chakra-ui/cli`), nunca en el bundle del navegador. La única "solución" que ofrece npm es `audit fix --force`, que **degrada `@chakra-ui/cli` a 2.5.8 (breaking)** — decidido NO hacerlo. Riesgo aceptado: requiere patrones glob controlados por un atacante en tiempo de build.
+- **Verificación**: `npm run lint` → 0 problemas. ⚠️ `npm run build` **falla por un WIP pre-existente ajeno a este cambio**: `src/pages/MisItems.jsx` (modificado, sin commit) importa `../components/mis-items/{BarraHerramientas,ComprarDeNuevo,Toast,useToast}` que **no existen** (el dir `src/components/mis-items/` solo tiene `HojaGuardarEnLista.jsx`, `ModalesLista.jsx`, `TarjetaProducto.jsx`). No lo introdujo la actualización de deps (los 5 errores son `UNRESOLVED_IMPORT` de ese archivo).
+
 
 ## Estructura src/
 
