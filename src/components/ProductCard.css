@@ -279,6 +279,11 @@
   font-size: 0.75rem;
   color: #74767c;
   margin: 0 0 6px;
+  line-height: 1.25;
+  /* Reserva SIEMPRE el alto de 2 líneas: el laboratorio con 1 o 2 líneas
+     no empuja el resto de la tarjeta hacia abajo. 2.5em = 2 × 1.25 (escala
+     solo cuando cambia el font-size, p.ej. en mobile). */
+  min-height: 2.5em;
 }
 
 /* ---------- Save with (placeholder) ---------- */

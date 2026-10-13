@@ -41,21 +41,12 @@ const urls = {
     lineahospitalariaa: `${BASE_URL}/lineahospitalariaa.png`,
     sacs: `${BASE_URL}/sacs.png`,
     farmapatria: `${BASE_URL}/farmapatria.gif`,
+    logoHorizontal: `${BASE_URL}/logodrogueria/logo%20color%20horizontal%20sin%20fondo.png`,
+    logoBlanco: `${BASE_URL}/logodrogueria/logo%20blanco%20sin%20fondo.png`,
+    miniLogoTeal: `${BASE_URL}/logodrogueria/mini%20logo%20blanco%20fondo%20teal.png`,
+    miniLogoAzul: `${BASE_URL}/logodrogueria/mini%20logo%20blanco%20fondo%20azul.png`,
 }
 
-
-const ImagePlaceholder = ({ label, className }) => {
-  return (
-    <div className={className} style={{ 
-      backgroundColor: '#e0e0e0', 
-      padding: '40px', 
-      textAlign: 'center',
-      color: '#888'
-    }}>
-      {label || 'Imagen'}
-    </div>
-  )
-}
  
 
 
@@ -653,8 +644,9 @@ function Landing() {
       {/* CABECERA */}
       <div className="landing-footer__header">
         <div className="landing-footer__brand-area">
-          <ImagePlaceholder
-            label="Logo"
+          <img
+            src={urls.logoHorizontal}
+            alt="Droguería Carrisan"
             className="landing-footer__logo"
           />
           <nav className="landing-footer__nav">
@@ -689,12 +681,14 @@ function Landing() {
         </div>
         {/* BADGES */}
         <div className="landing-footer__badges">
-          <ImagePlaceholder
-            label="Badge 1"
+          <img
+            src={urls.miniLogoTeal}
+            alt="Droguería Carrisan"
             className="landing-badge-img"
           />
-          <ImagePlaceholder
-            label="Badge 2"
+          <img
+            src={urls.miniLogoAzul}
+            alt="Droguería Carrisan"
             className="landing-badge-img"
           />
         </div>
@@ -779,8 +773,9 @@ function Landing() {
       </nav>
       {/* LOGO INFERIOR */}
       <div className="landing-footer__bottom-logo">
-        <ImagePlaceholder
-          label="Logo inferior"
+        <img
+          src={urls.logoBlanco}
+          alt="Droguería Carrisan"
           className="landing-footer__bottom-logo-img"
         />
       </div>

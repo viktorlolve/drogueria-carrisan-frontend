@@ -911,6 +911,8 @@
   margin: 0 0 18px;
   border: none;
   border-radius: 0;
+  object-fit: contain;
+  object-position: left center;
 }
 
 
@@ -1197,6 +1199,8 @@
   background: transparent;
 
   color: #ffffff;
+
+  object-fit: contain;
 }
 
 

@@ -92,6 +92,9 @@
   font-weight: 700;
   color: #14182A;
   line-height: 1.25;
+  /* Reserva SIEMPRE el alto de 2 líneas (laboratorio/molécula): con 1
+     línea o 2 todas las columnas quedan parejas. 2.5em = 2 × 1.25. */
+  min-height: 2.5em;
 }
 
 .secciones-carrusel__columna-header a {

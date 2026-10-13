@@ -131,6 +131,10 @@
   color: #14182A;
   margin: 0;
   letter-spacing: -0.01em;
+  /* Reserva SIEMPRE el alto de 2 líneas (título tipo "Productos {lab}"):
+     así el carrusel arranca a la misma altura aunque el laboratorio tenga
+     1 o 2 líneas. 2.6em = 2 × line-height 1.3 (h2 global, fonts.css). */
+  min-height: 2.6em;
 }
 
 .seccion-promo__acciones {
