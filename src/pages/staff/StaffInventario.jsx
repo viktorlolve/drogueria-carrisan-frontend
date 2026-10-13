@@ -724,7 +724,6 @@ function StaffInventario() {
       molecula: p.molecula || '',
       linea: p.linea || '',
       forma: p.forma || '',
-      pais_origen: p.pais_origen || '',
       activo: p.activo === true,
       visible_catalogo: p.visible_catalogo === true,
     })
@@ -1332,15 +1331,6 @@ function StaffInventario() {
                                 onChange={(e) => cambiarDato('forma', e.target.value)}
                               />
                             </label>
-                            <label className="si-label">
-                              <span>País de origen</span>
-                              <input
-                                type="text"
-                                className="sp-input"
-                                value={formDatos.pais_origen}
-                                onChange={(e) => cambiarDato('pais_origen', e.target.value)}
-                              />
-                            </label>
                           </div>
 
                           <label className="si-label">
@@ -1436,7 +1426,6 @@ function StaffInventario() {
                             <Dato etiqueta="Forma" valor={producto.forma} />
                             <Dato etiqueta="Molécula (columna)" valor={producto.molecula} />
                             <Dato etiqueta="Descripción" valor={producto.descripcion} />
-                            <Dato etiqueta="País de origen" valor={producto.pais_origen} />
                           </>
                         )}
                         <Dato etiqueta="SKU" valor={producto.sku} mono />
