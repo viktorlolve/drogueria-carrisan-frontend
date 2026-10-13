@@ -126,6 +126,38 @@
   animation: fav-brillo 1.3s ease infinite;
 }
 
+/* Chip de lista con menú de acciones (⋯) */
+.fav-chip-menu {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.fav-chip-menu .fav-chip {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right-width: 0;
+}
+.fav-chip-menu__trig {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 40px;
+  padding: 0;
+  border: 1.5px solid var(--fav-borde);
+  border-left: 0;
+  border-radius: 0 999px 999px 0;
+  background: #fff;
+  color: var(--fav-apagado);
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+.fav-chip-menu__trig:hover {
+  background: #F6F7FB;
+  color: var(--fav-indigo);
+}
+
 .fav-aviso {
   display: flex;
   align-items: center;
@@ -230,6 +262,9 @@
 .fav-menu__lista button:hover { background: #F6F7FB; }
 .fav-menu__lista .fav-menu__peligro { color: var(--fav-error); }
 .fav-menu__lista .fav-menu__peligro:hover { background: var(--fav-error-suave); }
+
+/* Menú de acciones del chip (portal a body — evita el clipping del scroll de .fav-chips) */
+.fav-menu__lista--fija { position: fixed; }
 
 /* ---------- Barra de herramientas ---------- */
 .fav-barra { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }

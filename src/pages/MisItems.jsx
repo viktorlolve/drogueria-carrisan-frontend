@@ -1,403 +1,73 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useSearchParams } from 'react-router-dom'
+import { Star, List, Plus, MoreVertical, Pencil, Trash2, CheckSquare, Bookmark } from 'lucide-react'
 import api from '../api/axios'
 import { useCart } from '../context/CartContext'
 import { useFavoritos } from '../context/FavoritosContext'
 import LayoutPaginaPrincipal from '../components/paginas-principales/Layoutpaginaprincipal'
 import { NAV_UNIFICADO } from '../components/paginas-principales/NavUnificado'
-import './MisItems.css'
+import BarraHerramientas from '../components/mis-items/BarraHerramientas'
+import ComprarDeNuevo from '../components/mis-items/ComprarDeNuevo'
+import HojaGuardarEnLista from '../components/mis-items/HojaGuardarEnLista'
+import TarjetaProducto from '../components/mis-items/TarjetaProducto'
+import Toast from '../components/mis-items/Toast'
+import useToast from '../components/mis-items/useToast'
+import { ModalNombreLista, ModalConfirmar, ModalAgregarProductos } from '../components/mis-items/ModalesLista'
+import '../components/mis-items/MisItems.css'
 
 // Sugerencias de listas rápidas. Solo crea la lista con este nombre;
 // no llevan lógica especial más allá de eso.
-const LISTAS_SUGERIDAS = [
-  { nombre: 'Favoritos', icon: '⭐' },
-  { nombre: 'Antibióticos', icon: '💊' },
-  { nombre: 'Cuidado Personal', icon: '🧴' },
-  { nombre: 'Vitaminas', icon: '🛡️' },
+const LISTAS_SUGERIDAS = ['Favoritos', 'Antibióticos', 'Cuidado Personal', 'Vitaminas']
+
+const TABS = [
+  { id: 'items', label: 'Mis Items' },
+  { id: 'recomprar', label: 'Comprar de nuevo' },
 ]
 
-// Filtros por línea de producto — iguales en "Mis Items" y "Comprar de nuevo"
-// para que ambas pestañas se vean y se comporten de forma consistente.
-const LINEAS_FILTRO = [
-  { id: 'todo', nombre: 'Todo' },
-  { id: 'Linea Hospitalaria', nombre: 'Línea hospitalaria' },
-  { id: 'Linea Farmacia', nombre: 'Línea farmacia' },
-  { id: 'Material Medico', nombre: 'Material Médico' },
-]
-
-function formatUSD(valor) {
-  return Number(valor).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
-
-// Separa parte entera y centavos para formato superíndice: $1⁰⁶
-function PrecioSuperIndice({ valor }) {
-  if (valor == null) return <span>—</span>
-  const partes = Number(valor).toFixed(2).split('.')
-  return (
-    <>
-      <span className="precio-simbolo">$</span>
-      <span className="precio-entero">{partes[0]}</span>
-      <sup className="precio-centavos">{partes[1]}</sup>
-    </>
+// Lee las listas del usuario junto con sus miembros: devuelve las listas y un
+// Map(listaId → Set(productoId)). Función de módulo (no del componente) para
+// poder encadenarla con .then() desde el efecto y respetar la regla de lint
+// react-hooks/set-state-in-effect (que marca cualquier async con setState).
+async function leerListasCompletas() {
+  const { data: listasData } = await api.get('/lists')
+  const pares = await Promise.all(
+    listasData.map(async (l) => {
+      const { data: items } = await api.get(`/lists/${l.id}/items`)
+      return [l.id, new Set(items.map((it) => it.producto_id))]
+    })
   )
-}
-
-function IconoBuscar() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M11.5 11.5L15 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  )
-}
-
-function IconoGrid() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-      <rect x="1.5" y="1.5" width="6" height="6" rx="1.2" stroke="currentColor" strokeWidth="1.4" />
-      <rect x="10.5" y="1.5" width="6" height="6" rx="1.2" stroke="currentColor" strokeWidth="1.4" />
-      <rect x="1.5" y="10.5" width="6" height="6" rx="1.2" stroke="currentColor" strokeWidth="1.4" />
-      <rect x="10.5" y="10.5" width="6" height="6" rx="1.2" stroke="currentColor" strokeWidth="1.4" />
-    </svg>
-  )
-}
-
-function IconoLista() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-      <circle cx="2.5" cy="4" r="1" fill="currentColor" />
-      <circle cx="2.5" cy="9" r="1" fill="currentColor" />
-      <circle cx="2.5" cy="14" r="1" fill="currentColor" />
-      <path d="M6 4H16M6 9H16M6 14H16" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-    </svg>
-  )
-}
-
-function IconoFiltro() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <path d="M2 4h12M4.5 8h7M7 12h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  )
-}
-
-function CarruselSkeleton() {
-  return (
-    <div className="itemcard itemcard--skeleton">
-      <div className="itemcard__media itemcard__media--skeleton" />
-      <div className="skel-line skel-line--btn" />
-      <div className="skel-line skel-line--sm" />
-      <div className="skel-line skel-line--md" />
-    </div>
-  )
+  return { listas: listasData, miembros: new Map(pares) }
 }
 
 // ---------------------------------------------------------
-// ItemsCard — tarjeta compacta de producto (grid 2 columnas móvil /
-// grid de N columnas desktop). Usada en Mis Favoritos y Comprar de nuevo.
+// Tab: Mis Items (favoritos + chips de listas + filtro por línea)
 // ---------------------------------------------------------
-function ItemsCard({ producto, cantidadEnCarrito, onAgregar, onQuitar, mostrarQuitar, badge, tasaVes }) {
-  const tieneDescuento = producto?.precio_original_usd != null && producto?.descuento_activo
-  const precioVes = tasaVes && producto?.precio_usd != null
-    ? Number((producto.precio_usd * tasaVes).toFixed(2)).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    : null
-
-  return (
-    <div className="itemcard">
-      <Link to={`/producto/${producto?.id}`} className="itemcard__media">
-        {producto?.foto_url ? (
-          <img src={producto.foto_url} alt={producto.nombre_comercial} loading="lazy" />
-        ) : (
-          <div className="itemcard__media-placeholder">Sin imagen</div>
-        )}
-
-        {badge && <span className="itemcard__badge">{badge}</span>}
-
-        {mostrarQuitar && (
-          <button
-            type="button"
-            className="itemcard__quitar"
-            onClick={(e) => { e.preventDefault(); onQuitar() }}
-            aria-label="Quitar de la lista"
-          >
-            ✕
-          </button>
-        )}
-      </Link>
-
-      <div className="itemcard__body">
-        <p className="itemcard__nombre">{producto?.nombre_comercial}</p>
-        <div className="itemcard__footer">
-          <div className="itemcard__precios">
-            {tieneDescuento ? (
-              <>
-                <span className="itemcard__precio-ahora">
-                  <span className="itemcard__precio-ahora-label">Ahora</span>
-                  <PrecioSuperIndice valor={producto.precio_usd} />
-                </span>
-                <span className="itemcard__precio-original">
-                  <PrecioSuperIndice valor={producto.precio_original_usd} />
-                </span>
-              </>
-            ) : (
-              <span className="itemcard__precio-normal">
-                <PrecioSuperIndice valor={producto?.precio_usd} />
-              </span>
-            )}
-            {precioVes && (
-              <span className="itemcard__precio-ves">
-                ≈ Bs. {precioVes}
-              </span>
-            )}
-          </div>
-          <button
-            type="button"
-            className={`itemcard__cta ${cantidadEnCarrito ? 'itemcard__cta--cantidad' : ''}`}
-            onClick={onAgregar}
-          >
-            {cantidadEnCarrito ? cantidadEnCarrito : '+ Agregar'}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------
-// Modal genérico de confirmación / formulario, estilo Amazon
-// ("Crear una nueva lista", "Filtrar y ordenar", etc.)
-//
-// Se renderiza vía portal directo a document.body a propósito: así
-// queda completamente afuera de .ppal-shift (el contenedor que
-// LayoutPaginaPrincipal empuja/encoge cuando el drawer móvil está
-// abierto). Si el modal fuera descendiente de ese contenedor, mientras
-// el drawer cierra (overflow:hidden + transform en transición) el
-// modal podría recortarse o mal-posicionarse por una fracción de
-// segundo — con el portal, nunca depende de ese estado.
-// ---------------------------------------------------------
-function Modal({ titulo, onCerrar, children }) {
-  return createPortal(
-    <div className="misitems-modal-overlay" onClick={onCerrar}>
-      <div className="misitems-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="misitems-modal__header">
-          <h3>{titulo}</h3>
-          <button type="button" className="misitems-modal__cerrar" onClick={onCerrar} aria-label="Cerrar">
-            ✕
-          </button>
-        </div>
-        <div className="misitems-modal__body">{children}</div>
-      </div>
-    </div>,
-    document.body
-  )
-}
-
-// ---------------------------------------------------------
-// Carrusel de listas ("Listas y listas de regalos")
-// ---------------------------------------------------------
-function CarruselListas({ listas, cargando, onCrearNueva, onEliminar }) {
-  return (
-    <section className="carrusel-listas">
-      <div className="carrusel-listas__header">
-        <h2 className="misitems-section-title">Listas y listas de regalos</h2>
-        <button
-          type="button"
-          className="carrusel-listas__agregar"
-          onClick={onCrearNueva}
-          aria-label="Crear nueva lista"
-        >
-          +
-        </button>
-      </div>
-
-      {cargando ? (
-        <div className="carrusel-listas__scroll">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="lista-chip lista-chip--skeleton" />
-          ))}
-        </div>
-      ) : (
-        <div className="carrusel-listas__scroll">
-          {listas.map((lista) => (
-            <div key={lista.id} className="lista-chip-wrap">
-              {!lista.es_predeterminada && (
-                <button
-                  type="button"
-                  className="lista-chip__eliminar"
-                  onClick={(e) => { e.preventDefault(); onEliminar(lista) }}
-                  aria-label={`Eliminar lista ${lista.nombre}`}
-                >
-                  ✕
-                </button>
-              )}
-              <Link to={`/listas/${lista.id}`} className="lista-chip">
-                <span className="lista-chip__icon">
-                  {lista.es_predeterminada ? '📌' : '📋'}
-                </span>
-                <span className="lista-chip__nombre">{lista.nombre}</span>
-              </Link>
-            </div>
-          ))}
-          <button type="button" className="lista-chip lista-chip--nueva" onClick={onCrearNueva}>
-            <span className="lista-chip__icon">+</span>
-            <span className="lista-chip__nombre">Nueva lista</span>
-          </button>
-        </div>
-      )}
-    </section>
-  )
-}
-
-// ---------------------------------------------------------
-// Buscador simple para el modal "Agregar producto": sin botón de
-// buscar, muestra resultados en vivo con debounce (mismo patrón que
-// BuscadorMovil.jsx) y al tocar un resultado ejecuta onSeleccionar.
-// ---------------------------------------------------------
-function BuscadorProducto({ onSeleccionar }) {
-  const [query, setQuery] = useState('')
-  const [resultados, setResultados] = useState([])
-  const [buscando, setBuscando] = useState(false)
-
-  useEffect(() => {
-    if (query.trim().length < 1) {
-      return
-    }
-    const debounce = setTimeout(async () => {
-      setBuscando(true)
-      try {
-        const { data } = await api.get(`/products?search=${encodeURIComponent(query.trim())}&limit=8`)
-        setResultados(data.slice(0, 8))
-      } catch {
-        setResultados([])
-      } finally {
-        setBuscando(false)
-      }
-    }, 250)
-    return () => clearTimeout(debounce)
-  }, [query])
-
-  const resultadosVisibles = query.trim().length < 1 ? [] : resultados
-
-  return (
-    <div className="buscador-producto">
-      <div className="misitems-buscador buscador-producto__input">
-        <IconoBuscar />
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar producto por nombre…"
-          autoFocus
-        />
-      </div>
-
-      {buscando && <p className="buscador-producto__estado">Buscando…</p>}
-
-      {!buscando && query.trim().length > 0 && resultadosVisibles.length === 0 && (
-        <p className="buscador-producto__estado">No se encontraron productos para "{query}".</p>
-      )}
-
-      {resultadosVisibles.length > 0 && (
-        <ul className="buscador-producto__resultados">
-          {resultadosVisibles.map((producto) => (
-            <li key={producto.id}>
-              <button
-                type="button"
-                className="buscador-producto__resultado"
-                onClick={() => onSeleccionar(producto)}
-              >
-                <span className="buscador-producto__resultado-media">
-                  {producto.foto_url ? (
-                    <img src={producto.foto_url} alt={producto.nombre_comercial} loading="lazy" />
-                  ) : (
-                    <span className="itemcard__media-placeholder">Sin imagen</span>
-                  )}
-                </span>
-                <span className="buscador-producto__resultado-info">
-                  <span className="buscador-producto__resultado-nombre">{producto.nombre_comercial}</span>
-                  <span className="buscador-producto__resultado-precio">${formatUSD(producto.precio_usd)}</span>
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  )
-}
-
-// ---------------------------------------------------------
-// Tab: Mis Items (favoritos + carrusel de listas + filtro por línea)
-// ---------------------------------------------------------
-function TabMisItems({ mostrarCrear, setMostrarCrear, tasaVes }) {
+function TabMisItems({
+  tasaVes,
+  favoritos,
+  cargandoFav,
+  idsEnListas,
+  toggleFavorito,
+  seleccion,
+  setSeleccion,
+  salirSeleccion,
+  listas,
+  cargandoListas,
+  miembros,
+  abrirCrear,
+  abrirAgregar,
+  renombrar,
+  eliminar,
+  abrirHoja,
+  notificar,
+}) {
   const { items: cartItems, addItem } = useCart()
-  const { favoritos, toggleFavorito, loading: cargandoFav } = useFavoritos()
-
-  const [listas, setListas] = useState([])
-  const [cargandoListas, setCargandoListas] = useState(true)
-  const [nuevoNombre, setNuevoNombre] = useState('')
-  const [creando, setCreando] = useState(false)
-
-  const [mostrarAgregarProducto, setMostrarAgregarProducto] = useState(false)
 
   const [busqueda, setBusqueda] = useState('')
   const [lineaActiva, setLineaActiva] = useState('todo')
   const [vista, setVista] = useState('grid') // 'grid' | 'lista'
-  const [filtrosAbiertos, setFiltrosAbiertos] = useState(false)
-
-  const cargarListas = useCallback(async () => {
-    try {
-      const { data } = await api.get('/lists')
-      setListas(data)
-    } catch {
-      console.error('Error al cargar listas')
-    } finally {
-      setCargandoListas(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    async function iniciar() {
-      await cargarListas()
-    }
-    iniciar()
-  }, [cargarListas])
-
-  async function crearLista(nombre) {
-    if (!nombre.trim()) return
-    setCreando(true)
-    try {
-      await api.post('/lists', { nombre })
-      setNuevoNombre('')
-      setMostrarCrear(false)
-      await cargarListas()
-    } catch {
-      alert('Error al crear lista')
-    } finally {
-      setCreando(false)
-    }
-  }
-
-  async function eliminarLista(lista) {
-    if (!confirm(`¿Eliminar la lista "${lista.nombre}"?`)) return
-    try {
-      await api.delete(`/lists/${lista.id}`)
-      setListas((prev) => prev.filter((l) => l.id !== lista.id))
-    } catch {
-      alert('No se pudo eliminar la lista')
-    }
-  }
-
-  const nombresExistentes = listas.map((l) => l.nombre.toLowerCase())
-  const sugerenciasDisponibles = LISTAS_SUGERIDAS.filter(
-    (s) => !nombresExistentes.includes(s.nombre.toLowerCase())
-  )
-
-  async function quitarItem(productoId) {
-    const producto = favoritos.find((item) => item.id === productoId)
-    if (producto) await toggleFavorito(producto)
-  }
+  const [menuChip, setMenuChip] = useState(null) // { lista, top, right }
 
   function cantidadEnCarrito(productoId) {
     const linea = cartItems.find((i) => i.producto.id === productoId)
@@ -416,471 +86,270 @@ function TabMisItems({ mostrarCrear, setMostrarCrear, tasaVes }) {
     return resultado
   }, [favoritos, lineaActiva, busqueda])
 
-  const cargando = cargandoFav
+  // ---- Selección múltiple ----
+  const activarSeleccion = () => setSeleccion({ activo: true, ids: new Set() })
+
+  function toggleSeleccion(id) {
+    setSeleccion((prev) => {
+      const ids = new Set(prev.ids)
+      if (ids.has(id)) ids.delete(id)
+      else ids.add(id)
+      return { ...prev, ids }
+    })
+  }
+
+  const todosSeleccionados =
+    itemsFiltrados.length > 0 && itemsFiltrados.every((p) => seleccion.ids.has(p.id))
+
+  function alternarTodos() {
+    if (todosSeleccionados) setSeleccion({ activo: true, ids: new Set() })
+    else setSeleccion({ activo: true, ids: new Set(itemsFiltrados.map((p) => p.id)) })
+  }
+
+  function guardarSeleccion() {
+    const elegidos = favoritos.filter((f) => seleccion.ids.has(f.id))
+    abrirHoja(elegidos)
+  }
+
+  async function quitarSeleccion() {
+    const aQuitar = favoritos.filter((f) => seleccion.ids.has(f.id))
+    for (const p of aQuitar) await toggleFavorito(p)
+    salirSeleccion()
+    if (aQuitar.length > 0) {
+      notificar(`${aQuitar.length} producto${aQuitar.length !== 1 ? 's' : ''} quitado${aQuitar.length !== 1 ? 's' : ''}`)
+    }
+  }
+
+  // ---- Quitar un solo favorito con opción de deshacer ----
+  function quitarFavoritoUnico(producto) {
+    toggleFavorito(producto)
+    notificar('Quitado de tus favoritos', {
+      accion: { label: 'Deshacer', onClick: () => toggleFavorito(producto) },
+    })
+  }
+
+  // ---- Menú de acciones del chip (portal para no recortarse con el scroll) ----
+  function abrirMenuChip(e, lista) {
+    const rect = e.currentTarget.getBoundingClientRect()
+    setMenuChip({
+      lista,
+      top: rect.bottom + 6,
+      right: Math.max(8, window.innerWidth - rect.right),
+    })
+  }
 
   return (
     <>
-      <CarruselListas
-        listas={listas}
-        cargando={cargandoListas}
-        onCrearNueva={() => setMostrarCrear(true)}
-        onEliminar={eliminarLista}
-      />
+      {/* Chips de listas */}
+      <div className="fav-chips">
+        <button
+          type="button"
+          className="fav-chip fav-chip--on"
+          onClick={() => { setBusqueda(''); setLineaActiva('todo') }}
+        >
+          <Star size={15} fill="currentColor" />
+          <span>Favoritos</span>
+          <span className="fav-chip__n">{favoritos.length}</span>
+        </button>
 
-      <section className="misitems-section misitems-section--favoritos">
-        <div className="misitems-section__header">
-          <div>
-            <h2 className="misitems-section-title">Todos los artículos guardados</h2>
-            {!cargando && favoritos.length > 0 && (
-              <p className="misitems-section-subtitulo">
-                {favoritos.length} producto{favoritos.length !== 1 ? 's' : ''} guardado{favoritos.length !== 1 ? 's' : ''}
-              </p>
-            )}
-          </div>
-          <button
-            type="button"
-            className="misitems-agregar-todos"
-            onClick={() => setMostrarAgregarProducto(true)}
-          >
-            + Agregar producto
+        {cargandoListas
+          ? Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="fav-chip fav-chip--skeleton" />
+            ))
+          : listas.map((l) => {
+              const total = miembros.get(l.id)?.size || 0
+              const contenido = (
+                <>
+                  <List size={15} />
+                  <span>{l.nombre}</span>
+                  <span className="fav-chip__n">{total}</span>
+                </>
+              )
+              return l.es_predeterminada ? (
+                <Link key={l.id} className="fav-chip" to={`/listas/${l.id}`}>
+                  {contenido}
+                </Link>
+              ) : (
+                <div key={l.id} className="fav-chip-menu">
+                  <Link className="fav-chip" to={`/listas/${l.id}`}>
+                    {contenido}
+                  </Link>
+                  <button
+                    type="button"
+                    className="fav-chip-menu__trig"
+                    onClick={(e) => abrirMenuChip(e, l)}
+                    aria-label={`Acciones de la lista ${l.nombre}`}
+                  >
+                    <MoreVertical size={15} />
+                  </button>
+                </div>
+              )
+            })}
+
+        <button type="button" className="fav-chip fav-chip--nueva" onClick={abrirCrear}>
+          <Plus size={16} />
+          <span>Nueva lista</span>
+        </button>
+      </div>
+
+      <div className="fav-cab">
+        <div className="fav-cab__titulos">
+          <h2>Todos los artículos guardados</h2>
+          {!cargandoFav && favoritos.length > 0 && (
+            <p>
+              {favoritos.length} producto{favoritos.length !== 1 ? 's' : ''} guardado
+              {favoritos.length !== 1 ? 's' : ''}
+            </p>
+          )}
+        </div>
+        <div className="fav-cab__acciones">
+          <button type="button" className="fav-btn fav-btn--secundario" onClick={abrirAgregar}>
+            <Plus size={16} /> Agregar producto
           </button>
         </div>
+      </div>
 
-
-        {!cargando && favoritos.length > 0 && (
-          <>
-            {/* Toolbar: buscador + filtros + toggle vista */}
-            <div className="misitems-toolbar">
-              <div className="misitems-buscador">
-                <IconoBuscar />
-                <input
-                  type="text"
-                  value={busqueda}
-                  onChange={(e) => setBusqueda(e.target.value)}
-                  placeholder="Buscar en esta lista"
-                />
-              </div>
-              <button
-                type="button"
-                className={`misitems-toolbar__btn ${lineaActiva !== 'todo' ? 'misitems-toolbar__btn--activo' : ''}`}
-                onClick={() => setFiltrosAbiertos(!filtrosAbiertos)}
-                aria-expanded={filtrosAbiertos}
-              >
-                <IconoFiltro /> Filtros
-              </button>
-              <div className="misitems-toolbar__vista">
-                <button
-                  type="button"
-                  className={vista === 'lista' ? 'activo' : ''}
-                  onClick={() => setVista('lista')}
-                  aria-label="Vista de lista"
-                >
-                  <IconoLista />
-                </button>
-                <button
-                  type="button"
-                  className={vista === 'grid' ? 'activo' : ''}
-                  onClick={() => setVista('grid')}
-                  aria-label="Vista de cuadrícula"
-                >
-                  <IconoGrid />
-                </button>
-              </div>
-            </div>
-
-            {/* Filtros colapsables — solo cuando se abre el botón Filtros */}
-            {filtrosAbiertos && (
-              <div className="misitems-filtros">
-                <p className="misitems-filtros__titulo">Tipo de producto</p>
-                <div className="misitems-filtros__chips">
-                  {LINEAS_FILTRO.map((linea) => (
-                    <button
-                      key={linea.id}
-                      type="button"
-                      className={`filtro-chip ${lineaActiva === linea.id ? 'filtro-chip--activo' : ''}`}
-                      onClick={() => setLineaActiva(linea.id)}
-                    >
-                      {linea.nombre}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {itemsFiltrados.length === 0 ? (
-              <p className="misitems-vacio-filtro">
-                No hay favoritos que coincidan con los filtros actuales.
-              </p>
-            ) : (
-              <div className={vista === 'grid' ? 'product-grid' : 'product-lista'}>
-                {itemsFiltrados.map((producto) => (
-                  <ItemsCard
-                    key={producto.id}
-                    producto={producto}
-                    cantidadEnCarrito={cantidadEnCarrito(producto.id)}
-                    onAgregar={() => addItem(producto, 1)}
-                    onQuitar={() => quitarItem(producto.id)}
-                    mostrarQuitar
-                    tasaVes={tasaVes}
-                  />
-                ))}
-              </div>
-            )}
-          </>
-        )}
-
-        {cargando && (
-          <div className="product-grid">
-            {Array.from({ length: 4 }).map((_, i) => <CarruselSkeleton key={i} />)}
-          </div>
-        )}
-
-        {!cargando && favoritos.length === 0 && (
-          <div className="misitems-vacio">
-            <span className="misitems-vacio__icon">⭐</span>
-            <p>Todavía no tienes productos favoritos.</p>
-            <Link to="/catalogo" className="misitems-vacio__cta">Explorar catálogo</Link>
-          </div>
-        )}
-      </section>
-
-      {/* Modal: Crear una nueva lista o lista de regalos (estilo Amazon) */}
-      {mostrarCrear && (
-        <Modal
-          titulo="Crear una nueva lista o lista de regalos"
-          onCerrar={() => { setMostrarCrear(false); setNuevoNombre('') }}
-        >
-          <label className="misitems-modal__label" htmlFor="nombre-lista">
-            Nombre de la lista (requerido)
-          </label>
-          <input
-            id="nombre-lista"
-            type="text"
-            value={nuevoNombre}
-            onChange={(e) => setNuevoNombre(e.target.value)}
-            placeholder="Ej. Lista de compras"
-            className="misitems-modal__input"
-            autoFocus
-            onKeyDown={(e) => e.key === 'Enter' && crearLista(nuevoNombre)}
-          />
-
-          {sugerenciasDisponibles.length > 0 && (
-            <div className="misitems-modal__sugerencias">
-              {sugerenciasDisponibles.map((s) => (
-                <button
-                  key={s.nombre}
-                  type="button"
-                  className="sugerencia-chip"
-                  onClick={() => setNuevoNombre(s.nombre)}
-                >
-                  <span className="sugerencia-chip__icon">{s.icon}</span>
-                  <span>{s.nombre}</span>
-                </button>
-              ))}
-            </div>
-          )}
-
-          <p className="misitems-modal__nota">
-            Utiliza listas para guardar artículos para más adelante. Todas las listas son privadas a menos que las compartas con otras personas.
-          </p>
-          <div className="misitems-modal__acciones">
+      {!cargandoFav && favoritos.length > 0 && (
+        <BarraHerramientas
+          busqueda={busqueda}
+          onBusqueda={setBusqueda}
+          placeholder="Buscar en esta lista"
+          lineaActiva={lineaActiva}
+          onLinea={setLineaActiva}
+          vista={vista}
+          onVista={setVista}
+          extra={
             <button
               type="button"
-              className="misitems-modal__btn misitems-modal__btn--cancelar"
-              onClick={() => { setMostrarCrear(false); setNuevoNombre('') }}
+              className={`fav-barra__btn ${seleccion.activo ? 'fav-barra__btn--on' : ''}`}
+              onClick={() => (seleccion.activo ? salirSeleccion() : activarSeleccion())}
+              aria-pressed={seleccion.activo}
             >
-              Cancelar
+              <CheckSquare size={16} />
+              <span>Seleccionar</span>
             </button>
-            <button
-              type="button"
-              className="misitems-modal__btn misitems-modal__btn--crear"
-              onClick={() => crearLista(nuevoNombre)}
-              disabled={creando || !nuevoNombre.trim()}
-            >
-              Crear
-            </button>
-          </div>
-        </Modal>
+          }
+        />
       )}
 
-      {/* Modal: Agregar producto (buscador en vivo → agrega a favoritos) */}
-      {mostrarAgregarProducto && (
-        <Modal titulo="Agregar producto" onCerrar={() => setMostrarAgregarProducto(false)}>
-          <BuscadorProducto
-            onSeleccionar={async (producto) => {
-              const yaEsFavorito = favoritos.some((f) => f.id === producto.id)
-              if (!yaEsFavorito) await toggleFavorito(producto)
-              setMostrarAgregarProducto(false)
-            }}
-          />
-        </Modal>
+      {cargandoFav ? (
+        <div className={`fav-grid fav-grid--${vista}`} aria-busy="true">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="fav-card fav-card--skeleton" />
+          ))}
+        </div>
+      ) : favoritos.length === 0 ? (
+        <div className="fav-estado">
+          <span className="fav-estado__icono"><Star size={28} /></span>
+          <h2>Todavía no tienes productos favoritos</h2>
+          <p>Guarda productos para encontrarlos rápido y agregarlos a tus listas.</p>
+          <Link to="/catalogo" className="fav-btn fav-btn--primario">Explorar catálogo</Link>
+        </div>
+      ) : itemsFiltrados.length === 0 ? (
+        <p className="fav-vacio-filtro">No hay favoritos que coincidan con los filtros actuales.</p>
+      ) : (
+        <div className={`fav-grid fav-grid--${vista} ${seleccion.activo ? 'fav-grid--con-barra' : ''}`}>
+          {itemsFiltrados.map((producto) => (
+            <TarjetaProducto
+              key={producto.id}
+              producto={producto}
+              vista={vista}
+              tasaVes={tasaVes}
+              cantidadEnCarrito={cantidadEnCarrito(producto.id)}
+              onAgregar={() => addItem(producto, 1)}
+              onGuardar={() => abrirHoja(producto)}
+              enAlgunaLista={idsEnListas.has(producto.id)}
+              onQuitar={() => quitarFavoritoUnico(producto)}
+              etiquetaQuitar="Quitar de favoritos"
+              modoSeleccion={seleccion.activo}
+              seleccionado={seleccion.ids.has(producto.id)}
+              onToggleSeleccion={() => toggleSeleccion(producto.id)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Barra fija del modo selección (portal) */}
+      {seleccion.activo && createPortal(
+        <div className="fav-portal">
+          <div className="fav-barra-sel">
+            <div className="fav-barra-sel__info">
+              <span>
+                {seleccion.ids.size} seleccionado{seleccion.ids.size !== 1 ? 's' : ''}
+              </span>
+              <button type="button" className="fav-link" onClick={alternarTodos}>
+                {todosSeleccionados ? 'Quitar selección' : 'Seleccionar todo'}
+              </button>
+            </div>
+            <div className="fav-barra-sel__acciones">
+              <button
+                type="button"
+                onClick={guardarSeleccion}
+                disabled={seleccion.ids.size === 0}
+              >
+                <Bookmark size={18} />
+                <span>Guardar en lista</span>
+              </button>
+              <button
+                type="button"
+                className="fav-barra-sel__peligro"
+                onClick={quitarSeleccion}
+                disabled={seleccion.ids.size === 0}
+                aria-label="Quitar de favoritos"
+              >
+                <Trash2 size={18} />
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Menú de acciones del chip (portal) */}
+      {menuChip && createPortal(
+        <div className="fav-portal">
+          <div className="fav-menu__cierre" onClick={() => setMenuChip(null)} />
+          <ul
+            className="fav-menu__lista fav-menu__lista--fija"
+            style={{ top: menuChip.top, right: menuChip.right }}
+          >
+            <li>
+              <button
+                type="button"
+                onClick={() => { const l = menuChip.lista; setMenuChip(null); renombrar(l) }}
+              >
+                <Pencil size={15} /> Renombrar
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                className="fav-menu__peligro"
+                onClick={() => { const l = menuChip.lista; setMenuChip(null); eliminar(l) }}
+              >
+                <Trash2 size={15} /> Eliminar
+              </button>
+            </li>
+          </ul>
+        </div>,
+        document.body
       )}
     </>
   )
 }
 
 // ---------------------------------------------------------
-// Tab: Comprar de nuevo
-// Se arma a partir del historial real de órdenes del usuario
-// (GET /orders, que ya incluye ordenes_items con producto_id).
-// Por cada producto único comprado se consulta su ficha actual
-// (GET /products/:id) para tener precio y foto vigentes.
-// ---------------------------------------------------------
-function TabComprarDeNuevo({ tasaVes }) {
-  const { items: cartItems, addItem } = useCart()
-  const [productos, setProductos] = useState([])
-  const [cargando, setCargando] = useState(true)
-  const [error, setError] = useState('')
-  const [busqueda, setBusqueda] = useState('')
-  const [filtroActivo, setFiltroActivo] = useState('todo') // 'todo' | 'ofertas'
-  const [lineaActiva, setLineaActiva] = useState('todo')
-  const [vista, setVista] = useState('grid') // 'grid' | 'lista'
-  const [filtrosAbiertos, setFiltrosAbiertos] = useState(false)
-
-  const cargarRecompras = useCallback(async () => {
-    try {
-      const { data: ordenes } = await api.get('/orders')
-
-      const conteoPorProducto = new Map()
-      for (const orden of ordenes) {
-        if (orden.estado === 'cancelado') continue
-        for (const item of orden.ordenes_items || []) {
-          const actual = conteoPorProducto.get(item.producto_id)
-          const fechaOrden = orden.created_at
-          if (!actual) {
-            conteoPorProducto.set(item.producto_id, { veces: 1, ultimaFecha: fechaOrden })
-          } else {
-            conteoPorProducto.set(item.producto_id, {
-              veces: actual.veces + 1,
-              ultimaFecha: fechaOrden > actual.ultimaFecha ? fechaOrden : actual.ultimaFecha,
-            })
-          }
-        }
-      }
-
-      const idsUnicos = Array.from(conteoPorProducto.keys()).filter(Boolean)
-
-      if (idsUnicos.length === 0) {
-        setProductos([])
-        return
-      }
-
-      const resultados = await Promise.allSettled(
-        idsUnicos.map((id) => api.get(`/products/${id}`))
-      )
-
-      const productosConDatos = resultados
-        .map((r, i) => {
-          if (r.status !== 'fulfilled') return null
-          const producto = r.value.data
-          const meta = conteoPorProducto.get(idsUnicos[i])
-          return { ...producto, _veces: meta.veces, _ultimaFecha: meta.ultimaFecha }
-        })
-        .filter(Boolean)
-        .sort((a, b) => b._veces - a._veces || new Date(b._ultimaFecha) - new Date(a._ultimaFecha))
-
-      setProductos(productosConDatos)
-    } catch (err) {
-      setError('No se pudo cargar tu historial de compras')
-      console.error(err)
-    } finally {
-      setCargando(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    async function iniciar() {
-      await cargarRecompras()
-    }
-    iniciar()
-  }, [cargarRecompras])
-
-  function cantidadEnCarrito(productoId) {
-    const linea = cartItems.find((i) => i.producto.id === productoId)
-    return linea?.cantidad || 0
-  }
-
-  if (error) return <p className="misitems-error">{error}</p>
-
-  // "Ofertas" = productos con descuento activo, si el campo existe en el producto
-  const productosFiltrados = productos
-    .filter((p) => (filtroActivo === 'ofertas' ? p.precio_oferta_usd || p.en_oferta : true))
-    .filter((p) => (lineaActiva === 'todo' ? true : p.linea === lineaActiva))
-    .filter((p) =>
-      busqueda.trim()
-        ? p.nombre_comercial?.toLowerCase().includes(busqueda.trim().toLowerCase())
-        : true
-    )
-
-  const cantidadOfertas = productos.filter((p) => p.precio_oferta_usd || p.en_oferta).length
-
-  return (
-    <section className="comprar-nuevo">
-      {cantidadOfertas > 0 && (
-        <div className="comprar-nuevo__chips">
-          <button
-            type="button"
-            className={`comprar-nuevo__chip-oferta ${filtroActivo === 'ofertas' ? 'comprar-nuevo__chip-oferta--activo' : ''}`}
-            onClick={() => setFiltroActivo(filtroActivo === 'ofertas' ? 'todo' : 'ofertas')}
-          >
-            <span className="comprar-nuevo__chip-oferta-icono">🏷️</span>
-            <span>
-              <strong>Ofertas</strong>
-              <br />
-              {cantidadOfertas} producto{cantidadOfertas !== 1 ? 's' : ''}
-            </span>
-          </button>
-        </div>
-      )}
-
-      {/* Toolbar: buscador + filtros + toggle vista (igual que Mis Items) */}
-      <div className="misitems-toolbar">
-        <div className="misitems-buscador">
-          <IconoBuscar />
-          <input
-            type="text"
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            placeholder="Buscar compras pasadas"
-          />
-        </div>
-        <button
-          type="button"
-          className={`misitems-toolbar__btn ${lineaActiva !== 'todo' ? 'misitems-toolbar__btn--activo' : ''}`}
-          onClick={() => setFiltrosAbiertos(!filtrosAbiertos)}
-          aria-expanded={filtrosAbiertos}
-        >
-          <IconoFiltro /> Filtros
-        </button>
-        <div className="misitems-toolbar__vista">
-          <button
-            type="button"
-            className={vista === 'lista' ? 'activo' : ''}
-            onClick={() => setVista('lista')}
-            aria-label="Vista de lista"
-          >
-            <IconoLista />
-          </button>
-          <button
-            type="button"
-            className={vista === 'grid' ? 'activo' : ''}
-            onClick={() => setVista('grid')}
-            aria-label="Vista de cuadrícula"
-          >
-            <IconoGrid />
-          </button>
-        </div>
-      </div>
-
-      {/* Filtros colapsables — igual que Mis Items */}
-      {filtrosAbiertos && (
-        <div className="misitems-filtros">
-          <p className="misitems-filtros__titulo">Tipo de producto</p>
-          <div className="misitems-filtros__chips">
-            {LINEAS_FILTRO.map((linea) => (
-              <button
-                key={linea.id}
-                type="button"
-                className={`filtro-chip ${lineaActiva === linea.id ? 'filtro-chip--activo' : ''}`}
-                onClick={() => setLineaActiva(linea.id)}
-              >
-                {linea.nombre}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {cargando ? (
-        <div className={vista === 'grid' ? 'comprar-nuevo__lista' : 'comprar-nuevo__lista comprar-nuevo__lista--filas'}>
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="comprar-nuevo-card comprar-nuevo-card--skeleton" />
-          ))}
-        </div>
-      ) : productos.length === 0 ? (
-        <div className="misitems-vacio">
-          <span className="misitems-vacio__icon">🔁</span>
-          <p>Todavía no tienes compras anteriores para recomprar.</p>
-          <Link to="/orders" className="misitems-vacio__cta">Ver mis órdenes</Link>
-        </div>
-      ) : productosFiltrados.length === 0 ? (
-        <p className="misitems-vacio-filtro">No hay compras que coincidan con tu búsqueda.</p>
-      ) : (
-        <div className={vista === 'grid' ? 'comprar-nuevo__lista' : 'comprar-nuevo__lista comprar-nuevo__lista--filas'}>
-          {productosFiltrados.map((producto) => {
-            const tieneDescuentoCN = producto.precio_original_usd != null && producto.descuento_activo
-            const precioVesCN = tasaVes && producto.precio_usd != null
-              ? Number((producto.precio_usd * tasaVes).toFixed(2)).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-              : null
-            return (
-              <div key={producto.id} className="comprar-nuevo-card">
-                <Link to={`/producto/${producto.id}`} className="comprar-nuevo-card__media">
-                  {producto.foto_url ? (
-                    <img src={producto.foto_url} alt={producto.nombre_comercial} loading="lazy" />
-                  ) : (
-                    <div className="itemcard__media-placeholder">Sin imagen</div>
-                  )}
-                </Link>
-                <div className="comprar-nuevo-card__info">
-                  <Link to={`/producto/${producto.id}`} className="comprar-nuevo-card__nombre">
-                    {producto.nombre_comercial}
-                  </Link>
-                  <div className="comprar-nuevo-card__precios">
-                    {tieneDescuentoCN ? (
-                      <>
-                        <span className="comprar-nuevo-card__precio-ahora">
-                          <span className="comprar-nuevo-card__precio-ahora-label">Ahora</span>
-                          <PrecioSuperIndice valor={producto.precio_usd} />
-                        </span>
-                        <span className="comprar-nuevo-card__precio-original">
-                          <PrecioSuperIndice valor={producto.precio_original_usd} />
-                        </span>
-                      </>
-                    ) : (
-                      <span className="comprar-nuevo-card__precio-normal">
-                        <PrecioSuperIndice valor={producto.precio_usd} />
-                      </span>
-                    )}
-                    {precioVesCN && (
-                      <span className="comprar-nuevo-card__precio-ves">
-                        ≈ Bs. {precioVesCN}
-                      </span>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    className={`comprar-nuevo-card__cta ${cantidadEnCarrito(producto.id) ? 'comprar-nuevo-card__cta--cantidad' : ''}`}
-                    onClick={() => addItem(producto, 1)}
-                  >
-                    {cantidadEnCarrito(producto.id)
-                      ? `En el carrito (${cantidadEnCarrito(producto.id)})`
-                      : 'Agregar al carrito'}
-                  </button>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
-    </section>
-  )
-}
-
-// ---------------------------------------------------------
 // Componente principal
 // ---------------------------------------------------------
-const TABS = [
-  { id: 'items', label: 'Mis Items' },
-  { id: 'recomprar', label: 'Comprar de nuevo' },
-]
-
 function MisItems() {
-  // La pestaña activa vive en la URL (?tab=recomprar) en vez de un
-  // useState suelto: así el link "Comprar de nuevo" del menú de
-  // Páginas Principales puede llevar directo a esa pestaña, y el
-  // botón "atrás" del navegador también funciona como uno espera.
+  // La pestaña activa vive en la URL (?tab=recomprar) en vez de un useState
+  // suelto: así el link "Comprar de nuevo" del menú puede llevar directo a esa
+  // pestaña, y el botón "atrás" del navegador también funciona como uno espera.
   const [searchParams, setSearchParams] = useSearchParams()
   const tabActivo = searchParams.get('tab') === 'recomprar' ? 'recomprar' : 'items'
+
+  const { favoritos, esFavorito, toggleFavorito, loading: cargandoFav } = useFavoritos()
+  const { toast, mostrar, cerrar } = useToast()
 
   // Tasa de cambio VES — global, se carga una sola vez.
   const [tasaVes, setTasaVes] = useState(null)
@@ -891,20 +360,179 @@ function MisItems() {
       .catch(() => setTasaVes(null))
   }, [])
 
+  // Listas del usuario + sus miembros (Map(listaId → Set(productoId)))
+  const [listas, setListas] = useState([])
+  const [miembros, setMiembros] = useState(() => new Map())
+  const [cargandoListas, setCargandoListas] = useState(true)
+  const [ocupadas, setOcupadas] = useState(() => new Set())
+
+  useEffect(() => {
+    let activo = true
+    leerListasCompletas()
+      .then(({ listas: l, miembros: m }) => {
+        if (!activo) return
+        setListas(l)
+        setMiembros(m)
+      })
+      .catch(() => { if (activo) console.error('Error al cargar listas') })
+      .finally(() => { if (activo) setCargandoListas(false) })
+    return () => { activo = false }
+  }, [])
+
+  // ---- Modales ----
+  const [modalNombre, setModalNombre] = useState(null) // null | { lista: null | listaObj }
+  const [modalEliminar, setModalEliminar] = useState(null)
+  const [modalAgregar, setModalAgregar] = useState(false)
+  const [hojaProductos, setHojaProductos] = useState(null)
+  const [guardandoNombre, setGuardandoNombre] = useState(false)
+  const [eliminando, setEliminando] = useState(false)
+
+  // ---- Selección múltiple (a nivel de página: el Toast y el layout la leen) ----
+  const [seleccion, setSeleccion] = useState({ activo: false, ids: new Set() })
+  const salirSeleccion = useMemo(
+    () => () => setSeleccion({ activo: false, ids: new Set() }),
+    []
+  )
+
+  const idsEnListas = useMemo(() => {
+    const s = new Set()
+    for (const set of miembros.values()) for (const id of set) s.add(id)
+    return s
+  }, [miembros])
+
+  const nombresExistentes = useMemo(
+    () => new Set(listas.map((l) => l.nombre.trim().toLowerCase())),
+    [listas]
+  )
+
+  const sugerenciasDisponibles = useMemo(
+    () => LISTAS_SUGERIDAS.filter((n) => !nombresExistentes.has(n.toLowerCase())),
+    [nombresExistentes]
+  )
+
+  const existentesParaModal = useMemo(() => {
+    const editId = modalNombre?.lista?.id
+    return listas.filter((l) => l.id !== editId).map((l) => l.nombre.trim().toLowerCase())
+  }, [listas, modalNombre])
+
   function cambiarTab(id) {
+    salirSeleccion()
     setSearchParams(id === 'recomprar' ? { tab: 'recomprar' } : {})
   }
 
-  // "Crear lista" vive como acción del menú (no una ruta): la
-  // controlamos acá arriba para poder dispararla tanto desde el botón
-  // "+" del carrusel de listas como desde el link del sidebar/drawer.
-  const [mostrarCrear, setMostrarCrear] = useState(false)
+  // ---- Abrir hoja "Guardar en lista" (acepta 1 producto o un arreglo) ----
+  function abrirHoja(productos) {
+    const arr = Array.isArray(productos) ? productos : [productos]
+    if (arr.length === 0) return
+    salirSeleccion()
+    setHojaProductos(arr)
+  }
 
-  function manejarAccionNav(accion) {
-    if (accion === 'crear-lista') {
-      cambiarTab('items')
-      setMostrarCrear(true)
+  // ---- CRUD de listas ----
+  async function guardarNombre(nombre) {
+    const editando = modalNombre?.lista
+    setGuardandoNombre(true)
+    try {
+      if (editando) {
+        await api.patch(`/lists/${editando.id}`, { nombre })
+        setListas((prev) => prev.map((l) => (l.id === editando.id ? { ...l, nombre } : l)))
+        mostrar('Lista renombrada')
+      } else {
+        const { data } = await api.post('/lists', { nombre })
+        setListas((prev) => [...prev, data])
+        setMiembros((prev) => new Map(prev).set(data.id, new Set()))
+        mostrar('Lista creada')
+      }
+      setModalNombre(null)
+    } catch {
+      mostrar(editando ? 'No se pudo renombrar la lista' : 'No se pudo crear la lista', { tipo: 'error' })
+    } finally {
+      setGuardandoNombre(false)
     }
+  }
+
+  async function eliminarLista() {
+    const lista = modalEliminar
+    if (!lista) return
+    setEliminando(true)
+    try {
+      await api.delete(`/lists/${lista.id}`)
+      setListas((prev) => prev.filter((l) => l.id !== lista.id))
+      setMiembros((prev) => {
+        const m = new Map(prev)
+        m.delete(lista.id)
+        return m
+      })
+      setModalEliminar(null)
+      mostrar('Lista eliminada')
+    } catch {
+      mostrar('No se pudo eliminar la lista', { tipo: 'error' })
+    } finally {
+      setEliminando(false)
+    }
+  }
+
+  // ---- Hoja: alternar productos en una lista existente ----
+  async function alternarEnLista(lista, productos, accion) {
+    setOcupadas((prev) => new Set(prev).add(lista.id))
+    try {
+      if (accion === 'agregar') {
+        const faltan = productos.filter((p) => !miembros.get(lista.id)?.has(p.id))
+        for (const p of faltan) {
+          await api.post(`/lists/${lista.id}/items`, { producto_id: p.id })
+        }
+        setMiembros((prev) => {
+          const m = new Map(prev)
+          const set = new Set(m.get(lista.id) || [])
+          faltan.forEach((p) => set.add(p.id))
+          m.set(lista.id, set)
+          return m
+        })
+        mostrar('Guardado en la lista')
+      } else {
+        const quitar = productos.filter((p) => miembros.get(lista.id)?.has(p.id))
+        for (const p of quitar) {
+          await api.delete(`/lists/${lista.id}/items/${p.id}`)
+        }
+        setMiembros((prev) => {
+          const m = new Map(prev)
+          const set = new Set(m.get(lista.id) || [])
+          quitar.forEach((p) => set.delete(p.id))
+          m.set(lista.id, set)
+          return m
+        })
+        mostrar('Quitado de la lista')
+      }
+    } catch {
+      mostrar('No se pudo actualizar la lista', { tipo: 'error' })
+    } finally {
+      setOcupadas((prev) => {
+        const s = new Set(prev)
+        s.delete(lista.id)
+        return s
+      })
+    }
+  }
+
+  // ---- Hoja: crear lista nueva y guardar los productos ahí ----
+  // Lanza si falla para que la hoja muestre el error con su propio estado.
+  async function crearDesdeHoja(nombre, productos) {
+    const { data } = await api.post('/lists', { nombre })
+    for (const p of productos) {
+      await api.post(`/lists/${data.id}/items`, { producto_id: p.id })
+    }
+    setListas((prev) => [...prev, data])
+    setMiembros((prev) => new Map(prev).set(data.id, new Set(productos.map((p) => p.id))))
+    mostrar(`Lista "${nombre}" creada`)
+  }
+
+  const acciones = {
+    abrirCrear: () => setModalNombre({ lista: null }),
+    abrirAgregar: () => setModalAgregar(true),
+    renombrar: (lista) => setModalNombre({ lista }),
+    eliminar: (lista) => setModalEliminar(lista),
+    abrirHoja,
+    notificar: mostrar,
   }
 
   return (
@@ -913,15 +541,14 @@ function MisItems() {
       titulo="Mis Items"
       subtitulo="Tus favoritos, listas y compras frecuentes"
       nav={NAV_UNIFICADO}
-      onAccion={manejarAccionNav}
     >
-      <div className="misitems-page">
-        <div className="misitems-tabs">
+      <div className="fav-root">
+        <div className="fav-tabs">
           {TABS.map((tab) => (
             <button
               key={tab.id}
               type="button"
-              className={`misitems-tab ${tabActivo === tab.id ? 'misitems-tab--activo' : ''}`}
+              className={`fav-tab ${tabActivo === tab.id ? 'fav-tab--on' : ''}`}
               onClick={() => cambiarTab(tab.id)}
             >
               {tab.label}
@@ -929,11 +556,80 @@ function MisItems() {
           ))}
         </div>
 
-        <div className="misitems-container">
-          {tabActivo === 'items' && <TabMisItems mostrarCrear={mostrarCrear} setMostrarCrear={setMostrarCrear} tasaVes={tasaVes} />}
-          {tabActivo === 'recomprar' && <TabComprarDeNuevo tasaVes={tasaVes} />}
-        </div>
+        {tabActivo === 'items' ? (
+          <TabMisItems
+            tasaVes={tasaVes}
+            favoritos={favoritos}
+            cargandoFav={cargandoFav}
+            idsEnListas={idsEnListas}
+            toggleFavorito={toggleFavorito}
+            seleccion={seleccion}
+            setSeleccion={setSeleccion}
+            salirSeleccion={salirSeleccion}
+            listas={listas}
+            cargandoListas={cargandoListas}
+            miembros={miembros}
+            abrirCrear={acciones.abrirCrear}
+            abrirAgregar={acciones.abrirAgregar}
+            renombrar={acciones.renombrar}
+            eliminar={acciones.eliminar}
+            abrirHoja={acciones.abrirHoja}
+            notificar={acciones.notificar}
+          />
+        ) : (
+          <ComprarDeNuevo tasaVes={tasaVes} onGuardar={abrirHoja} idsEnListas={idsEnListas} />
+        )}
       </div>
+
+      {/* ---- Modales y hoja (portales) ---- */}
+      {modalNombre && (
+        <ModalNombreLista
+          titulo={modalNombre.lista ? 'Renombrar lista' : 'Crear una nueva lista'}
+          textoBoton={modalNombre.lista ? 'Guardar' : 'Crear lista'}
+          inicial={modalNombre.lista?.nombre || ''}
+          existentes={existentesParaModal}
+          sugerencias={modalNombre.lista ? [] : sugerenciasDisponibles}
+          guardando={guardandoNombre}
+          onGuardar={guardarNombre}
+          onCerrar={() => setModalNombre(null)}
+        />
+      )}
+
+      {modalEliminar && (
+        <ModalConfirmar
+          titulo="Eliminar lista"
+          texto={`¿Seguro que quieres eliminar "${modalEliminar.nombre}"? Los productos seguirán en tus favoritos.`}
+          textoConfirmar="Eliminar"
+          procesando={eliminando}
+          onConfirmar={eliminarLista}
+          onCerrar={() => setModalEliminar(null)}
+        />
+      )}
+
+      {hojaProductos && (
+        <HojaGuardarEnLista
+          productos={hojaProductos}
+          listas={listas}
+          miembros={miembros}
+          ocupadas={ocupadas}
+          onAlternar={alternarEnLista}
+          onCrear={crearDesdeHoja}
+          onCerrar={() => setHojaProductos(null)}
+        />
+      )}
+
+      {modalAgregar && (
+        <ModalAgregarProductos
+          modo="favoritos"
+          favoritos={favoritos}
+          idsEnLista={idsEnListas}
+          yaEsta={(p) => esFavorito(p.id)}
+          onAgregarUno={async (p) => { if (!esFavorito(p.id)) await toggleFavorito(p) }}
+          onCerrar={() => setModalAgregar(false)}
+        />
+      )}
+
+      <Toast toast={toast} onCerrar={cerrar} sobreBarra={seleccion.activo && tabActivo === 'items'} />
     </LayoutPaginaPrincipal>
   )
 }

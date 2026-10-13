@@ -14,7 +14,7 @@ export default function Toast({ toast, onCerrar, sobreBarra = false }) {
         role={esError ? 'alert' : 'status'}
       >
         {esError ? <AlertCircle size={18} /> : <CheckCircle2 size={18} />}
-        <span className="fav-toast__texto">{toast.texto}</span>
+        <span className="fav-toast__texto">{toast.mensaje}</span>
         {toast.accion && (
           <button
             type="button"

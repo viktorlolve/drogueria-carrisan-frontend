@@ -7,7 +7,11 @@ const FavoritosContext = createContext();
 
 export function FavoritosProvider({ children }) {
   const [favoritos, setFavoritos] = useState([]);
-  const [loading, setLoading] = useState(false);
+  // Id del usuario cuyos favoritos ya terminaron de cargar. Antes había un
+  // useState(false) para `loading` que nunca se ponía en true en la carga
+  // inicial: Mis Items mostraba "no tienes favoritos" hasta que llegaba la
+  // respuesta. Ahora `loading` se deriva: es true hasta que carga el usuario actual.
+  const [cargadoPara, setCargadoPara] = useState(null);
   const { user, token } = useAuth();
 
   // Cargar favoritos cuando el usuario inicia sesión
@@ -18,13 +22,12 @@ export function FavoritosProvider({ children }) {
     }
 
     try {
-      setLoading(true);
       const { data } = await api.get('/favoritos');
       setFavoritos(data.favoritos || []);
     } catch (error) {
       console.error('Error al cargar favoritos:', error);
     } finally {
-      setLoading(false);
+      setCargadoPara(user.id);
     }
   }, [user, token]);
 
@@ -35,7 +38,7 @@ export function FavoritosProvider({ children }) {
     api.get('/favoritos')
       .then(({ data }) => { if (activo) setFavoritos(data.favoritos || []) })
       .catch((error) => { if (activo) console.error('Error al cargar favoritos:', error) })
-      .finally(() => { if (activo) setLoading(false) })
+      .finally(() => { if (activo) setCargadoPara(user.id) })
     return () => { activo = false }
   }, [user, token])
 
@@ -71,7 +74,7 @@ export function FavoritosProvider({ children }) {
 
   const value = {
     favoritos: user && token ? favoritos : [],
-    loading,
+    loading: !!(user && token) && cargadoPara !== user.id,
     esFavorito,
     toggleFavorito,
     recargarFavoritos: cargarFavoritos

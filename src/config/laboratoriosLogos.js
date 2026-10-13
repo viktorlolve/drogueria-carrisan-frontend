@@ -41,6 +41,13 @@ export const LOGOS_LABORATORIOS = {
   ronava:           { logo: `${BASE_IMG}/logos/ronava.jpg`,             nombre: 'RONAVA' },
   gema:             { logo: `${BASE_IMG}/logos/gema.png`,             nombre: 'GEMA LABS' },
   intercaps:        { logo: `${BASE_IMG}/logos/intercaps.png`,        nombre: 'INTERCAPS' },
+  // ── Tanda 3 (logotipos cargados 2026-10-13) ──────────────────────────
+  // DROTAFARMA: archivo drotafarma.jpg; corresponde al registro
+  // "CASA DE REPRESENTACIONES TAGUAPIREFARMA C.A." (DROTAFARMA es su marca).
+  taguapire:        { logo: `${BASE_IMG}/logos/drotafarma.jpg`,       nombre: 'DROTAFARMA' },
+  distrilab:        { logo: `${BASE_IMG}/logos/distrilab.jpg`,        nombre: 'DISTRILAB' },
+  bioglass:         { logo: `${BASE_IMG}/logos/bioglass.png`,         nombre: 'BIOGLASS' },
+  angelus:          { logo: `${BASE_IMG}/logos/angelus.jpg`,          nombre: 'ANGELUS' },
 }
 
 // Normaliza un nombre para la búsqueda de tokens (minúsculas + sin acentos).
