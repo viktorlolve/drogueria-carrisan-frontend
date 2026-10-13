@@ -302,6 +302,16 @@ function StaffInventario() {
   const [guardandoFoto, setGuardandoFoto] = useState(false)
   const [guardandoPrecio, setGuardandoPrecio] = useState(false)
 
+  // Datos de texto del producto (nombre, laboratorio, línea, forma, molécula,
+  // descripción, país, activo, visible_catalogo). Viven en estado LOCAL propio
+  // porque el formulario es un borrador: se copia del servidor al pulsar
+  // "Editar" y solo se manda al guardar. El refetch del detalle (foto/precio)
+  // NO toca este borrador mientras se está editando.
+  const [editandoDatos, setEditandoDatos] = useState(false)
+  const [formDatos, setFormDatos] = useState(null)
+  const [guardandoDatos, setGuardandoDatos] = useState(false)
+  const [notaDatos, setNotaDatos] = useState('')
+
   // Cuáles de los dos campos de edición tienen algo tecleado SIN guardar. Es un
   // ref y no estado a propósito: el refetch del detalle (cada escritura bumpea
   // `detalleRecarga`) repone los campos con lo que dice el servidor, y con estado
@@ -349,7 +359,10 @@ function StaffInventario() {
     setArchivo(null)
     setUrlFoto('')
     setPrecioTexto('')
-    
+    setEditandoDatos(false)
+    setFormDatos(null)
+    setNotaDatos('')
+    setGuardandoDatos(false)
   }
 
   // --- GET /staff/inventario/opciones --------------------------------------
@@ -699,11 +712,80 @@ function StaffInventario() {
     }
   }
 
+  // --- escritura de datos del producto ------------------------------------
+
+  function empezarEditarDatos() {
+    const p = detalle?.producto
+    if (!p) return
+    setFormDatos({
+      nombre_comercial: p.nombre_comercial || '',
+      descripcion: p.descripcion || '',
+      laboratorio: p.laboratorio || '',
+      molecula: p.molecula || '',
+      linea: p.linea || '',
+      forma: p.forma || '',
+      pais_origen: p.pais_origen || '',
+      activo: p.activo === true,
+      visible_catalogo: p.visible_catalogo === true,
+    })
+    setNotaDatos('')
+    setDrawerError('')
+    setEditandoDatos(true)
+  }
+
+  function descartarDatos() {
+    setFormDatos(null)
+    setNotaDatos('')
+    setDrawerError('')
+    setEditandoDatos(false)
+  }
+
+  function cambiarDato(campo, valor) {
+    setFormDatos((prev) => (prev ? { ...prev, [campo]: valor } : prev))
+    setNotaDatos('')
+  }
+
+  async function guardarDatos() {
+    if (!formDatos) return
+    if (!formDatos.nombre_comercial.trim()) {
+      setDrawerError('El nombre comercial no puede quedar vacío')
+      return
+    }
+    setGuardandoDatos(true)
+    setDrawerError('')
+    setNotaDatos('')
+    try {
+      const { data } = await staffApi.patch(`/staff/inventario/${drawerId}`, formDatos)
+      // El server normaliza (trim + limpieza del laboratorio): se muestra lo que
+      // quedó guardado, no lo que se tecleó.
+      setDetalle((prev) =>
+        prev ? { ...prev, producto: { ...prev.producto, ...data } } : prev,
+      )
+      setNotaDatos('Datos guardados.')
+      setEditandoDatos(false)
+      setFormDatos(null)
+      trasEscribir()
+    } catch (err) {
+      setDrawerError(err.response?.data?.error || 'No se pudieron guardar los datos')
+      console.error('[inventario] error al guardar los datos:', err?.response?.status, err?.message)
+    } finally {
+      setGuardandoDatos(false)
+    }
+  }
+
   // --- datos derivados del drawer ----------------------------------------
   const producto = detalle?.producto || null
   const fotoUrlActual = producto?.foto_url || ''
   const hayFoto = fotoUrlActual !== ''
   const puedeEditarPrecio = detalle?.puede_editar_precio === true
+  const puedeEditarDatos = detalle?.puede_editar_datos === true
+  // Sugerencias para los inputs de texto del formulario de datos. Son las mismas
+  // listas de los filtros: el campo es libre (datalist), no un select cerrado,
+  // porque corregir un dato puede requerir un valor que todavía no está en la BD.
+  const labsDatos = opciones?.laboratorios || []
+  const lineasDatos = opciones?.lineas || []
+  const formasDatos = opciones?.formas || []
+  const moleculasDatos = opciones?.moleculas || []
   const costoMasBarato = (detalle?.costos || []).find((c) => c.es_el_mas_barato) || null
   const refs = (detalle?.moleculas || [])
     .map((m) => m.moleculas_referencias)
@@ -1180,16 +1262,185 @@ function StaffInventario() {
                       {notaPrecio && <p className="si-nota si-nota--ok" role="status">{notaPrecio}</p>}
                     </section>
 
-                    {/* 4. Datos (solo lectura) */}
+                    {/* 4. Datos del producto (texto; lo edita la gerencia) */}
                     <section className="si-fieldset">
-                      <h3 className="si-fieldset__titulo">Datos</h3>
+                      <div className="si-head-datos">
+                        <h3 className="si-fieldset__titulo">Datos</h3>
+                        {puedeEditarDatos && !editandoDatos && (
+                          <button
+                            type="button"
+                            className="si-btn"
+                            onClick={empezarEditarDatos}
+                            disabled={guardandoDatos}
+                          >
+                            Editar datos
+                          </button>
+                        )}
+                      </div>
+
+                      {editandoDatos && formDatos && (
+                        <div className="si-form-datos">
+                          <label className="si-label">
+                            <span>Nombre comercial</span>
+                            <input
+                              type="text"
+                              className="sp-input"
+                              value={formDatos.nombre_comercial}
+                              maxLength={500}
+                              onChange={(e) => cambiarDato('nombre_comercial', e.target.value)}
+                            />
+                          </label>
+
+                          <label className="si-label">
+                            <span>Descripción</span>
+                            <textarea
+                              className="sp-input si-textarea"
+                              rows={3}
+                              value={formDatos.descripcion}
+                              onChange={(e) => cambiarDato('descripcion', e.target.value)}
+                            />
+                          </label>
+
+                          <div className="si-grid-2">
+                            <label className="si-label">
+                              <span>Laboratorio</span>
+                              <input
+                                type="text"
+                                className="sp-input"
+                                list="si-labs-datos"
+                                value={formDatos.laboratorio}
+                                onChange={(e) => cambiarDato('laboratorio', e.target.value)}
+                              />
+                            </label>
+                            <label className="si-label">
+                              <span>Línea</span>
+                              <input
+                                type="text"
+                                className="sp-input"
+                                list="si-lineas-datos"
+                                value={formDatos.linea}
+                                onChange={(e) => cambiarDato('linea', e.target.value)}
+                              />
+                            </label>
+                            <label className="si-label">
+                              <span>Forma</span>
+                              <input
+                                type="text"
+                                className="sp-input"
+                                list="si-formas-datos"
+                                value={formDatos.forma}
+                                onChange={(e) => cambiarDato('forma', e.target.value)}
+                              />
+                            </label>
+                            <label className="si-label">
+                              <span>País de origen</span>
+                              <input
+                                type="text"
+                                className="sp-input"
+                                value={formDatos.pais_origen}
+                                onChange={(e) => cambiarDato('pais_origen', e.target.value)}
+                              />
+                            </label>
+                          </div>
+
+                          <label className="si-label">
+                            <span>Molécula (columna)</span>
+                            <input
+                              type="text"
+                              className="sp-input si-input-molecula"
+                              list="si-moleculas-datos"
+                              value={formDatos.molecula}
+                              onChange={(e) => cambiarDato('molecula', e.target.value)}
+                            />
+                          </label>
+                          <p className="si-nota">
+                            Cambiar la molécula actualiza solo el texto de la columna; el enlace a
+                            la ficha clínica/vademécum (ATC) NO se recalcula desde acá.
+                          </p>
+                          <p className="sp-hint">
+                            El laboratorio se guarda sin comas ni comillas dobles: una coma ahí
+                            rompe el filtro del catálogo por laboratorio.
+                          </p>
+
+                          <div className="si-grid-2">
+                            <label className="sp-check">
+                              <input
+                                type="checkbox"
+                                checked={formDatos.activo}
+                                onChange={(e) => cambiarDato('activo', e.target.checked)}
+                              />
+                              Activo
+                            </label>
+                            <label className="sp-check">
+                              <input
+                                type="checkbox"
+                                checked={formDatos.visible_catalogo}
+                                onChange={(e) => cambiarDato('visible_catalogo', e.target.checked)}
+                              />
+                              Visible en el catálogo
+                            </label>
+                          </div>
+
+                          <div className="si-fila-botones">
+                            <button
+                              type="button"
+                              className="si-btn si-btn--principal"
+                              onClick={guardarDatos}
+                              disabled={guardandoDatos}
+                            >
+                              {guardandoDatos ? 'Guardando...' : 'Guardar datos'}
+                            </button>
+                            <button
+                              type="button"
+                              className="si-btn si-btn--sutil"
+                              onClick={descartarDatos}
+                              disabled={guardandoDatos}
+                            >
+                              Descartar
+                            </button>
+                          </div>
+
+                          {/* Sugerencias: el mismo contenido que los filtros. Va como
+                              datalist (campo libre) porque corregir un dato puede requerir
+                              un valor que todavía no está en la BD. */}
+                          <datalist id="si-labs-datos">
+                            {labsDatos.map((v) => <option key={v} value={v} />)}
+                          </datalist>
+                          <datalist id="si-lineas-datos">
+                            {lineasDatos.map((v) => <option key={v} value={v} />)}
+                          </datalist>
+                          <datalist id="si-formas-datos">
+                            {formasDatos.map((v) => <option key={v} value={v} />)}
+                          </datalist>
+                          <datalist id="si-moleculas-datos">
+                            {moleculasDatos.map((m) => <option key={m.nombre} value={m.nombre} />)}
+                          </datalist>
+                        </div>
+                      )}
+
+                      {notaDatos && <p className="si-nota si-nota--ok" role="status">{notaDatos}</p>}
+
+                      {!puedeEditarDatos && (
+                        <p className="si-sin-permiso">
+                          Los datos del producto los corrige la gerencia (administrador/director)
+                        </p>
+                      )}
+
+                      {/* Registro + estado derivado. NO se editan desde acá y siguen
+                          visibles mientras se edita, para tener el contexto. */}
                       <div className="si-datos">
+                        {!editandoDatos && (
+                          <>
+                            <Dato etiqueta="Laboratorio" valor={producto.laboratorio} />
+                            <Dato etiqueta="Línea" valor={producto.linea} />
+                            <Dato etiqueta="Forma" valor={producto.forma} />
+                            <Dato etiqueta="Molécula (columna)" valor={producto.molecula} />
+                            <Dato etiqueta="Descripción" valor={producto.descripcion} />
+                            <Dato etiqueta="País de origen" valor={producto.pais_origen} />
+                          </>
+                        )}
                         <Dato etiqueta="SKU" valor={producto.sku} mono />
                         <Dato etiqueta="Registro INHRR" valor={producto.fuente_inhrr_ef} mono />
-                        <Dato etiqueta="Laboratorio" valor={producto.laboratorio} />
-                        <Dato etiqueta="Línea" valor={producto.linea} />
-                        <Dato etiqueta="Forma" valor={producto.forma} />
-                        <Dato etiqueta="Molécula (columna)" valor={producto.molecula} />
                         <Dato
                           etiqueta="Moléculas (vademécum)"
                           valor={refs.map((r) => r.nombre).join(', ')}
