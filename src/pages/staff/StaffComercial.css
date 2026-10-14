@@ -966,7 +966,7 @@
 .sp-sortable { cursor: pointer; user-select: none; }
 .sp-nombre { min-width: 200px; }
 .sp-mol { font-size: 0.75rem; color: #64748b; }
-.sp-badge { display: inline-block; background: #eef2ff; color: #3730a3; border-radius: 4px; padding: 2px 6px; font-size: 0.75rem; }
+.spc-badge { display: inline-block; background: #eef2ff; color: #3730a3; border-radius: 4px; padding: 2px 6px; font-size: 0.75rem; }
 .sp-precio { min-width: 120px; }
 .sp-precio-btn { background: transparent; border: 1px dashed #cbd5e1; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.85rem; }
 .sp-precio-btn:hover { border-color: var(--ldep-color, #2563EB); color: var(--ldep-color, #2563EB); }

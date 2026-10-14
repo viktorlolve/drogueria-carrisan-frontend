@@ -1,4 +1,6 @@
 import { getLabelEstado } from '../../config/estadosOrden'
+import { formatearUSD } from '../../utils/formato'
+import StaffEstado from './StaffEstado'
 import './ColaOrdenes.css'
 
 // Componentes y helpers compartidos por las 6 colas logisticas.
@@ -76,10 +78,11 @@ export default function ColaOrdenes({
   vacio = 'No hay nada por aquí.',
   renderAcciones,
   badge,
+  onReintentar,
 }) {
-  if (cargando) return <p>Cargando...</p>
-  if (error) return <p className="sp-error">{error}</p>
-  if (ordenes.length === 0) return <p>{vacio}</p>
+  if (cargando) return <StaffEstado tipo="cargando" />
+  if (error) return <StaffEstado tipo="error" mensaje={error} onReintentar={onReintentar} />
+  if (ordenes.length === 0) return <StaffEstado tipo="vacio" titulo={vacio} />
 
   return (
     <div>
@@ -92,7 +95,7 @@ export default function ColaOrdenes({
           <div key={orden.id} className="sp-card-wrap">
             <div className="sp-card">
               <div className="sp-card-head">
-                <p className="sp-card-titulo">Orden #{orden.id} — ${formatUSD(orden.total_usd)}</p>
+                <p className="sp-card-titulo">Orden #{orden.id} — {formatearUSD(orden.total_usd)}</p>
                 {badge ? badge(orden) : (
                   <span className={`sp-badge ${orden.forma_pago === 'credito' ? 'sp-badge--credito' : 'sp-badge--contado'}`}>
                     {orden.forma_pago === 'credito' ? 'Crédito' : 'Contado'}

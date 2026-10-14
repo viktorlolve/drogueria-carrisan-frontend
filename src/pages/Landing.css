@@ -905,8 +905,8 @@
 
 
 .landing-footer__logo {
-  width: 190px;
-  height: 48px;
+  width: 239px;
+  height: 88px;
   min-height: 0;
   margin: 0 0 18px;
   border: none;
@@ -964,7 +964,7 @@
 
 .landing-badge-img {
   border-radius: 12px;
-  height: 86px;
+  height: 51px;
   min-height: 0;
 
   display: flex;
@@ -1188,8 +1188,8 @@
 
 
 .landing-footer__bottom-logo-img {
-  width: 120px;
-  height: 38px;
+  width: 160px;
+  height: 75px;
 
   min-height: 0;
 
@@ -1274,8 +1274,8 @@
 
 
   .landing-footer__logo {
-    width: 165px;
-    height: 42px;
+    width: 208px;
+    height: 77px;
   }
 
 
@@ -1296,7 +1296,7 @@
 
 
   .landing-badge-img {
-    height: 55px;
+    height: 34px;
   }
 
 

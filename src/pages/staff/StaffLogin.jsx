@@ -15,12 +15,12 @@ import {
 } from '@chakra-ui/react'
 import { ShieldCheck, ClipboardCheck, Truck, Lock } from 'lucide-react'
 import { useStaffAuth } from '../../context/StaffAuthContext'
-import logo from '../../assets/minilogo color sin fondo.png'
+import { MINI_LOGO_COLOR as logo } from '../../config/logos'
 
 /* Paleta de marca */
 const TEAL = '#12A594'
-const VERDE_STAFF = '#0D9373'
-const GRIS_OSCURO = '#232B45'
+const VERDE_STAFF = '#0E8577'
+const GRIS_OSCURO = '#1A1A3A'
 
 /* Puntos destacados del panel de branding (desktop) */
 const PANEL_FEATURES = [

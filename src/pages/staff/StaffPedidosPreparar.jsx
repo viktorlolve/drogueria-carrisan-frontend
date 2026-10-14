@@ -5,12 +5,13 @@ import ColaOrdenes from '../../components/staff/ColaOrdenes'
 import { useColaStaff } from '../../hooks/useColaStaff'
 import { useStaffBadges } from '../../context/StaffBadgesContext'
 import { exportarGuiaDespacho } from '../../utils/exportUtils'
+import { useStaffUI } from '../../hooks/useStaffUI'
 
 // Órdenes aprobadas y en 'preparando'. La cola trae TODAS las de ese estado
 // (incluidas las que esperan pago); el badge `preparar` del nav cuenta solo las
 // accionables, y `preparar_esperando_pago` alimenta el aviso de arriba.
 export default function StaffPedidosPreparar() {
-  const { datos, cargando, error, recargarTodo } = useColaStaff('/staff/almacen/preparar')
+  const { datos, cargando, error, recargar, recargarTodo } = useColaStaff('/staff/almacen/preparar')
   const { conteos } = useStaffBadges()
 
   return (
@@ -28,6 +29,7 @@ export default function StaffPedidosPreparar() {
         ordenes={datos}
         cargando={cargando}
         error={error}
+        onReintentar={recargar}
         vacio="No hay pedidos por preparar."
         renderAcciones={(orden) => (
           <AccionesPreparar orden={orden} onRecargar={recargarTodo} />
@@ -38,6 +40,7 @@ export default function StaffPedidosPreparar() {
 }
 
 function AccionesPreparar({ orden, onRecargar }) {
+  const { confirmar, avisar } = useStaffUI()
   const [verificando, setVerificando] = useState({})
   const [procesando, setProcesando] = useState(false)
 
@@ -66,14 +69,14 @@ function AccionesPreparar({ orden, onRecargar }) {
       await staffApi.post(`/staff/logistica/${orden.id}/verificar-paquete`)
       await onRecargar()
     } catch (err) {
-      alert(err.response?.data?.error || 'No se pudo verificar el paquete')
+      avisar(err.response?.data?.error || 'No se pudo verificar el paquete', 'error')
     } finally {
       setProcesando(false)
     }
   }
 
   async function salir(destino) {
-    if (destino === 'cancelar' && !window.confirm(`¿Cancelar la orden #${orden.id}?`)) return
+    if (destino === 'cancelar' && !(await confirmar({ titulo: `¿Cancelar la orden #${orden.id}?`, textoConfirmar: 'Cancelar orden', textoCancelar: 'Volver', peligro: true }))) return
     setProcesando(true)
     try {
       if (destino === 'cancelar') {
@@ -86,7 +89,7 @@ function AccionesPreparar({ orden, onRecargar }) {
       }
       await onRecargar()
     } catch (err) {
-      alert(err.response?.data?.error || 'No se pudo marcar el pedido')
+      avisar(err.response?.data?.error || 'No se pudo marcar el pedido', 'error')
     } finally {
       setProcesando(false)
     }

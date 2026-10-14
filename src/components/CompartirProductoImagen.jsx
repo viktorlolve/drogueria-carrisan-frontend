@@ -13,6 +13,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { ImageDown, X, Share2, Download, Loader2 } from 'lucide-react'
+import { LOGO_COLOR_HORIZONTAL } from '../config/logos'
 import './CompartirProductoImagen.css'
 
 const W = 1080
@@ -26,9 +27,9 @@ const TEAL = '#12A594'
 const ORO = '#F59E0B'
 
 // ── Pendientes de marca ──────────────────────────────────────────────────
-// LOGO_URL: cuando exista el logo, pon aquí su ruta (ej. '/logo-blanco.png' en /public).
-// Mientras esté vacío se dibuja un recuadro "LOGO" de placeholder.
-const LOGO_URL = ''
+// LOGO_URL: logo real que se dibuja sobre la pill blanca de la franja superior.
+// Si estuviera vacío se dibujaría el recuadro "LOGO" de placeholder.
+const LOGO_URL = LOGO_COLOR_HORIZONTAL
 const LOGO_TAGLINE = 'TAGLINE'
 // SITIO_WEB: si se define, aparece en el pie (ej. 'drogueriacarrisan.com'). Vacío = no se muestra.
 const SITIO_WEB = ''

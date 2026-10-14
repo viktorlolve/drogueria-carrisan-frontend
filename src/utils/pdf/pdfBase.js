@@ -8,6 +8,7 @@
 // Unidades: mm, A4 (salvo que el formato pida otra cosa).
 
 import empresaInfo from '../../config/empresa'
+import { LOGO_BLANCO } from '../../config/logos'
 
 /* ---------- Paleta de marca ---------- */
 export const C = {
@@ -90,6 +91,86 @@ export function textoEsp(doc, txt, x, y, { align = 'left', cs = 0.6 } = {}) {
   doc.text(txt, x0, y, { charSpace: cs })
 }
 
+/* ---------- Color del degradado en la posición t (0..1) ---------- */
+function colorDegradado(t, desde = C.indigo, hasta = C.azul) {
+  return desde.map((c, k) => Math.round(c + (hasta[k] - c) * t))
+}
+
+/* ---------- Logo del membrete ----------
+   El membrete va sobre el degradado oscuro, así que usa la versión blanca
+   horizontal. jsPDF incrusta los PNG como RGBA crudo (~4 B/px: el logo a
+   ~500 px suma ~200 KB a CADA PDF), pero los JPEG los copia tal cual (~25 KB).
+   Por eso el logo se rasteriza una sola vez sobre un canvas que reproduce el
+   degradado del membrete (sin alpha → sin costura) y se exporta como JPEG.
+   Se carga una sola vez y se reutiliza en todos los PDFs. Si falla,
+   `dibujarMembrete` cae al sello vectorial + texto.
+
+   OJO: el fondo del canvas replica `degradado(doc, 0, 0, PAG.ancho, alto)` con
+   los defaults C.indigo→C.azul. Si el membrete cambia de colores o dirección,
+   este fondo hay que ajustarlo igual. */
+const LOGO_MEMBRETE_ALTO = 15 // mm de alto con que se dibuja en el membrete
+const LOGO_MEMBRETE_PX = 520 // ancho en px con que se rasteriza (≈315 dpi)
+
+let logoMembrete = null
+let logoMembretePromesa = null
+
+async function cargarLogoMembrete() {
+  if (logoMembrete) return logoMembrete
+  if (logoMembretePromesa) return logoMembretePromesa
+  logoMembretePromesa = (async () => {
+    try {
+      const res = await fetch(LOGO_BLANCO, { mode: 'cors', signal: AbortSignal.timeout(8000) })
+      if (!res.ok) throw new Error(`logo ${res.status}`)
+      const blob = await res.blob()
+      const dataUrl = await new Promise((resolve, reject) => {
+        const fr = new FileReader()
+        fr.onload = () => resolve(fr.result)
+        fr.onerror = reject
+        fr.readAsDataURL(blob)
+      })
+      const img = new Image()
+      img.src = dataUrl
+      await img.decode()
+
+      const ratio = img.naturalWidth / img.naturalHeight
+      const w = Math.min(ratio * LOGO_MEMBRETE_ALTO, 62)
+      const h = w / ratio
+
+      const canvas = document.createElement('canvas')
+      canvas.width = LOGO_MEMBRETE_PX
+      canvas.height = Math.max(1, Math.round(LOGO_MEMBRETE_PX / ratio))
+      const ctx = canvas.getContext('2d')
+      if (!ctx) throw new Error('canvas 2d no disponible')
+
+      // Degradado del membrete recortado al tramo que ocupa el logo.
+      const t0 = PAG.margen / PAG.ancho
+      const t1 = (PAG.margen + w) / PAG.ancho
+      const grad = ctx.createLinearGradient(0, 0, canvas.width, 0)
+      grad.addColorStop(0, `rgb(${colorDegradado(t0).join(',')})`)
+      grad.addColorStop(1, `rgb(${colorDegradado(t1).join(',')})`)
+      ctx.fillStyle = grad
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+
+      logoMembrete = { data: canvas.toDataURL('image/jpeg', 0.95), w, h }
+    } catch {
+      logoMembrete = null
+    }
+    return logoMembrete
+  })()
+  return logoMembretePromesa
+}
+
+function dibujarLogoMembrete(doc) {
+  if (!logoMembrete) return false
+  try {
+    doc.addImage(logoMembrete.data, 'JPEG', PAG.margen, 11, logoMembrete.w, logoMembrete.h)
+    return true
+  } catch {
+    return false
+  }
+}
+
 /* ---------- Marca: círculo teal con cruz ---------- */
 export function dibujarMarca(doc, cx, cy, r = 6) {
   doc.setFillColor(...C.teal)
@@ -106,8 +187,7 @@ function degradado(doc, x, y, w, h, desde = C.indigo, hasta = C.azul, pasos = 70
   const paso = w / pasos
   for (let i = 0; i < pasos; i++) {
     const t = i / (pasos - 1)
-    const col = desde.map((c, k) => Math.round(c + (hasta[k] - c) * t))
-    doc.setFillColor(...col)
+    doc.setFillColor(...colorDegradado(t, desde, hasta))
     doc.rect(x + i * paso, y, paso + 0.4, h, 'F') // +0.4 evita costuras visibles
   }
 }
@@ -132,16 +212,26 @@ export function dibujarMembrete(doc, { etiqueta, numero, sub, alto = 50, numeroS
     doc.circle(-6, alto - 6, 22, 'F')
   })
 
-  // Marca + nombre
-  dibujarMarca(doc, PAG.margen + 6, 17, 6.2)
-  doc.setTextColor(...C.blanco)
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(14)
-  doc.text(e.nombre.toUpperCase(), PAG.margen + 16, 16.5, { charSpace: 0.4 })
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(8)
-  doc.setTextColor(...C.luz)
-  doc.text(e.tagline, PAG.margen + 16, 21.5)
+  // Logo + nombre. Con el logo cargado se dibuja la marca blanca (el wordmark
+  // ya incluye el nombre); si falla, se cae al sello vectorial + texto.
+  if (dibujarLogoMembrete(doc)) {
+    if (e.tagline) {
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(8)
+      doc.setTextColor(...C.luz)
+      doc.text(e.tagline, PAG.margen, 33)
+    }
+  } else {
+    dibujarMarca(doc, PAG.margen + 6, 17, 6.2)
+    doc.setTextColor(...C.blanco)
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(14)
+    doc.text(e.nombre.toUpperCase(), PAG.margen + 16, 16.5, { charSpace: 0.4 })
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(8)
+    doc.setTextColor(...C.luz)
+    doc.text(e.tagline, PAG.margen + 16, 21.5)
+  }
 
   // Bloque derecho: tipo de documento
   if (etiqueta) {
@@ -436,6 +526,9 @@ export async function dibujarVerificacion(doc, y, { tipo, id, codigo, folio }) {
 /* ---------- Guardar ---------- */
 export async function nuevoDoc(opciones = {}) {
   const { jsPDF } = await import('jspdf')
+  // Precarga el logo del membrete: `nuevoDoc` es el punto único por el que
+  // pasan todos los generadores, así el membrete ya lo tiene al dibujarse.
+  await cargarLogoMembrete()
   return new jsPDF({ unit: 'mm', format: 'a4', ...opciones })
 }
 

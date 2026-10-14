@@ -23,13 +23,13 @@
 }
 
 .staff-tab:hover {
-  border-color: var(--ldep-color, #1B4B8F);
-  color: var(--ldep-color, #1B4B8F);
+  border-color: var(--ldep-color, #0052DC);
+  color: var(--ldep-color, #0052DC);
 }
 
 .staff-tab--activo {
-  background: var(--ldep-color, #1B4B8F);
-  border-color: var(--ldep-color, #1B4B8F);
+  background: var(--ldep-color, #0052DC);
+  border-color: var(--ldep-color, #0052DC);
   color: #fff;
 }
 
@@ -37,7 +37,7 @@
   font-size: 11px;
   font-weight: 700;
   background: #fff;
-  color: var(--ldep-color, #1B4B8F);
+  color: var(--ldep-color, #0052DC);
   border-radius: 999px;
   padding: 1px 8px;
 }

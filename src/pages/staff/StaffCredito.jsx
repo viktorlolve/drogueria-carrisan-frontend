@@ -3,6 +3,7 @@ import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import StaffTabs from '../../components/staff/StaffTabs'
 import './StaffFinanzas.css'
+import { useStaffUI } from '../../hooks/useStaffUI'
 
 function formatUSD(v) { return Number(v || 0).toFixed(2) }
 function formatFecha(f) {
@@ -502,6 +503,7 @@ function TabLinea() {
 }
 
 function StaffCredito() {
+  const { avisar } = useStaffUI()
   const [tab, setTab] = useState('clientes')
   const [aging, setAging] = useState([])
   const [cargando, setCargando] = useState(true)
@@ -599,7 +601,7 @@ function StaffCredito() {
         mensaje: formRec.mensaje,
       })
       setFormRec({ usuario_id: '', mensaje: '' })
-      alert('Recordatorio enviado')
+      avisar('Recordatorio enviado')
     } catch (err) {
       setError(err.response?.data?.error || 'Error al enviar recordatorio')
     } finally {

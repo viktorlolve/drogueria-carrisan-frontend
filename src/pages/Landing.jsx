@@ -20,6 +20,7 @@ import recaudosCuentaB2B from '../data/recaudosCuentaB2B'
 import seguridadInformacion from '../data/seguridadInformacion'
 import respaldoMedicoVenezolano from '../data/respaldoMedicoVenezolano'
 import avisoNoDiscriminacion from '../data/avisoNoDiscriminacion'
+import { LOGO_COLOR_HORIZONTAL, LOGO_BLANCO, MINI_LOGO_TEAL, MINI_LOGO_AZUL } from '../config/logos'
 
 
   const BASE_URL = 'https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages'
@@ -41,10 +42,10 @@ const urls = {
     lineahospitalariaa: `${BASE_URL}/lineahospitalariaa.png`,
     sacs: `${BASE_URL}/sacs.png`,
     farmapatria: `${BASE_URL}/farmapatria.gif`,
-    logoHorizontal: `${BASE_URL}/logodrogueria/logo%20color%20horizontal%20sin%20fondo.png`,
-    logoBlanco: `${BASE_URL}/logodrogueria/logo%20blanco%20sin%20fondo.png`,
-    miniLogoTeal: `${BASE_URL}/logodrogueria/mini%20logo%20blanco%20fondo%20teal.png`,
-    miniLogoAzul: `${BASE_URL}/logodrogueria/mini%20logo%20blanco%20fondo%20azul.png`,
+    logoHorizontal: LOGO_COLOR_HORIZONTAL,
+    logoBlanco: LOGO_BLANCO,
+    miniLogoTeal: MINI_LOGO_TEAL,
+    miniLogoAzul: MINI_LOGO_AZUL,
 }
 
  

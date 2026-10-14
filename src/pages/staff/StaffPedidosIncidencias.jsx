@@ -3,13 +3,15 @@ import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import ColaOrdenes, { formatFecha } from '../../components/staff/ColaOrdenes'
 import { useColaStaff } from '../../hooks/useColaStaff'
+import { useStaffUI } from '../../hooks/useStaffUI'
 
 // Cola de RESOLUCION de incidencias. La incidencia se LEVANTA desde la pagina
 // de Envios (el despachador es quien la reporta); aqui el almacenista decide:
 // reenviar o cancelar. Las dos colas son disjuntas porque getColaDespacho
 // filtra las ordenes con incidencia abierta.
 export default function StaffPedidosIncidencias() {
-  const { datos, cargando, error, recargarTodo } = useColaStaff('/staff/logistica/incidencias')
+  const { confirmar, avisar } = useStaffUI()
+  const { datos, cargando, error, recargar, recargarTodo } = useColaStaff('/staff/logistica/incidencias')
   const [procesando, setProcesando] = useState(null)
 
   async function reintentar(orden) {
@@ -18,20 +20,20 @@ export default function StaffPedidosIncidencias() {
       await staffApi.patch(`/staff/logistica/${orden.id}/reintentar`)
       await recargarTodo()
     } catch (err) {
-      alert(err.response?.data?.error || 'No se pudo reintentar el envío')
+      avisar(err.response?.data?.error || 'No se pudo reintentar el envío', 'error')
     } finally {
       setProcesando(null)
     }
   }
 
   async function cancelar(orden) {
-    if (!window.confirm(`¿Cancelar la orden #${orden.id} de ${orden.users?.nombre || 'cliente'}? Esta acción no se puede deshacer.`)) return
+    if (!(await confirmar({ titulo: `¿Cancelar la orden #${orden.id} de ${orden.users?.nombre || 'cliente'}?`, texto: 'Esta acción no se puede deshacer.', textoConfirmar: 'Cancelar orden', textoCancelar: 'Volver', peligro: true }))) return
     setProcesando(orden.id)
     try {
       await staffApi.patch(`/staff/almacen/${orden.id}/cancelar`)
       await recargarTodo()
     } catch (err) {
-      alert(err.response?.data?.error || 'No se pudo cancelar la orden')
+      avisar(err.response?.data?.error || 'No se pudo cancelar la orden', 'error')
     } finally {
       setProcesando(null)
     }
@@ -44,6 +46,7 @@ export default function StaffPedidosIncidencias() {
         ordenes={datos}
         cargando={cargando}
         error={error}
+        onReintentar={recargar}
         vacio="No hay incidencias."
         renderAcciones={(orden) => (
           <>

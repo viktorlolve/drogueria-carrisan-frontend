@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { FaWhatsapp, FaMapMarkerAlt } from 'react-icons/fa'
-import logoBlanco from '../assets/minilogo blanco sin fondo.png'
+import { LOGO_BLANCO as logoBlanco } from '../config/logos'
 import { CONTACTO } from '../config/contacto'
 import './Footer.css'
 

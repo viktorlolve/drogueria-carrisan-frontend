@@ -3,6 +3,7 @@ import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import StaffTabs from '../../components/staff/StaffTabs'
 import './StaffVitrina.css'
+import { useStaffUI } from '../../hooks/useStaffUI'
 
 const BLOQUES = [
   { id: 'hero', label: 'Hero' },
@@ -13,6 +14,7 @@ const BLOQUES = [
 ]
 
 export default function StaffVitrina() {
+  const { confirmar } = useStaffUI()
   const [bloqueActivo, setBloqueActivo] = useState('hero')
   const [configs, setConfigs] = useState({})
   const [cargando, setCargando] = useState(true)
@@ -46,7 +48,7 @@ export default function StaffVitrina() {
   }
 
   async function restaurar() {
-    if (!window.confirm(`¿Restaurar el bloque "${bloqueActivo}" a los defaults del Home?`)) return
+    if (!(await confirmar({ titulo: `¿Restaurar el bloque "${bloqueActivo}"?`, texto: 'Vuelve a los defaults del Home.', textoConfirmar: 'Restaurar' }))) return
     setError('')
     try {
       await staffApi.delete(`/staff/vitrina/${bloqueActivo}`)

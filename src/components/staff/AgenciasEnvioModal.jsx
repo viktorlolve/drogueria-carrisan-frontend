@@ -1,8 +1,13 @@
 import { useState } from 'react'
 import staffApi from '../../api/staffAxios'
 import './ColaOrdenes.css'
+import { useStaffUI } from '../../hooks/useStaffUI'
+import { formatearUSD } from '../../utils/formato'
+import StaffModal from './StaffModal'
+import StaffEstado from './StaffEstado'
 
 function AgenciasEnvioModal() {
+  const { confirmar, avisar } = useStaffUI()
   const [abierto, setAbierto] = useState(false)
   const [agencias, setAgencias] = useState([])
   const [cargando, setCargando] = useState(false)
@@ -15,7 +20,7 @@ function AgenciasEnvioModal() {
       const { data } = await staffApi.get('/staff/logistica/agencias')
       setAgencias(data || [])
     } catch (err) {
-      alert(err.response?.data?.error || 'No se pudieron cargar las agencias')
+      avisar(err.response?.data?.error || 'No se pudieron cargar las agencias', 'error')
     } finally {
       setCargando(false)
     }
@@ -29,7 +34,7 @@ function AgenciasEnvioModal() {
   }
 
   async function guardar() {
-    if (!form.nombre.trim()) return alert('El nombre es requerido')
+    if (!form.nombre.trim()) return avisar('El nombre es requerido', 'error')
     try {
       if (editandoId) {
         await staffApi.patch(`/staff/logistica/agencias/${editandoId}`, form)
@@ -40,7 +45,7 @@ function AgenciasEnvioModal() {
       setForm({ nombre: '', telefono: '', ubicacion: '', tarifa_sugerida: '' })
       cargar()
     } catch (err) {
-      alert(err.response?.data?.error || 'No se pudo guardar la agencia')
+      avisar(err.response?.data?.error || 'No se pudo guardar la agencia', 'error')
     }
   }
 
@@ -50,12 +55,12 @@ function AgenciasEnvioModal() {
   }
 
   async function desactivar(a) {
-    if (!window.confirm(`¿Desactivar la agencia "${a.nombre}"?`)) return
+    if (!(await confirmar({ titulo: `¿Desactivar la agencia "${a.nombre}"?`, textoConfirmar: 'Desactivar', peligro: true }))) return
     try {
       await staffApi.delete(`/staff/logistica/agencias/${a.id}`)
       cargar()
     } catch (err) {
-      alert(err.response?.data?.error || 'No se pudo desactivar la agencia')
+      avisar(err.response?.data?.error || 'No se pudo desactivar la agencia', 'error')
     }
   }
 
@@ -63,11 +68,9 @@ function AgenciasEnvioModal() {
     <>
       <button className="sp-btn sp-btn--outline" type="button" onClick={abrir}>Agencias de envío</button>
       {abierto && (
-        <div className="sp-modal" onClick={() => setAbierto(false)}>
-          <div className="sp-modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3 className="sp-modal-titulo">Agencias de envío nacional</h3>
+        <StaffModal titulo="Agencias de envío nacional" onCerrar={() => setAbierto(false)}>
             {cargando ? (
-              <p>Cargando...</p>
+              <StaffEstado tipo="cargando" filas={2} />
             ) : (
               <div className="sp-agencias">
                 {agencias.map((a) => (
@@ -75,7 +78,7 @@ function AgenciasEnvioModal() {
                     <p><strong>{a.nombre}</strong> {a.telefono ? `— ${a.telefono}` : ''}</p>
                     <p className="sp-agencia-meta">
                       {a.ubicacion ? `${a.ubicacion} · ` : ''}
-                      {a.tarifa_sugerida ? `Tarifa $${a.tarifa_sugerida}` : 'Sin tarifa'}
+                      {a.tarifa_sugerida ? `Tarifa ${formatearUSD(a.tarifa_sugerida)}` : 'Sin tarifa'}
                       {!a.activo && ' · INACTIVA'}
                     </p>
                     <div className="sp-acciones">
@@ -92,14 +95,13 @@ function AgenciasEnvioModal() {
               <input placeholder="Nombre *" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} />
               <input placeholder="Teléfono" value={form.telefono} onChange={(e) => setForm({ ...form, telefono: e.target.value })} />
               <input placeholder="Ubicación" value={form.ubicacion} onChange={(e) => setForm({ ...form, ubicacion: e.target.value })} />
-              <input placeholder="Tarifa sugerida ($)" value={form.tarifa_sugerida} onChange={(e) => setForm({ ...form, tarifa_sugerida: e.target.value })} />
+              <input placeholder="Tarifa sugerida (USD)" value={form.tarifa_sugerida} onChange={(e) => setForm({ ...form, tarifa_sugerida: e.target.value })} />
               <div className="sp-acciones">
                 <button className="sp-btn" onClick={() => { setEditandoId(null); setForm({ nombre: '', telefono: '', ubicacion: '', tarifa_sugerida: '' }) }}>Limpiar</button>
                 <button className="sp-btn sp-btn--principal" onClick={guardar}>{editandoId ? 'Guardar cambios' : 'Crear agencia'}</button>
               </div>
             </div>
-          </div>
-        </div>
+        </StaffModal>
       )}
     </>
   )

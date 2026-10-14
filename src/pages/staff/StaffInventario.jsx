@@ -29,6 +29,7 @@ import { useEsMobile } from '../../hooks/useEsMobile'
 import { IconoProducto } from '../../components/icons/ProductoImagen'
 import './StaffComercial.css'
 import './StaffInventario.css'
+import { useStaffUI } from '../../hooks/useStaffUI'
 
 const POR_PAGINA = 20
 // Espejo de los límites del backend. Acá solo evita gastar un request; el
@@ -259,6 +260,7 @@ function BarraFiltros({ filtros, cambiarFiltro, opciones, onLimpiar }) {
 // ---------------------------------------------------------------------------
 
 function StaffInventario() {
+  const { confirmar } = useStaffUI()
   const esMobile = useEsMobile(768)
 
   // Lista
@@ -647,9 +649,12 @@ function StaffInventario() {
   }
 
   async function quitarFoto() {
-    if (!window.confirm(
-      '¿Quitar la foto de este producto?\n\nSe vacía la foto y el estado queda en "sin foto". El archivo guardado en Storage NO se borra.',
-    )) return
+    if (!(await confirmar({
+      titulo: '¿Quitar la foto de este producto?',
+      texto: 'Se vacía la foto y el estado queda en "sin foto". El archivo guardado en Storage NO se borra.',
+      textoConfirmar: 'Quitar foto',
+      peligro: true,
+    }))) return
     setGuardandoFoto(true)
     setDrawerError('')
     setFotoOk('')

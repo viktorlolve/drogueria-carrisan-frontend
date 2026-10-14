@@ -1,0 +1,49 @@
+/* Estados de lista del staff (prefijo stfe-). Usa los tokens --stf-*. */
+.stfe-sr {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+.stfe-skeleton { display: flex; flex-direction: column; gap: 10px; }
+.stfe-skeleton__fila {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 16px; background: var(--stf-superficie, #fff);
+  border: 1px solid var(--stf-borde, #E6E8F0); border-radius: 14px;
+}
+.stfe-skeleton__barra {
+  display: block; height: 12px; border-radius: 6px;
+  background: linear-gradient(90deg, #EEF0F6 25%, #F6F7FB 50%, #EEF0F6 75%);
+  background-size: 200% 100%;
+  animation: stfe-brillo 1.3s linear infinite;
+}
+.stfe-skeleton__barra--larga { width: 62%; height: 14px; }
+.stfe-skeleton__barra--corta { width: 34%; }
+
+.stfe-caja {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 32px 20px; text-align: center;
+  background: var(--stf-superficie, #fff);
+  border: 1px dashed var(--stf-borde, #E6E8F0); border-radius: 14px;
+  color: var(--stf-indigo, #1A1A3A);
+}
+.stfe-caja--error { border-style: solid; border-color: #F3C6C3; background: var(--stf-error-suave, #FDECEC); }
+.stfe-caja__icono {
+  width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: #F1F3F8; color: var(--stf-apagado, #5B6178);
+}
+.stfe-caja--error .stfe-caja__icono { background: #fff; color: var(--stf-error, #B3261E); }
+.stfe-caja__titulo { margin: 4px 0 0; font-size: 0.95rem; font-weight: 800; }
+.stfe-caja__mensaje { margin: 0; max-width: 420px; font-size: 0.85rem; line-height: 1.45; color: var(--stf-apagado, #5B6178); }
+.stfe-caja--error .stfe-caja__mensaje { color: var(--stf-error, #B3261E); }
+
+.stfe-btn {
+  display: inline-flex; align-items: center; gap: 8px; margin-top: 10px;
+  height: 40px; padding: 0 16px; border-radius: 12px;
+  border: 1.5px solid var(--stf-borde, #E6E8F0); background: #fff; color: var(--stf-indigo, #1A1A3A);
+  font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer;
+}
+.stfe-btn:hover { border-color: #B9C2DB; }
+.stfe-btn:focus-visible { outline: 2px solid var(--stf-azul, #0052DC); outline-offset: 2px; }
+
+@keyframes stfe-brillo { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+@media (prefers-reduced-motion: reduce) { .stfe-skeleton__barra { animation: none; } }

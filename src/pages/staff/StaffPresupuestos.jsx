@@ -5,6 +5,7 @@ import { ModalCrearPresupuesto } from '../../components/staff/StaffComercialModa
 import './StaffComercial.css'
 import './StaffClientes.css'
 import './StaffPresupuestos.css'
+import { useStaffUI } from '../../hooks/useStaffUI'
 
 function formatUSD(v) {
   return Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -115,6 +116,7 @@ function ModalPresupuestoDetalle({ presupuesto, onClose, onRecotizar, onGenerarP
 }
 
 function StaffPresupuestos({ departamento = 'comercial', activo = 'presupuestos', titulo = 'Presupuestos' }) {
+  const { confirmar, avisar } = useStaffUI()
   const [estado, setEstado] = useState('')
   const [pagina, setPagina] = useState(1)
   const [presupuestos, setPresupuestos] = useState([])
@@ -142,19 +144,19 @@ function StaffPresupuestos({ departamento = 'comercial', activo = 'presupuestos'
       const { data } = await staffApi.get('/staff/presupuestos', { params: { estado: estado || undefined, pagina } })
       setPresupuestos(data?.presupuestos || [])
     } catch (err) {
-      window.alert(err.response?.data?.error || 'Error al recotizar')
+      avisar(err.response?.data?.error || 'Error al recotizar', 'error')
     }
   }
 
   async function generarPedido(id) {
-    if (!window.confirm('¿Generar pedido desde este presupuesto?')) return
+    if (!(await confirmar({ titulo: '¿Generar pedido desde este presupuesto?', textoConfirmar: 'Generar pedido' }))) return
     try {
       await staffApi.post(`/staff/presupuestos/${id}/generar-pedido`)
-      window.alert(`Pedido generado desde el presupuesto #${id}.`)
+      avisar(`Pedido generado desde el presupuesto #${id}.`)
       const { data } = await staffApi.get('/staff/presupuestos', { params: { estado: estado || undefined, pagina } })
       setPresupuestos(data?.presupuestos || [])
     } catch (err) {
-      window.alert(err.response?.data?.error || 'Error al generar pedido')
+      avisar(err.response?.data?.error || 'Error al generar pedido', 'error')
     }
   }
 

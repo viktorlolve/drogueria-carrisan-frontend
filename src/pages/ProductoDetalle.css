@@ -1293,12 +1293,19 @@
     font-size: 1.4rem;
   }
 
+  /* La barra compacta es solo precio + cantidad + CTA. Los bloques que se
+     agregaron despues a la tarjeta (divisor y vendedor) son de la vista
+     grande: si no se ocultan, su ancho minimo desborda la barra (~388px),
+     el precio (flex:1, min-width:0) colapsa a 0 y el vendedor se sale de
+     pantalla (overflow-x: clip lo esconde sin scrollbar). */
   .pd-purchase__original,
   .pd-purchase__savings,
   .pd-purchase__ves,
   .pd-purchase__trust,
   .pd-purchase__login,
-  .pd-purchase__note {
+  .pd-purchase__note,
+  .pd-purchase__divider,
+  .pd-purchase__seller {
     display: none;
   }
 

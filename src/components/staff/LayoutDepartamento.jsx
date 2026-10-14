@@ -96,9 +96,9 @@ function LayoutDepartamento({ departamento, activo, titulo, children }) {
     <div
       className="ldep-root"
       style={{
-        '--ldep-color': depto?.color || '#2563EB',
-        '--ldep-color-strong': depto?.colorStrong || '#1d4ed8',
-        '--ldep-color-soft': depto?.colorLight || '#eef4fd',
+        '--ldep-color': depto?.color || '#0052DC',
+        '--ldep-color-strong': depto?.colorStrong || '#0043B3',
+        '--ldep-color-soft': depto?.colorLight || '#EAF1FF',
       }}
     >
       <aside className={`ldep-drawer-panel ${drawerAbierto ? 'ldep-drawer-panel--abierto' : ''}`}>

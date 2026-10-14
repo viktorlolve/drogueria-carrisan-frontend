@@ -42,7 +42,7 @@ function ModalInstalarStaff({ onClose }) {
   const titulo = esIOS ? 'Agregar a pantalla de inicio' : 'Instalar Carrisan Staff'
   const sub =
     esAndroid
-      ? 'Tu navegador no mostró la pregunta de instalación todavía. Podés instalarla manualmente en unos segundos:'
+      ? 'Tu navegador no mostró la pregunta de instalación todavía. Puedes instalarla manualmente en unos segundos:'
       : 'Instalá la app para acceder más rápido al panel interno.'
 
   return (

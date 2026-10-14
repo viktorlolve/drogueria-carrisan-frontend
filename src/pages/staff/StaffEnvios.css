@@ -1,37 +1,42 @@
-/* Módulo Logística — Envíos (motorizado) */
+/* Módulo Logística — Envíos y Delivery (motorizado, móvil primero).
+   Tokens --stf-* de styles/staff-tokens.css; los botones con texto blanco
+   usan la variante "strong" del departamento (contraste AA). */
 .se-page { max-width: 520px; margin: 0 auto; }
-.se-intro { color: #6B7280; font-size: 13px; margin: 0 0 12px; }
-.se-error { color: #DC2626; }
+.se-intro { color: var(--stf-apagado, #5B6178); font-size: 13px; margin: 0 0 12px; }
+.se-encabezado { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 .se-list { display: grid; gap: 14px; }
 
-.se-card { background: #fff; border: 1px solid #E5E7EB; border-radius: 12px; padding: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+.se-card { background: var(--stf-superficie, #fff); border: 1px solid var(--stf-borde, #E6E8F0); border-radius: 14px; padding: 16px; box-shadow: 0 1px 2px rgba(26, 26, 58, 0.04); }
 .se-card-head { display: flex; justify-content: space-between; align-items: center; }
-.se-card-orden { font-weight: 700; margin: 0; }
+.se-card-orden { font-weight: 800; margin: 0; }
 .se-tag { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
-.se-tag--delivery { background: #DBEAFE; color: #1E40AF; }
-.se-tag--nacional { background: #FEF3C7; color: #92400E; }
-.se-tag--retiro { background: #E5E7EB; color: #374151; }
+.se-tag--delivery { background: var(--stf-azul-suave, #EAF1FF); color: var(--stf-azul-fuerte, #0043B3); }
+.se-tag--nacional { background: var(--stf-aviso-suave, #FFF4E0); color: var(--stf-aviso, #B45309); }
+.se-tag--retiro { background: #F1F3F8; color: var(--stf-apagado, #5B6178); }
 .se-card-cliente { font-size: 15px; margin: 6px 0; }
-.se-card-contacto { display: flex; gap: 8px; margin: 8px 0; }
-.se-card-direccion { border-top: 1px dashed #E5E7EB; border-bottom: 1px dashed #E5E7EB; padding: 8px 0; font-size: 14px; margin-bottom: 8px; }
-.se-nota { color: #B45309; font-size: 13px; margin: 4px 0 0; }
-.se-num-ausente { color: #9CA3AF; font-size: 12px; }
-.se-horario { margin-top: 6px; padding: 8px 10px; background: #F5F5F4; border: 1px solid #E5E7EB; border-radius: 8px; }
-.se-horario p { margin: 2px 0; font-size: 12.5px; color: #4B5563; }
-.se-horario p::before { content: '🕐 '; }
+.se-card-contacto { display: flex; gap: 8px; margin: 8px 0; flex-wrap: wrap; }
+.se-card-direccion { border-top: 1px dashed var(--stf-borde, #E6E8F0); border-bottom: 1px dashed var(--stf-borde, #E6E8F0); padding: 10px 0; font-size: 14px; margin-bottom: 10px; }
+.se-nota { color: var(--stf-aviso, #B45309); font-size: 13px; margin: 4px 0 0; }
+.se-num-ausente { color: #8A90A6; font-size: 12px; }
+.se-horario { margin-top: 8px; padding: 8px 10px; background: #F6F7FB; border: 1px solid var(--stf-borde, #E6E8F0); border-radius: 10px; }
+.se-horario p { display: flex; align-items: center; gap: 6px; margin: 2px 0; font-size: 12.5px; color: var(--stf-apagado, #5B6178); }
+.se-horario p svg { flex-shrink: 0; }
 .se-card-items { margin: 0 0 10px; padding-left: 18px; font-size: 13px; }
 .se-card-items li { margin: 2px 0; }
 .se-card-acciones { display: flex; gap: 8px; flex-wrap: wrap; }
 
-.se-btn-main { flex: 1; min-width: 140px; padding: 10px 14px; border-radius: 8px; border: none; background: #D97706; color: #fff; font-weight: 700; cursor: pointer; }
-.se-btn-main:hover:not(:disabled) { filter: brightness(0.95); }
+.se-btn-main { flex: 1; min-width: 140px; min-height: 44px; padding: 10px 14px; border-radius: 10px; border: none; background: var(--ldep-color-strong, var(--stf-logistica-fuerte, #B45309)); color: #fff; font-weight: 700; cursor: pointer; }
+.se-btn-main:hover:not(:disabled) { filter: brightness(0.94); }
 .se-btn-main:disabled { opacity: 0.5; cursor: not-allowed; }
-.se-btn-sec { padding: 10px 12px; border-radius: 8px; border: 1px solid #D1D5DB; background: #fff; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; color: #374151; display: inline-flex; align-items: center; gap: 6px; }
-.se-btn-wa { padding: 10px 12px; border-radius: 8px; background: #25D366; color: #fff; font-weight: 700; font-size: 13px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
-.se-btn-inc { padding: 10px 12px; border-radius: 8px; border: 1px solid #FECACA; background: #FEF2F2; color: #B91C1C; font-weight: 600; font-size: 13px; cursor: pointer; }
+.se-btn-sec { min-height: 44px; padding: 10px 14px; border-radius: 10px; border: 1.5px solid var(--stf-borde, #E6E8F0); background: #fff; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; color: var(--stf-indigo, #1A1A3A); display: inline-flex; align-items: center; gap: 6px; }
+.se-btn-sec:hover:not(:disabled) { border-color: #B9C2DB; }
+/* Verde de WhatsApp oscurecido para que el texto blanco cumpla contraste AA */
+.se-btn-wa { min-height: 44px; padding: 10px 14px; border-radius: 10px; background: #16803C; color: #fff; font-weight: 700; font-size: 13px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.se-btn-wa:hover { filter: brightness(0.94); }
+.se-btn-inc { min-height: 44px; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #F3C6C3; background: var(--stf-error-suave, #FDECEC); color: var(--stf-error, #B3261E); font-weight: 700; font-size: 13px; cursor: pointer; }
+.se-btn-inc:hover:not(:disabled) { background: #FBDCDA; }
+.se-btn-sec:focus-visible, .se-btn-main:focus-visible, .se-btn-wa:focus-visible, .se-btn-inc:focus-visible { outline: 2px solid var(--stf-azul, #0052DC); outline-offset: 2px; }
 
-.se-modal { position: fixed; inset: 0; background: rgba(17,24,39,0.6); display: flex; align-items: center; justify-content: center; z-index: 60; padding: 16px; }
-.se-modal-content { background: #fff; border-radius: 12px; max-width: 420px; width: 100%; padding: 18px; }
-.se-modal-content h3 { margin: 0 0 6px; }
-.se-modal-meta { color: #6B7280; font-size: 13px; margin: 0 0 10px; }
-.se-modal-content select { width: 100%; padding: 8px; border: 1px solid #D1D5DB; border-radius: 6px; margin-bottom: 12px; font-size: 14px; }
+/* Contenido del modal de incidencia (el contenedor lo pone StaffModal) */
+.se-modal-meta { color: var(--stf-apagado, #5B6178); font-size: 13px; margin: 0 0 12px; }
+.se-modal-content select { width: 100%; min-height: 44px; padding: 8px 10px; border: 1.5px solid var(--stf-borde, #E6E8F0); border-radius: 10px; margin-bottom: 14px; font-size: 16px; font-family: inherit; background: #fff; }

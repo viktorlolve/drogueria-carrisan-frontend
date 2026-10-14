@@ -3,12 +3,12 @@
    clientes". CSS autocontenido (bajo .ldep-main).
    ============================================================ */
 
-.sd-page {
+.sdir-page {
   width: 100%;
 }
 
 /* Toolbar: buscador + filtros de tipo */
-.sd-toolbar {
+.sdir-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -17,7 +17,7 @@
   margin-bottom: 20px;
 }
 
-.sd-buscador {
+.sdir-buscador {
   flex: 1;
   min-width: 240px;
   display: flex;
@@ -30,12 +30,12 @@
   color: #94a3b8;
 }
 
-.sd-buscador:focus-within {
+.sdir-buscador:focus-within {
   border-color: #d97706;
   box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.12);
 }
 
-.sd-buscador input {
+.sdir-buscador input {
   flex: 1;
   border: none;
   outline: none;
@@ -45,11 +45,11 @@
   background: transparent;
 }
 
-.sd-buscador input::placeholder {
+.sdir-buscador input::placeholder {
   color: #94a3b8;
 }
 
-.sd-tabs {
+.sdir-tabs {
   display: flex;
   gap: 4px;
   background: #f0f0f0;
@@ -57,7 +57,7 @@
   padding: 3px;
 }
 
-.sd-tab {
+.sdir-tab {
   padding: 8px 14px;
   border: none;
   border-radius: 6px;
@@ -69,14 +69,14 @@
   transition: all 0.15s;
 }
 
-.sd-tab--activo {
+.sdir-tab--activo {
   background: #fff;
   color: #b45309;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 /* Estado vacío */
-.sd-vacio {
+.sdir-vacio {
   text-align: center;
   color: #999;
   padding: 40px 16px;
@@ -84,13 +84,13 @@
 }
 
 /* Grid de tarjetas */
-.sd-grid {
+.sdir-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 14px;
 }
 
-.sd-card {
+.sdir-card {
   background: #fff;
   border: 1px solid #e8e8e8;
   border-radius: 12px;
@@ -101,21 +101,21 @@
   transition: box-shadow 0.15s;
 }
 
-.sd-card:hover {
+.sdir-card:hover {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
 }
 
-.sd-card__head {
+.sdir-card__head {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.sd-card__avatar {
+.sdir-card__avatar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #d97706;
+  background: var(--ldep-color-strong, #B45309);
   color: #fff;
   display: flex;
   align-items: center;
@@ -125,19 +125,19 @@
   flex-shrink: 0;
 }
 
-.sd-card__cliente {
+.sdir-card__cliente {
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
 }
 
-.sd-card__cliente strong {
+.sdir-card__cliente strong {
   font-size: 0.9rem;
   color: #14142b;
 }
 
-.sd-card__cliente span {
+.sdir-card__cliente span {
   font-size: 0.78rem;
   color: #6c6e8a;
   white-space: nowrap;
@@ -145,7 +145,7 @@
   text-overflow: ellipsis;
 }
 
-.sd-card__badge {
+.sdir-card__badge {
   align-self: flex-start;
   font-size: 0.7rem;
   font-weight: 700;
@@ -155,17 +155,17 @@
   letter-spacing: 0.03em;
 }
 
-.sd-card__badge--delivery {
+.sdir-card__badge--delivery {
   background: #e8f5e9;
   color: #0e7c5e;
 }
 
-.sd-card__badge--envio_nacional {
+.sdir-card__badge--envio_nacional {
   background: #fff3e0;
   color: #a2650a;
 }
 
-.sd-card__direccion {
+.sdir-card__direccion {
   display: flex;
   gap: 10px;
   align-items: flex-start;
@@ -175,35 +175,35 @@
   border-radius: 10px;
 }
 
-.sd-card__direccion > div {
+.sdir-card__direccion > div {
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
 }
 
-.sd-card__direccion p {
+.sdir-card__direccion p {
   margin: 0;
   font-size: 0.85rem;
   color: #1e293b;
   line-height: 1.4;
 }
 
-.sd-card__direccion .sd-card__nombre {
+.sdir-card__direccion .sdir-card__nombre {
   font-weight: 700;
 }
 
-.sd-card__direccion .sd-card__ciudad,
-.sd-card__direccion .sd-card__ref {
+.sdir-card__direccion .sdir-card__ciudad,
+.sdir-card__direccion .sdir-card__ref {
   font-size: 0.78rem;
   color: #6c6e8a;
 }
 
-.sd-card__direccion .sd-card__ref {
+.sdir-card__direccion .sdir-card__ref {
   font-style: italic;
 }
 
-.sd-card__meta {
+.sdir-card__meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -214,38 +214,35 @@
   padding-top: 10px;
 }
 
-.sd-card__meta-item {
+.sdir-card__meta-item {
   display: inline-flex;
   align-items: center;
   gap: 4px;
 }
 
-.sd-card__fecha {
+.sdir-card__fecha {
   margin-left: auto;
 }
 
 /* Responsive */
 @media (max-width: 600px) {
-  .sd-toolbar {
+  .sdir-toolbar {
     flex-direction: column;
     align-items: stretch;
   }
-  .sd-tabs {
+  .sdir-tabs {
     align-self: flex-start;
   }
 }
 
 /* Nuevos estilos — acciones puntuales (Task 9) */
-.sd-card__nota { font-size: 12px; color: #B45309; margin: 4px 0 0; }
-.sd-badge-pref { color: #D97706; font-weight: 700; }
-.sd-card__acciones { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-.sd-card__btn { padding: 7px 12px; border-radius: 8px; border: 1px solid #D1D5DB; background: #fff; font-size: 12px; font-weight: 600; cursor: pointer; }
-.sd-card__btn:hover:not(:disabled) { background: #F9FAFB; }
-.sd-card__btn--primario { background: #D97706; border-color: #D97706; color: #fff; }
-.sd-card__meta-agencia { font-size: 12px; color: #6B7280; }
-.sd-modal { position: fixed; inset: 0; background: rgba(17,24,39,0.6); display: flex; align-items: center; justify-content: center; z-index: 60; padding: 16px; }
-.sd-modal-content { background: #fff; border-radius: 12px; max-width: 420px; width: 100%; padding: 18px; }
-.sd-modal-content h3 { margin: 0 0 12px; }
-.sd-modal-content label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 10px; }
-.sd-modal-content input { display: block; width: 100%; margin-top: 4px; padding: 8px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px; font-weight: 400; }
-.sd-modal__acciones { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.sdir-card__nota { font-size: 12px; color: #B45309; margin: 4px 0 0; }
+.sdir-badge-pref { color: #D97706; font-weight: 700; }
+.sdir-card__acciones { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.sdir-card__btn { padding: 7px 12px; border-radius: 8px; border: 1px solid #D1D5DB; background: #fff; font-size: 12px; font-weight: 600; cursor: pointer; }
+.sdir-card__btn:hover:not(:disabled) { background: #F9FAFB; }
+.sdir-card__btn--primario { background: var(--ldep-color-strong, #B45309); border-color: var(--ldep-color-strong, #B45309); color: #fff; }
+.sdir-card__meta-agencia { font-size: 12px; color: #6B7280; }
+.sdir-modal-content label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+.sdir-modal-content input { display: block; width: 100%; margin-top: 4px; padding: 10px; font-size: 16px; font-family: inherit; border: 1px solid #D1D5DB; border-radius: 6px; font-weight: 400; }
+.sdir-modal__acciones { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }

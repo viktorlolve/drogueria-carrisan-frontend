@@ -1,0 +1,42 @@
+/* ============================================================
+   Tokens visuales del módulo Staff (/staff/*).
+   Paleta aprobada de la plataforma + los 3 colores de departamento
+   alineados a ella. El CSS del proyecto es global, por eso todas las
+   variables llevan el prefijo --stf-.
+
+   Los modales/toasts de Staff se montan en document.body (portal) y
+   heredan estas variables porque viven en :root.
+   ============================================================ */
+:root {
+  /* Marca */
+  --stf-azul: #0052DC;
+  --stf-azul-fuerte: #0043B3;
+  --stf-azul-suave: #EAF1FF;
+  --stf-indigo: #1A1A3A;
+  --stf-teal: #12A594;
+  --stf-teal-fuerte: #0E8577;
+  --stf-teal-suave: #E6F6F3;
+  --stf-paper: #FBFAF7;
+
+  /* Departamentos (NavStaff.js los lee de aquí) */
+  --stf-finanzas: #0E8577;
+  --stf-finanzas-fuerte: #0B6E63;
+  --stf-finanzas-suave: #E6F6F3;
+  --stf-comercial: #0052DC;
+  --stf-comercial-fuerte: #0043B3;
+  --stf-comercial-suave: #EAF1FF;
+  --stf-logistica: #D97706;
+  --stf-logistica-fuerte: #B45309;
+  --stf-logistica-suave: #FFF4E0;
+
+  /* Neutros y estados */
+  --stf-superficie: #FFFFFF;
+  --stf-borde: #E6E8F0;
+  --stf-apagado: #5B6178;
+  --stf-error: #B3261E;
+  --stf-error-fuerte: #971E18;
+  --stf-error-suave: #FDECEC;
+  --stf-exito: #0E8577;
+  --stf-aviso: #B45309;
+  --stf-aviso-suave: #FFF4E0;
+}

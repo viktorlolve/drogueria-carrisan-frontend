@@ -1,144 +1,117 @@
-/* Módulo Logística — colas de pedidos (compartido por las 6 colas y por el
-   CRUD de agencias de envío).
-   Origen: se extrajo de pages/staff/StaffPedidos.css sin cambiar ninguna regla,
-   para que la página monolítica siga compiando hasta que se elimine (Task 9). */
+/* Módulo Logística — colas de pedidos (compartido por las colas, Delivery/Envíos
+   y el CRUD de agencias de envío). Usa los tokens --stf-* de
+   styles/staff-tokens.css y el color del departamento (--ldep-color*) que
+   inyecta LayoutDepartamento. Los botones con texto blanco usan la variante
+   "strong" del departamento para mantener contraste AA. */
 
-/* Módulo Logística — Pedidos */
 .sp-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
-.sp-error { color: #DC2626; }
-.sp-aviso { color: #B45309; background: #FFFBEB; border: 1px solid #FDE68A; padding: 8px 12px; border-radius: 8px; margin-top: 8px; font-size: 13px; }
-.sp-meta { color: #6B7280; font-size: 13px; margin: 6px 0; }
-.sp-incidencia { background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B; padding: 8px 12px; border-radius: 8px; margin-top: 8px; font-size: 13px; }
+.sp-aviso { color: var(--stf-aviso, #B45309); background: var(--stf-aviso-suave, #FFF4E0); border: 1px solid #F6D9A8; padding: 10px 12px; border-radius: 10px; margin-top: 8px; font-size: 13px; }
+.sp-meta { color: var(--stf-apagado, #5B6178); font-size: 13px; margin: 6px 0 12px; }
+.sp-incidencia { background: var(--stf-error-suave, #FDECEC); border: 1px solid #F3C6C3; color: #8F1D17; padding: 10px 12px; border-radius: 10px; margin-top: 8px; font-size: 13px; }
 
-.sp-card { border: 1px solid #E5E7EB; border-radius: 10px; padding: 14px 16px; margin-bottom: 6px; background: #fff; }
-.sp-card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.sp-card-titulo { font-weight: 700; margin: 0; }
-.sp-card-cliente { margin: 6px 0 0; font-size: 14px; }
-.sp-card-meta { margin: 4px 0 0; font-size: 13px; color: #374151; }
-.sp-card-items { margin: 8px 0 0; padding-left: 18px; font-size: 13px; }
-.sp-card-items li { margin: 2px 0; }
+.sp-card { border: 1px solid var(--stf-borde, #E6E8F0); border-radius: 14px; padding: 16px; margin-bottom: 6px; background: var(--stf-superficie, #fff); box-shadow: 0 1px 2px rgba(26, 26, 58, 0.04); }
+.sp-card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sp-card-titulo { font-weight: 800; margin: 0; color: var(--stf-indigo, #1A1A3A); }
+.sp-card-cliente { margin: 6px 0 0; font-size: 14px; color: var(--stf-indigo, #1A1A3A); }
+.sp-card-meta { margin: 4px 0 0; font-size: 13px; color: var(--stf-apagado, #5B6178); }
+.sp-card-items { margin: 10px 0 0; padding-left: 18px; font-size: 13px; }
+.sp-card-items li { margin: 3px 0; }
 .sp-item--anulado { color: #9CA3AF; text-decoration: line-through; }
 
-.sp-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
-.sp-badge--credito { background: #EFF6FF; color: #1D4ED8; }
-.sp-badge--contado { background: #F3F4F6; color: #374151; }
-.sp-badge--entregado { background: #D1FAE5; color: #065F46; }
+.sp-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.sp-badge--credito { background: var(--stf-azul-suave, #EAF1FF); color: var(--stf-azul-fuerte, #0043B3); }
+.sp-badge--contado { background: #F1F3F8; color: var(--stf-apagado, #5B6178); }
+.sp-badge--entregado { background: var(--stf-teal-suave, #E6F6F3); color: var(--stf-teal-fuerte, #0E8577); }
+.sp-badge--alerta {
+  background: var(--stf-error-suave, #FDECEC);
+  color: #8F1D17;
+  border: 1px solid #F3C6C3;
+}
 
 .sp-acciones { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 18px; }
-.sp-btn { padding: 8px 14px; border-radius: 8px; border: 1px solid #D1D5DB; background: #fff; cursor: pointer; font-size: 13px; font-weight: 600; }
-.sp-btn:hover:not(:disabled) { background: #F9FAFB; }
+.sp-btn { min-height: 40px; padding: 8px 16px; border-radius: 10px; border: 1.5px solid var(--stf-borde, #E6E8F0); background: #fff; color: var(--stf-indigo, #1A1A3A); cursor: pointer; font-size: 13px; font-weight: 700; }
+.sp-btn:hover:not(:disabled) { border-color: #B9C2DB; background: #FAFBFD; }
+.sp-btn:focus-visible { outline: 2px solid var(--stf-azul, #0052DC); outline-offset: 2px; }
 .sp-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.sp-btn--principal { background: var(--ldep-color, #D97706); border-color: var(--ldep-color, #D97706); color: #fff; }
-.sp-btn--principal:hover:not(:disabled) { filter: brightness(0.95); }
-.sp-btn--danger { background: #FEE2E2; border-color: #FECACA; color: #B91C1C; }
+.sp-btn--principal { background: var(--ldep-color-strong, var(--stf-logistica-fuerte, #B45309)); border-color: var(--ldep-color-strong, var(--stf-logistica-fuerte, #B45309)); color: #fff; }
+.sp-btn--principal:hover:not(:disabled) { filter: brightness(0.94); background: var(--ldep-color-strong, var(--stf-logistica-fuerte, #B45309)); }
+.sp-btn--danger { background: var(--stf-error-suave, #FDECEC); border-color: #F3C6C3; color: var(--stf-error, #B3261E); }
+.sp-btn--danger:hover:not(:disabled) { background: #FBDCDA; border-color: #EBA9A5; }
 .sp-btn--ghost { background: transparent; }
-.sp-btn--outline { background: transparent; border-color: var(--ldep-color, #D97706); color: var(--ldep-color, #D97706); }
+.sp-btn--outline { background: transparent; border-color: var(--ldep-color-strong, var(--stf-logistica-fuerte, #B45309)); color: var(--ldep-color-strong, var(--stf-logistica-fuerte, #B45309)); }
 
-.sp-modal { position: fixed; inset: 0; background: rgba(17, 24, 39, 0.6); display: flex; align-items: center; justify-content: center; z-index: 60; padding: 16px; }
-.sp-modal-content { background: #fff; border-radius: 12px; max-width: 620px; width: 100%; max-height: 88vh; overflow: auto; padding: 18px; }
-.sp-modal-titulo { margin: 0 0 10px; }
-
-.sp-editor-item { border: 1px solid #E5E7EB; border-radius: 8px; padding: 10px; margin-bottom: 8px; }
-.sp-editor-item.is-anulado { background: #F9FAFB; opacity: 0.75; }
+.sp-editor-item { border: 1px solid var(--stf-borde, #E6E8F0); border-radius: 12px; padding: 12px; margin-bottom: 8px; }
+.sp-editor-item.is-anulado { background: #F8F9FC; opacity: 0.8; }
 .sp-editor-info strong { display: block; }
-.sp-editor-info span { font-size: 12px; color: #6B7280; }
-.sp-editor-controles { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-.sp-stepper-btn { width: 28px; height: 28px; border-radius: 6px; border: 1px solid #D1D5DB; background: #fff; cursor: pointer; }
-.sp-stepper-val { min-width: 24px; text-align: center; font-weight: 700; }
-.sp-btn-anular { padding: 6px 10px; border-radius: 6px; border: 1px solid #FECACA; background: #FEF2F2; color: #B91C1C; font-size: 12px; cursor: pointer; }
-.sp-btn-anular.is-anulado { background: #D1FAE5; border-color: #A7F3D0; color: #065F46; }
-.sp-nota { width: 100%; margin-top: 8px; padding: 8px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 13px; }
-.sp-total { font-size: 15px; margin: 12px 0; }
-.sp-total-aviso { color: #D97706; font-size: 13px; }
+.sp-editor-info span { font-size: 12px; color: var(--stf-apagado, #5B6178); }
+.sp-editor-controles { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.sp-stepper-btn { width: 36px; height: 36px; border-radius: 10px; border: 1.5px solid var(--stf-borde, #E6E8F0); background: #fff; color: var(--stf-indigo, #1A1A3A); font-size: 16px; font-weight: 700; cursor: pointer; }
+.sp-stepper-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.sp-stepper-val { min-width: 28px; text-align: center; font-weight: 800; }
+.sp-btn-anular { min-height: 36px; padding: 6px 12px; border-radius: 10px; border: 1.5px solid #F3C6C3; background: var(--stf-error-suave, #FDECEC); color: var(--stf-error, #B3261E); font-size: 12px; font-weight: 700; cursor: pointer; }
+.sp-btn-anular.is-anulado { background: var(--stf-teal-suave, #E6F6F3); border-color: #BFE6DF; color: var(--stf-teal-fuerte, #0E8577); }
+/* 16px: iOS hace zoom al enfocar inputs con menos de 16px */
+.sp-nota { width: 100%; margin-top: 10px; padding: 10px; border: 1.5px solid var(--stf-borde, #E6E8F0); border-radius: 10px; font-size: 16px; font-family: inherit; }
+.sp-nota:focus { outline: 2px solid var(--stf-azul, #0052DC); outline-offset: 1px; border-color: transparent; }
+.sp-total { font-size: 15px; margin: 14px 0; }
+.sp-total-aviso { color: var(--stf-aviso, #B45309); font-size: 13px; }
 
-.sp-caja-verificar { border: 1px solid #DDD6FE; background: #F5F3FF; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
-.sp-caja-titulo { margin: 0 0 8px; font-weight: 600; font-size: 13px; }
-.sp-verificar-item { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 2px 0; }
-.sp-verificar-item input { width: 16px; height: 16px; }
+.sp-caja-verificar { border: 1px solid #C9DAFB; background: var(--stf-azul-suave, #EAF1FF); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; }
+.sp-caja-titulo { margin: 0 0 8px; font-weight: 700; font-size: 13px; }
+.sp-verificar-item { display: flex; align-items: center; gap: 10px; font-size: 13px; padding: 4px 0; }
+.sp-verificar-item input { width: 18px; height: 18px; accent-color: var(--stf-azul, #0052DC); }
 
 .sp-agencias { display: grid; gap: 8px; margin-bottom: 10px; }
-.sp-agencia { border: 1px solid #E5E7EB; border-radius: 8px; padding: 10px 12px; }
+.sp-agencia { border: 1px solid var(--stf-borde, #E6E8F0); border-radius: 12px; padding: 12px 14px; }
 .sp-agencia--inactiva { opacity: 0.6; }
-.sp-agencia-meta { font-size: 12px; color: #6B7280; margin: 2px 0 6px; }
-.sp-agencia-form input { width: 100%; padding: 8px; border: 1px solid #D1D5DB; border-radius: 6px; margin-bottom: 8px; font-size: 13px; }
+.sp-agencia-meta { font-size: 12px; color: var(--stf-apagado, #5B6178); margin: 2px 0 6px; }
+.sp-agencia-form input { width: 100%; padding: 10px; border: 1.5px solid var(--stf-borde, #E6E8F0); border-radius: 10px; margin-bottom: 8px; font-size: 16px; font-family: inherit; }
+.sp-agencia-form input:focus { outline: 2px solid var(--stf-azul, #0052DC); outline-offset: 1px; border-color: transparent; }
 
 /* Card wrapper: agrupa la card y sus acciones en un bloque con separacion. */
-.sp-card-wrap {
-  margin-bottom: 14px;
-}
+.sp-card-wrap { margin-bottom: 14px; }
+.sp-card-wrap .sp-card { margin-bottom: 0; }
 
-.sp-card-wrap .sp-card {
-  margin-bottom: 0;
-}
+.sp-titulo-cola { font-size: 16px; font-weight: 800; margin: 0 0 4px; }
 
-.sp-titulo-cola {
-  font-size: 16px;
-  font-weight: 700;
-  margin: 0 0 4px;
-}
-
-/* Item agotado: se tacha, se explica y se ve que vale 0. */
-.sp-item--anulado .sp-item__nombre {
-  text-decoration: line-through;
-  color: #9CA3AF;
-}
-
-.sp-item__agotado {
-  color: #B45309;
-  font-weight: 600;
-  font-size: 12px;
-}
-
-.sp-item__importe {
-  color: #6B7280;
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.sp-item--anulado .sp-item__importe {
-  text-decoration: line-through;
-}
+/* Item agotado: se tacha, se explica y se ve que vale 0 (regla de oro 5.1:
+   un item anulado nunca se oculta). */
+.sp-item--anulado .sp-item__nombre { text-decoration: line-through; color: #9CA3AF; }
+.sp-item__agotado { color: var(--stf-aviso, #B45309); font-weight: 700; font-size: 12px; }
+.sp-item__importe { color: var(--stf-apagado, #5B6178); font-size: 12px; white-space: nowrap; }
+.sp-item--anulado .sp-item__importe { text-decoration: line-through; }
 
 /* Resumen de ajustes del almacenista. */
 .sp-ajuste {
   margin: 8px 0 0;
   padding: 6px 10px;
-  border-radius: 6px;
-  background: #FFFBEB;
-  border: 1px solid #FDE68A;
-  color: #B45309;
+  border-radius: 8px;
+  background: var(--stf-aviso-suave, #FFF4E0);
+  border: 1px solid #F6D9A8;
+  color: var(--stf-aviso, #B45309);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 /* El `<select>` de Completadas lleva un nombre scoped: la clase global
    .sp-select ya existe en StaffComercial.css con otros valores y, al ser CSS
    plano, la hoja cargada al final pisaria la otra. */
 .sp-select--rango {
+  min-height: 40px;
   padding: 6px 10px;
-  border: 1px solid #E5E7EB;
-  border-radius: 6px;
+  border: 1.5px solid var(--stf-borde, #E6E8F0);
+  border-radius: 10px;
   font-size: 13px;
   background: #fff;
 }
 
-.sp-badge--alerta {
-  background: #FEF2F2;
-  color: #991B1B;
-  border: 1px solid #FECACA;
-}
-
 /* El banner de incidencia viaja DENTRO de renderAcciones, que ColaOrdenes
    envuelve en .sp-acciones (flex). Sin esto el <p> se encoge al lado de los
-   botones en vez de ocupar su propia linea, como en el monolito viejo. */
-.sp-acciones > .sp-incidencia {
-  flex: 1 0 100%;
-}
+   botones en vez de ocupar su propia linea. */
+.sp-acciones > .sp-incidencia { flex: 1 0 100%; }
 
 /* Mismo caso para los avisos de Preparar Órdenes (pendiente de pago y
    productos agotados): van dentro de AccionesPreparar, envueltos en
    .sp-acciones, y deben ocupar su propia linea completa. */
 .sp-acciones > .sp-aviso,
-.sp-acciones > .sp-ajuste {
-  flex: 1 0 100%;
-}
+.sp-acciones > .sp-ajuste { flex: 1 0 100%; }

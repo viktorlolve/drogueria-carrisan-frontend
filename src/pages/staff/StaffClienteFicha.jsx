@@ -10,6 +10,7 @@ import { resumirHorario } from '../../utils/horario'
 import './StaffComercial.css'
 import './StaffTesoreria.css'
 import './StaffClientes.css'
+import { useStaffUI } from '../../hooks/useStaffUI'
 
 // -----------------------------------------------------------------
 // Helpers
@@ -177,6 +178,7 @@ function TabPedidos({ clienteId }) {
 // Tab: Presupuestos (unificado: presupuestos + cotizaciones + requerimientos)
 // -----------------------------------------------------------------
 function TabPresupuestos({ clienteId, crearModal, setCrearModal }) {
+  const { confirmar, avisar } = useStaffUI()
   const [presupuestos, setPresupuestos] = useState([])
   const [cotizaciones, setCotizaciones] = useState([])
   const [requerimientos, setRequerimientos] = useState([])
@@ -197,18 +199,18 @@ function TabPresupuestos({ clienteId, crearModal, setCrearModal }) {
       const { data } = await staffApi.get(`/staff/clientes/${clienteId}/presupuestos`)
       setPresupuestos(data || [])
     } catch (err) {
-      window.alert(err.response?.data?.error || 'Error al recotizar')
+      avisar(err.response?.data?.error || 'Error al recotizar', 'error')
     }
   }
 
   async function generarPedido(id) {
-    if (!window.confirm('¿Generar pedido desde este presupuesto?')) return
+    if (!(await confirmar({ titulo: '¿Generar pedido desde este presupuesto?', textoConfirmar: 'Generar pedido' }))) return
     try {
       await staffApi.post(`/staff/presupuestos/${id}/generar-pedido`)
       const { data } = await staffApi.get(`/staff/clientes/${clienteId}/presupuestos`)
       setPresupuestos(data || [])
     } catch (err) {
-      window.alert(err.response?.data?.error || 'Error al generar pedido')
+      avisar(err.response?.data?.error || 'Error al generar pedido', 'error')
     }
   }
 
@@ -489,6 +491,7 @@ function ModalDocumentoCompacto({ solicitud, onClose, onAprobar, onRechazar }) {
 // Página principal: Ficha del Cliente
 // -----------------------------------------------------------------
 function StaffClienteFicha() {
+  const { avisar } = useStaffUI()
   const { id } = useParams()
   const navigate = useNavigate()
   const [tab, setTab] = useState('resumen')
@@ -534,7 +537,7 @@ function StaffClienteFicha() {
       if (Array.isArray(data.etiquetas)) setEtiquetas(data.etiquetas)
       setEditandoEtiqueta(false)
     } catch (err) {
-      window.alert(err.response?.data?.error || 'Error al guardar la etiqueta')
+      avisar(err.response?.data?.error || 'Error al guardar la etiqueta', 'error')
     } finally {
       setGuardandoEtiqueta(false)
     }

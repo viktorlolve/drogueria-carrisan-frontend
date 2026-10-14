@@ -1,14 +1,18 @@
 import { useState } from 'react'
-import { Phone, MessageCircle } from 'lucide-react'
+import { Phone, MessageCircle, Clock } from 'lucide-react'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import AgenciasEnvioModal from '../../components/staff/AgenciasEnvioModal'
-import { ItemsOrden, formatUSD } from '../../components/staff/ColaOrdenes'
+import { ItemsOrden } from '../../components/staff/ColaOrdenes'
+import StaffEstado from '../../components/staff/StaffEstado'
+import StaffModal from '../../components/staff/StaffModal'
+import { formatearUSD } from '../../utils/formato'
 import { useColaStaff } from '../../hooks/useColaStaff'
 import { exportarGuiaDespacho } from '../../utils/exportUtils'
 import { resumirHorario } from '../../utils/horario'
 import '../../components/staff/ColaOrdenes.css'
 import './StaffEnvios.css'
+import { useStaffUI } from '../../hooks/useStaffUI'
 
 function telAEnlace(tel) {
   const limpio = String(tel || '').replace(/[^\d+]/g, '')
@@ -23,7 +27,8 @@ const MOTIVOS = [
 ]
 
 function StaffEnvios() {
-  const { datos: ordenes, cargando, error, recargarTodo } = useColaStaff('/staff/despacho', {
+  const { avisar } = useStaffUI()
+  const { datos: ordenes, cargando, error, recargar, recargarTodo } = useColaStaff('/staff/despacho', {
     params: { tipo: 'envio_nacional' },
   })
   const [procesando, setProcesando] = useState(null)
@@ -36,7 +41,7 @@ function StaffEnvios() {
       await staffApi.patch(`/staff/despacho/${id}/entregar`)
       await recargarTodo()
     } catch (err) {
-      alert(err.response?.data?.error || 'No se pudo marcar como entregado')
+      avisar(err.response?.data?.error || 'No se pudo marcar como entregado', 'error')
     } finally {
       setProcesando(null)
     }
@@ -50,7 +55,7 @@ function StaffEnvios() {
       setIncidenciaDe(null)
       await recargarTodo()
     } catch (err) {
-      alert(err.response?.data?.error || 'No se pudo registrar la incidencia')
+      avisar(err.response?.data?.error || 'No se pudo registrar la incidencia', 'error')
     } finally {
       setProcesando(null)
     }
@@ -59,14 +64,14 @@ function StaffEnvios() {
   return (
     <LayoutDepartamento departamento="logistica" activo="envios" titulo="Envíos por agencia">
       <div className="se-page">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+        <div className="se-encabezado">
           <p className="se-intro">Envíos por agencia — prepara la guía y despacha.</p>
           <AgenciasEnvioModal />
         </div>
 
-        {cargando && <p>Cargando...</p>}
-        {error && <p className="se-error">{error}</p>}
-        {!cargando && !error && ordenes.length === 0 && <p>No hay envíos por agencia pendientes ahora mismo.</p>}
+        {cargando && <StaffEstado tipo="cargando" />}
+        {error && <StaffEstado tipo="error" mensaje={error} onReintentar={recargar} />}
+        {!cargando && !error && ordenes.length === 0 && <StaffEstado tipo="vacio" titulo="No hay envíos por agencia pendientes ahora mismo." />}
 
         <div className="se-list">
           {ordenes.map((orden) => {
@@ -80,7 +85,7 @@ function StaffEnvios() {
                 </div>
 
                 <p className="se-card-cliente">
-                  {orden.users?.nombre} — ${formatUSD(orden.total_usd)}
+                  {orden.users?.nombre} — {formatearUSD(orden.total_usd)}
                 </p>
 
                 <div className="se-card-contacto">
@@ -100,7 +105,7 @@ function StaffEnvios() {
                   {resumirHorario(orden.horario_recepcion).length > 0 && (
                     <div className="se-horario">
                       {resumirHorario(orden.horario_recepcion).map((linea) => (
-                        <p key={linea}>{linea}</p>
+                        <p key={linea}><Clock size={13} /> {linea}</p>
                       ))}
                     </div>
                   )}
@@ -122,9 +127,8 @@ function StaffEnvios() {
       </div>
 
       {incidenciaDe && (
-        <div className="se-modal" onClick={() => setIncidenciaDe(null)}>
-          <div className="se-modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>Registrar incidencia</h3>
+        <StaffModal titulo="Registrar incidencia" ancho="sm" onCerrar={() => setIncidenciaDe(null)} bloqueado={procesando === incidenciaDe}>
+          <div className="se-modal-content">
             <p className="se-modal-meta">El pedido dejará de verse en tu cola y pasará a revisión.</p>
             <select value={motivo} onChange={(e) => setMotivo(e.target.value)}>
               {MOTIVOS.map((m) => <option key={m} value={m}>{m}</option>)}
@@ -136,7 +140,7 @@ function StaffEnvios() {
               </button>
             </div>
           </div>
-        </div>
+        </StaffModal>
       )}
     </LayoutDepartamento>
   )

@@ -198,7 +198,7 @@ export default function StaffCampanaNotificaciones() {
             <div className="snc-panel__cargando">Cargando…</div>
           ) : previas.length === 0 ? (
             <div className="snc-panel__vacio">
-              <p>No tenés notificaciones sin leer.</p>
+              <p>No tienes notificaciones sin leer.</p>
             </div>
           ) : (
             <ul className="snc-panel__lista">

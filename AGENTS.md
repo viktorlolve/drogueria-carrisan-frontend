@@ -438,7 +438,7 @@ Desde 2026-09-04 el módulo staff se organiza en **3 departamentos**: `finanzas`
 | Ruta | Guard | Departamento | Estado | Descripcion |
 |------|-------|--------------|--------|-------------|
 | /staff/login | publico | — | funcional | Login interno (email+password), usa Auth.css |
-| /staff/registro | publico | — | funcional | Registro de personal con código de invitación staff (`StaffRegistro.jsx` + `StaffRegistro.css`): verifica el código via `/auth/verificar-codigo {tipo:'staff'}`, formula (email, nombre, password), POST `/staff/registro` → auto-login (iniciarSesionConDatos) → /staff/dashboard |
+| /staff/registro | publico | — | funcional | Registro de personal con código de invitación staff (`StaffRegistro.jsx`): verifica el código via `/auth/verificar-codigo {tipo:'staff'}`, formula (email, nombre, password), POST `/staff/registro` → auto-login (iniciarSesionConDatos) → /staff/dashboard. `StaffRegistro.css` es **legado muerto** (NO se importa; sus clases `.staff-registro-*` son de una versión anterior del componente — layout de "Rol: <badge> [Cambiar]" en línea — y no se usan). El **panel del formulario** lleva `minW="0"` a propósito (ver "Trampa CSS: flex-item y ancho mínimo") |
 | /staff/dashboard | PrivateRouteStaff | — | funcional | Panel visual standalone (sin sidebar): tarjetas de departamento + boton admin-bridge (`StaffDashboard.css`) |
 | /staff/finanzas · /staff/comercial · /staff/logistica | PrivateRouteStaff | — | funcional | Hubs de departamento (`StaffDepartamento`): hero del depto + tarjetas de módulos visibles por rol |
 | /staff/ventas | roles: contabilidad/administrador/director/admin | Finanzas | funcional | **Facturación** (`StaffFacturacion.jsx`): emitir facturas/recibos + notas de crédito y débito + historial + anular. Endpoints `/staff/contabilidad/facturas*` (migración `026_facturacion.sql`) |
@@ -497,6 +497,66 @@ La pagina de crear orden a cliente (StaffOrdenes) usa **staffApi** (no el `api` 
 - `.auth-container--registro` → max-width 720px (formularios multi-columna)
 - Mobile: ambos a 100% con padding reducido
 - Desktop: containers centrados con max-width fijo
+
+## Trampa CSS: flex-item y ancho mínimo (mobile)
+
+Un `Flex`/`Box` que es **flex-item** de una fila tiene por defecto `min-width: auto`: **no baja de su
+ancho min-content** aunque tenga `flex: 1`. Si su contenido trae un bloque ancho, el panel no encoge y
+en móviles angostos la tarjeta se **recorta a la derecha**. Y como `html, body` llevan
+`overflow-x: clip` (ver `src/index.css`), el desborde se esconde **sin scrollbar** → contenido
+inalcanzable, imposible de scrollear.
+
+- **Caso real** (`StaffRegistro.jsx`, 2026-10-13): el panel del formulario (`<Flex flex="1" …>`) no bajaba
+  de **391px**. El driver era la fila de rol (badge "Vendedor" + "Rol asignado" + botón "Cambiar código",
+  con `flexShrink={0}` en los extremos) → min-content **301px** > inputs (247px). En pantallas ≤390px
+  (Android 360, iPhone SE 320) la card quedaba en 351px y **se recortaba ~31px** a la derecha.
+- **Fix**: `minW="0"` en el flex-item (el panel). La tarjeta en sí sí encoge: como flex-item su
+  `min-width: auto` toma la *specified-size suggestion* (`w="100%"`) y no su min-content.
+- **Verificación** (headless Edge + CDP): 320/360/375/390/414/428 × varios altos → **0 desbordes** y la
+  card escala (280/320/335/350/374/388) tras el fix. **`StaffLogin.jsx` usa el MISMO patrón pero su card
+  no supera el ancho → NO lo necesita** (no le agregues `minW="0"` "por simetría").
+
+## Logos — fuente única (Supabase Storage, IMPLEMENTADO 2026-10-14)
+
+Todos los logos de la empresa viven en **Supabase Storage** (bucket `crsnimages`, carpeta
+`logodrogueria/`) y se consumen desde **una sola fuente**: `src/config/logos.js`
+(`LOGO_COLOR_HORIZONTAL`, `LOGO_BLANCO`, `MINI_LOGO_COLOR`, `MINI_LOGO_TEAL`, `MINI_LOGO_AZUL` — con
+`%20` codificado). **No volver a importar los PNG de `src/assets/`** (`minilogo *.png` quedan sin uso,
+se conservan por si se revierte).
+
+| Constante | Fondo | Consumidor |
+|---|---|---|
+| `LOGO_BLANCO` | oscuro (`#0052DC` Navbar/StaffNavbar, `#1a1a3a` Footer) | `Navbar.jsx`, `Footer.jsx`, `config/empresa.js` (`logoStaffUrl` → `StaffNavbar.jsx`) |
+| `MINI_LOGO_COLOR` | claro (cards de auth) | `Login.jsx`, `RegistroConTipo/Institucional/Profesional/Honorifico/Invita.jsx`, `staff/StaffLogin.jsx`, `staff/StaffRegistro.jsx` |
+| `LOGO_COLOR_HORIZONTAL` | pill blanca | `CompartirProductoImagen.jsx` (`LOGO_URL`) |
+| `MINI_LOGO_TEAL` / `MINI_LOGO_AZUL` | badges | `Landing.jsx` (footer) |
+
+Aliases en uso: `import { MINI_LOGO_COLOR as logo } from '../config/logos'`,
+`import { LOGO_BLANCO as logoBlanco } from '../config/logos'` (el `as` mantiene el resto del JSX
+intacto).
+
+- **`CompartirProductoImagen.jsx`**: la imagen cross-origin se carga con `img.crossOrigin = 'anonymous'`
+  y el bucket responde `Access-Control-Allow-Origin: *` → el canvas **no queda tainted** y
+  `canvas.toBlob('image/png')` funciona. Si se cambia la fuente de la imagen, verificar el CORS o la
+  descarga revienta con `SecurityError`.
+- **Favicon/PWA**: generados con `sharp` desde `mini logo app favicon.png` a `public/` (`favicon.png`
+  64², `apple-touch-icon.png` 180², `android-chrome-192x192.png`, `android-chrome-512x512.png`).
+  `index.html` usa `<link rel="icon" type="image/png" href="/favicon.png" />` y `PwaScopeSwitcher.jsx`
+  setea `/favicon.png` + `image/png`. `public/favicon.svg` **eliminado**. El manifest
+  (`vite.config.js`) sigue apuntando a `android-chrome-*.png`.
+- **PDF membrete (`src/utils/pdf/pdfBase.js`)** — **regla de tamaño**: jsPDF embebe **PNG como RGBA
+  crudo (~4 B/px)**, así que el logo a resolución completa costaría ~1.6 MB; **JPEG se copia verbatim**
+  (~32 KB). Por eso el logo del membrete se rasteriza en un canvas con el **degradado del header
+  horneado** (`colorDegradado(t)` → paradas `t0 = PAG.margen/PAG.ancho`, `t1 = (PAG.margen + w)/PAG.ancho`),
+  se exporta con `canvas.toDataURL('image/jpeg', 0.95)` y se inserta con `addImage(..., 'JPEG', ...)`.
+  - `LOGO_MEMBRETE_ALTO = 15` (mm) y `LOGO_MEMBRETE_PX = 520` (canvas). Si cambian los colores o la
+    dirección del degradado del membrete, **hay que actualizar el fondo del canvas** en
+    `cargarLogoMembrete` (el comentario del módulo lo advierte).
+  - `nuevoDoc()` precarga el logo (async, `AbortSignal.timeout(8000)`, `fetch` + `FileReader` +
+    `img.decode()`), cacheado en una variable de módulo. Si falla → fallback al sello vectorial +
+    texto (nunca rompe el PDF).
+  - **`exportToPdf` de `src/utils/exportUtils.js` sigue SIN membrete** (solo título + fecha + tabla):
+    no dibuja logo, así que no necesita la precarga. Es un export genérico, no branding.
 
 ## Errores comunes a evitar
 

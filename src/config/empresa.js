@@ -7,6 +7,8 @@
 // pdfBase.js filtra los placeholders automáticamente (datosEmpresa()), pero
 // conviene no dejar ninguno: si el valor es un placeholder, el PDF lo omite.
 
+import { LOGO_BLANCO } from './logos'
+
 const empresaInfo = {
   nombre: 'Droguería Carrisan',
 
@@ -23,17 +25,15 @@ const empresaInfo = {
   email: 'dcarrisan@gmail.com',
   direccion: 'Av. Urdaneta (99), Qta Mirabal, Local 04C, Valencia 2001, Carabobo, Venezuela',
 
-  // Opcional: logo en base64 (data URL o solo el base64) para que el
-  // reporte lo muestre en el membrete en lugar del nombre en texto.
-  // Déjalo en null mientras no lo tengas.
-  // Ejemplo: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...'
+  // Logo en base64 para el membrete de los PDFs. NO se usa: el membrete
+  // carga su logo automáticamente desde config/logos.js (ver pdfBase.js).
+  // Se conserva por compatibilidad.
   logoBase64: null,
 
   // Logo del área staff (navbar superior de /staff/*). URL pública de la
   // imagen (png/jpg o svg). Vacío ('') = se pinta el placeholder con el
   // nombre de la empresa en texto.
-  // Pendiente del dueño: pegar aquí la URL del logo.
-  logoStaffUrl: '',
+  logoStaffUrl: LOGO_BLANCO,
 
   // Datos para que el cliente pague. Solo se imprimen si están completos.
   // Mientras no se confirmen más cuentas, deja solo lo verificado arriba:

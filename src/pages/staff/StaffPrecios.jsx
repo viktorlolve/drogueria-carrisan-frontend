@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import './StaffComercial.css'
+import { useStaffUI } from '../../hooks/useStaffUI'
 
 const LINEAS = ['Linea Hospitalaria', 'Linea Farmacia', 'Material Medico']
 const ITEMS_POR_PAGINA = 20
@@ -9,6 +10,7 @@ const ITEMS_POR_PAGINA = 20
 const formato = (n) => Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 function StaffPrecios() {
+  const { avisar } = useStaffUI()
   const [productos, setProductos] = useState([])
   const [laboratorios, setLaboratorios] = useState([])
   const [formas, setFormas] = useState([])
@@ -191,7 +193,7 @@ function StaffPrecios() {
       setLoteValor('')
       setRecarga((r) => r + 1)
       const nota = omitidos ? ` — ${omitidos} sin precio base omitidos` : ''
-      alert(`Precios aplicados: ${data.actualizados}${nota}`)
+      avisar(`Precios aplicados: ${data.actualizados}${nota}`)
     } catch (err) {
       setError(err.response?.data?.error || 'Error al aplicar precios en lote')
       console.error(err)
@@ -336,8 +338,8 @@ function StaffPrecios() {
                     </td>
                     <td>{p.laboratorio}</td>
                     <td>
-                      <span className="sp-badge">{p.linea || '-'}</span>{' '}
-                      <span className="sp-badge">{p.forma || '-'}</span>
+                      <span className="spc-badge">{p.linea || '-'}</span>{' '}
+                      <span className="spc-badge">{p.forma || '-'}</span>
                     </td>
                     <td className="sp-precio">
                       {precioEditando.id === p.id ? (

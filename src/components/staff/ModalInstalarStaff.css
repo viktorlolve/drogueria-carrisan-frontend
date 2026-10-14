@@ -1,5 +1,5 @@
 /* =================================================================
-   MODAL INSTALAR STAFF — diseño del panel interno (tema #1B4B8F)
+   MODAL INSTALAR STAFF — diseño del panel interno (paleta Azul #0052DC / Índigo #1A1A3A)
    ================================================================= */
 
 .sim-overlay {
@@ -53,12 +53,12 @@
   width: 58px;
   height: 58px;
   border-radius: 16px;
-  background: linear-gradient(135deg, #1B4B8F, #2563EB);
+  background: linear-gradient(135deg, #1A1A3A, #0052DC);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10px 22px -8px rgba(27, 75, 143, 0.6);
+  box-shadow: 0 10px 22px -8px rgba(0, 82, 220, 0.6);
   margin-bottom: 16px;
 }
 
@@ -97,8 +97,8 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: rgba(27, 75, 143, 0.1);
-  color: #1B4B8F;
+  background: rgba(0, 82, 220, 0.1);
+  color: #0052DC;
   font-size: 12px;
   font-weight: 800;
   display: flex;
@@ -131,7 +131,7 @@
   border: 0;
   border-radius: 12px;
   padding: 12px 16px;
-  background: linear-gradient(120deg, #1B4B8F, #2563EB);
+  background: linear-gradient(120deg, #0052DC, #0043B3);
   color: #fff;
   font-size: 14px;
   font-weight: 800;

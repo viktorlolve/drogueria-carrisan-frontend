@@ -28,7 +28,7 @@ export default function StaffPedidosCompletadas() {
   const [rango, setRango] = useState('30')
   const [desde, setDesde] = useState(() => fechaDesdeISO(30))
   const dias = RANGOS.find((r) => r.id === rango)?.dias || 30
-  const { datos, cargando, error } = useColaStaff('/staff/logistica/completadas', {
+  const { datos, cargando, error, recargar } = useColaStaff('/staff/logistica/completadas', {
     params: { desde },
     extraer: extraerOrdenes,
   })
@@ -53,6 +53,7 @@ export default function StaffPedidosCompletadas() {
         ordenes={datos}
         cargando={cargando}
         error={error}
+        onReintentar={recargar}
         vacio={`Sin completadas en los últimos ${dias} días.`}
         badge={(orden) => <span className="sp-badge sp-badge--entregado">{etiquetaEnvio(orden)}</span>}
       />

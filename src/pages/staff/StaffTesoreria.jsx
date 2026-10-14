@@ -6,6 +6,7 @@ import staffApi from '../../api/staffAxios'
 import { exportToPdf } from '../../utils/exportUtils'
 import './StaffFinanzas.css'
 import './StaffTesoreria.css'
+import { useStaffUI } from '../../hooks/useStaffUI'
 
 const CATEGORIAS_EGRESO = ['Proveedores', 'Nómina', 'Servicios', 'Mantenimiento', 'Impuestos', 'Otro']
 const CATEGORIAS_SALIDA_INTERNA = ['Transferencia a banco', 'Préstamo a personal', 'Retiro del dueño', 'Otro interno']
@@ -45,6 +46,7 @@ function descargarCSV(filas, cabeceras, keys, nombre) {
 }
 
 export default function StaffTesoreria() {
+  const { confirmar, avisar } = useStaffUI()
   const [tab, setTab] = useState('resumen')
   const [desde, setDesde] = useState(primerDiaDelMes)
   const [hasta, setHasta] = useState(hoy)
@@ -110,17 +112,17 @@ export default function StaffTesoreria() {
       setForm({ tipo: 'egreso', categoria: 'Proveedores', concepto: '', monto: '', fecha: hoy(), tercero: '' })
       await cargarResumen()
     } catch (err) {
-      alert(err.response?.data?.error || 'Error al crear el movimiento')
+      avisar(err.response?.data?.error || 'Error al crear el movimiento', 'error')
     }
   }
 
   const eliminarEgreso = async (id) => {
-    if (!window.confirm('¿Eliminar este movimiento?')) return
+    if (!(await confirmar({ titulo: '¿Eliminar este movimiento?', textoConfirmar: 'Eliminar', peligro: true }))) return
     try {
       await staffApi.delete(`/staff/tesoreria/egresos/${id}`)
       await cargarResumen()
     } catch (err) {
-      alert(err.response?.data?.error || 'Error al eliminar')
+      avisar(err.response?.data?.error || 'Error al eliminar', 'error')
     }
   }
 

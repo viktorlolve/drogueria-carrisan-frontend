@@ -1,8 +1,11 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Search, MapPin, Phone } from 'lucide-react'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
+import StaffEstado from '../../components/staff/StaffEstado'
+import StaffModal from '../../components/staff/StaffModal'
 import './StaffDirecciones.css'
+import { useStaffUI } from '../../hooks/useStaffUI'
 
 const TIPOS = [
   { id: 'todas', label: 'Todas' },
@@ -28,39 +31,54 @@ async function obtenerDirecciones(tipo, query) {
 }
 
 function StaffDirecciones({ departamento = 'logistica', activo = 'direcciones', titulo = 'Direcciones de clientes' }) {
+  const { avisar } = useStaffUI()
   const [direcciones, setDirecciones] = useState([])
   const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState('')
+  const [guardando, setGuardando] = useState(false)
   const [tipo, setTipo] = useState('todas')
   const [buscar, setBuscar] = useState('')
   const [editando, setEditando] = useState(null)
   const [form, setForm] = useState({ telefono_contacto: '', nota_entrega: '' })
   const timer = useRef(null)
+  const ultima = useRef(0)
+  const buscarRef = useRef('')
 
-  useEffect(() => {
-    let activo = true
-    obtenerDirecciones(tipo, '')
+  // Solo se aplica la respuesta de la ÚLTIMA petición: sin esto, una búsqueda
+  // lenta podía pisar a otra más reciente y la lista no coincidía con lo escrito.
+  const pedir = useCallback((t, q) => {
+    const id = ++ultima.current
+    return obtenerDirecciones(t, q)
       .then(
-        (data) => { if (activo) setDirecciones(data) },
-        (err) => { console.error('Error al cargar direcciones', err); if (activo) setDirecciones([]) },
+        (data) => { if (id === ultima.current) { setDirecciones(data); setError('') } },
+        (err) => {
+          if (id !== ultima.current) return
+          setDirecciones([])
+          setError(err.response?.data?.error || 'No se pudieron cargar las direcciones')
+        },
       )
-      .finally(() => { if (activo) setCargando(false) })
-    return () => { activo = false }
-  }, [tipo])
+      .finally(() => { if (id === ultima.current) setCargando(false) })
+  }, [])
+
+  // Al cambiar de pestaña se conserva el texto del buscador.
+  useEffect(() => {
+    pedir(tipo, buscarRef.current)
+    return () => { ultima.current += 1 }
+  }, [tipo, pedir])
 
   useEffect(() => () => clearTimeout(timer.current), [])
 
   function handleBuscar(value) {
     setBuscar(value)
+    buscarRef.current = value
     setCargando(true)
     clearTimeout(timer.current)
-    timer.current = setTimeout(() => {
-      obtenerDirecciones(tipo, value)
-        .then(
-          (data) => setDirecciones(data),
-          (err) => { console.error('Error al cargar direcciones', err); setDirecciones([]) },
-        )
-        .finally(() => setCargando(false))
-    }, 120)
+    timer.current = setTimeout(() => { pedir(tipo, value) }, 120)
+  }
+
+  function reintentar() {
+    setCargando(true)
+    pedir(tipo, buscarRef.current)
   }
 
   async function togglePreferida(d) {
@@ -68,7 +86,7 @@ function StaffDirecciones({ departamento = 'logistica', activo = 'direcciones', 
       await staffApi.patch(`/staff/direcciones/${d.id}`, { es_preferida: !d.es_preferida })
       setDirecciones((prev) => prev.map((x) => x.id === d.id ? { ...x, es_preferida: !d.es_preferida } : x))
     } catch (err) {
-      alert(err.response?.data?.error || 'No se pudo actualizar la preferida')
+      avisar(err.response?.data?.error || 'No se pudo actualizar la preferida', 'error')
     }
   }
 
@@ -79,6 +97,7 @@ function StaffDirecciones({ departamento = 'logistica', activo = 'direcciones', 
 
   async function guardarEdicion() {
     if (!editando) return
+    setGuardando(true)
     try {
       await staffApi.patch(`/staff/direcciones/${editando.id}`, {
         telefono_contacto: form.telefono_contacto,
@@ -89,15 +108,17 @@ function StaffDirecciones({ departamento = 'logistica', activo = 'direcciones', 
         : x))
       setEditando(null)
     } catch (err) {
-      alert(err.response?.data?.error || 'No se pudo guardar la dirección')
+      avisar(err.response?.data?.error || 'No se pudo guardar la dirección', 'error')
+    } finally {
+      setGuardando(false)
     }
   }
 
   return (
     <LayoutDepartamento departamento={departamento} activo={activo} titulo={titulo}>
-      <div className="sd-page">
-        <div className="sd-toolbar">
-          <div className="sd-buscador">
+      <div className="sdir-page">
+        <div className="sdir-toolbar">
+          <div className="sdir-buscador">
             <Search size={17} />
             <input
               type="text"
@@ -106,12 +127,12 @@ function StaffDirecciones({ departamento = 'logistica', activo = 'direcciones', 
               onChange={(e) => handleBuscar(e.target.value)}
             />
           </div>
-          <div className="sd-tabs">
+          <div className="sdir-tabs">
             {TIPOS.map((t) => (
               <button
                 key={t.id}
                 type="button"
-                className={`sd-tab ${tipo === t.id ? 'sd-tab--activo' : ''}`}
+                className={`sdir-tab ${tipo === t.id ? 'sdir-tab--activo' : ''}`}
                 onClick={() => { setTipo(t.id); setCargando(true) }}
               >
                 {t.label}
@@ -121,50 +142,53 @@ function StaffDirecciones({ departamento = 'logistica', activo = 'direcciones', 
         </div>
 
         {cargando ? (
-          <div className="loading-container">
-            <div className="spinner"></div>
-            <p>Cargando direcciones...</p>
-          </div>
+          <StaffEstado tipo="cargando" filas={4} />
+        ) : error ? (
+          <StaffEstado tipo="error" mensaje={error} onReintentar={reintentar} />
         ) : direcciones.length === 0 ? (
-          <p className="sd-vacio">No hay direcciones para mostrar.</p>
+          <StaffEstado
+            tipo="vacio"
+            titulo="No hay direcciones para mostrar."
+            mensaje={buscar.trim().length >= 2 ? 'Prueba con otro nombre, email o ciudad.' : undefined}
+          />
         ) : (
-          <div className="sd-grid">
+          <div className="sdir-grid">
             {direcciones.map((d) => (
-              <div className="sd-card" key={d.id}>
-                <div className="sd-card__head">
-                  <div className="sd-card__avatar">{(d.users?.nombre || d.users?.email || '?').trim().charAt(0).toUpperCase()}</div>
-                  <div className="sd-card__cliente">
-                    <strong>{d.users?.nombre || 'Sin nombre'}{d.es_preferida && <span className="sd-badge-pref"> Preferida</span>}</strong>
+              <div className="sdir-card" key={d.id}>
+                <div className="sdir-card__head">
+                  <div className="sdir-card__avatar">{(d.users?.nombre || d.users?.email || '?').trim().charAt(0).toUpperCase()}</div>
+                  <div className="sdir-card__cliente">
+                    <strong>{d.users?.nombre || 'Sin nombre'}{d.es_preferida && <span className="sdir-badge-pref"> Preferida</span>}</strong>
                     <span>{d.users?.email}{d.users?.rif_cedula ? ` · ${d.users.rif_cedula}` : ''}</span>
                   </div>
                 </div>
 
-                <span className={`sd-card__badge sd-card__badge--${d.tipo_direccion || 'delivery'}`}>
+                <span className={`sdir-card__badge sdir-card__badge--${d.tipo_direccion || 'delivery'}`}>
                   {d.tipo_direccion === 'envio_nacional' ? 'Envío nacional' : 'Delivery'}
                 </span>
 
-                <div className="sd-card__direccion">
+                <div className="sdir-card__direccion">
                   <MapPin size={15} />
                   <div>
-                    <p className="sd-card__nombre">{d.nombre || 'Dirección'}</p>
+                    <p className="sdir-card__nombre">{d.nombre || 'Dirección'}</p>
                     <p>{d.direccion}</p>
-                    {(d.ciudad || d.estado) && <p className="sd-card__ciudad">{[d.ciudad, d.estado].filter(Boolean).join(', ')}</p>}
-                    {d.referencia && <p className="sd-card__ref">{d.referencia}</p>}
-                    {d.nota_entrega && <p className="sd-card__nota">Nota: {d.nota_entrega}</p>}
+                    {(d.ciudad || d.estado) && <p className="sdir-card__ciudad">{[d.ciudad, d.estado].filter(Boolean).join(', ')}</p>}
+                    {d.referencia && <p className="sdir-card__ref">{d.referencia}</p>}
+                    {d.nota_entrega && <p className="sdir-card__nota">Nota: {d.nota_entrega}</p>}
                   </div>
                 </div>
 
-                <div className="sd-card__meta">
-                  {d.telefono_contacto && <span className="sd-card__meta-item"><Phone size={12} /> {d.telefono_contacto}</span>}
-                  {d.agencia_preferida && <span className="sd-card__meta-agencia">Agencia: {d.agencia_preferida}</span>}
-                  <span className="sd-card__fecha">Registrada {formatFecha(d.created_at)}</span>
+                <div className="sdir-card__meta">
+                  {d.telefono_contacto && <span className="sdir-card__meta-item"><Phone size={12} /> {d.telefono_contacto}</span>}
+                  {d.agencia_preferida && <span className="sdir-card__meta-agencia">Agencia: {d.agencia_preferida}</span>}
+                  <span className="sdir-card__fecha">Registrada {formatFecha(d.created_at)}</span>
                 </div>
 
-                <div className="sd-card__acciones">
-                  <button type="button" className="sd-card__btn" onClick={() => togglePreferida(d)}>
+                <div className="sdir-card__acciones">
+                  <button type="button" className="sdir-card__btn" onClick={() => togglePreferida(d)}>
                     {d.es_preferida ? 'Quitar preferida' : 'Marcar preferida'}
                   </button>
-                  <button type="button" className="sd-card__btn" onClick={() => abrirEdicion(d)}>Editar contacto/nota</button>
+                  <button type="button" className="sdir-card__btn" onClick={() => abrirEdicion(d)}>Editar contacto/nota</button>
                 </div>
               </div>
             ))}
@@ -172,9 +196,8 @@ function StaffDirecciones({ departamento = 'logistica', activo = 'direcciones', 
         )}
 
         {editando && (
-          <div className="sd-modal" onClick={() => setEditando(null)}>
-            <div className="sd-modal-content" onClick={(e) => e.stopPropagation()}>
-              <h3>Dirección de {editando.users?.nombre}</h3>
+          <StaffModal titulo={`Dirección de ${editando.users?.nombre || 'cliente'}`} ancho="sm" onCerrar={() => setEditando(null)} bloqueado={guardando}>
+            <div className="sdir-modal-content">
               <label>
                 Teléfono de contacto
                 <input value={form.telefono_contacto} onChange={(e) => setForm({ ...form, telefono_contacto: e.target.value })} />
@@ -183,12 +206,14 @@ function StaffDirecciones({ departamento = 'logistica', activo = 'direcciones', 
                 Nota de entrega
                 <input value={form.nota_entrega} onChange={(e) => setForm({ ...form, nota_entrega: e.target.value })} placeholder="Ej. preguntar por María, edificio verde" />
               </label>
-              <div className="sd-modal__acciones">
-                <button type="button" className="sd-card__btn" onClick={() => setEditando(null)}>Cancelar</button>
-                <button type="button" className="sd-card__btn sd-card__btn--primario" onClick={guardarEdicion}>Guardar</button>
+              <div className="sdir-modal__acciones">
+                <button type="button" className="sdir-card__btn" onClick={() => setEditando(null)} disabled={guardando}>Cancelar</button>
+                <button type="button" className="sdir-card__btn sdir-card__btn--primario" onClick={guardarEdicion} disabled={guardando}>
+                  {guardando ? 'Guardando...' : 'Guardar'}
+                </button>
               </div>
             </div>
-          </div>
+          </StaffModal>
         )}
       </div>
     </LayoutDepartamento>

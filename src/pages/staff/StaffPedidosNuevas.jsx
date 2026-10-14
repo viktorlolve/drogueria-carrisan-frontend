@@ -2,24 +2,28 @@ import { useState } from 'react'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import ColaOrdenes, { formatUSD } from '../../components/staff/ColaOrdenes'
+import StaffModal from '../../components/staff/StaffModal'
+import { formatearUSD } from '../../utils/formato'
 import { useColaStaff } from '../../hooks/useColaStaff'
 import { exportarGuiaDespacho } from '../../utils/exportUtils'
+import { useStaffUI } from '../../hooks/useStaffUI'
 
 // Entrada del pipeline: ordenes recien recibidas. El almacenista revisa,
 // anula lo agotado (con nota) y aprueba. Aprobar mueve la orden a
 // 'preparando' y recalcula el total en el backend.
 export default function StaffPedidosNuevas() {
-  const { datos, cargando, error, recargarTodo } = useColaStaff('/staff/almacen/revisar')
+  const { confirmar, avisar } = useStaffUI()
+  const { datos, cargando, error, recargar, recargarTodo } = useColaStaff('/staff/almacen/revisar')
   const [procesando, setProcesando] = useState(false)
 
   async function cancelar(orden) {
-    if (!window.confirm(`¿Cancelar la orden #${orden.id} de ${orden.users?.nombre || 'cliente'}? Esta acción no se puede deshacer.`)) return
+    if (!(await confirmar({ titulo: `¿Cancelar la orden #${orden.id} de ${orden.users?.nombre || 'cliente'}?`, texto: 'Esta acción no se puede deshacer.', textoConfirmar: 'Cancelar orden', textoCancelar: 'Volver', peligro: true }))) return
     setProcesando(true)
     try {
       await staffApi.patch(`/staff/almacen/${orden.id}/cancelar`)
       await recargarTodo()
     } catch (err) {
-      alert(err.response?.data?.error || 'No se pudo cancelar la orden')
+      avisar(err.response?.data?.error || 'No se pudo cancelar la orden', 'error')
     } finally {
       setProcesando(false)
     }
@@ -34,6 +38,7 @@ export default function StaffPedidosNuevas() {
         ordenes={datos}
         cargando={cargando}
         error={error}
+        onReintentar={recargar}
         vacio="No hay pedidos por revisar."
         renderAcciones={(orden) => (
           <>
@@ -50,6 +55,7 @@ export default function StaffPedidosNuevas() {
 // Boton + modal de edicion de una orden. Se renderiza por cada orden de la
 // cola, asi que mantiene su propio estado local (abierto/cerrado + items).
 function EditorAprobar({ orden, onCerrar }) {
+  const { avisar } = useStaffUI()
   const [abierto, setAbierto] = useState(false)
   const [items, setItems] = useState([])
   const [procesando, setProcesando] = useState(false)
@@ -114,7 +120,7 @@ function EditorAprobar({ orden, onCerrar }) {
       cerrar()
       await onCerrar()
     } catch (err) {
-      alert(err.response?.data?.error || 'No se pudo aprobar la orden')
+      avisar(err.response?.data?.error || 'No se pudo aprobar la orden', 'error')
     } finally {
       setProcesando(false)
     }
@@ -124,9 +130,7 @@ function EditorAprobar({ orden, onCerrar }) {
     <>
       <button className="sp-btn" onClick={abrir}>Revisar y aprobar</button>
       {abierto && (
-        <div className="sp-modal" onClick={cerrar}>
-          <div className="sp-modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3 className="sp-modal-titulo">Revisar orden #{orden.id}</h3>
+        <StaffModal titulo={`Revisar orden #${orden.id}`} onCerrar={cerrar} bloqueado={procesando}>
             <p className="sp-card-cliente">{orden.users?.nombre} — {orden.forma_pago === 'credito' ? 'Crédito' : 'Contado'}</p>
 
             <div className="sp-editor">
@@ -157,7 +161,7 @@ function EditorAprobar({ orden, onCerrar }) {
             </div>
 
             <p className="sp-total">
-              Total: <strong>${formatUSD(total)}</strong>
+              Total: <strong>{formatearUSD(total)}</strong>
               {huboCambios && <span className="sp-total-aviso"> — se recalculará al aprobar</span>}
             </p>
 
@@ -167,8 +171,7 @@ function EditorAprobar({ orden, onCerrar }) {
                 {procesando ? 'Aprobando...' : 'Aprobar pedido'}
               </button>
             </div>
-          </div>
-        </div>
+        </StaffModal>
       )}
     </>
   )

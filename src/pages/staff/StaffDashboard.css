@@ -36,10 +36,10 @@
   margin: 28px clamp(16px, 4vw, 40px) 8px;
   padding: 44px clamp(20px, 5vw, 56px);
   border-radius: 22px;
-  background: linear-gradient(120deg, #1B4B8F 0%, #2563EB 55%, #2b6ce5 100%);
+  background: linear-gradient(120deg, #1A1A3A 0%, #0052DC 100%);
   color: #fff;
   overflow: hidden;
-  box-shadow: 0 18px 40px -18px rgba(27, 75, 143, 0.55);
+  box-shadow: 0 18px 40px -18px rgba(0, 82, 220, 0.55);
 }
 
 .sd-hero__glow {
@@ -285,18 +285,18 @@
 }
 
 .sd-instalar:hover {
-  border-color: #1B4B8F;
+  border-color: #0052DC;
   border-style: solid;
-  color: #1B4B8F;
-  background: rgba(27, 75, 143, 0.04);
+  color: #0052DC;
+  background: rgba(0, 82, 220, 0.04);
 }
 
 /* -----------------------------------------------------------------
    Jornada enfocada — panel de trabajo (3c)
    ----------------------------------------------------------------- */
 .sd-foco {
-  --sd-foco-color: var(--sd-card-color, #1B4B8F);
-  --sd-foco-color-soft: var(--sd-card-color-soft, rgba(27, 75, 143, 0.1));
+  --sd-foco-color: var(--sd-card-color, #0052DC);
+  --sd-foco-color-soft: var(--sd-card-color-soft, rgba(0, 82, 220, 0.1));
 }
 
 .sd-foco__cab {

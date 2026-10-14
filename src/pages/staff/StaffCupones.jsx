@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import './StaffCupones.css'
+import { useStaffUI } from '../../hooks/useStaffUI'
 
 function formatUSD(valor) {
   return Number(valor || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -20,6 +21,7 @@ function estadoCupon(cupon) {
 }
 
 export default function StaffCupones() {
+  const { confirmar } = useStaffUI()
   const [cupones, setCupones] = useState([])
   const [estadisticas, setEstadisticas] = useState({ total: 0, usados: 0, disponibles: 0 })
   const [cargando, setCargando] = useState(true)
@@ -92,7 +94,7 @@ export default function StaffCupones() {
   }
 
   async function handleEliminar(cupon) {
-    if (!window.confirm(`¿Eliminar el cupón ${cupon.codigo}? Esta acción no se puede deshacer.`)) return
+    if (!(await confirmar({ titulo: `¿Eliminar el cupón ${cupon.codigo}?`, texto: 'Esta acción no se puede deshacer.', textoConfirmar: 'Eliminar', peligro: true }))) return
     try {
       await staffApi.delete(`/staff/cupones/${cupon.id}`)
       setCupones((prev) => prev.filter((c) => c.id !== cupon.id))

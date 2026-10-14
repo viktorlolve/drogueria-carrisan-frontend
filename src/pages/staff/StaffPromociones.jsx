@@ -3,6 +3,7 @@ import { Plus, Trash2, Edit3, Percent, Tag, Clock, X } from 'lucide-react'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import './StaffComercial.css'
+import { useStaffUI } from '../../hooks/useStaffUI'
 
 const PLANTILLAS_PRECARGADAS = [
   { titulo: '¡20% en toda la farmacia!', mensaje: 'Aprovechá un 20% de descuento en todos los productos de línea farmacéutica. Solo por tiempo limitado.', descuento_pct: 20 },
@@ -14,6 +15,7 @@ const PLANTILLAS_PRECARGADAS = [
 ]
 
 function StaffPromociones({ departamento = 'comercial', activo = 'promociones', titulo = 'Promociones' }) {
+  const { confirmar } = useStaffUI()
   const [plantillas, setPlantillas] = useState([])
   const [historial, setHistorial] = useState([])
   const [cargando, setCargando] = useState(true)
@@ -84,7 +86,7 @@ function StaffPromociones({ departamento = 'comercial', activo = 'promociones', 
   }
 
   async function eliminarPlantilla(id) {
-    if (!confirm('¿Eliminar esta plantilla?')) return
+    if (!(await confirmar({ titulo: '¿Eliminar esta plantilla?', textoConfirmar: 'Eliminar', peligro: true }))) return
     await staffApi.delete(`/staff/promociones/templates/${id}`)
     cargarDatos()
   }

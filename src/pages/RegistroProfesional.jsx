@@ -18,7 +18,7 @@ import {
 } from '../utils/validadores'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/axios'
-import logo from '../assets/minilogo color sin fondo.png'
+import { MINI_LOGO_COLOR as logo } from '../config/logos'
 import { LegalLink } from '../components/legal/LegalModal'
 import { SupportLink } from '../components/registro/SupportModal'
 import './Auth.css'

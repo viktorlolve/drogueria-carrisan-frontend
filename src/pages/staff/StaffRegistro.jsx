@@ -27,12 +27,12 @@ import { validarEmail, validarPassword } from '../../utils/validadores'
 import { useStaffAuth } from '../../context/StaffAuthContext'
 import api from '../../api/axios'
 import staffApi from '../../api/staffAxios'
-import logo from '../../assets/minilogo color sin fondo.png'
+import { MINI_LOGO_COLOR as logo } from '../../config/logos'
 
 /* Paleta de marca (staff = teal, no azul de cliente) */
 const TEAL = '#12A594'
-const VERDE_STAFF = '#0D9373'
-const GRIS_OSCURO = '#232B45'
+const VERDE_STAFF = '#0E8577'
+const GRIS_OSCURO = '#1A1A3A'
 
 /* Puntos destacados del panel de branding (desktop) — mismos que StaffLogin,
    para que login y registro de personal se sientan la misma plataforma. */
@@ -156,7 +156,7 @@ function StaffRegistro() {
     <>
       <Separator borderColor="gray.100" />
       <Box textAlign="center" fontSize="sm" color="gray.500">
-        ¿Ya tenés acceso?{' '}
+        ¿Ya tienes acceso?{' '}
         <Link to="/staff/login" style={{ color: TEAL, fontWeight: 600 }}>
           Iniciá sesión
         </Link>
@@ -282,7 +282,10 @@ function StaffRegistro() {
       </Box>
 
       {/* ---------- Panel del formulario (fondo blanco sobrio, sin glass) ---------- */}
-      <Flex flex="1" align="center" justify="center" p={{ base: 5, md: 8 }} minH="100dvh">
+      {/* minW="0": sin esto el flex-item no baja de su ancho min-content (~391px) y en
+          móviles angostos (≤390px) la tarjeta se recorta a la derecha — el `overflow-x: clip`
+          global esconde el desborde sin scrollbar. Ver AGENTS. */}
+      <Flex flex="1" minW="0" align="center" justify="center" p={{ base: 5, md: 8 }} minH="100dvh">
         <Card.Root
           w="100%"
           maxW="md"
@@ -327,7 +330,7 @@ function StaffRegistro() {
                     <KeyRound size={16} />
                   </Box>
                   <Text fontSize="sm" color="gray.600">
-                    El código es personal e intransferible. Si no tenés uno, solicitá el
+                    El código es personal e intransferible. Si no tienes uno, solicita el
                     acceso con tu líder o con la administración.
                   </Text>
                 </Flex>
@@ -387,7 +390,7 @@ function StaffRegistro() {
                     Completa tu registro
                   </Heading>
                   <Text mt={1.5} fontSize="sm" color="gray.500">
-                    Código verificado — ya podés completar tus datos
+                    Código verificado — ya puedes completar tus datos
                   </Text>
                 </Box>
 

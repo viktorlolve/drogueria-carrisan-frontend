@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import './StaffFinanzas.css'
+import { useStaffUI } from '../../hooks/useStaffUI'
 
 function formatUSD(valor) {
   return Number(valor || 0).toFixed(2)
@@ -18,6 +19,7 @@ function formatFecha(fecha) {
 // queden colgadas por cobrar.
 // ------------------------------------------------------------------
 function StaffOrdenesPorCancelar() {
+  const { confirmar } = useStaffUI()
   const [ordenes, setOrdenes] = useState([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
@@ -45,7 +47,7 @@ function StaffOrdenesPorCancelar() {
   }, [])
 
   async function cancelar(orden) {
-    if (!window.confirm(`¿Cancelar la orden #${orden.id} de ${orden.users?.nombre || 'cliente'}? El cliente ya no podrá pagarla.`)) return
+    if (!(await confirmar({ titulo: `¿Cancelar la orden #${orden.id} de ${orden.users?.nombre || 'cliente'}?`, texto: 'El cliente ya no podrá pagarla.', textoConfirmar: 'Cancelar orden', textoCancelar: 'Volver', peligro: true }))) return
     setProcesando(orden.id)
     try {
       await staffApi.patch(`/staff/contabilidad/ordenes/${orden.id}/cancelar`)
@@ -58,7 +60,7 @@ function StaffOrdenesPorCancelar() {
   }
 
   async function confirmarPago(orden) {
-    if (!window.confirm(`¿Confirmar que el cliente pagó la orden #${orden.id} (${formatUSD(orden.total_usd)} USD)? El pago se marcará como verificado sin comprobante.`)) return
+    if (!(await confirmar({ titulo: `¿Confirmar que el cliente pagó la orden #${orden.id}?`, texto: `Monto: ${formatUSD(orden.total_usd)} USD. El pago se marcará como verificado sin comprobante.`, textoConfirmar: 'Confirmar pago' }))) return
     setProcesando(orden.id)
     try {
       await staffApi.patch(`/staff/contabilidad/ordenes/${orden.id}/confirmar-pago`)

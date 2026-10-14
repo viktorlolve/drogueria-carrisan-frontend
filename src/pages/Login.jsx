@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom'
 import { PackageSearch, ShieldCheck, Clock3 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
-import logo from '../assets/minilogo color sin fondo.png'
+import { MINI_LOGO_COLOR as logo } from '../config/logos'
 import api from '../api/axios'
 import { validarEmail } from '../utils/validadores'
 import './Auth.css'
@@ -142,9 +142,7 @@ function Login() {
             </ul>
           </div>
 
-          <p className="auth-brand-panel__footer">
-            © 2026 Drogueria Carrisan, C.A. · RIF J-40068410-2
-          </p>
+      
         </aside>
 
         {/* ---------- Panel del formulario ---------- */}

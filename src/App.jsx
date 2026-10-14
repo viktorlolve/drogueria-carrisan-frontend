@@ -10,6 +10,7 @@ import { LoadingBarProvider, useLoadingBar } from './context/LoadingBarContext'
 import { registerLoadingBar } from './api/axios'
 import { StaffAuthProvider } from './context/StaffAuthContext'
 import { StaffBadgesProvider } from './context/StaffBadgesContext'
+import StaffUIProvider from './components/staff/StaffUIProvider'
 import TopLoadingBar from './components/TopLoadingBar'
 import Navbar from './components/Navbar'
 import ScrollToTop from './components/ScrollToTop'
@@ -171,6 +172,7 @@ function App() {
   return (
   <AuthProvider>
     <StaffAuthProvider>
+      <StaffUIProvider>
       <StaffBadgesProvider>
         <NavBadgesProvider>
           <CartProvider>
@@ -251,6 +253,7 @@ function App() {
           </CartProvider>
         </NavBadgesProvider>
       </StaffBadgesProvider>
+      </StaffUIProvider>
     </StaffAuthProvider>
   </AuthProvider>
   )

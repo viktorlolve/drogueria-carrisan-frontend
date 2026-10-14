@@ -30,8 +30,8 @@ function PwaScopeSwitcher() {
     // Solo cosmetico: la pestana del navegador, no el icono instalado.
     const favicon = document.querySelector('link[rel="icon"]')
     if (favicon) {
-      favicon.setAttribute('href', '/favicon.svg')
-      favicon.setAttribute('type', 'image/svg+xml')
+      favicon.setAttribute('href', '/favicon.png')
+      favicon.setAttribute('type', 'image/png')
     }
   }, [location.pathname])
 
