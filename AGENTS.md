@@ -521,12 +521,15 @@ inalcanzable, imposible de scrollear.
 Todos los logos de la empresa viven en **Supabase Storage** (bucket `crsnimages`, carpeta
 `logodrogueria/`) y se consumen desde **una sola fuente**: `src/config/logos.js`
 (`LOGO_COLOR_HORIZONTAL`, `LOGO_BLANCO`, `MINI_LOGO_COLOR`, `MINI_LOGO_TEAL`, `MINI_LOGO_AZUL` — con
-`%20` codificado). **No volver a importar los PNG de `src/assets/`** (`minilogo *.png` quedan sin uso,
-se conservan por si se revierte).
+`%20` codificado). **Excepción (decisión del dueño, 2026-10-14)**: el **Navbar** sigue usando el asset
+local `src/assets/minilogo blanco sin fondo.png` — quiere el **mini logo blanco** ahí, no el wordmark
+horizontal; Supabase no tiene esa variante (solo el wordmark horizontal y los mini logos *con fondo de
+color*). Los demás `minilogo *.png` locales quedan sin uso.
 
 | Constante | Fondo | Consumidor |
 |---|---|---|
-| `LOGO_BLANCO` | oscuro (`#0052DC` Navbar/StaffNavbar, `#1a1a3a` Footer) | `Navbar.jsx`, `Footer.jsx`, `config/empresa.js` (`logoStaffUrl` → `StaffNavbar.jsx`) |
+| `LOGO_BLANCO` | oscuro (`#0052DC` StaffNavbar, `#1a1a3a` Footer) | `Footer.jsx`, `config/empresa.js` (`logoStaffUrl` → `StaffNavbar.jsx`) |
+| — (asset local) | `#0052DC` Navbar | `Navbar.jsx` → `src/assets/minilogo blanco sin fondo.png` |
 | `MINI_LOGO_COLOR` | claro (cards de auth) | `Login.jsx`, `RegistroConTipo/Institucional/Profesional/Honorifico/Invita.jsx`, `staff/StaffLogin.jsx`, `staff/StaffRegistro.jsx` |
 | `LOGO_COLOR_HORIZONTAL` | pill blanca | `CompartirProductoImagen.jsx` (`LOGO_URL`) |
 | `MINI_LOGO_TEAL` / `MINI_LOGO_AZUL` | badges | `Landing.jsx` (footer) |
