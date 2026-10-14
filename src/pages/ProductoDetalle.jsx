@@ -103,6 +103,21 @@ function Estrellas({ promedio, tamano = '1rem' }) {
   )
 }
 
+// Precio con centavos en superíndice, mismo formato que el catálogo
+// (ProductCard: `$` + entero + `<sup>` centavos). El wrapper recibe la clase
+// de la página que fija tamaño/color; las partes solo escalan por encima.
+function PrecioSuperIndice({ valor, className = '' }) {
+  if (valor == null) return null
+  const [entero, centavos] = Number(valor).toFixed(2).split('.')
+  return (
+    <span className={className}>
+      <span className="pd-precio__simbolo">$</span>
+      <span className="pd-precio__entero">{entero}</span>
+      <sup className="pd-precio__centavos">{centavos}</sup>
+    </span>
+  )
+}
+
 function ProductoDetalle() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -675,9 +690,10 @@ function ProductoDetalle() {
               ) : (
                 <>
                   <div className="pd-purchase__m-precio-fila">
-                    <span className="pd-purchase__m-price">
-                      ${Number(producto.precio_usd).toFixed(2)}
-                    </span>
+                    <PrecioSuperIndice
+                      className="pd-purchase__m-price"
+                      valor={producto.precio_usd}
+                    />
                     {producto.descuento_activo && (
                       <span className="pd-purchase__m-dto">
                         -{producto.descuento_activo.valor}%
@@ -689,7 +705,7 @@ function ProductoDetalle() {
                       {precioVes && <>Bs. {precioVes}</>}
                       {precioVes && producto.precio_original_usd && ' · '}
                       {producto.precio_original_usd && (
-                        <s>${Number(producto.precio_original_usd).toFixed(2)}</s>
+                        <s><PrecioSuperIndice valor={producto.precio_original_usd} /></s>
                       )}
                     </div>
                   )}
@@ -764,12 +780,13 @@ function ProductoDetalle() {
                   <span className="pd-purchase__precio-fila">
                     {producto.precio_original_usd && (
                       <span className="pd-purchase__original">
-                        ${Number(producto.precio_original_usd).toFixed(2)}
+                        <PrecioSuperIndice valor={producto.precio_original_usd} />
                       </span>
                     )}
-                    <span className="pd-purchase__price">
-                      ${Number(producto.precio_usd).toFixed(2)}
-                    </span>
+                    <PrecioSuperIndice
+                      className="pd-purchase__price"
+                      valor={producto.precio_usd}
+                    />
                     {producto.precio_original_usd && (
                       <span className="pd-purchase__savings">
                         Ahorras ${(Number(producto.precio_original_usd) - Number(producto.precio_usd)).toFixed(2)}

@@ -516,6 +516,37 @@
   color: #12A594;
 }
 
+/* Formato de precio del catálogo: `$` + entero + centavos en superíndice
+   ($1⁰⁶). Cada parte es inline-block, así que un contenedor tachado
+   (`.pd-purchase__original`, `.pd-purchase__m-bs`) NO propaga su línea a los
+   hijos: hay que pintarla explícitamente en cada parte. */
+.pd-precio__simbolo {
+  display: inline-block;
+  font-size: 0.75em;
+  font-weight: 700;
+  margin-right: 1px;
+}
+
+.pd-precio__entero {
+  display: inline-block;
+  font-size: 1em;
+}
+
+.pd-precio__centavos {
+  display: inline-block;
+  font-size: 0.55em;
+  font-weight: 700;
+}
+
+.pd-purchase__original .pd-precio__simbolo,
+.pd-purchase__original .pd-precio__entero,
+.pd-purchase__original .pd-precio__centavos,
+.pd-purchase__m-bs .pd-precio__simbolo,
+.pd-purchase__m-bs .pd-precio__entero,
+.pd-purchase__m-bs .pd-precio__centavos {
+  text-decoration: line-through;
+}
+
 .pd-purchase__ves {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.88rem;
@@ -1296,6 +1327,7 @@
     overflow: hidden;
     border-radius: 16px;
     padding: 9px 12px;
+    font-family: 'Figtree', sans-serif;
     background: linear-gradient(180deg, #ffffff 0%, #f7fafc 100%);
     box-shadow: 0 -6px 24px rgba(26, 26, 46, 0.14), 0 2px 10px rgba(26, 26, 46, 0.08);
     border: 1px solid #E8EDF3;
@@ -1346,7 +1378,7 @@
   }
 
   .pd-purchase__m-price {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-family: 'Figtree', sans-serif;
     font-weight: 800;
     font-size: 1.3rem;
     line-height: 1;
