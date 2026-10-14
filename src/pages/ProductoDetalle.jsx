@@ -156,6 +156,7 @@ function ProductoDetalle() {
     setCarruseles([])
     setSuscripcion(null)
     setError('')
+    setMostrarBarra(false)
   }
 
   useEffect(() => {
@@ -180,12 +181,21 @@ function ProductoDetalle() {
   }, [user, producto, sinPrecio])
 
   useEffect(() => {
+    // `.pd-info` solo existe cuando termina la carga (mientras `cargando` la
+    // vista es el skeleton). Si la dependencia fuera solo `[producto]` el
+    // efecto correría dos veces con `infoRef.current === null` (una al montar
+    // con producto null y otra cuando `setProducto` commitea pero `cargando`
+    // sigue true) y, como `producto` ya no cambia, nunca volvería a correr:
+    // el listener no se engancharía y la barra móvil jamás aparecería.
+    // Depender también de `cargando` garantiza re-engancharlo cuando el
+    // bloque ya está en el DOM.
+    if (cargando) return
     const info = infoRef.current
     if (!info) return
     const onScroll = () => setMostrarBarra(info.getBoundingClientRect().bottom < 0)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
-  }, [producto])
+  }, [producto, cargando])
 
   const cargarProducto = useCallback(async () => {
     if (controllerRef.current) controllerRef.current.abort()
