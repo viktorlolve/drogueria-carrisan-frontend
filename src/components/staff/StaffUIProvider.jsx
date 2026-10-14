@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react'
 import { StaffUIContext } from '../../context/staffUIContext'
@@ -11,32 +11,50 @@ import './StaffUI.css'
 //
 //   const { confirmar, avisar } = useStaffUI()
 //
-// Ambos se pintan en un portal en document.body, así que no los recorta
+//   const motivo = await pedirTexto({ titulo, obligatorio: true })  // string | null
+//
+// Todo se pinta en un portal en document.body, así que no lo recorta
 // ningún contenedor con overflow del layout.
 // ---------------------------------------------------------------
 const DURACION_TOAST = { exito: 4200, info: 4200, error: 6500 }
 
 function DialogoConfirmar({ opciones, onResponder }) {
   const botonCancelar = useRef(null)
-  const { titulo, texto, textoConfirmar, textoCancelar, peligro } = opciones
+  const campoRef = useRef(null)
+  const uid = useId()
+  const [valor, setValor] = useState('')
+  const { titulo, texto, textoConfirmar, textoCancelar, peligro, campo } = opciones
+  const conCampo = Boolean(campo)
+  // Con campo de texto: cancelar → null, aceptar → texto recortado.
+  // Sin campo: cancelar → false, aceptar → true.
+  const cancelado = conCampo ? null : false
+  const aceptarDeshabilitado = conCampo && campo.obligatorio && !valor.trim()
+
+  function aceptar() {
+    if (aceptarDeshabilitado) return
+    onResponder(conCampo ? valor.trim() : true)
+  }
 
   useEffect(() => {
     function onKeyDown(e) {
-      if (e.key === 'Escape') onResponder(false)
+      if (e.key === 'Escape') onResponder(conCampo ? null : false)
     }
     const overflowAnterior = document.body.style.overflow
     document.addEventListener('keydown', onKeyDown)
     document.body.style.overflow = 'hidden'
-    botonCancelar.current?.focus()
+    if (conCampo) campoRef.current?.focus()
+    else botonCancelar.current?.focus()
     return () => {
       document.removeEventListener('keydown', onKeyDown)
       document.body.style.overflow = overflowAnterior
     }
-  }, [onResponder])
+  }, [onResponder, conCampo])
+
+  const Campo = conCampo && campo.multilinea ? 'textarea' : 'input'
 
   return createPortal(
     <div className="stfui-portal">
-      <div className="stfui-overlay" onClick={() => onResponder(false)}>
+      <div className="stfui-overlay" onClick={() => onResponder(cancelado)}>
         <div
           className="stfui-dialogo"
           role="alertdialog"
@@ -47,14 +65,30 @@ function DialogoConfirmar({ opciones, onResponder }) {
         >
           <h2 id="stfui-dialogo-titulo" className="stfui-dialogo__titulo">{titulo}</h2>
           {texto && <p id="stfui-dialogo-texto" className="stfui-dialogo__texto">{texto}</p>}
+          {conCampo && (
+            <div className="stfui-campo">
+              {campo.etiqueta && <label htmlFor={`${uid}-campo`} className="stfui-campo__etiqueta">{campo.etiqueta}</label>}
+              <Campo
+                id={`${uid}-campo`}
+                ref={campoRef}
+                className="stfui-campo__input"
+                value={valor}
+                onChange={(e) => setValor(e.target.value)}
+                placeholder={campo.placeholder}
+                rows={campo.multilinea ? 3 : undefined}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !campo.multilinea) { e.preventDefault(); aceptar() } }}
+              />
+            </div>
+          )}
           <div className="stfui-dialogo__acciones">
-            <button ref={botonCancelar} type="button" className="stfui-btn stfui-btn--secundario" onClick={() => onResponder(false)}>
+            <button ref={botonCancelar} type="button" className="stfui-btn stfui-btn--secundario" onClick={() => onResponder(cancelado)}>
               {textoCancelar}
             </button>
             <button
               type="button"
               className={`stfui-btn ${peligro ? 'stfui-btn--peligro' : 'stfui-btn--primario'}`}
-              onClick={() => onResponder(true)}
+              onClick={aceptar}
+              disabled={aceptarDeshabilitado}
             >
               {textoConfirmar}
             </button>
@@ -84,30 +118,49 @@ function Toast({ toast, onCerrar }) {
 }
 
 export default function StaffUIProvider({ children }) {
-  const [confirmacion, setConfirmacion] = useState(null)
+  const [dialogo, setDialogo] = useState(null)
   const [toast, setToast] = useState(null)
-  const resolverRef = useRef(null)
+  const pendienteRef = useRef(null) // { resolve, cancelado }
   const timerRef = useRef(null)
 
   const responder = useCallback((valor) => {
-    resolverRef.current?.(valor)
-    resolverRef.current = null
-    setConfirmacion(null)
+    pendienteRef.current?.resolve(valor)
+    pendienteRef.current = null
+    setDialogo(null)
   }, [])
 
-  // confirmar({ titulo, texto?, textoConfirmar?, textoCancelar?, peligro? }) → Promise<boolean>
-  const confirmar = useCallback((opciones = {}) => new Promise((resolve) => {
-    // Si ya había una confirmación abierta se descarta como "no".
-    resolverRef.current?.(false)
-    resolverRef.current = resolve
-    setConfirmacion({
-      titulo: opciones.titulo || '¿Confirmas esta acción?',
-      texto: opciones.texto || '',
-      textoConfirmar: opciones.textoConfirmar || 'Confirmar',
-      textoCancelar: opciones.textoCancelar || 'Cancelar',
-      peligro: Boolean(opciones.peligro),
-    })
+  // Abre un diálogo. Si ya había otro abierto se descarta con su valor de cancelación.
+  const abrir = useCallback((opciones, cancelado) => new Promise((resolve) => {
+    pendienteRef.current?.resolve(pendienteRef.current.cancelado)
+    pendienteRef.current = { resolve, cancelado }
+    setDialogo(opciones)
   }), [])
+
+  // confirmar({ titulo, texto?, textoConfirmar?, textoCancelar?, peligro? }) → Promise<boolean>
+  const confirmar = useCallback((opciones = {}) => abrir({
+    titulo: opciones.titulo || '¿Confirmas esta acción?',
+    texto: opciones.texto || '',
+    textoConfirmar: opciones.textoConfirmar || 'Confirmar',
+    textoCancelar: opciones.textoCancelar || 'Cancelar',
+    peligro: Boolean(opciones.peligro),
+  }, false), [abrir])
+
+  // pedirTexto({ titulo, texto?, etiqueta?, placeholder?, textoConfirmar?, textoCancelar?,
+  //              obligatorio?, multilinea?, peligro? }) → Promise<string | null>
+  // null = cancelado; string = texto recortado (puede ser '' si no es obligatorio).
+  const pedirTexto = useCallback((opciones = {}) => abrir({
+    titulo: opciones.titulo || 'Escribe un texto',
+    texto: opciones.texto || '',
+    textoConfirmar: opciones.textoConfirmar || 'Aceptar',
+    textoCancelar: opciones.textoCancelar || 'Cancelar',
+    peligro: Boolean(opciones.peligro),
+    campo: {
+      etiqueta: opciones.etiqueta || '',
+      placeholder: opciones.placeholder || '',
+      obligatorio: Boolean(opciones.obligatorio),
+      multilinea: opciones.multilinea !== false,
+    },
+  }, null), [abrir])
 
   const cerrarToast = useCallback(() => {
     clearTimeout(timerRef.current)
@@ -127,12 +180,12 @@ export default function StaffUIProvider({ children }) {
 
   useEffect(() => () => clearTimeout(timerRef.current), [])
 
-  const valor = useMemo(() => ({ confirmar, avisar }), [confirmar, avisar])
+  const valor = useMemo(() => ({ confirmar, pedirTexto, avisar }), [confirmar, pedirTexto, avisar])
 
   return (
     <StaffUIContext.Provider value={valor}>
       {children}
-      {confirmacion && <DialogoConfirmar opciones={confirmacion} onResponder={responder} />}
+      {dialogo && <DialogoConfirmar opciones={dialogo} onResponder={responder} />}
       {toast && <Toast toast={toast} onCerrar={cerrarToast} />}
     </StaffUIContext.Provider>
   )

@@ -3,10 +3,8 @@ import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import './StaffFinanzas.css'
 import { useStaffUI } from '../../hooks/useStaffUI'
-
-function formatUSD(valor) {
-  return Number(valor || 0).toFixed(2)
-}
+import { formatearUSD } from '../../utils/formato'
+import StaffEstado from '../../components/staff/StaffEstado'
 
 function formatFecha(fecha) {
   if (!fecha) return '—'
@@ -60,7 +58,7 @@ function StaffOrdenesPorCancelar() {
   }
 
   async function confirmarPago(orden) {
-    if (!(await confirmar({ titulo: `¿Confirmar que el cliente pagó la orden #${orden.id}?`, texto: `Monto: ${formatUSD(orden.total_usd)} USD. El pago se marcará como verificado sin comprobante.`, textoConfirmar: 'Confirmar pago' }))) return
+    if (!(await confirmar({ titulo: `¿Confirmar que el cliente pagó la orden #${orden.id}?`, texto: `Monto: ${formatearUSD(orden.total_usd)}. El pago se marcará como verificado sin comprobante.`, textoConfirmar: 'Confirmar pago' }))) return
     setProcesando(orden.id)
     try {
       await staffApi.patch(`/staff/contabilidad/ordenes/${orden.id}/confirmar-pago`)
@@ -74,9 +72,9 @@ function StaffOrdenesPorCancelar() {
 
   return (
     <LayoutDepartamento departamento="finanzas" activo="ordenes-por-cancelar" titulo="En espera de pago">
-      {error && <p style={{ color: '#DC2626', marginBottom: 8 }}>{error}</p>}
-      {cargando && <p>Cargando...</p>}
-      {!cargando && ordenes.length === 0 && <p>No hay órdenes contado pendientes de pago.</p>}
+      {error && <p className="stf-error" role="alert">{error}</p>}
+      {cargando && <StaffEstado tipo="cargando" />}
+      {!cargando && ordenes.length === 0 && <StaffEstado tipo="vacio" titulo="No hay órdenes contado pendientes de pago." />}
       {!cargando && ordenes.length > 0 && (
         <div className="stf-tabla-wrap">
           <table className="stf-tabla">
@@ -84,7 +82,7 @@ function StaffOrdenesPorCancelar() {
               <tr>
                 <th>#</th>
                 <th>Cliente</th>
-                <th>Total USD</th>
+                <th>Total</th>
                 <th>Estado pago</th>
                 <th>Fecha</th>
                 <th></th>
@@ -95,7 +93,7 @@ function StaffOrdenesPorCancelar() {
                 <tr key={o.id}>
                   <td>#{o.id}</td>
                   <td>{o.users?.nombre || `#${o.usuario_id}`}</td>
-                  <td>${formatUSD(o.total_usd)}</td>
+                  <td>{formatearUSD(o.total_usd)}</td>
                   <td>{o.estado_pago === 'reportado' ? 'Pago reportado' : 'Esperando pago'}</td>
                   <td>{formatFecha(o.created_at)}</td>
                   <td>

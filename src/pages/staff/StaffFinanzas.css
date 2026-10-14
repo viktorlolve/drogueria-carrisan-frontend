@@ -4,7 +4,7 @@
 .stf-subtitulo {
   font-size: 15px;
   font-weight: 700;
-  color: #232B45;
+  color: var(--stf-indigo, #1A1A3A);
   margin: 22px 0 10px;
 }
 
@@ -23,7 +23,7 @@
 
 .stf-stat {
   background: #fff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--stf-borde, #E6E8F0);
   border-radius: 12px;
   padding: 14px 16px;
   display: flex;
@@ -33,7 +33,7 @@
 
 .stf-stat-label {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--stf-apagado, #5B6178);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -42,12 +42,12 @@
 .stf-stat-valor {
   font-size: 20px;
   font-weight: 700;
-  color: #232B45;
+  color: var(--stf-indigo, #1A1A3A);
 }
 
 .stf-tabla-wrap {
   background: #fff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--stf-borde, #E6E8F0);
   border-radius: 12px;
   overflow-x: auto;
 }
@@ -62,19 +62,19 @@
   text-align: left;
   padding: 12px 16px;
   background: #f8f9fb;
-  color: #6b7280;
+  color: var(--stf-apagado, #5B6178);
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--stf-borde, #E6E8F0);
   white-space: nowrap;
 }
 
 .stf-tabla td {
   padding: 12px 16px;
   border-bottom: 1px solid #f0f1f4;
-  color: #374151;
+  color: var(--stf-indigo, #1A1A3A);
 }
 
 .stf-tabla tr:last-child td {
@@ -87,17 +87,17 @@
 }
 
 .stf-cliente-cell strong {
-  color: #232B45;
+  color: var(--stf-indigo, #1A1A3A);
 }
 
 .stf-cliente-cell span {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--stf-apagado, #5B6178);
 }
 
 .stf-form {
   background: #fff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--stf-borde, #E6E8F0);
   border-radius: 12px;
   padding: 16px;
 }
@@ -110,25 +110,26 @@
 
 .stf-input {
   padding: 10px 12px;
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid var(--stf-borde, #E6E8F0);
   border-radius: 9px;
-  font-size: 14px;
+  font-size: 16px; /* iOS hace zoom al enfocar campos con menos de 16px */
   font-family: inherit;
-  color: #232B45;
+  color: var(--stf-indigo, #1A1A3A);
   min-width: 0;
   flex: 1 1 160px;
 }
 
 .stf-input:focus {
   outline: none;
-  border-color: #1B4B8F;
+  border-color: var(--ldep-color-strong, #0B6E63);
 }
 
 .stf-btn {
+  min-height: 40px;
   padding: 10px 14px;
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid var(--stf-borde, #E6E8F0);
   background: #fff;
-  color: #4b5563;
+  color: var(--stf-indigo, #1A1A3A);
   border-radius: 9px;
   font-size: 14px;
   font-weight: 700;
@@ -136,25 +137,26 @@
 }
 
 .stf-btn--primary {
-  background: #1B4B8F;
-  border-color: #1B4B8F;
+  background: var(--ldep-color-strong, #0B6E63);
+  border-color: var(--ldep-color-strong, #0B6E63);
   color: #fff;
 }
 
 .stf-btn--danger {
-  background: #DC2626;
-  border-color: #DC2626;
+  background: var(--stf-error, #B3261E);
+  border-color: var(--stf-error, #B3261E);
   color: #fff;
 }
 
 .stf-btn--ghost {
   border-color: transparent;
   background: transparent;
-  color: #1B4B8F;
+  color: var(--ldep-color-strong, #0B6E63);
   padding-left: 0;
 }
 
 .stf-btn--small {
+  min-height: 34px;
   padding: 6px 12px;
   font-size: 13px;
 }
@@ -170,32 +172,13 @@
   flex-wrap: wrap;
 }
 
-.stf-modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(35, 43, 69, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  z-index: 100;
-}
 
-.stf-modal-content {
-  background: #fff;
-  border-radius: 14px;
-  padding: 24px;
-  width: 100%;
-  max-width: 440px;
-}
+/* Envoltorio del contenido dentro de StaffModal (el marco lo pone el modal). */
+.stf-modal-content { width: 100%; }
 
-.stf-modal-content h3 {
-  margin: 0 0 8px;
-  color: #232B45;
-}
 
 .stf-modal-content p {
-  color: #6b7280;
+  color: var(--stf-apagado, #5B6178);
   font-size: 14px;
   margin: 0 0 12px;
 }
@@ -205,11 +188,11 @@
 }
 
 .stf-btn--success {
-  background: #16A34A;
-  border-color: #16A34A;
+  background: #15803D;
+  border-color: #15803D;
   color: #fff;
 }
-.stf-btn--success:hover { background: #15803D; border-color: #15803D; }
+.stf-btn--success:hover { background: #166534; border-color: #166534; }
 
 /* ---------------------------------------------------------------
    Crédito y Cobranza — scr-* (staff credito)
@@ -219,7 +202,7 @@
   margin-bottom: 16px;
 }
 .scr-detalle-header h3 { margin: 0 0 4px; }
-.scr-detalle-header span { font-size: 0.85rem; color: #6B7280; margin-right: 12px; }
+.scr-detalle-header span { font-size: 0.85rem; color: var(--stf-apagado, #5B6178); margin-right: 12px; }
 
 .scr-bloqueo-bar {
   display: flex;
@@ -228,7 +211,7 @@
   padding: 10px 14px;
   border-radius: 8px;
   background: #F9FAFB;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--stf-borde, #E6E8F0);
   margin: 12px 0;
   gap: 8px;
   flex-wrap: wrap;
@@ -268,7 +251,7 @@
 .scr-form-row input,
 .scr-form-row select {
   padding: 6px 10px;
-  border: 1px solid #D1D5DB;
+  border: 1px solid #D5DAE8;
   border-radius: 6px;
   font-size: 0.9rem;
 }
@@ -279,7 +262,7 @@
 .scr-form-nota input[type="date"],
 .scr-form-nota select {
   padding: 8px 10px;
-  border: 1px solid #D1D5DB;
+  border: 1px solid #D5DAE8;
   border-radius: 6px;
   font-size: 0.9rem;
   resize: vertical;
@@ -293,7 +276,7 @@
 
 .scr-nota-card {
   padding: 12px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--stf-borde, #E6E8F0);
   border-radius: 8px;
   background: #FAFAFA;
 }
@@ -311,8 +294,8 @@
   border-radius: 4px;
   font-size: 0.78rem;
   font-weight: 600;
-  background: #EFF6FF;
-  color: #2563EB;
+  background: var(--stf-azul-suave, #EAF1FF);
+  color: var(--stf-azul-fuerte, #0043B3);
 }
 
 .scr-nota-cliente {
@@ -322,7 +305,7 @@
 
 .scr-nota-fecha {
   font-size: 0.82rem;
-  color: #6B7280;
+  color: var(--stf-apagado, #5B6178);
   margin-left: auto;
 }
 
@@ -333,11 +316,37 @@
 
 .scr-nota-seguimiento {
   font-size: 0.82rem;
-  color: #CA8A04;
+  color: #A16207;
 }
 
 .scr-nota-staff {
   font-size: 0.78rem;
-  color: #9CA3AF;
+  color: var(--stf-apagado, #5B6178);
   margin-left: 8px;
+}
+.stf-btn:focus-visible { outline: 2px solid var(--stf-azul, #0052DC); outline-offset: 2px; }
+.stf-btn:hover:not(:disabled) { border-color: #B9C2DB; }
+.stf-btn--primary:hover:not(:disabled), .stf-btn--danger:hover:not(:disabled) { filter: brightness(0.94); }
+
+/* Confirmación de una acción (documento emitido, etc.) */
+.stf-exito {
+  margin: 8px 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--stf-teal-suave, #E6F6F3);
+  border: 1px solid #BFE6DF;
+  color: #0B6E63;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Mensaje de error de página o de acción (reemplaza los <p style="color:red">) */
+.stf-error {
+  margin: 8px 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--stf-error-suave, #FDECEC);
+  border: 1px solid #F3C6C3;
+  color: #8F1D17;
+  font-size: 14px;
 }

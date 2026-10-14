@@ -4,8 +4,10 @@ import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import StaffTabs from '../../components/staff/StaffTabs'
 import './StaffFinanzas.css'
 import { useStaffUI } from '../../hooks/useStaffUI'
+import { formatearUSD, formatearVES } from '../../utils/formato'
+import StaffEstado from '../../components/staff/StaffEstado'
+import StaffModal from '../../components/staff/StaffModal'
 
-function formatUSD(v) { return Number(v || 0).toFixed(2) }
 function formatFecha(f) {
   if (!f) return '—'
   return new Date(f).toLocaleDateString('es-VE', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -35,7 +37,7 @@ function AgingBadge({ monto, label }) {
   else if (label === '90+') color = '#DC2626'
   return (
     <span className="scr-aging-badge" style={{ background: color + '18', color, borderColor: color }}>
-      {label}d: ${formatUSD(monto)}
+      {label}d: {formatearUSD(monto)}
     </span>
   )
 }
@@ -128,10 +130,10 @@ function TabCobros() {
         </div>
       </form>
 
-      {error && <p style={{ color: '#DC2626', marginTop: 8 }}>{error}</p>}
+      {error && <p className="stf-error" role="alert">{error}</p>}
 
       <h3 className="stf-subtitulo">Historial de pagos</h3>
-      {cargando && <p>Cargando...</p>}
+      {cargando && <StaffEstado tipo="cargando" />}
       {!cargando && (
         <div className="stf-tabla-wrap">
           <table className="stf-tabla">
@@ -151,7 +153,7 @@ function TabCobros() {
                 pagos.map((p) => (
                   <tr key={p.id}>
                     <td>{p.users?.nombre || `#${p.usuario_id}`}</td>
-                    <td>${formatUSD(p.monto)}</td>
+                    <td>{formatearUSD(p.monto)}</td>
                     <td>{p.tipo}</td>
                     <td>{p.detalle || '—'}</td>
                     <td>{formatFecha(p.created_at)}</td>
@@ -236,8 +238,8 @@ function TabPorVerificar() {
 
   return (
     <div>
-      {error && <p style={{ color: '#DC2626', marginBottom: 8 }}>{error}</p>}
-      {cargando && <p>Cargando...</p>}
+      {error && <p className="stf-error" role="alert">{error}</p>}
+      {cargando && <StaffEstado tipo="cargando" />}
       {!cargando && reportes.length === 0 && <p>No hay reportes de pago pendientes de verificar.</p>}
       {!cargando && reportes.length > 0 && (
         <div className="stf-tabla-wrap">
@@ -246,7 +248,7 @@ function TabPorVerificar() {
               <tr>
                 <th>Cliente</th>
                 <th>Órdenes</th>
-                <th>Monto USD</th>
+                <th>Monto</th>
                 <th>Monto Bs</th>
                 <th>Fecha</th>
                 <th>Comprobante</th>
@@ -258,8 +260,8 @@ function TabPorVerificar() {
                 <tr key={r.id}>
                   <td>{r.users?.nombre || `#${r.usuario_id}`}</td>
                   <td>{(r.reporte_pago_ordenes || []).map((v) => `#${v.orden_id}`).join(', ')}</td>
-                  <td>${formatUSD(r.monto_usd)}</td>
-                  <td>Bs. {Number(r.monto_bs || 0).toLocaleString('es-VE', { minimumFractionDigits: 2 })}</td>
+                  <td>{formatearUSD(r.monto_usd)}</td>
+                  <td>{formatearVES(r.monto_bs)}</td>
                   <td>{formatFecha(r.created_at)}</td>
                   <td>
                     {r.url_comprobante ? (
@@ -280,14 +282,13 @@ function TabPorVerificar() {
       )}
 
       {reporteAbierto && accion === 'verificar' && (
-        <div className="stf-modal" onClick={cerrar}>
-          <div className="stf-modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>Verificar pago #{reporteAbierto.id}</h3>
+        <StaffModal titulo={`Verificar pago #${reporteAbierto.id}`} ancho="sm" onCerrar={cerrar} bloqueado={procesando}>
+          <div className="stf-modal-content">
             <p>
               Se confirmará el pago y se avanzará la(s) orden(es) a "Preparando". La factura o recibo
               de cobro se genera aparte en Facturación.
             </p>
-            {error && <p style={{ color: '#DC2626', marginTop: 8 }}>{error}</p>}
+            {error && <p className="stf-error" role="alert">{error}</p>}
             <div className="stf-acciones" style={{ marginTop: 14 }}>
               <button className="stf-btn" onClick={cerrar} disabled={procesando}>Cancelar</button>
               <button className="stf-btn stf-btn--primary" onClick={confirmarVerificar} disabled={procesando}>
@@ -295,13 +296,12 @@ function TabPorVerificar() {
               </button>
             </div>
           </div>
-        </div>
+        </StaffModal>
       )}
 
       {reporteAbierto && accion === 'rechazar' && (
-        <div className="stf-modal" onClick={cerrar}>
-          <div className="stf-modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>Rechazar pago #{reporteAbierto.id}</h3>
+        <StaffModal titulo={`Rechazar pago #${reporteAbierto.id}`} ancho="sm" onCerrar={cerrar} bloqueado={procesando}>
+          <div className="stf-modal-content">
             <textarea
               className="stf-input"
               value={notaRechazo}
@@ -309,7 +309,7 @@ function TabPorVerificar() {
               placeholder="Motivo (opcional)"
               rows={3}
             />
-            {error && <p style={{ color: '#DC2626', marginTop: 8 }}>{error}</p>}
+            {error && <p className="stf-error" role="alert">{error}</p>}
             <div className="stf-acciones" style={{ marginTop: 14 }}>
               <button className="stf-btn" onClick={cerrar} disabled={procesando}>Cancelar</button>
               <button className="stf-btn stf-btn--danger" onClick={confirmarRechazar} disabled={procesando}>
@@ -317,7 +317,7 @@ function TabPorVerificar() {
               </button>
             </div>
           </div>
-        </div>
+        </StaffModal>
       )}
     </div>
   )
@@ -407,8 +407,8 @@ function TabLinea() {
         />
       </div>
 
-      {error && <p style={{ color: '#DC2626', marginBottom: 8 }}>{error}</p>}
-      {cargando && <p>Cargando...</p>}
+      {error && <p className="stf-error" role="alert">{error}</p>}
+      {cargando && <StaffEstado tipo="cargando" />}
       {!cargando && (
         <div className="stf-tabla-wrap">
           <table className="stf-tabla">
@@ -434,11 +434,11 @@ function TabLinea() {
                         <span>{c.email}</span>
                       </div>
                     </td>
-                    <td>${formatUSD(c.linea_credito)}</td>
+                    <td>{formatearUSD(c.linea_credito)}</td>
                     <td style={{ color: c.deuda_total > 0 ? '#DC2626' : 'inherit' }}>
-                      ${formatUSD(c.deuda_total)}
+                      {formatearUSD(c.deuda_total)}
                     </td>
-                    <td>${formatUSD(c.saldo_disponible)}</td>
+                    <td>{formatearUSD(c.saldo_disponible)}</td>
                     <td>
                       {c.credito_bloqueado
                         ? <span style={{ color: '#DC2626', fontWeight: 600 }}>Bloqueado</span>
@@ -461,10 +461,9 @@ function TabLinea() {
       )}
 
       {editando && (
-        <div className="stf-modal" onClick={() => setEditando(null)}>
-          <div className="stf-modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>Línea de crédito — {editando.nombre}</h3>
-            <p style={{ margin: '8px 0 4px' }}>Línea actual: ${formatUSD(editando.linea_credito)} · Deuda: ${formatUSD(editando.deuda_total)}</p>
+        <StaffModal titulo={`Línea de crédito — ${editando.nombre}`} ancho="sm" onCerrar={() => setEditando(null)} bloqueado={guardando}>
+          <div className="stf-modal-content">
+            <p style={{ margin: '8px 0 4px' }}>Línea actual: {formatearUSD(editando.linea_credito)} · Deuda: {formatearUSD(editando.deuda_total)}</p>
             <form onSubmit={guardar}>
               <div className="stf-form-row" style={{ marginTop: 8 }}>
                 <input
@@ -487,7 +486,7 @@ function TabLinea() {
                 rows={2}
                 style={{ marginTop: 8, width: '100%' }}
               />
-              {error && <p style={{ color: '#DC2626', marginTop: 8 }}>{error}</p>}
+              {error && <p className="stf-error" role="alert">{error}</p>}
               <div className="stf-acciones" style={{ marginTop: 14 }}>
                 <button className="stf-btn" onClick={() => setEditando(null)} disabled={guardando}>Cancelar</button>
                 <button className="stf-btn stf-btn--primary" type="submit" disabled={guardando}>
@@ -496,14 +495,14 @@ function TabLinea() {
               </div>
             </form>
           </div>
-        </div>
+        </StaffModal>
       )}
     </div>
   )
 }
 
 function StaffCredito() {
-  const { avisar } = useStaffUI()
+  const { avisar, pedirTexto } = useStaffUI()
   const [tab, setTab] = useState('clientes')
   const [aging, setAging] = useState([])
   const [cargando, setCargando] = useState(true)
@@ -612,10 +611,16 @@ function StaffCredito() {
   // Toggle bloqueo
   async function toggleBloqueo(cliente) {
     const accion = cliente.credito_bloqueado ? 'desbloquear' : 'bloquear'
-    const motivo = accion === 'bloquear'
-      ? prompt('Motivo del bloqueo (opcional):')
-      : null
-    if (accion === 'bloquear' && motivo === null) return // cancelado
+    let motivo = null
+    if (accion === 'bloquear') {
+      motivo = await pedirTexto({
+        titulo: `Bloquear el crédito de ${cliente.nombre || 'este cliente'}`,
+        etiqueta: 'Motivo del bloqueo (opcional)',
+        textoConfirmar: 'Bloquear',
+        peligro: true,
+      })
+      if (motivo === null) return // cancelado
+    }
 
     try {
       await staffApi.patch(`/staff/credito/bloquear/${cliente.id}`, {
@@ -637,7 +642,7 @@ function StaffCredito() {
           ← Volver a lista
         </button>
 
-        {error && <p style={{ color: '#DC2626' }}>{error}</p>}
+        {error && <p className="stf-error" role="alert">{error}</p>}
 
         <div className="scr-detalle-header">
           <h3>{detalle.cliente.nombre}</h3>
@@ -649,17 +654,17 @@ function StaffCredito() {
         <div className="stf-grid-3">
           <div className="stf-stat">
             <span className="stf-stat-label">Línea de crédito</span>
-            <span className="stf-stat-valor">${formatUSD(detalle.resumen.linea_credito)}</span>
+            <span className="stf-stat-valor">{formatearUSD(detalle.resumen.linea_credito)}</span>
           </div>
           <div className="stf-stat">
             <span className="stf-stat-label">Deuda total</span>
             <span className="stf-stat-valor" style={{ color: detalle.resumen.deuda_total > 0 ? '#DC2626' : 'inherit' }}>
-              ${formatUSD(detalle.resumen.deuda_total)}
+              {formatearUSD(detalle.resumen.deuda_total)}
             </span>
           </div>
           <div className="stf-stat">
             <span className="stf-stat-label">Saldo disponible</span>
-            <span className="stf-stat-valor">${formatUSD(detalle.resumen.saldo)}</span>
+            <span className="stf-stat-valor">{formatearUSD(detalle.resumen.saldo)}</span>
           </div>
         </div>
 
@@ -710,7 +715,7 @@ function StaffCredito() {
                 detalle.ordenes.map((o) => (
                   <tr key={o.id} style={{ opacity: o.vencida ? 1 : 0.7 }}>
                     <td>#{o.id}</td>
-                    <td>${formatUSD(o.total_usd)}</td>
+                    <td>{formatearUSD(o.total_usd)}</td>
                     <td>{o.forma_pago}</td>
                     <td>{o.estado}</td>
                     <td>{o.fecha_vencimiento ? formatFecha(o.fecha_vencimiento) : '—'}</td>
@@ -785,12 +790,12 @@ function StaffCredito() {
     <LayoutDepartamento departamento="finanzas" activo="credito" titulo="Crédito y cobranza">
       <StaffTabs tabs={TABS} activo={tab} onChange={setTab} />
 
-      {error && <p style={{ color: '#DC2626' }}>{error}</p>}
+      {error && <p className="stf-error" role="alert">{error}</p>}
 
       {/* Tab CLIENTES — Aging dashboard */}
       {tab === 'clientes' && (
         <>
-          {cargando && <p>Cargando...</p>}
+          {cargando && <StaffEstado tipo="cargando" />}
           {!cargando && (
             <div className="stf-tabla-wrap">
               <table className="stf-tabla">
@@ -820,15 +825,15 @@ function StaffCredito() {
                             <span>{c.email}</span>
                           </div>
                         </td>
-                        <td>${formatUSD(c.linea_credito)}</td>
-                        <td>${formatUSD(c.deuda_total)}</td>
+                        <td>{formatearUSD(c.linea_credito)}</td>
+                        <td>{formatearUSD(c.deuda_total)}</td>
                         <td style={{ color: c.deuda_vencida > 0 ? '#DC2626' : 'inherit', fontWeight: c.deuda_vencida > 0 ? 600 : 400 }}>
-                          ${formatUSD(c.deuda_vencida)}
+                          {formatearUSD(c.deuda_vencida)}
                         </td>
-                        <td>{c.buckets['0-30'] > 0 ? `$${formatUSD(c.buckets['0-30'])}` : '—'}</td>
-                        <td>{c.buckets['31-60'] > 0 ? `$${formatUSD(c.buckets['31-60'])}` : '—'}</td>
-                        <td>{c.buckets['61-90'] > 0 ? `$${formatUSD(c.buckets['61-90'])}` : '—'}</td>
-                        <td>{c.buckets['90+'] > 0 ? `$${formatUSD(c.buckets['90+'])}` : '—'}</td>
+                        <td>{c.buckets['0-30'] > 0 ? formatearUSD(c.buckets['0-30']) : '—'}</td>
+                        <td>{c.buckets['31-60'] > 0 ? formatearUSD(c.buckets['31-60']) : '—'}</td>
+                        <td>{c.buckets['61-90'] > 0 ? formatearUSD(c.buckets['61-90']) : '—'}</td>
+                        <td>{c.buckets['90+'] > 0 ? formatearUSD(c.buckets['90+']) : '—'}</td>
                         <td>
                           {c.credito_bloqueado
                             ? <span style={{ color: '#DC2626', fontWeight: 600 }}>Bloqueado</span>

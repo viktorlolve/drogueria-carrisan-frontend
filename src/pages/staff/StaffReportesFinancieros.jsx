@@ -11,6 +11,8 @@ import {
 import './StaffFinanzas.css'
 import './StaffTesoreria.css'
 import './StaffReportesFinancieros.css'
+import { formatearUSD } from '../../utils/formato'
+import StaffEstado from '../../components/staff/StaffEstado'
 
 const TABS = [
   { id: 'panel', texto: 'Panel' },
@@ -19,10 +21,6 @@ const TABS = [
   { id: 'cobros', texto: 'Cobros' },
   { id: 'egresos', texto: 'Egresos' },
 ]
-
-function formatUSD(n) {
-  return `$${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-}
 
 function hoy() {
   return new Date().toISOString().slice(0, 10)
@@ -59,14 +57,21 @@ function descargarCSV(filas, cabeceras, keys, nombre) {
   URL.revokeObjectURL(a.href)
 }
 
+// Número con 2 decimales para las exportaciones (la cabecera de columna ya dice USD).
+function numero(n) {
+  return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
 export default function StaffReportesFinancieros() {
   const [tab, setTab] = useState('panel')
   const [modoPeriodo, setModoPeriodo] = useState('mes') // 'mes' | 'rango'
   const [anioMes, setAnioMes] = useState(anioMesDefault)
   const [desde, setDesde] = useState(primerDiaDelMes)
   const [hasta, setHasta] = useState(hoy)
-  const [datos, setDatos] = useState(null)
-  const [cargando, setCargando] = useState(true)
+  // Resultado de la última consulta, etiquetado con el período que pidió. Si el
+  // período cambia (o falla la consulta nueva) no se muestran datos de otro período.
+  const [resultado, setResultado] = useState(null) // { clave, datos } | { clave, error }
+  const [intento, setIntento] = useState(0)
 
   // Calcular fechas reales desde anioMes
   const fechasDesdeMes = useMemo(() => {
@@ -76,36 +81,44 @@ export default function StaffReportesFinancieros() {
   }, [anioMes])
   const fechasHastaMes = useMemo(() => `${anioMes}-${diasEnMes(anioMes)}`, [anioMes])
 
-  useEffect(() => {
-    let activo = true
-    const cargar = async () => {
-      const params = modoPeriodo === 'mes'
-        ? { desde: fechasDesdeMes, hasta: fechasHastaMes }
-        : { desde, hasta }
-      try {
-        const res = await staffApi.get('/staff/reportes/resumen', { params })
-        if (activo) setDatos(res.data)
-      } catch (e) {
-        if (activo) console.error('Error cargando reportes financieros:', e)
-      } finally {
-        if (activo) setCargando(false)
-      }
-    }
-    cargar()
-    return () => { activo = false }
-  }, [modoPeriodo, anioMes, desde, hasta, fechasDesdeMes, fechasHastaMes])
-
   const paramsActuales = modoPeriodo === 'mes'
     ? { desde: fechasDesdeMes, hasta: fechasHastaMes }
     : { desde, hasta }
+  const claveActual = `${paramsActuales.desde}|${paramsActuales.hasta}`
+
+  useEffect(() => {
+    let activo = true
+    const params = modoPeriodo === 'mes'
+      ? { desde: fechasDesdeMes, hasta: fechasHastaMes }
+      : { desde, hasta }
+    const clave = `${params.desde}|${params.hasta}`
+    staffApi.get('/staff/reportes/resumen', { params })
+      .then((res) => { if (activo) setResultado({ clave, datos: res.data }) })
+      .catch((e) => {
+        if (!activo) return
+        console.error('Error cargando reportes financieros:', e)
+        setResultado({ clave, error: e.response?.data?.error || 'No se pudieron cargar los datos del reporte' })
+      })
+    return () => { activo = false }
+  }, [modoPeriodo, desde, hasta, fechasDesdeMes, fechasHastaMes, intento])
+
+  const vigente = resultado && resultado.clave === claveActual ? resultado : null
+  const datos = vigente?.datos ?? null
+  const error = vigente?.error || ''
+  const cargando = !vigente
+
+  function reintentar() {
+    setResultado(null)
+    setIntento((n) => n + 1)
+  }
 
   const exportarPDF = async () => {
     if (!datos) return
     const filas = datos.ventas.serie_por_dia.map(d => ({
       fecha: d.fecha,
-      total: formatUSD(d.total),
-      contado: formatUSD(d.contado),
-      credito: formatUSD(d.credito),
+      total: numero(d.total),
+      contado: numero(d.contado),
+      credito: numero(d.credito),
       ordenes: d.ordenes,
     }))
     await exportToPdf(
@@ -189,25 +202,25 @@ export default function StaffReportesFinancieros() {
       <StaffTabs tabs={TABS} activo={tab} onChange={setTab} />
 
       {cargando ? (
-        <p style={{ color: '#6b7280', marginTop: 16 }}>Cargando reporte...</p>
-      ) : !datos ? (
-        <p style={{ color: '#6b7280', marginTop: 16 }}>No se pudieron cargar los datos.</p>
+        <div style={{ marginTop: 16 }}><StaffEstado tipo="cargando" filas={3} /></div>
+      ) : error ? (
+        <div style={{ marginTop: 16 }}><StaffEstado tipo="error" mensaje={error} onReintentar={reintentar} /></div>
       ) : (
         <>
           {/* ═══ PANEL (vista general) ═══ */}
           {tab === 'panel' && (
             <div className="srf-panel">
               <div className="st-resumen-cards">
-                <KPI label="Ventas totales" value={formatUSD(datos.ventas.total_usd)} />
-                <KPI label="Ticket promedio" value={formatUSD(datos.ventas.ticket_promedio)} />
-                <KPI label="Crédito aprobado" value={formatUSD(datos.credito_aprobado.total_usd)} />
-                <KPI label="Crédito vencido" value={formatUSD(datos.credito_vencido.total_usd)} color={datos.credito_vencido.total_usd > 0 ? '#dc2626' : undefined} />
-                <KPI label="Cobros" value={formatUSD(datos.cobros.total_usd)} />
-                <KPI label="Facturado" value={formatUSD(datos.facturado_vs_cobrado.facturado_usd)} />
-                <KPI label="Egresos totales" value={formatUSD(datos.egresos.total_usd)} color="#dc2626" />
+                <KPI label="Ventas totales" value={formatearUSD(datos.ventas.total_usd)} />
+                <KPI label="Ticket promedio" value={formatearUSD(datos.ventas.ticket_promedio)} />
+                <KPI label="Crédito aprobado" value={formatearUSD(datos.credito_aprobado.total_usd)} />
+                <KPI label="Crédito vencido" value={formatearUSD(datos.credito_vencido.total_usd)} color={datos.credito_vencido.total_usd > 0 ? '#dc2626' : undefined} />
+                <KPI label="Cobros" value={formatearUSD(datos.cobros.total_usd)} />
+                <KPI label="Facturado" value={formatearUSD(datos.facturado_vs_cobrado.facturado_usd)} />
+                <KPI label="Egresos totales" value={formatearUSD(datos.egresos.total_usd)} color="#dc2626" />
                 <KPI
                   label="Resultado de caja (cobros − egresos)"
-                  value={formatUSD(datos.cobros.total_usd - datos.egresos.total_usd)}
+                  value={formatearUSD(datos.cobros.total_usd - datos.egresos.total_usd)}
                   color={
                     (datos.cobros.total_usd - datos.egresos.total_usd) >= 0 ? '#16a34a' : '#dc2626'
                   }
@@ -223,7 +236,7 @@ export default function StaffReportesFinancieros() {
                         <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
                         <XAxis dataKey="fecha" fontSize={11} />
                         <YAxis fontSize={11} tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
-                        <Tooltip formatter={v => formatUSD(v)} />
+                        <Tooltip formatter={v => formatearUSD(v)} />
                         <Legend />
                         <Bar dataKey="contado" name="Contado" fill="#2563EB" stackId="a" />
                         <Bar dataKey="credito" name="Crédito" fill="#0D9373" stackId="a" />
@@ -242,7 +255,7 @@ export default function StaffReportesFinancieros() {
                         <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
                         <XAxis dataKey="bucket" fontSize={11} />
                         <YAxis fontSize={11} tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
-                        <Tooltip formatter={v => formatUSD(v)} />
+                        <Tooltip formatter={v => formatearUSD(v)} />
                         <Bar dataKey="total" name="Monto vencido" fill="#dc2626" />
                       </BarChart>
                     </ResponsiveContainer>
@@ -256,11 +269,11 @@ export default function StaffReportesFinancieros() {
           {tab === 'ventas' && (
             <div className="srf-seccion">
               <div className="st-resumen-cards">
-                <KPI label="Total vendido" value={formatUSD(datos.ventas.total_usd)} />
+                <KPI label="Total vendido" value={formatearUSD(datos.ventas.total_usd)} />
                 <KPI label="Órdenes" value={datos.ventas.cantidad_ordenes} />
-                <KPI label="Ticket promedio" value={formatUSD(datos.ventas.ticket_promedio)} />
-                <KPI label="Contado" value={formatUSD(datos.ventas.contado_usd)} />
-                <KPI label="Crédito" value={formatUSD(datos.ventas.credito_usd)} />
+                <KPI label="Ticket promedio" value={formatearUSD(datos.ventas.ticket_promedio)} />
+                <KPI label="Contado" value={formatearUSD(datos.ventas.contado_usd)} />
+                <KPI label="Crédito" value={formatearUSD(datos.ventas.credito_usd)} />
               </div>
 
               {datos.ventas.serie_por_dia.length > 0 && (
@@ -272,7 +285,7 @@ export default function StaffReportesFinancieros() {
                         <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
                         <XAxis dataKey="fecha" fontSize={11} />
                         <YAxis fontSize={11} tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
-                        <Tooltip formatter={v => formatUSD(v)} />
+                        <Tooltip formatter={v => formatearUSD(v)} />
                         <Legend />
                         <Bar dataKey="contado" name="Contado" fill="#2563EB" stackId="a" />
                         <Bar dataKey="credito" name="Crédito" fill="#0D9373" stackId="a" />
@@ -305,9 +318,9 @@ export default function StaffReportesFinancieros() {
           {tab === 'credito' && (
             <div className="srf-seccion">
               <div className="st-resumen-cards">
-                <KPI label="Crédito aprobado (período)" value={formatUSD(datos.credito_aprobado.total_usd)} />
+                <KPI label="Crédito aprobado (período)" value={formatearUSD(datos.credito_aprobado.total_usd)} />
                 <KPI label="Órdenes aprobadas" value={datos.credito_aprobado.cantidad_ordenes} />
-                <KPI label="Crédito vencido (al cierre)" value={formatUSD(datos.credito_vencido.total_usd)} color={datos.credito_vencido.total_usd > 0 ? '#dc2626' : undefined} />
+                <KPI label="Crédito vencido (al cierre)" value={formatearUSD(datos.credito_vencido.total_usd)} color={datos.credito_vencido.total_usd > 0 ? '#dc2626' : undefined} />
                 <KPI label="Órdenes vencidas" value={datos.credito_vencido.cantidad_ordenes} />
               </div>
 
@@ -320,7 +333,7 @@ export default function StaffReportesFinancieros() {
                         <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
                         <XAxis dataKey="fecha" fontSize={11} />
                         <YAxis fontSize={11} tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
-                        <Tooltip formatter={v => formatUSD(v)} />
+                        <Tooltip formatter={v => formatearUSD(v)} />
                         <Bar dataKey="total" name="Crédito aprobado" fill="#0D9373" />
                       </BarChart>
                     </ResponsiveContainer>
@@ -344,11 +357,11 @@ export default function StaffReportesFinancieros() {
                       </thead>
                       <tbody>
                         <tr>
-                          <td>{formatUSD(datos.credito_vencido.buckets['0-30'])}</td>
-                          <td>{formatUSD(datos.credito_vencido.buckets['31-60'])}</td>
-                          <td>{formatUSD(datos.credito_vencido.buckets['61-90'])}</td>
-                          <td className="st-saldo-negativo">{formatUSD(datos.credito_vencido.buckets['90+'])}</td>
-                          <td style={{ textAlign: 'right' }} className="st-saldo-negativo">{formatUSD(datos.credito_vencido.total_usd)}</td>
+                          <td>{formatearUSD(datos.credito_vencido.buckets['0-30'])}</td>
+                          <td>{formatearUSD(datos.credito_vencido.buckets['31-60'])}</td>
+                          <td>{formatearUSD(datos.credito_vencido.buckets['61-90'])}</td>
+                          <td className="st-saldo-negativo">{formatearUSD(datos.credito_vencido.buckets['90+'])}</td>
+                          <td style={{ textAlign: 'right' }} className="st-saldo-negativo">{formatearUSD(datos.credito_vencido.total_usd)}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -360,7 +373,7 @@ export default function StaffReportesFinancieros() {
                         <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
                         <XAxis dataKey="bucket" fontSize={11} />
                         <YAxis fontSize={11} tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
-                        <Tooltip formatter={v => formatUSD(v)} />
+                        <Tooltip formatter={v => formatearUSD(v)} />
                         <Bar dataKey="total" name="Monto vencido" fill="#dc2626" />
                       </BarChart>
                     </ResponsiveContainer>
@@ -374,12 +387,12 @@ export default function StaffReportesFinancieros() {
           {tab === 'cobros' && (
             <div className="srf-seccion">
               <div className="st-resumen-cards">
-                <KPI label="Cobros totales" value={formatUSD(datos.cobros.total_usd)} />
+                <KPI label="Cobros totales" value={formatearUSD(datos.cobros.total_usd)} />
                 <KPI label="Cantidad de pagos" value={datos.cobros.cantidad_pagos} />
-                <KPI label="Facturado en el período" value={formatUSD(datos.facturado_vs_cobrado.facturado_usd)} />
+                <KPI label="Facturado en el período" value={formatearUSD(datos.facturado_vs_cobrado.facturado_usd)} />
                 <KPI
                   label="Diferencia (facturado − cobrado)"
-                  value={formatUSD(datos.facturado_vs_cobrado.diferencia)}
+                  value={formatearUSD(datos.facturado_vs_cobrado.diferencia)}
                   color={datos.facturado_vs_cobrado.diferencia >= 0 ? '#16a34a' : '#dc2626'}
                 />
               </div>
@@ -395,7 +408,7 @@ export default function StaffReportesFinancieros() {
                     <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
                     <XAxis dataKey="concepto" fontSize={11} />
                     <YAxis fontSize={11} tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
-                    <Tooltip formatter={v => formatUSD(v)} />
+                    <Tooltip formatter={v => formatearUSD(v)} />
                     <Bar dataKey="valor" name="USD" fill="#2563EB" />
                   </BarChart>
                 </ResponsiveContainer>
@@ -407,9 +420,9 @@ export default function StaffReportesFinancieros() {
           {tab === 'egresos' && (
             <div className="srf-seccion">
               <div className="st-resumen-cards">
-                <KPI label="Egresos operativos" value={formatUSD(datos.egresos.operativos_usd)} />
-                <KPI label="Salidas internas" value={formatUSD(datos.egresos.salidas_internas_usd)} />
-                <KPI label="Egresos totales" value={formatUSD(datos.egresos.total_usd)} color="#dc2626" />
+                <KPI label="Egresos operativos" value={formatearUSD(datos.egresos.operativos_usd)} />
+                <KPI label="Salidas internas" value={formatearUSD(datos.egresos.salidas_internas_usd)} />
+                <KPI label="Egresos totales" value={formatearUSD(datos.egresos.total_usd)} color="#dc2626" />
               </div>
 
               <div className="srf-chart-container" style={{ marginTop: 16 }}>
@@ -423,7 +436,7 @@ export default function StaffReportesFinancieros() {
                     <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
                     <XAxis dataKey="tipo" fontSize={11} />
                     <YAxis fontSize={11} tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
-                    <Tooltip formatter={v => formatUSD(v)} />
+                    <Tooltip formatter={v => formatearUSD(v)} />
                     <Bar dataKey="total" name="USD" fill="#ea580c" />
                   </BarChart>
                 </ResponsiveContainer>

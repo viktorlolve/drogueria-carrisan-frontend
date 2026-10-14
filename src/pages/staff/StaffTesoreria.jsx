@@ -7,6 +7,8 @@ import { exportToPdf } from '../../utils/exportUtils'
 import './StaffFinanzas.css'
 import './StaffTesoreria.css'
 import { useStaffUI } from '../../hooks/useStaffUI'
+import { formatearUSD } from '../../utils/formato'
+import StaffEstado from '../../components/staff/StaffEstado'
 
 const CATEGORIAS_EGRESO = ['Proveedores', 'Nómina', 'Servicios', 'Mantenimiento', 'Impuestos', 'Otro']
 const CATEGORIAS_SALIDA_INTERNA = ['Transferencia a banco', 'Préstamo a personal', 'Retiro del dueño', 'Otro interno']
@@ -15,10 +17,6 @@ const TABS = [
   { id: 'resumen', texto: 'Resumen' },
   { id: 'egresos', texto: 'Egresos y salidas' },
 ]
-
-function formatUSD(n) {
-  return `$${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-}
 
 function hoy() {
   return new Date().toISOString().slice(0, 10)
@@ -61,6 +59,7 @@ export default function StaffTesoreria() {
     tercero: '',
   })
   const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState('')
 
   const cargarResumen = useCallback(async () => {
     try {
@@ -70,8 +69,10 @@ export default function StaffTesoreria() {
       ])
       setResumen(resumenRes.data)
       setMovimientos(movRes.data)
+      setError('')
     } catch (e) {
       console.error('Error cargando tesorería:', e)
+      setError(e.response?.data?.error || 'No se pudo cargar la tesorería')
     } finally {
       setCargando(false)
     }
@@ -87,9 +88,12 @@ export default function StaffTesoreria() {
         if (!activo) return
         setResumen(resumenRes.data)
         setMovimientos(movRes.data)
+        setError('')
       })
       .catch((e) => {
-        if (activo) console.error('Error cargando tesorería:', e)
+        if (!activo) return
+        console.error('Error cargando tesorería:', e)
+        setError(e.response?.data?.error || 'No se pudo cargar la tesorería')
       })
       .finally(() => { if (activo) setCargando(false) })
     return () => { activo = false }
@@ -188,7 +192,9 @@ export default function StaffTesoreria() {
           </div>
 
           {cargando ? (
-            <p style={{ color: '#6b7280' }}>Cargando...</p>
+            <StaffEstado tipo="cargando" filas={3} />
+          ) : error ? (
+            <StaffEstado tipo="error" mensaje={error} onReintentar={cargarResumen} />
           ) : (
             resumen && (
               <>
@@ -200,20 +206,20 @@ export default function StaffTesoreria() {
                 <div className="st-resumen-cards">
                   <div className="st-resumen-card">
                     <div className="st-resumen-card__label">Ingresos (pagos)</div>
-                    <div className="st-resumen-card__valor">{formatUSD(resumen.ingresos)}</div>
+                    <div className="st-resumen-card__valor">{formatearUSD(resumen.ingresos)}</div>
                   </div>
                   <div className="st-resumen-card">
                     <div className="st-resumen-card__label">Egresos operativos</div>
-                    <div className="st-resumen-card__valor" style={{ color: '#dc2626' }}>{formatUSD(resumen.egresos)}</div>
+                    <div className="st-resumen-card__valor" style={{ color: '#dc2626' }}>{formatearUSD(resumen.egresos)}</div>
                   </div>
                   <div className="st-resumen-card">
                     <div className="st-resumen-card__label">Salidas internas</div>
-                    <div className="st-resumen-card__valor" style={{ color: '#ea580c' }}>{formatUSD(resumen.salidas_internas)}</div>
+                    <div className="st-resumen-card__valor" style={{ color: '#ea580c' }}>{formatearUSD(resumen.salidas_internas)}</div>
                   </div>
                   <div className="st-resumen-card">
                     <div className="st-resumen-card__label">Saldo del período</div>
                     <div className={`st-resumen-card__valor ${resumen.saldo < 0 ? 'st-resumen-card__valor--negativo' : ''}`}>
-                      {formatUSD(resumen.saldo)}
+                      {formatearUSD(resumen.saldo)}
                     </div>
                   </div>
                 </div>
@@ -227,7 +233,7 @@ export default function StaffTesoreria() {
                           <tr>
                             <th>Tercero</th>
                             <th>Tipo</th>
-                            <th style={{ textAlign: 'right' }}>Total USD</th>
+                            <th style={{ textAlign: 'right' }}>Total</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -236,7 +242,7 @@ export default function StaffTesoreria() {
                               <td>{t.tercero}</td>
                               <td>{t.tipo}</td>
                               <td style={{ textAlign: 'right' }} className={t.total >= 0 ? 'st-saldo-positivo' : 'st-saldo-negativo'}>
-                                {t.total >= 0 ? formatUSD(t.total) : `−${formatUSD(Math.abs(t.total))}`}
+                                {t.total >= 0 ? formatearUSD(t.total) : `−${formatearUSD(Math.abs(t.total))}`}
                               </td>
                             </tr>
                           ))}
@@ -262,10 +268,10 @@ export default function StaffTesoreria() {
                         {resumen.movimientos_por_dia.map((d) => (
                           <tr key={d.fecha}>
                             <td>{new Date(d.fecha + 'T12:00:00').toLocaleDateString('es-VE')}</td>
-                            <td style={{ textAlign: 'right' }} className="st-saldo-positivo">{formatUSD(d.ingresos)}</td>
-                            <td style={{ textAlign: 'right' }} className="st-saldo-negativo">{formatUSD(d.egresos)}</td>
+                            <td style={{ textAlign: 'right' }} className="st-saldo-positivo">{formatearUSD(d.ingresos)}</td>
+                            <td style={{ textAlign: 'right' }} className="st-saldo-negativo">{formatearUSD(d.egresos)}</td>
                             <td style={{ textAlign: 'right' }} className={d.saldo >= 0 ? 'st-saldo-positivo' : 'st-saldo-negativo'}>
-                              {formatUSD(d.saldo)}
+                              {formatearUSD(d.saldo)}
                             </td>
                           </tr>
                         ))}
@@ -365,7 +371,7 @@ export default function StaffTesoreria() {
                       {new Date(e.fecha + 'T12:00:00').toLocaleDateString('es-VE')}
                     </div>
                   </div>
-                  <div className="st-egreso-item__monto">−{formatUSD(e.monto)}</div>
+                  <div className="st-egreso-item__monto">−{formatearUSD(e.monto)}</div>
                   <button className="st-egreso-item__borrar" onClick={() => eliminarEgreso(e.id)} title="Eliminar">
                     ×
                   </button>

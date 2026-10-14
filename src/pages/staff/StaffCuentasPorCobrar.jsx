@@ -2,10 +2,8 @@ import { useState, useEffect } from 'react'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import './StaffFinanzas.css'
-
-function formatUSD(valor) {
-  return Number(valor || 0).toFixed(2)
-}
+import { formatearUSD } from '../../utils/formato'
+import StaffEstado from '../../components/staff/StaffEstado'
 
 function formatFecha(fecha) {
   if (!fecha) return '—'
@@ -50,21 +48,21 @@ function StaffCuentasPorCobrar() {
           ← Volver a clientes
         </button>
 
-        {error && <p style={{ color: '#DC2626' }}>{error}</p>}
+        {error && <p className="stf-error" role="alert">{error}</p>}
         {detalle && (
           <>
             <div className="stf-grid-3">
               <div className="stf-stat">
                 <span className="stf-stat-label">Línea de crédito</span>
-                <span className="stf-stat-valor">${formatUSD(detalle.resumen.linea_credito)}</span>
+                <span className="stf-stat-valor">{formatearUSD(detalle.resumen.linea_credito)}</span>
               </div>
               <div className="stf-stat">
                 <span className="stf-stat-label">Deuda actual</span>
-                <span className="stf-stat-valor">${formatUSD(detalle.resumen.deuda_actual)}</span>
+                <span className="stf-stat-valor">{formatearUSD(detalle.resumen.deuda_actual)}</span>
               </div>
               <div className="stf-stat">
                 <span className="stf-stat-label">Saldo disponible</span>
-                <span className="stf-stat-valor">${formatUSD(detalle.resumen.saldo)}</span>
+                <span className="stf-stat-valor">{formatearUSD(detalle.resumen.saldo)}</span>
               </div>
             </div>
 
@@ -87,7 +85,7 @@ function StaffCuentasPorCobrar() {
                     detalle.ordenes_pendientes.map((o) => (
                       <tr key={o.id}>
                         <td>#{o.id}</td>
-                        <td>${formatUSD(o.total_usd)}</td>
+                        <td>{formatearUSD(o.total_usd)}</td>
                         <td>{o.forma_pago}</td>
                         <td>{o.estado}</td>
                         <td>{formatFecha(o.created_at)}</td>
@@ -116,7 +114,7 @@ function StaffCuentasPorCobrar() {
                     detalle.facturas.map((f) => (
                       <tr key={f.id}>
                         <td>{f.numero_factura}</td>
-                        <td>${formatUSD(f.monto_facturado !== null && f.monto_facturado !== undefined ? f.monto_facturado : f.monto)}</td>
+                        <td>{formatearUSD(f.monto_facturado !== null && f.monto_facturado !== undefined ? f.monto_facturado : f.monto)}</td>
                         <td>{f.estado}</td>
                         <td>{formatFecha(f.created_at)}</td>
                       </tr>
@@ -142,7 +140,7 @@ function StaffCuentasPorCobrar() {
                   ) : (
                     detalle.pagos.map((p) => (
                       <tr key={p.id}>
-                        <td>${formatUSD(p.monto)}</td>
+                        <td>{formatearUSD(p.monto)}</td>
                         <td>{p.tipo}</td>
                         <td>{formatFecha(p.created_at)}</td>
                       </tr>
@@ -159,8 +157,8 @@ function StaffCuentasPorCobrar() {
 
   return (
     <LayoutDepartamento departamento="finanzas" activo="cuentas-por-cobrar" titulo="Cuentas por cobrar">
-      {cargando && <p>Cargando...</p>}
-      {error && <p style={{ color: '#DC2626' }}>{error}</p>}
+      {cargando && <StaffEstado tipo="cargando" />}
+      {error && <p className="stf-error" role="alert">{error}</p>}
       {!cargando && (
         <div className="stf-tabla-wrap">
           <table className="stf-tabla">
@@ -185,9 +183,9 @@ function StaffCuentasPorCobrar() {
                         <span>{c.email}</span>
                       </div>
                     </td>
-                    <td>${formatUSD(c.linea_credito)}</td>
-                    <td style={{ color: Number(c.deuda_actual) > 0 ? '#DC2626' : 'inherit' }}>${formatUSD(c.deuda_actual)}</td>
-                    <td>${formatUSD(c.saldo)}</td>
+                    <td>{formatearUSD(c.linea_credito)}</td>
+                    <td style={{ color: Number(c.deuda_actual) > 0 ? '#DC2626' : 'inherit' }}>{formatearUSD(c.deuda_actual)}</td>
+                    <td>{formatearUSD(c.saldo)}</td>
                     <td>
                       <button className="stf-btn stf-btn--small" onClick={() => verDetalle(c)}>Ver cuenta</button>
                     </td>

@@ -4,10 +4,7 @@ import staffApi from '../../api/staffAxios'
 import { tipoDocumento } from './staffFacturacionConfig'
 import './StaffOrdenes.css'
 import './StaffFinanzas.css'
-
-function formatUSD(valor) {
-  return Number(valor || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
+import { formatearUSD, formatearVES } from '../../utils/formato'
 
 function formatFecha(fecha) {
   if (!fecha) return '—'
@@ -150,7 +147,7 @@ export default function TabEmitir() {
     setGuardando(true)
     try {
       const { data } = await staffApi.post('/staff/contabilidad/facturas', payload)
-      setExito(`${tipoDocumento(data.tipo)} #${data.numero_factura} emitida por $${formatUSD(data.monto_facturado)} (Bs ${formatUSD(data.monto_bs || 0)})`)
+      setExito(`${tipoDocumento(data.tipo)} #${data.numero_factura} emitida por ${formatearUSD(data.monto_facturado)} (${formatearVES(data.monto_bs || 0)})`)
       setSeleccionadas([])
       setMonto('')
       setMotivo('')
@@ -248,7 +245,7 @@ export default function TabEmitir() {
                         <th></th>
                         <th>Orden</th>
                         <th>Fecha</th>
-                        <th>Total US$</th>
+                        <th>Total</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -263,7 +260,7 @@ export default function TabEmitir() {
                           </td>
                           <td>#{o.id}</td>
                           <td>{formatFecha(o.created_at)}</td>
-                          <td>${formatUSD(o.total_usd)}</td>
+                          <td>{formatearUSD(o.total_usd)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -272,8 +269,8 @@ export default function TabEmitir() {
               )}
 
               <p className="stf-subtitulo">
-                Total: ${formatUSD(totalUSD)}
-                {tasaVisibles && `  ·  Bs ${formatUSD(bolivares)} (tasa ${Number(tasaVisibles.usd_a_ves).toFixed(4)})`}
+                Total: {formatearUSD(totalUSD)}
+                {tasaVisibles && `  ·  ${formatearVES(bolivares)} (tasa ${Number(tasaVisibles.usd_a_ves).toFixed(4)})`}
               </p>
             </>
           ) : (
@@ -281,7 +278,7 @@ export default function TabEmitir() {
               <div className="stf-form-row" style={{ marginTop: 12 }}>
                 <input
                   className="stf-input"
-                  placeholder="Monto ($)"
+                  placeholder="Monto (USD)"
                   type="number"
                   min="0"
                   step="0.01"
@@ -297,7 +294,7 @@ export default function TabEmitir() {
                   <option value="">Sin factura de referencia</option>
                   {facturasVisibles.map((f) => (
                     <option key={f.id} value={f.id}>
-                      #{f.numero_factura} · ${formatUSD(f.monto_facturado)}
+                      #{f.numero_factura} · {formatearUSD(f.monto_facturado)}
                     </option>
                   ))}
                 </select>
@@ -313,8 +310,8 @@ export default function TabEmitir() {
             </>
           )}
 
-          {error && <p style={{ color: '#DC2626', marginTop: 8 }}>{error}</p>}
-          {exito && <p style={{ color: '#065F46', marginTop: 8 }}>{exito}</p>}
+          {error && <p className="stf-error" role="alert">{error}</p>}
+          {exito && <p className="stf-exito" role="status">{exito}</p>}
 
           <div style={{ marginTop: 16 }}>
             <button className="stf-btn stf-btn--primary" type="button" onClick={emitir} disabled={guardando}>

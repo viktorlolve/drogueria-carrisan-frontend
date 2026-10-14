@@ -68,6 +68,18 @@
 .stfui-btn--peligro { background: var(--u-error); color: #fff; }
 .stfui-btn--peligro:hover { background: var(--u-error-fuerte); }
 
+/* Campo de texto (pedirTexto) */
+.stfui-campo { margin-top: 14px; text-align: left; }
+.stfui-campo__etiqueta { display: block; margin-bottom: 6px; font-size: 0.8rem; font-weight: 700; color: var(--u-indigo); }
+/* 16px: iOS hace zoom al enfocar campos con menos */
+.stfui-campo__input {
+  display: block; width: 100%; padding: 10px 12px;
+  border: 1.5px solid var(--u-borde); border-radius: 12px;
+  font: inherit; font-size: 16px; color: var(--u-indigo); resize: vertical;
+}
+.stfui-campo__input:focus { outline: 2px solid var(--u-azul); outline-offset: 1px; border-color: transparent; }
+.stfui-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
 /* ---------- Toast ---------- */
 .stfui-toast {
   position: fixed;

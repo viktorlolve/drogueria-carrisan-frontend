@@ -5,10 +5,9 @@ import StaffTabs from '../../components/staff/StaffTabs'
 import TabEmitir from './StaffFacturacionEmitir'
 import { tipoDocumento } from './staffFacturacionConfig'
 import './StaffFinanzas.css'
-
-function formatUSD(valor) {
-  return Number(valor || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
+import { formatearUSD, formatearVES } from '../../utils/formato'
+import StaffEstado from '../../components/staff/StaffEstado'
+import { useStaffUI } from '../../hooks/useStaffUI'
 
 function formatFecha(fecha) {
   if (!fecha) return '—'
@@ -27,6 +26,7 @@ const TABS = [
 // Lista de documentos (usada por los 4 tabs de grilla)
 // ------------------------------------------------------------------
 function ListaDocumentos({ tipos, mostrarAnuladas }) {
+  const { pedirTexto } = useStaffUI()
   const [docs, setDocs] = useState([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
@@ -54,12 +54,18 @@ function ListaDocumentos({ tipos, mostrarAnuladas }) {
   }, [])
 
   async function anular(doc) {
-    const motivo = window.prompt(`Motivo de la anulación de ${tipoDocumento(doc.tipo)} #${doc.numero_factura}:`)
-    if (!motivo || !motivo.trim()) return
+    const motivo = await pedirTexto({
+      titulo: `Anular ${tipoDocumento(doc.tipo)} #${doc.numero_factura}`,
+      etiqueta: 'Motivo de la anulación',
+      textoConfirmar: 'Anular',
+      peligro: true,
+      obligatorio: true,
+    })
+    if (!motivo) return
     setAnulando(doc.id)
     setError('')
     try {
-      await staffApi.patch(`/staff/contabilidad/facturas/${doc.id}/anular`, { motivo: motivo.trim() })
+      await staffApi.patch(`/staff/contabilidad/facturas/${doc.id}/anular`, { motivo })
       await cargar()
     } catch (err) {
       setError(err.response?.data?.error || 'No se pudo anular el documento')
@@ -74,8 +80,8 @@ function ListaDocumentos({ tipos, mostrarAnuladas }) {
 
   return (
     <div>
-      {error && <p style={{ color: '#DC2626', marginTop: 8 }}>{error}</p>}
-      {cargando && <p>Cargando...</p>}
+      {error && <p className="stf-error" role="alert">{error}</p>}
+      {cargando && <StaffEstado tipo="cargando" />}
       {!cargando && (
         <div className="stf-tabla-wrap">
           <table className="stf-tabla">
@@ -84,8 +90,8 @@ function ListaDocumentos({ tipos, mostrarAnuladas }) {
                 <th>Cliente</th>
                 <th>Tipo</th>
                 <th>N°</th>
-                <th>$</th>
-                <th>Bs</th>
+                <th>Monto</th>
+                <th>Monto Bs</th>
                 <th>Referencia</th>
                 <th>Motivo</th>
                 <th>Fecha</th>
@@ -101,8 +107,8 @@ function ListaDocumentos({ tipos, mostrarAnuladas }) {
                     <td>{d.users?.nombre || `#${d.usuario_id}`}</td>
                     <td>{tipoDocumento(d.tipo)}</td>
                     <td>{d.numero_factura}</td>
-                    <td>${formatUSD(d.monto_facturado)}</td>
-                    <td>{d.monto_bs ? `Bs ${formatUSD(d.monto_bs)}` : '—'}</td>
+                    <td>{formatearUSD(d.monto_facturado)}</td>
+                    <td>{d.monto_bs ? formatearVES(d.monto_bs) : '—'}</td>
                     <td>{d.factura_referencia_id ? `#${d.factura_referencia_id}` : '—'}</td>
                     <td>{d.motivo || d.anulada_motivo || '—'}</td>
                     <td>{formatFecha(d.created_at)}</td>
