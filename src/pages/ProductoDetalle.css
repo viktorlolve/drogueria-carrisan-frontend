@@ -503,14 +503,14 @@
 }
 
 .pd-purchase__original {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Figtree', 'Inter', sans-serif;
   font-size: 1rem;
   color: #94A3B8;
   text-decoration: line-through;
 }
 
 .pd-purchase__price {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Figtree', 'Inter', sans-serif;
   font-size: 2rem;
   font-weight: 800;
   color: #12A594;
@@ -548,13 +548,13 @@
 }
 
 .pd-purchase__ves {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Figtree', 'Inter', sans-serif;
   font-size: 0.88rem;
   color: #64748B;
 }
 
 .pd-purchase__savings {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Figtree', 'Inter', sans-serif;
   font-size: 0.76rem;
   font-weight: 700;
   color: #16A34A;
