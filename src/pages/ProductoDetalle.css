@@ -331,7 +331,7 @@
 }
 
 .pd-info__sku {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Figtree', 'Inter', sans-serif;
   font-size: 0.75rem;
   color: #94A3B8;
   font-weight: 500;
@@ -421,7 +421,7 @@
 }
 
 .pd-chip__detail {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Figtree', 'Inter', sans-serif;
   font-size: 0.75rem;
   color: #12A594;
   font-weight: 700;
@@ -617,7 +617,7 @@
   text-align: center;
   font-weight: 700;
   color: #1A1A2E;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Figtree', 'Inter', sans-serif;
 }
 
 .pd-purchase__cta {
