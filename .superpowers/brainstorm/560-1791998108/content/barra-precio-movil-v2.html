@@ -1,0 +1,141 @@
+<h2>C, afinada — botón del catálogo + link de devolución</h2>
+<p class="subtitle">
+  Misma dirección C (franja degradada + precio protagonista) pero: el botón es el <strong>mismo del catálogo</strong>
+  (<code>+ Agregar</code> → contador <code>− N +</code>), y la línea de abajo es el <strong>enlace a Política de devolución</strong>.
+</p>
+
+<style>
+  .bar-demo {
+    background: #eef0f4;
+    border-radius: 12px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 150px;
+    justify-content: flex-end;
+  }
+  .bar-demo__page {
+    flex: 1;
+    border-radius: 8px;
+    background: repeating-linear-gradient(180deg, #e2e5ec 0 8px, #eef0f4 8px 16px);
+  }
+  .bar-mini {
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color: #232B45;
+    border-radius: 14px;
+    overflow: hidden;
+    background: linear-gradient(180deg, #ffffff 0%, #f7fafc 100%);
+    box-shadow: 0 -6px 20px rgba(26,26,46,.16);
+  }
+  .bar-mini .bar-top { height: 3px; background: linear-gradient(90deg, #0052DC, #12A594); }
+  .bar-mini .bar-body { padding: 9px 12px; display: flex; align-items: center; gap: 10px; }
+
+  .price-usd { font-family:'JetBrains Mono',ui-monospace,monospace; font-weight:800; color:#1B4B8F; line-height:1; font-size:20px; }
+  .price-old { font-family:'JetBrains Mono',ui-monospace,monospace; color:#94a3b8; text-decoration:line-through; font-size:11px; }
+  .pill-dto { font-size:9.5px; font-weight:800; color:#0d7a5f; background:#d6f5ec; border-radius:6px; padding:1.5px 5px; white-space:nowrap; }
+  .bs-line { font-size:10.5px; color:#64748b; margin-top:3px; }
+
+  /* Botón del catálogo — píldora azul */
+  .btn-catalogo {
+    border:none; border-radius:999px; background:#0052DC; color:#fff;
+    font-weight:700; font-size:12px; padding:9px 16px; white-space:nowrap;
+    display:inline-flex; align-items:center; justify-content:center; gap:4px;
+  }
+  .btn-catalogo:active { transform: scale(.97); }
+  /* Contador del catálogo — misma píldora azul */
+  .contador {
+    display:inline-flex; align-items:center; justify-content:space-between;
+    border:1px solid #0052DC; border-radius:999px; background:#0052DC;
+    padding:4px 6px; gap:2px;
+  }
+  .contador b {
+    width:26px; height:26px; border-radius:50%; color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700;
+  }
+  .contador i { color:#fff; font-weight:700; font-size:13px; font-style:normal; min-width:26px; text-align:center; }
+
+  /* Link de política de devolución */
+  .link-dev {
+    display:inline-flex; align-items:center; gap:4px;
+    font-size:9.5px; font-weight:700; color:#1B4B8F;
+    margin-top:6px;
+  }
+  .link-dev u { text-decoration:underline; text-underline-offset:2px; }
+  .link-dev .chev { color:#94a3b8; }
+  .nav-tachado { font-size: 11px; color: #94a3b8; text-align: center; margin-top: 6px; }
+  .nav-tachado b { color: #dc2626; text-decoration: line-through; }
+  .estado-tag {
+    position:absolute; top:8px; left:8px; font-size:10px; font-weight:800; letter-spacing:.3px;
+    color:#fff; background:#232B45; border-radius:6px; padding:2px 7px; text-transform:uppercase;
+  }
+</style>
+
+<div class="cards">
+
+  <div class="card" data-choice="inicial" onclick="toggleSelect(this)">
+    <div class="card-image" style="position:relative">
+      <span class="estado-tag">Estado inicial</span>
+      <div class="bar-demo">
+        <div class="bar-demo__page"></div>
+        <div class="bar-mini">
+          <div class="bar-top"></div>
+          <div class="bar-body">
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:6px">
+                <span class="price-usd">$12.50</span>
+                <span class="pill-dto">-15%</span>
+              </div>
+              <div class="bs-line">Bs 640,00 · <span class="price-old">$14.70</span></div>
+              <div class="link-dev">↺ <u>Política de devolución</u> <span class="chev">›</span></div>
+            </div>
+            <button class="btn-catalogo">+ Agregar</button>
+          </div>
+        </div>
+      </div>
+      <div class="nav-tachado">bottom nav: <b>oculto</b> en esta página</div>
+    </div>
+    <div class="card-body">
+      <h3>Antes de agregar</h3>
+      <p>El CTA es la píldora azul del catálogo (<strong>+ Agregar</strong>). La línea baja ahora es el enlace a <strong>Política de devolución</strong> (abre el modal que ya existe) en vez de “Vendido por Droguería Carrisan”.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="agregado" onclick="toggleSelect(this)">
+    <div class="card-image" style="position:relative">
+      <span class="estado-tag">Después de agregar</span>
+      <div class="bar-demo">
+        <div class="bar-demo__page"></div>
+        <div class="bar-mini">
+          <div class="bar-top"></div>
+          <div class="bar-body">
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:6px">
+                <span class="price-usd">$12.50</span>
+                <span class="pill-dto">-15%</span>
+              </div>
+              <div class="bs-line">Bs 640,00 · <span class="price-old">$14.70</span></div>
+              <div class="link-dev">↺ <u>Política de devolución</u> <span class="chev">›</span></div>
+            </div>
+            <div class="contador">
+              <b>−</b><i>2</i><b>+</b>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="nav-tachado">bottom nav: <b>oculto</b> en esta página</div>
+    </div>
+    <div class="card-body">
+      <h3>Al agregar</h3>
+      <p>La píldora muta al <strong>contador <code>− 2 +</code></strong> idéntico al del catálogo (mismo azul, mismos botones circulares). Bajar a 0 quita el producto, igual que en el catálogo.</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:18px">
+  <strong>Dudas para cerrar el diseño:</strong><br>
+  1. Dijiste “nos concentramos solo en el precio” — ¿quieres que la barra muestre <em>solo</em> precio USD + descuento, y saque el equivalente en Bs?<br>
+  2. ¿El encabezado del producto (título) debería asomarse en la barra o se queda solo el precio?<br>
+  3. ¿El contador va a la derecha (como el mock) o el precio arriba y el contador/CTA a todo el ancho abajo?
+</p>
