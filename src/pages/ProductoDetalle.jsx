@@ -4,6 +4,7 @@ import {
   Heart, Share2, Check, Stethoscope, Pill, ShieldCheck, Package, Thermometer,
   FileCheck2, Building2,
   MapPin, FlaskConical, Layers, Tablet, Store,
+  RotateCcw, ChevronRight,
 } from 'lucide-react'
 import api from '../api/axios'
 import { useCart } from '../context/CartContext'
@@ -12,6 +13,7 @@ import { useFavoritos } from '../context/FavoritosContext'
 import HomeCarrusel from '../components/HomeCarrusel'
 import Valoraciones from '../components/Valoraciones'
 import FilasConfianza from '../components/FilasConfianza'
+import { BotonPoliticaDevolucion } from '../components/ModalPoliticaDevolucion'
 import { agruparPorLinea } from '../utils/agruparPorLinea'
 import Footer from '../components/Footer'
 import BottomNav from '../components/BottomNav'
@@ -104,7 +106,7 @@ function Estrellas({ promedio, tamano = '1rem' }) {
 function ProductoDetalle() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { addItem } = useCart()
+  const { addItem, updateCantidad, removeItem, items: cartItems } = useCart()
   const { user } = useAuth()
   const { esFavorito, toggleFavorito } = useFavoritos()
 
@@ -117,6 +119,10 @@ function ProductoDetalle() {
   const [error, setError] = useState('')
   const [cantidad, setCantidad] = useState(1)
   const [agregado, setAgregado] = useState(false)
+  // Modo contador de la barra móvil: el botón del catálogo se convierte en
+  // el contador − N + al agregar (igual que ProductCard). La cantidad real
+  // vive en el carrito, no en estado local.
+  const [mostrarContador, setMostrarContador] = useState(false)
   const [carruseles, setCarruseles] = useState([])
   const [imagenActiva, setImagenActiva] = useState(0)
   const [tabActiva, setTabActiva] = useState('ficha')
@@ -157,6 +163,7 @@ function ProductoDetalle() {
     setSuscripcion(null)
     setError('')
     setMostrarBarra(false)
+    setMostrarContador(false)
   }
 
   useEffect(() => {
@@ -181,18 +188,16 @@ function ProductoDetalle() {
   }, [user, producto, sinPrecio])
 
   useEffect(() => {
-    // `.pd-info` solo existe cuando termina la carga (mientras `cargando` la
-    // vista es el skeleton). Si la dependencia fuera solo `[producto]` el
-    // efecto correría dos veces con `infoRef.current === null` (una al montar
-    // con producto null y otra cuando `setProducto` commitea pero `cargando`
-    // sigue true) y, como `producto` ya no cambia, nunca volvería a correr:
-    // el listener no se engancharía y la barra móvil jamás aparecería.
-    // Depender también de `cargando` garantiza re-engancharlo cuando el
-    // bloque ya está en el DOM.
+    // La barra móvil aparece en cuanto el usuario baja un poco (ya no espera
+    // a que `.pd-info` salga del viewport: en el teléfono eso ocurría muy
+    // abajo y la barra casi nunca se veía). El umbral es el alto del navbar
+    // fijo, para que no tape la cabecera del producto mientras se está
+    // arriba. Igual hace falta `cargando` en las deps: mientras carga la
+    // vista es el skeleton, y al commitear el producto el efecto debe
+    // re-engancharse para evaluar el scroll actual.
     if (cargando) return
-    const info = infoRef.current
-    if (!info) return
-    const onScroll = () => setMostrarBarra(info.getBoundingClientRect().bottom < 0)
+    const onScroll = () => setMostrarBarra(window.scrollY > 100)
+    onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [producto, cargando])
@@ -291,6 +296,26 @@ function ProductoDetalle() {
     timerRef.current = setTimeout(() => setAgregado(false), 2000)
   }
 
+  // --- Barra móvil: mismo comportamiento que el botón del catálogo
+  // (ProductCard). La cantidad vive en el carrito; al bajar a 0 se quita.
+  function handleAgregarBarra() {
+    if (cantidadCarrito === 0) addItem(producto, 1)
+    setMostrarContador(true)
+  }
+
+  function handleSumarBarra() {
+    updateCantidad(producto.id, cantidadCarrito + 1)
+  }
+
+  function handleRestarBarra() {
+    if (cantidadCarrito <= 1) {
+      removeItem(producto.id)
+      setMostrarContador(false)
+    } else {
+      updateCantidad(producto.id, cantidadCarrito - 1)
+    }
+  }
+
   async function toggleAvisame() {
     if (!user || !producto || suscripcion === null || procesandoToggle) return
     setProcesandoToggle(true)
@@ -382,6 +407,9 @@ function ProductoDetalle() {
     : null
 
   const galeria = [producto.foto_url, ...(detalles?.imagen_secundaria_urls || [])].filter(Boolean)
+
+  const itemEnCarrito = cartItems.find((i) => i.producto.id === producto.id)
+  const cantidadCarrito = itemEnCarrito?.cantidad || 0
 
   const tieneComposicion = moleculas.length > 0
 
@@ -633,6 +661,100 @@ function ProductoDetalle() {
         </div>
 
         <div className={`pd-purchase${mostrarBarra ? ' pd-purchase--show' : ''}`}>
+          {/* ---- Barra de compra MÓVIL (solo ≤767px; el card de abajo se
+               oculta en el teléfono). Reemplaza al bottom nav, que en la
+               ficha de producto queda oculto (ver CSS). ---- */}
+          <div className="pd-purchase__m">
+            <div className="pd-purchase__m-thumb">
+              <ProductoImagen src={galeria[0] || null} alt={producto.nombre_comercial} />
+            </div>
+
+            <div className="pd-purchase__m-info">
+              {sinPrecio ? (
+                <span className="pd-purchase__m-consultar">Consultar precio</span>
+              ) : (
+                <>
+                  <div className="pd-purchase__m-precio-fila">
+                    <span className="pd-purchase__m-price">
+                      ${Number(producto.precio_usd).toFixed(2)}
+                    </span>
+                    {producto.descuento_activo && (
+                      <span className="pd-purchase__m-dto">
+                        -{producto.descuento_activo.valor}%
+                      </span>
+                    )}
+                  </div>
+                  {(precioVes || producto.precio_original_usd) && (
+                    <div className="pd-purchase__m-bs">
+                      {precioVes && <>Bs. {precioVes}</>}
+                      {precioVes && producto.precio_original_usd && ' · '}
+                      {producto.precio_original_usd && (
+                        <s>${Number(producto.precio_original_usd).toFixed(2)}</s>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+
+              <BotonPoliticaDevolucion className="pd-purchase__m-dev">
+                <RotateCcw size={11} aria-hidden="true" />
+                <span>Política de devolución</span>
+                <ChevronRight size={12} className="pd-purchase__m-dev-chev" aria-hidden="true" />
+              </BotonPoliticaDevolucion>
+            </div>
+
+            <div className="pd-purchase__m-cta">
+              {!user ? (
+                <Link className="pd-purchase__m-login" to="/login">Inicia sesión</Link>
+              ) : producto.disponible ? (
+                mostrarContador || cantidadCarrito > 0 ? (
+                  <div className="pd-purchase__m-contador">
+                    <button
+                      type="button"
+                      className="pd-m-contador-btn"
+                      onClick={handleRestarBarra}
+                      aria-label="Quitar uno"
+                    >
+                      −
+                    </button>
+                    <span className="pd-m-contador-cantidad">{cantidadCarrito}</span>
+                    <button
+                      type="button"
+                      className="pd-m-contador-btn"
+                      onClick={handleSumarBarra}
+                      aria-label="Agregar uno"
+                    >
+                      +
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="pd-purchase__m-agregar"
+                    onClick={handleAgregarBarra}
+                  >
+                    + Agregar
+                  </button>
+                )
+              ) : sinPrecio ? (
+                <button
+                  type="button"
+                  className={`pd-purchase__m-avisame ${suscripcion ? 'subscribed' : ''}`}
+                  onClick={toggleAvisame}
+                  disabled={suscripcion === null || procesandoToggle}
+                >
+                  {suscripcion === null || procesandoToggle
+                    ? '...'
+                    : suscripcion
+                      ? 'Te avisaremos'
+                      : 'Avísame'}
+                </button>
+              ) : (
+                <span className="pd-purchase__m-nodisp">No disponible</span>
+              )}
+            </div>
+          </div>
+
           <div className="pd-purchase__card">
             <div className="pd-purchase__prices">
               {producto.precio_usd != null ? (
@@ -898,7 +1020,7 @@ function ProductoDetalle() {
       </div>
 
       <BottomNav />
-      </div>
+    </div>
 
       <div className="pd-footer-wrapper">
         <Footer />

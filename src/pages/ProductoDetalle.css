@@ -436,6 +436,10 @@
   top: 80px;
 }
 
+.pd-purchase__m {
+  display: none;
+}
+
 @media (min-width: 1024px) {
   .pd-purchase {
     top: 130px;
@@ -1245,18 +1249,25 @@
 
 /* ---- Barra de compra fija (solo teléfono ≤767px) ---- */
 @media (max-width: 767px) {
+  /* Ocultar bottom nav en la ficha de producto (solo móvil) */
+  .pd-page .bottom-nav {
+    display: none;
+  }
+
   .pd-purchase {
     position: fixed;
-    left: 12px;
-    right: 12px;
-    bottom: calc(78px + env(safe-area-inset-bottom, 0));
+    left: 10px;
+    right: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0));
     top: auto;
     grid-area: auto;
     z-index: 45;
     padding: 0;
     border: none;
     background: transparent;
-    transform: translateY(150%);
+    max-height: none;
+    overflow: visible;
+    transform: translateY(160%);
     opacity: 0;
     pointer-events: none;
     transition: transform 0.25s ease, opacity 0.25s ease;
@@ -1268,70 +1279,218 @@
     pointer-events: auto;
   }
 
+  /* El card de escritorio no existe en móvil: la barra es __m */
   .pd-purchase__card {
-    flex-direction: row;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 14px;
-    border-radius: 14px;
-    box-shadow: 0 -6px 24px rgba(26, 26, 46, 0.12), 0 2px 10px rgba(26, 26, 46, 0.08);
-  }
-
-  /* En la barra compacta vuelve a ser una fila: la referencia en Bs ya está
-     en `display: none` más abajo, así que solo queda el precio y debe quedar
-     centrado verticalmente con el resto de la barra. */
-  .pd-purchase__prices {
-    flex: 1;
-    min-width: 0;
-    flex-direction: row;
-    align-items: baseline;
-    flex-wrap: nowrap;
-    gap: 8px;
-  }
-
-  .pd-purchase__price {
-    font-size: 1.4rem;
-  }
-
-  /* La barra compacta es solo precio + cantidad + CTA. Los bloques que se
-     agregaron despues a la tarjeta (divisor y vendedor) son de la vista
-     grande: si no se ocultan, su ancho minimo desborda la barra (~388px),
-     el precio (flex:1, min-width:0) colapsa a 0 y el vendedor se sale de
-     pantalla (overflow-x: clip lo esconde sin scrollbar). */
-  .pd-purchase__original,
-  .pd-purchase__savings,
-  .pd-purchase__ves,
-  .pd-purchase__trust,
-  .pd-purchase__login,
-  .pd-purchase__note,
-  .pd-purchase__divider,
-  .pd-purchase__seller {
     display: none;
   }
 
-  .pd-purchase__actions {
-    flex-direction: row;
+  .pd-purchase__m {
+    display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 16px;
+    padding: 9px 12px;
+    background: linear-gradient(180deg, #ffffff 0%, #f7fafc 100%);
+    box-shadow: 0 -6px 24px rgba(26, 26, 46, 0.14), 0 2px 10px rgba(26, 26, 46, 0.08);
+    border: 1px solid #E8EDF3;
   }
 
-  .pd-purchase__qty button {
-    width: 34px;
-    height: 34px;
+  .pd-purchase__m::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #0052DC, #12A594);
   }
 
-  .pd-purchase__qty span {
-    width: 30px;
+  .pd-purchase__m-thumb {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    border-radius: 11px;
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid #E2E8F0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   }
 
-  .pd-purchase__cta {
-    width: auto;
-    padding: 11px 18px;
+  .pd-purchase__m-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .pd-purchase__m-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .pd-purchase__m-precio-fila {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .pd-purchase__m-price {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-weight: 800;
+    font-size: 1.3rem;
+    line-height: 1;
+    color: #1B4B8F;
+  }
+
+  .pd-purchase__m-dto {
+    font-size: 0.66rem;
+    font-weight: 800;
+    color: #0d7a5f;
+    background: #d6f5ec;
+    border-radius: 6px;
+    padding: 1px 5px;
+    white-space: nowrap;
+  }
+
+  .pd-purchase__m-bs {
+    font-size: 0.7rem;
+    color: #64748b;
+    line-height: 1.15;
+  }
+
+  .pd-purchase__m-bs s {
+    color: #94a3b8;
+  }
+
+  .pd-purchase__m-consultar {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #1B4B8F;
+  }
+
+  .pd-purchase__m-dev {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 3px;
+    padding: 0;
+    background: none;
+    border: none;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #1B4B8F;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+    width: fit-content;
+  }
+
+  .pd-purchase__m-dev-chev {
+    color: #94a3b8;
+  }
+
+  .pd-purchase__m-cta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .pd-purchase__m-agregar {
+    border: none;
+    border-radius: 999px;
+    background: #0052DC;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.8rem;
+    padding: 9px 16px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+  }
+
+  .pd-purchase__m-agregar:active {
+    transform: scale(0.97);
+  }
+
+  .pd-purchase__m-contador {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2px;
+    border: 1px solid #0052DC;
+    border-radius: 999px;
+    background: #0052DC;
+    padding: 3px 5px;
+  }
+
+  .pd-m-contador-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: #ffffff;
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease;
+  }
+
+  .pd-m-contador-btn:hover {
+    background: #1B4B8F;
+  }
+
+  .pd-m-contador-cantidad {
+    color: #ffffff;
+    font-weight: 700;
     font-size: 0.85rem;
+    min-width: 16px;
+    text-align: center;
+    padding: 0 8px;
+  }
+
+  .pd-purchase__m-login {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #ffffff;
+    background: #0052DC;
+    border-radius: 999px;
+    padding: 9px 14px;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .pd-purchase__m-avisame {
+    border: 1px solid #1B4B8F;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #1B4B8F;
+    font-weight: 700;
+    font-size: 0.74rem;
+    padding: 9px 14px;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .pd-purchase__m-nodisp {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #94a3b8;
     white-space: nowrap;
   }
 
   .pd-footer-spacer {
-    height: 160px;
+    height: 108px;
   }
 }
