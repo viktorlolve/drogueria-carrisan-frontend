@@ -13,6 +13,7 @@ import {
 import LayoutPaginaPrincipal from '../components/paginas-principales/Layoutpaginaprincipal'
 import HojaInferior from '../components/HojaInferior'
 import BannerOnboarding from '../components/BannerOnboarding'
+import AvisoNotificaciones from '../components/AvisoNotificaciones'
 import { NAV_UNIFICADO } from '../components/paginas-principales/NavUnificado'
 import { ESTADOS_ORDEN, getEstadoVisual } from '../config/estadosOrden'
 import { OrdenCard } from '../components/OrdenCard'
@@ -722,6 +723,10 @@ function MiCuenta() {
         )}
 
         <BannerOnboarding />
+
+        {/* Aviso fijo inferior para activar las notificaciones del navegador
+            (una vez por dispositivo; ver avisoNotificacionesHelpers.js). */}
+        <AvisoNotificaciones />
 
         {cargando ? (
           <div className="mi-cuenta__cargando">

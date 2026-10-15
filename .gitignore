@@ -24,3 +24,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# superpowers (brainstorm/sdd): artefactos de sesión (mockups, ledgers), no van al repo
+.superpowers/

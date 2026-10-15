@@ -258,6 +258,38 @@ Unifica el card de producto sin precio y el botón "Avísame". Plan/spec en la r
 - Colores disponibles en `Notificaciones.css` como `.notif-icon--<color>` (incluye `--amber`); `colorPalette` de los badges usa el nombre del color.
 - OJO: el backend agrupa todos los hitos del pedido como tipo `estado_cambiado`; **no** deduzcas el estado parseando el mensaje para cambiar el ícono.
 
+## Aviso de notificaciones al entrar a Mi Cuenta (IMPLEMENTADO — 2026-10-15)
+
+Motivo: el push del navegador **nunca llega** a la mayoría de usuarios porque **nadie los suscribe** —
+los únicos puntos para activarlo estaban escondidos dentro de Mi Cuenta (el engranaje "Permisos y
+notificaciones"), así que quien no entra ahí tampoco se suscribe. Las notificaciones in-app (campanita
+del nav) sí funcionan; falta solo el push del navegador.
+
+- **`AvisoNotificaciones.jsx` + `.css`** (clases `.aviso-notif__*`): **barra fija inferior** (opción A
+  aprobada con mockups en el compañero visual — mismo lenguaje visual que `CookieConsent`, índigo
+  `#1A1A3A`). Se monta **solo en `MiCuenta.jsx`** (junto a `<BannerOnboarding />`). Copy: *"Activá las
+  notificaciones"* + *"Enterate al instante cuando tu pedido avanza, te responden un mensaje o vence un
+  pago."*, botones **"Ahora no"** y **"Activar"** (`activar()` de `usePush` — necesita el gesto del click).
+- **`avisoNotificacionesHelpers.js`** (lógica pura, test `scripts/avisoNotificacionesHelpers.test.mjs`,
+  **9 tests**): `debeMostrarAviso({ soportado, suscrito, permiso, dijoAhoraNo })` → no se muestra si el
+  navegador no soporta push, si todavía detecta (`suscrito`/`permiso` `null`), si ya está activado, si
+  el permiso está `denied` (lo maneja el engranaje) o si ya eligió "Ahora no" **en este dispositivo**
+  (`localStorage['carrisan_aviso_notificaciones']='no_mostrar'`, vía `safeStorage`). En otro dispositivo
+  se vuelve a preguntar; activar más tarde sigue disponible en el engranaje de Mi Cuenta.
+- **`BannerOnboarding.jsx` (banner viejo) queda "solo instalar"**: se le **quitó el botón
+  "Notificaciones"** y su lógica (`handleNotificaciones`, auto-hide por `suscrito`, `Bell`,
+  `pidiendoPermiso`). **Se conserva la visibilidad tal cual** (sigue usando `usePush` solo para
+  `soportado`/`permiso`). Diferido al dueño: el **flujo de instalación** (Chrome → acción directa con
+  `beforeinstallprompt`; Safari → **explicar** cómo instalar, sin poder llamar la acción; y que el
+  banner no aparezca cuando no hay nada que instalar).
+- **Barra inferior sin despeje de dock**: `MiCuenta` usa `LayoutPaginaPrincipal`, que **no** monta
+  `BottomNav`; por eso `bottom: calc(16px + safe-area)` en todas las medidas (a diferencia de
+  `CookieConsent`, que sube a `88px` en móvil por el dock de Home/Catálogo).
+- **Bloqueante real del push (sigue pendiente, no es código)**: la **rotación VAPID** en Render
+  (`VAPID_PRIVATE_KEY`/`VAPID_SUBJECT`) + Vercel (`VITE_VAPID_PUBLIC_KEY`, requiere redeploy) con el
+  **mismo par**; sin eso, aunque el usuario se suscriba, los envíos fallan en silencio. Ver la raíz
+  AGENTS.md → "Pendientes del dueño".
+
 ## Vademécum clínico — ficha de molécula (IMPLEMENTADO — 2026-09-10)
 
 Contexto: el vademécum explica por **molécula** (ficha clínica CIMA); el INHRR es solo registro sanitario. El backend enriqueció `GET /moleculas/moleculas/:id` (2026-09-10) — **contrato listo para consumir**, ver "Contrato del endpoint" abajo. Detalle completo y conteos en el AGENTS raíz (sección vademécum clínico).
@@ -441,7 +473,7 @@ Desde 2026-09-04 el módulo staff se organiza en **3 departamentos**: `finanzas`
 | /staff/registro | publico | — | funcional | Registro de personal con código de invitación staff (`StaffRegistro.jsx`): verifica el código via `/auth/verificar-codigo {tipo:'staff'}`, formula (email, nombre, password), POST `/staff/registro` → auto-login (iniciarSesionConDatos) → /staff/dashboard. `StaffRegistro.css` es **legado muerto** (NO se importa; sus clases `.staff-registro-*` son de una versión anterior del componente — layout de "Rol: <badge> [Cambiar]" en línea — y no se usan). El **panel del formulario** lleva `minW="0"` a propósito (ver "Trampa CSS: flex-item y ancho mínimo") |
 | /staff/dashboard | PrivateRouteStaff | — | funcional | Panel visual standalone (sin sidebar): tarjetas de departamento + boton admin-bridge (`StaffDashboard.css`) |
 | /staff/finanzas · /staff/comercial · /staff/logistica | PrivateRouteStaff | — | funcional | Hubs de departamento (`StaffDepartamento`): hero del depto + tarjetas de módulos visibles por rol |
-| /staff/ventas | roles: contabilidad/administrador/director/admin | Finanzas | funcional | **Facturación** (`StaffFacturacion.jsx`): emitir facturas/recibos + notas de crédito y débito + historial + anular. Endpoints `/staff/contabilidad/facturas*` (migración `026_facturacion.sql`) |
+| /staff/ventas | roles: contabilidad/administrador/director/admin | Finanzas | funcional | **Facturación** (`StaffFacturacion.jsx`): **rediseñada 2026-10-14 (fase de pulido, Opción C "Cliente primero")** — la búsqueda de cliente es la entrada; al elegir cliente se abre su ficha de trabajo (órdenes por cerrar + barra de emitir + documentos del cliente). Los 5 tabs y los 4 botones de tipo dejaron de ser punto de entrada; el tipo se elige en la barra de emitir (`PanelEmitir` en `StaffFacturacionEmitir.jsx`). Ver sección "Fase de pulido" abajo. Endpoints `/staff/contabilidad/facturas*` (migración `026_facturacion.sql`) |
 | /staff/cuentas-por-cobrar | roles: contabilidad/administrador/director/admin | Finanzas | funcional | Clientes con línea de crédito (línea/deuda/saldo) + estado de cuenta al detallar (órdenes pendientes, facturas, pagos) (`StaffFinanzas.css`) |
 | /staff/ordenes-por-cancelar | roles: contabilidad/administrador/director/admin | Finanzas | funcional | Cola de órdenes contado en `preparando` (o legacy `procesando`) sin pago verificado; botón "Cancelar pedido" (`StaffFinanzas.css`) |
 | /staff/credito | roles: contabilidad/administrador/director/admin | Finanzas | funcional | **Crédito y cobranza** (`StaffCredito.jsx`): aging report, notas de cobranza, recordatorios push, freeze de crédito. Migración `026_credito_cobranza.sql` (ver AGENTS raíz) |
@@ -485,6 +517,42 @@ La pagina de crear orden a cliente (StaffOrdenes) usa **staffApi** (no el `api` 
 - **CSS**: clases nuevas `.si-head-datos`, `.si-form-datos`, `.si-grid-2`, `.si-textarea` en `StaffInventario.css`; reutiliza `.si-nota`/`.si-label`/`.si-btn`/`.si-fila-botones`/`.si-sin-permiso`/`.si-datos` y `.sp-input`/`.sp-check`/`.sp-select` de `StaffComercial.css`.
 - **Nunca `{ ...req.body }`**: el `PATCH /staff/inventario/:id` escribe solo la whitelist del backend (ver AGENTS del backend).
 
+## Fase de pulido — rediseño de páginas de trabajo staff (2026-10-14)
+
+El dueño abrió una **fase de pulido** de las páginas de trabajo del staff: rediseñar el layout de cada
+página para que el espacio de trabajo sea cómodo, con la regla **diseño primero, lógica después**.
+**Método completo, decisiones y estado: sección "Fase de pulido — rediseño de páginas de trabajo staff"
+del AGENTS.md raíz** (brainstorming + companion visual con mockups HTML aprobados por el dueño, opción
+de layout elegida explícitamente, verificación `npm run lint` + `npx vite build --mode development`).
+
+**Primera página: Facturación (`/staff/ventas`) — Opción C "Cliente primero, ficha de trabajo"**:
+
+- **Antes**: 5 tabs de página + 4 botones "Tipo de documento" = **dos navegaciones anidadas** que
+  hacían parecer que había que elegir un tipo/tab para empezar.
+- **Ahora**: la **búsqueda del cliente es la entrada**. Tres estados:
+  1. **Entrada**: `BuscadorCliente` (`GET /staff/clientes?buscar=`, debounce 300 ms, resultados
+     `.so-lista`/`.so-item`) + tarjetas "Clientes recientes" (derivadas de los documentos cargados: top
+     5 clientes por documento más reciente) + enlace "Ver todos los documentos…".
+  2. **Ficha del cliente**: header (nombre, RIF/email, chip de crédito solo si `linea_credito > 0`,
+     pill "Crédito bloqueado", botón "Cambiar cliente") + `<PanelEmitir key={cliente.id} cliente tasa
+     onEmitido>` + documentos del cliente con `DOC_CHIPS` + `TablaDocumentos`.
+  3. **Vista global**: buscador + chips + `TablaDocumentos mostrarCliente` (secundaria).
+- **Archivos**: `StaffFacturacion.jsx` (página search-first), `StaffFacturacionEmitir.jsx` (ahora
+  `export default function PanelEmitir({ cliente, tasa, onEmitido })`, sin tab y sin buscador propio; la
+  barra de emitir lleva los type-chips + N° + Nota + Emitir), `StaffFinanzas.css` (bloque de diseño
+  `.stf-*`). Reusa `.so-*` de `StaffOrdenes.css`.
+- **Decisiones de diseño** (no re-preguntar): "Suele cerrar con: Recibo/Factura" se **omitió** (no hay
+  campo que lo respalde); el contador "N pendientes" de los recientes **no** se implementó (necesita
+  endpoint nuevo → lógica diferida). El título de la sección de arriba es **dinámico** ("Órdenes por
+  cerrar (todavía sin documento)" vs "Datos de la nota") porque el selector de tipo va **debajo** de lo
+  que controla.
+- **🔴 Hallazgo de lógica (diferido, reportado)**: la búsqueda usa `GET /staff/clientes` (Comercial,
+  `ROLES_VENTAS`); una cuenta **`contabilidad` pura recibe 403**. Pre-existente (el buscador vivía en el
+  tab Emitir con el mismo endpoint); el rediseño lo hace visible. **No se corrigió** (es lógica). El
+  código lo documenta en un comentario dentro de `BuscadorCliente`.
+- **Deuda de lógica conocida (fuera de esta fase)**: "no toda orden es facturada pero lo ideal es cerrar
+  todas las órdenes a un recibo de cobro o factura" — la lógica de cierre puede tener bugs.
+
 ## Estados de órdenes — fuente única de verdad
 
 - **`src/config/estadosOrden.js`** es la ÚNICA fuente de verdad para labels, colores, descripciones y timeline de `order.status` (entrega y pago son dimensiones separadas — ver AGENTS.md raíz, sección "Arquitectura de ordenes").
@@ -521,16 +589,19 @@ inalcanzable, imposible de scrollear.
 Todos los logos de la empresa viven en **Supabase Storage** (bucket `crsnimages`, carpeta
 `logodrogueria/`) y se consumen desde **una sola fuente**: `src/config/logos.js`
 (`LOGO_COLOR_HORIZONTAL`, `LOGO_BLANCO`, `MINI_LOGO_COLOR`, `MINI_LOGO_TEAL`, `MINI_LOGO_AZUL` — con
-`%20` codificado). **Excepción (decisión del dueño, 2026-10-14)**: el **Navbar** sigue usando el asset
-local `src/assets/minilogo blanco sin fondo.png` — quiere el **mini logo blanco** ahí, no el wordmark
-horizontal; Supabase no tiene esa variante (solo el wordmark horizontal y los mini logos *con fondo de
-color*). Los demás `minilogo *.png` locales quedan sin uso.
+`%20` codificado). **Excepciones (decisión del dueño, 2026-10-14)** — el **Navbar** y el **login de
+clientes** (`Login.jsx`) siguen usando los mini logos locales `src/assets/minilogo blanco sin fondo.png`
+(Navbar) y `src/assets/minilogo color sin fondo.png` (login) — quiere el **mini logo** ahí (el de login es
+el mismo del navbar pero a color), no el wordmark horizontal; Supabase no tiene esa variante (solo el
+wordmark horizontal y los mini logos *con fondo de color*, que en esos fondos se ve como un recuadro). El
+resto de `minilogo *.png` locales queda sin uso.
 
 | Constante | Fondo | Consumidor |
 |---|---|---|
 | `LOGO_BLANCO` | oscuro (`#0052DC` StaffNavbar, `#1a1a3a` Footer) | `Footer.jsx`, `config/empresa.js` (`logoStaffUrl` → `StaffNavbar.jsx`) |
 | — (asset local) | `#0052DC` Navbar | `Navbar.jsx` → `src/assets/minilogo blanco sin fondo.png` |
-| `MINI_LOGO_COLOR` | claro (cards de auth) | `Login.jsx`, `RegistroConTipo/Institucional/Profesional/Honorifico/Invita.jsx`, `staff/StaffLogin.jsx`, `staff/StaffRegistro.jsx` |
+| — (asset local) | claro (login clientes) | `Login.jsx` → `src/assets/minilogo color sin fondo.png` (mismo del navbar pero a color) |
+| `MINI_LOGO_COLOR` | claro (cards de auth) | `RegistroConTipo/Institucional/Profesional/Honorifico/Invita.jsx`, `staff/StaffLogin.jsx`, `staff/StaffRegistro.jsx` |
 | `LOGO_COLOR_HORIZONTAL` | pill blanca | `CompartirProductoImagen.jsx` (`LOGO_URL`) |
 | `MINI_LOGO_TEAL` / `MINI_LOGO_AZUL` | badges | `Landing.jsx` (footer) |
 

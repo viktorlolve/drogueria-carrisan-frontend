@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Download, Bell, X } from 'lucide-react'
+import { Download, X } from 'lucide-react'
 import { usePush } from '../hooks/usePush'
 import { safeGetItem, safeSetItem } from '../utils/safeStorage'
 
@@ -12,7 +12,11 @@ function yaInstalado() {
 export default function BannerOnboarding() {
   const [visible, setVisible] = useState(false)
   const [deferredPrompt, setDeferredPrompt] = useState(null)
-  const { soportado, suscrito, permiso, pidiendoPermiso, activar } = usePush()
+  // `usePush` se usa SOLO para decidir la visibilidad del aviso de instalación.
+  // El botón de notificaciones se quitó: activar el push ahora lo invita el
+  // aviso fijo de Mi Cuenta (`AvisoNotificaciones`). El flujo de instalación
+  // (Safari → explicar cómo; Chrome → acción directa) se revisa más adelante.
+  const { soportado, permiso } = usePush()
 
   // Ajuste de estado en fase de render (patrón oficial de React): cuando el
   // permiso de notificaciones pasa a 'default' tras la detección asíncrona
@@ -39,16 +43,6 @@ export default function BannerOnboarding() {
     return () => window.removeEventListener('beforeinstallprompt', onBeforeInstall)
   }, [permiso, soportado])
 
-  useEffect(() => {
-    if (visible && suscrito && deferredPrompt === null) {
-      const timer = setTimeout(() => {
-        setVisible(false)
-        safeSetItem(STORAGE_KEYDismiss, '1')
-      }, 3000)
-      return () => clearTimeout(timer)
-    }
-  }, [visible, suscrito, deferredPrompt])
-
   if (!visible) return null
 
   async function handleInstalar() {
@@ -62,17 +56,12 @@ export default function BannerOnboarding() {
     }
   }
 
-  function handleNotificaciones() {
-    activar()
-  }
-
   function handleCerrar() {
     setVisible(false)
     safeSetItem(STORAGE_KEYDismiss, '1')
   }
 
   const showInstalar = deferredPrompt && !yaInstalado()
-  const showNotificaciones = soportado && !suscrito && permiso !== 'denied'
 
   return (
     <div className="banner-onboarding">
@@ -95,16 +84,6 @@ export default function BannerOnboarding() {
         {showInstalar && (
           <button type="button" className="banner-onboarding__btn banner-onboarding__btn--primario" onClick={handleInstalar}>
             <Download size={15} /> Instalar
-          </button>
-        )}
-        {showNotificaciones && (
-          <button
-            type="button"
-            className="banner-onboarding__btn banner-onboarding__btn--secundario"
-            onClick={handleNotificaciones}
-            disabled={pidiendoPermiso}
-          >
-            <Bell size={15} /> {pidiendoPermiso ? 'Activando…' : 'Notificaciones'}
           </button>
         )}
       </div>
