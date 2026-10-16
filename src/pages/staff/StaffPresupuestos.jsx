@@ -6,6 +6,9 @@ import './StaffComercial.css'
 import './StaffClientes.css'
 import './StaffPresupuestos.css'
 import { useStaffUI } from '../../hooks/useStaffUI'
+import StaffModal from '../../components/staff/StaffModal'
+import StaffEstado from '../../components/staff/StaffEstado'
+import { formatearUSD } from '../../utils/formato'
 
 function formatUSD(v) {
   return Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -48,70 +51,66 @@ function ModalPresupuestoDetalle({ presupuesto, onClose, onRecotizar, onGenerarP
   if (!presupuesto) return null
 
   return (
-    <div className="odm-overlay" onClick={onClose}>
-      <div className="odm-content" onClick={(e) => e.stopPropagation()}>
-        <button className="odm-close" onClick={onClose}>✕</button>
-        <div className="odm-header">
-          <div>
-            <p className="odm-numero">Presupuesto #{presupuesto.numero || presupuesto.id}</p>
-            <p className="odm-fecha">{formatFecha(presupuesto.fecha_creacion)}</p>
-          </div>
-          <span className="odm-badge" style={{
-            background: presupuesto.estado === 'vigente' ? '#d1fae5' : '#f3f4f6',
-            color: presupuesto.estado === 'vigente' ? '#059669' : '#6b7280',
-          }}>{presupuesto.estado}</span>
+    <StaffModal titulo={`Presupuesto #${presupuesto.numero || presupuesto.id}`} ancho="sm" onCerrar={onClose}>
+      <div className="odm-header">
+        <div>
+          <p className="odm-fecha">{formatFecha(presupuesto.fecha_creacion)}</p>
         </div>
-
-        {presupuesto.usuario && (
-          <div className="odm-cliente">
-            <div className="odm-cliente-avatar">{(presupuesto.usuario.nombre || '?').trim().charAt(0).toUpperCase()}</div>
-            <div className="odm-cliente-info">
-              <strong>{presupuesto.usuario.nombre}</strong>
-              <span>{presupuesto.usuario.email}</span>
-            </div>
-          </div>
-        )}
-
-        <div className="odm-divider" />
-
-        {error && <p className="kb-error">{error}</p>}
-        {cargando ? (
-          <p style={{ padding: '16px 0', fontSize: '0.9rem', color: '#6b7280' }}>Cargando detalle...</p>
-        ) : detalle ? (
-          <>
-            <div className="odm-section">
-              <p className="odm-section-title">Productos</p>
-              {(detalle.items || []).map((item, i) => (
-                <div key={i} className="odm-item">
-                  <div className="odm-item-body">
-                    <p className="odm-item-nombre">{item.nombre_comercial} × {item.cantidad}</p>
-                    <p className="odm-item-cantidad">
-                      {item.disponible
-                        ? `$${formatUSD(item.precio_unitario)} · Subtotal $${formatUSD(item.subtotal)}`
-                        : 'Sin precio disponible'}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {detalle.vencido && presupuesto.estado === 'vigente' && (
-              <p className="odm-notas" style={{ color: '#dc2626' }}>Vencido — recotiza antes de generar pedido.</p>
-            )}
-            <div className="odm-totales">
-              <div className="odm-total-final">
-                <span>Total</span>
-                <span className="odm-total-valor">${formatUSD(detalle.total_usd)}</span>
-              </div>
-            </div>
-          </>
-        ) : null}
-
-        <div className="kb-modal-acciones" style={{ marginTop: 12 }}>
-          <button className="kb-btn-rechazar" onClick={() => { onClose(); onRecotizar(presupuesto.id) }}>Recotizar</button>
-          <button className="kb-btn-responder" onClick={() => { onClose(); onGenerarPedido(presupuesto.id) }}>Generar pedido</button>
-        </div>
+        <span className="odm-badge" style={{
+          background: presupuesto.estado === 'vigente' ? '#d1fae5' : '#f3f4f6',
+          color: presupuesto.estado === 'vigente' ? '#059669' : '#6b7280',
+        }}>{presupuesto.estado}</span>
       </div>
-    </div>
+
+      {presupuesto.usuario && (
+        <div className="odm-cliente">
+          <div className="odm-cliente-avatar">{(presupuesto.usuario.nombre || '?').trim().charAt(0).toUpperCase()}</div>
+          <div className="odm-cliente-info">
+            <strong>{presupuesto.usuario.nombre}</strong>
+            <span>{presupuesto.usuario.email}</span>
+          </div>
+        </div>
+      )}
+
+      <div className="odm-divider" />
+
+      {error && <p className="kb-error">{error}</p>}
+      {cargando ? (
+        <StaffEstado tipo="cargando" filas={2} />
+      ) : detalle ? (
+        <>
+          <div className="odm-section">
+            <p className="odm-section-title">Productos</p>
+            {(detalle.items || []).map((item, i) => (
+              <div key={i} className="odm-item">
+                <div className="odm-item-body">
+                  <p className="odm-item-nombre">{item.nombre_comercial} × {item.cantidad}</p>
+                  <p className="odm-item-cantidad">
+                    {item.disponible
+                      ? `$${formatUSD(item.precio_unitario)} · Subtotal $${formatUSD(item.subtotal)}`
+                      : 'Sin precio disponible'}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+          {detalle.vencido && presupuesto.estado === 'vigente' && (
+            <p className="odm-notas" style={{ color: '#dc2626' }}>Vencido — recotiza antes de generar pedido.</p>
+          )}
+          <div className="odm-totales">
+            <div className="odm-total-final">
+              <span>Total</span>
+              <span className="odm-total-valor">{formatearUSD(detalle.total_usd)}</span>
+            </div>
+          </div>
+        </>
+      ) : null}
+
+      <div className="kb-modal-acciones" style={{ marginTop: 12 }}>
+        <button className="kb-btn-rechazar" onClick={() => { onClose(); onRecotizar(presupuesto.id) }}>Recotizar</button>
+        <button className="kb-btn-responder" onClick={() => { onClose(); onGenerarPedido(presupuesto.id) }}>Generar pedido</button>
+      </div>
+    </StaffModal>
   )
 }
 
@@ -119,30 +118,50 @@ function StaffPresupuestos({ departamento = 'comercial', activo = 'presupuestos'
   const { confirmar, avisar } = useStaffUI()
   const [estado, setEstado] = useState('')
   const [pagina, setPagina] = useState(1)
-  const [presupuestos, setPresupuestos] = useState([])
-  const [totalPaginas, setTotalPaginas] = useState(1)
-  const [cargando, setCargando] = useState(true)
+  // Resultado de la última consulta, etiquetado con el filtro y la página que pidió:
+  // nunca se muestra una lista de otro filtro ni una lista vieja tras un error.
+  const [resultado, setResultado] = useState(null) // { clave, presupuestos, totalPaginas } | { clave, error }
+  const [intento, setIntento] = useState(0)
   const [modal, setModal] = useState(null)
   const [crearModal, setCrearModal] = useState(false)
 
+  const claveActual = `${estado}|${pagina}`
+
   useEffect(() => {
     let vivo = true
+    const clave = `${estado}|${pagina}`
     staffApi.get('/staff/presupuestos', { params: { estado: estado || undefined, pagina } })
       .then(({ data }) => {
-        if (!vivo) return
-        setPresupuestos(data?.presupuestos || [])
-        setTotalPaginas(data?.total_paginas || 1)
+        if (vivo) setResultado({ clave, presupuestos: data?.presupuestos || [], totalPaginas: data?.total_paginas || 1 })
       })
-      .catch((err) => { console.error('Error al listar presupuestos', err) })
-      .finally(() => { if (vivo) setCargando(false) })
+      .catch((err) => {
+        if (!vivo) return
+        console.error('Error al listar presupuestos', err)
+        setResultado({ clave, error: err.response?.data?.error || 'No se pudieron cargar los presupuestos' })
+      })
     return () => { vivo = false }
-  }, [estado, pagina])
+  }, [estado, pagina, intento])
+
+  const vigente = resultado && resultado.clave === claveActual ? resultado : null
+  const presupuestos = vigente?.presupuestos || []
+  const totalPaginas = vigente?.totalPaginas || 1
+  const error = vigente?.error || ''
+  const cargando = !vigente
+
+  // Vuelve a pedir la lista sin ocultarla (tras recotizar / generar pedido).
+  function recargar() {
+    setIntento((n) => n + 1)
+  }
+
+  function reintentar() {
+    setResultado(null)
+    setIntento((n) => n + 1)
+  }
 
   async function recotizar(id) {
     try {
       await staffApi.post(`/staff/presupuestos/${id}/recotizar`)
-      const { data } = await staffApi.get('/staff/presupuestos', { params: { estado: estado || undefined, pagina } })
-      setPresupuestos(data?.presupuestos || [])
+      recargar()
     } catch (err) {
       avisar(err.response?.data?.error || 'Error al recotizar', 'error')
     }
@@ -153,22 +172,10 @@ function StaffPresupuestos({ departamento = 'comercial', activo = 'presupuestos'
     try {
       await staffApi.post(`/staff/presupuestos/${id}/generar-pedido`)
       avisar(`Pedido generado desde el presupuesto #${id}.`)
-      const { data } = await staffApi.get('/staff/presupuestos', { params: { estado: estado || undefined, pagina } })
-      setPresupuestos(data?.presupuestos || [])
+      recargar()
     } catch (err) {
       avisar(err.response?.data?.error || 'Error al generar pedido', 'error')
     }
-  }
-
-  if (cargando) {
-    return (
-      <LayoutDepartamento departamento={departamento} activo={activo} titulo={titulo}>
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Cargando presupuestos...</p>
-        </div>
-      </LayoutDepartamento>
-    )
   }
 
   return (
@@ -181,15 +188,19 @@ function StaffPresupuestos({ departamento = 'comercial', activo = 'presupuestos'
       </div>
 
       <div className="sc-lista-solicitudes" style={{ marginTop: 12 }}>
-        {presupuestos.length === 0 ? (
-          <p className="sc-vacio">Sin presupuestos.</p>
+        {cargando ? (
+          <StaffEstado tipo="cargando" filas={4} />
+        ) : error ? (
+          <StaffEstado tipo="error" mensaje={error} onReintentar={reintentar} />
+        ) : presupuestos.length === 0 ? (
+          <StaffEstado tipo="vacio" titulo="Sin presupuestos." />
         ) : (
           presupuestos.map((p) => (
             <div key={p.id} className="sc-solicitud-card" onClick={() => setModal(p)}>
               <div className="sc-solicitud-info">
                 <span className="sc-solicitud-id">#{p.numero || p.id}</span>
                 <span className="sc-solicitud-meta" style={{ marginLeft: 8 }}>
-                  {p.usuario?.nombre || `Cliente #${p.usuario_id}`} · {formatFecha(p.fecha_creacion)} · ${formatUSD(p.total_usd)}
+                  {p.usuario?.nombre || `Cliente #${p.usuario_id}`} · {formatFecha(p.fecha_creacion)} · {formatearUSD(p.total_usd)}
                 </span>
               </div>
               <span className={`sc-badge ${p.estado === 'vigente' ? 'sc-badge--activo' : 'sc-badge--tipo'}`}>{p.estado}</span>
@@ -216,9 +227,7 @@ function StaffPresupuestos({ departamento = 'comercial', activo = 'presupuestos'
         <ModalCrearPresupuesto
           onClose={() => setCrearModal(false)}
           onCreado={() => {
-            staffApi.get('/staff/presupuestos', { params: { estado: estado || undefined, pagina } })
-              .then(({ data }) => setPresupuestos(data?.presupuestos || []))
-              .catch(() => {})
+            recargar()
             setCrearModal(false)
           }}
         />

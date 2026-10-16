@@ -3,6 +3,7 @@ import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import './StaffComercial.css'
 import { useStaffUI } from '../../hooks/useStaffUI'
+import StaffEstado from '../../components/staff/StaffEstado'
 
 const LINEAS = ['Linea Hospitalaria', 'Linea Farmacia', 'Material Medico']
 const ITEMS_POR_PAGINA = 20
@@ -111,6 +112,7 @@ function StaffPrecios() {
     staffApi.get(`/staff/precios?${params.toString()}`)
       .then((res) => {
         if (!activo) return
+        setError('')
         setProductos(res.data.productos || res.data)
         setTotal(res.data.total != null ? res.data.total : (res.data.length || 0))
         setSeleccion((prev) => prev.filter((id) => (res.data.productos || res.data).some((p) => p.id === id)))
@@ -296,10 +298,10 @@ function StaffPrecios() {
           Mostrando {productos.length} de {total} productos
         </div>
 
-        {error && <p className="sp-error">{error}</p>}
+        {error && <p className="sp-error" role="alert">{error}</p>}
 
         {cargando ? (
-          <div className="sp-loading">Cargando precios...</div>
+          <StaffEstado tipo="cargando" filas={5} />
         ) : (
           <div className="sp-table-wrap">
             <table className="sp-table">

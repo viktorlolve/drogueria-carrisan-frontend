@@ -2,6 +2,9 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import './StaffChat.css'
+import { Search, RefreshCw, MessageCircle } from 'lucide-react'
+import StaffEstado from '../../components/staff/StaffEstado'
+import { useStaffUI } from '../../hooks/useStaffUI'
 
 // ---------------------------------------------------------------
 // Comunicaciones (Comercial staff). Centro de mensajes cliente-empresa:
@@ -38,12 +41,32 @@ function StaffChat() {
   const [cargandoMensajes, setCargandoMensajes] = useState(false)
   const [texto, setTexto] = useState('')
   const [enviando, setEnviando] = useState(false)
+  const [errorMensajes, setErrorMensajes] = useState('')
+  const { avisar } = useStaffUI()
   const scrollRef = useRef(null)
   const activaIdRef = useRef(null)
 
   useEffect(() => {
     activaIdRef.current = conversacionActiva?.id ?? null
   }, [conversacionActiva])
+
+  // Carga inicial. `cargando` ya arranca en true, por eso no se vuelve a marcar aquí.
+  // (Sin este efecto la página se quedaba en "Cargando..." hasta pulsar Reintentar.)
+  useEffect(() => {
+    let vivo = true
+    staffApi.get('/staff/chat/conversaciones')
+      .then(({ data }) => {
+        if (!vivo) return
+        setConversaciones(ordenarConversaciones(data))
+        setError('')
+      })
+      .catch((err) => {
+        console.error(err)
+        if (vivo) setError('No se pudieron cargar las conversaciones')
+      })
+      .finally(() => { if (vivo) setCargando(false) })
+    return () => { vivo = false }
+  }, [])
 
   async function cargarConversaciones() {
     try {
@@ -70,7 +93,8 @@ function StaffChat() {
         const actual = data.find((c) => c.id === actId)
         if (actual) setConversacionActiva((prev) => (prev && prev.id === actId ? actual : prev))
         const { data: msgs } = await staffApi.get(`/staff/chat/conversaciones/${actId}/mensajes`)
-        setMensajes(msgs)
+        // Si mientras tanto se abrió otra conversación, estos mensajes ya no corresponden.
+        if (activaIdRef.current === actId) setMensajes(msgs)
       }
     } catch (err) {
       console.error('Error al refrescar conversaciones:', err)
@@ -84,17 +108,26 @@ function StaffChat() {
 
   async function abrirConversacion(conv) {
     setConversacionActiva(conv)
+    // Se actualiza ya (el efecto lo hace después del render) para poder descartar
+    // respuestas de una conversación anterior si se cambia de hilo rápido.
+    activaIdRef.current = conv.id
+    setMensajes([])
+    setErrorMensajes('')
     setCargandoMensajes(true)
     try {
       const { data } = await staffApi.get(`/staff/chat/conversaciones/${conv.id}/mensajes`)
+      if (activaIdRef.current !== conv.id) return
       setMensajes(data)
       setConversaciones((prev) =>
         prev.map((c) => (c.id === conv.id ? { ...c, no_leidos: 0 } : c))
       )
     } catch (err) {
       console.error('Error al cargar mensajes:', err)
+      if (activaIdRef.current === conv.id) {
+        setErrorMensajes(err.response?.data?.error || 'No se pudieron cargar los mensajes')
+      }
     } finally {
-      setCargandoMensajes(false)
+      if (activaIdRef.current === conv.id) setCargandoMensajes(false)
     }
   }
 
@@ -115,7 +148,10 @@ function StaffChat() {
         `/staff/chat/conversaciones/${conversacionActiva.id}/mensajes`,
         { contenido }
       )
-      setMensajes((prev) => [...prev, nuevoMensaje])
+      // Solo se agrega al hilo visible si sigue siendo el mismo que se respondió.
+      if (activaIdRef.current === conversacionActiva.id) {
+        setMensajes((prev) => [...prev, nuevoMensaje])
+      }
       setConversaciones((prev) =>
         ordenarConversaciones(
           prev.map((c) =>
@@ -128,6 +164,7 @@ function StaffChat() {
     } catch (err) {
       console.error('Error al enviar mensaje:', err)
       setTexto(contenido)
+      avisar(err.response?.data?.error || 'No se pudo enviar el mensaje. Tu texto sigue en el cuadro para reintentar.', 'error')
     } finally {
       setEnviando(false)
     }
@@ -160,7 +197,7 @@ function StaffChat() {
           <aside className={`scc-list ${conversacionActiva ? 'scc-list--oculto-movil' : ''}`}>
             <div className="scc-list__toolbar">
               <div className="scc-buscar">
-                <span className="scc-buscar__icon">🔍</span>
+                <span className="scc-buscar__icon"><Search size={14} /></span>
                 <input
                   type="text"
                   placeholder="Buscar por cliente, email u orden..."
@@ -175,13 +212,13 @@ function StaffChat() {
                 onClick={refrescarConversaciones}
                 title="Actualizar"
               >
-                🔄
+                <RefreshCw size={15} />
               </button>
             </div>
 
             <div className="scc-list__scroll">
               {cargando ? (
-                <p className="scc-vacio">Cargando conversaciones...</p>
+                <StaffEstado tipo="cargando" filas={4} />
               ) : conversacionesFiltradas.length === 0 ? (
                 <p className="scc-vacio">No se encontraron conversaciones</p>
               ) : (
@@ -216,7 +253,7 @@ function StaffChat() {
           <section className="scc-panel">
             {!conversacionActiva ? (
               <div className="scc-vacio scc-vacio--panel">
-                <span>💬</span>
+                <span className="scc-vacio__icono"><MessageCircle size={32} /></span>
                 <p>Selecciona una conversación para responder</p>
               </div>
             ) : (
@@ -242,7 +279,9 @@ function StaffChat() {
 
                 <div className="scc-panel__mensajes" ref={scrollRef}>
                   {cargandoMensajes ? (
-                    <p className="scc-vacio">Cargando mensajes...</p>
+                    <StaffEstado tipo="cargando" filas={3} />
+                  ) : errorMensajes ? (
+                    <StaffEstado tipo="error" mensaje={errorMensajes} onReintentar={() => abrirConversacion(conversacionActiva)} />
                   ) : (
                     mensajes.map((m) => (
                       <div

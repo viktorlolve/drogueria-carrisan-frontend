@@ -11,13 +11,14 @@ import './StaffComercial.css'
 import './StaffTesoreria.css'
 import './StaffClientes.css'
 import { useStaffUI } from '../../hooks/useStaffUI'
+import StaffModal from '../../components/staff/StaffModal'
+import { Pencil } from 'lucide-react'
+import StaffEstado from '../../components/staff/StaffEstado'
+import { formatearUSD } from '../../utils/formato'
 
 // -----------------------------------------------------------------
 // Helpers
 // -----------------------------------------------------------------
-function formatUSD(v) {
-  return Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
 function formatFecha(f) {
   if (!f) return '—'
   return new Date(f).toLocaleDateString('es-VE', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -29,7 +30,7 @@ const DOC_LABELS = { rif: 'RIF', estado_cuenta: 'Estado de cuenta', referencia_c
 // Tab: Resumen
 // -----------------------------------------------------------------
 function TabResumen({ cliente, perfil, credito }) {
-  if (!cliente) return <p className="sc-loading">Cargando...</p>
+  if (!cliente) return <StaffEstado tipo="cargando" filas={3} />
 
   return (
     <>
@@ -91,19 +92,19 @@ function TabResumen({ cliente, perfil, credito }) {
           <div className="sc-credito-cards">
             <div className="st-resumen-card" style={{ background: '#f0fdf4' }}>
               <span>Línea de crédito</span>
-              <strong>${formatUSD(credito.linea_credito)}</strong>
+              <strong>{formatearUSD(credito.linea_credito)}</strong>
             </div>
             <div className="st-resumen-card" style={{ background: '#fef2f2' }}>
               <span>Deuda total</span>
-              <strong style={{ color: credito.deuda_total > 0 ? '#dc2626' : '#111827' }}>${formatUSD(credito.deuda_total)}</strong>
+              <strong style={{ color: credito.deuda_total > 0 ? '#dc2626' : '#111827' }}>{formatearUSD(credito.deuda_total)}</strong>
             </div>
             <div className="st-resumen-card" style={{ background: credito.deuda_vencida > 0 ? '#fef2f2' : '#f9fafb' }}>
               <span>Deuda vencida</span>
-              <strong style={{ color: credito.deuda_vencida > 0 ? '#dc2626' : '#111827' }}>${formatUSD(credito.deuda_vencida)}</strong>
+              <strong style={{ color: credito.deuda_vencida > 0 ? '#dc2626' : '#111827' }}>{formatearUSD(credito.deuda_vencida)}</strong>
             </div>
             <div className="st-resumen-card" style={{ background: '#eff6ff' }}>
               <span>Saldo disponible</span>
-              <strong>${formatUSD(credito.saldo)}</strong>
+              <strong>{formatearUSD(credito.saldo)}</strong>
             </div>
           </div>
           {credito.credito_bloqueado && (
@@ -123,16 +124,27 @@ function TabResumen({ cliente, perfil, credito }) {
 function TabPedidos({ clienteId }) {
   const [ordenes, setOrdenes] = useState([])
   const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState('')
+  const [intento, setIntento] = useState(0)
 
   useEffect(() => {
+    let vivo = true
     staffApi.get(`/staff/clientes/${clienteId}/ordenes`)
-      .then(({ data }) => setOrdenes(data || []))
-      .catch(() => setOrdenes([]))
-      .finally(() => setCargando(false))
-  }, [clienteId])
+      .then(({ data }) => {
+        if (!vivo) return
+        setOrdenes(data || [])
+        setError('')
+      })
+      .catch((err) => {
+        if (vivo) setError(err.response?.data?.error || 'No se pudieron cargar las órdenes del cliente')
+      })
+      .finally(() => { if (vivo) setCargando(false) })
+    return () => { vivo = false }
+  }, [clienteId, intento])
 
-  if (cargando) return <p className="sc-loading">Cargando órdenes...</p>
-  if (!ordenes.length) return <p className="sc-vacio">Este cliente no tiene órdenes.</p>
+  if (cargando) return <StaffEstado tipo="cargando" filas={3} />
+  if (error) return <StaffEstado tipo="error" mensaje={error} onReintentar={() => { setCargando(true); setIntento((n) => n + 1) }} />
+  if (!ordenes.length) return <StaffEstado tipo="vacio" titulo="Este cliente no tiene órdenes." />
 
   return (
     <div className="sc-pedidos-lista">
@@ -165,7 +177,7 @@ function TabPedidos({ clienteId }) {
                 {fulfillment?.label || o.tipo_envio} · {o.forma_pago === 'credito' ? 'Crédito' : 'Contado'}
                 {o.estado_pago ? ` · Pago: ${o.estado_pago}` : ''}
               </span>
-              <span className="sc-pedido-total">${formatUSD(o.total_usd)}</span>
+              <span className="sc-pedido-total">{formatearUSD(o.total_usd)}</span>
             </div>
           </div>
         )
@@ -183,15 +195,24 @@ function TabPresupuestos({ clienteId, crearModal, setCrearModal }) {
   const [cotizaciones, setCotizaciones] = useState([])
   const [requerimientos, setRequerimientos] = useState([])
   const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState('')
+  const [intento, setIntento] = useState(0)
   const [modal, setModal] = useState(null) // { tipo: 'presupuesto'|'cotizacion'|'requerimiento', data }
 
   useEffect(() => {
+    let vivo = true
     Promise.all([
       staffApi.get(`/staff/clientes/${clienteId}/presupuestos`).then(({ data }) => setPresupuestos(data || [])),
       staffApi.get(`/staff/clientes/${clienteId}/cotizaciones`).then(({ data }) => setCotizaciones(data || [])),
       staffApi.get(`/staff/clientes/${clienteId}/requerimientos`).then(({ data }) => setRequerimientos(data || [])),
-    ]).catch(() => {}).finally(() => setCargando(false))
-  }, [clienteId])
+    ])
+      .then(() => { if (vivo) setError('') })
+      .catch((err) => {
+        if (vivo) setError(err.response?.data?.error || 'No se pudieron cargar las solicitudes del cliente')
+      })
+      .finally(() => { if (vivo) setCargando(false) })
+    return () => { vivo = false }
+  }, [clienteId, intento])
 
   async function recotizar(id) {
     try {
@@ -229,7 +250,8 @@ function TabPresupuestos({ clienteId, crearModal, setCrearModal }) {
     setRequerimientos((prev) => prev.map((r) => (r.id === id ? data : r)))
   }
 
-  if (cargando) return <p className="sc-loading">Cargando presupuestos...</p>
+  if (cargando) return <StaffEstado tipo="cargando" filas={3} />
+  if (error) return <StaffEstado tipo="error" mensaje={error} onReintentar={() => { setCargando(true); setIntento((n) => n + 1) }} />
 
   return (
     <>
@@ -247,7 +269,7 @@ function TabPresupuestos({ clienteId, crearModal, setCrearModal }) {
               <div key={p.id} className="sc-solicitud-card" onClick={() => setModal({ tipo: 'presupuesto', data: p })}>
                 <div className="sc-solicitud-info">
                   <span className="sc-solicitud-id">#{p.numero || p.id}</span>
-                  <span className="sc-solicitud-meta" style={{ marginLeft: 8 }}>{formatFecha(p.fecha_creacion)} · ${formatUSD(p.total_usd)}</span>
+                  <span className="sc-solicitud-meta" style={{ marginLeft: 8 }}>{formatFecha(p.fecha_creacion)} · {formatearUSD(p.total_usd)}</span>
                 </div>
                 <div className="sc-solicitud-acciones">
                   <span className={`sc-badge ${p.estado === 'vigente' ? 'sc-badge--activo' : 'sc-badge--tipo'}`}>{p.estado}</span>
@@ -310,28 +332,24 @@ function TabPresupuestos({ clienteId, crearModal, setCrearModal }) {
 
       {/* Modal Detalle Presupuesto */}
       {modal?.tipo === 'presupuesto' && (
-        <div className="odm-overlay" onClick={() => setModal(null)}>
-          <div className="odm-content" onClick={(e) => e.stopPropagation()}>
-            <button className="odm-close" onClick={() => setModal(null)}>✕</button>
-            <div className="odm-header">
-              <div>
-                <p className="odm-numero">Presupuesto #{modal.data.numero || modal.data.id}</p>
-                <p className="odm-fecha">{formatFecha(modal.data.fecha_creacion)}</p>
-              </div>
-              <span className="odm-badge" style={{
-                background: modal.data.estado === 'vigente' ? '#d1fae5' : '#f3f4f6',
-                color: modal.data.estado === 'vigente' ? '#059669' : '#6b7280',
-              }}>{modal.data.estado}</span>
+        <StaffModal titulo={`Presupuesto #${modal.data.numero || modal.data.id}`} ancho="sm" onCerrar={() => setModal(null)}>
+          <div className="odm-header">
+            <div>
+              <p className="odm-fecha">{formatFecha(modal.data.fecha_creacion)}</p>
             </div>
-            <p style={{ fontSize: '0.85rem', color: '#6b7280', margin: '8px 0 16px' }}>
-              Expira: {formatFecha(modal.data.fecha_expiracion)} · Total: ${formatUSD(modal.data.total_usd)}
-            </p>
-            <div className="kb-modal-acciones">
-              <button className="kb-btn-rechazar" onClick={() => { setModal(null); recotizar(modal.data.id) }}>Recotizar</button>
-              <button className="kb-btn-responder" onClick={() => { setModal(null); generarPedido(modal.data.id) }}>Generar pedido</button>
-            </div>
+            <span className="odm-badge" style={{
+              background: modal.data.estado === 'vigente' ? '#d1fae5' : '#f3f4f6',
+              color: modal.data.estado === 'vigente' ? '#059669' : '#6b7280',
+            }}>{modal.data.estado}</span>
           </div>
-        </div>
+          <p style={{ fontSize: '0.85rem', color: '#6b7280', margin: '8px 0 16px' }}>
+            Expira: {formatFecha(modal.data.fecha_expiracion)} · Total: {formatearUSD(modal.data.total_usd)}
+          </p>
+          <div className="kb-modal-acciones">
+            <button className="kb-btn-rechazar" onClick={() => { setModal(null); recotizar(modal.data.id) }}>Recotizar</button>
+            <button className="kb-btn-responder" onClick={() => { setModal(null); generarPedido(modal.data.id) }}>Generar pedido</button>
+          </div>
+        </StaffModal>
       )}
 
       {/* Modal Detalle Cotización */}
@@ -378,13 +396,23 @@ function TabDocumentos({ clienteId }) {
   const [solicitudes, setSolicitudes] = useState([])
   const [cargando, setCargando] = useState(true)
   const [seleccionada, setSeleccionada] = useState(null)
+  const [error, setError] = useState('')
+  const [intento, setIntento] = useState(0)
 
   useEffect(() => {
+    let vivo = true
     staffApi.get('/staff/documentos', { params: { usuario_id: clienteId } })
-      .then(({ data }) => setSolicitudes(Array.isArray(data) ? data : []))
-      .catch(() => setSolicitudes([]))
-      .finally(() => setCargando(false))
-  }, [clienteId])
+      .then(({ data }) => {
+        if (!vivo) return
+        setSolicitudes(Array.isArray(data) ? data : [])
+        setError('')
+      })
+      .catch((err) => {
+        if (vivo) setError(err.response?.data?.error || 'No se pudieron cargar los documentos del cliente')
+      })
+      .finally(() => { if (vivo) setCargando(false) })
+    return () => { vivo = false }
+  }, [clienteId, intento])
 
   async function handleAprobar(id, payload) {
     const { data } = await staffApi.patch(`/staff/documentos/${id}/aprobar`, payload)
@@ -396,8 +424,9 @@ function TabDocumentos({ clienteId }) {
     setSolicitudes((prev) => prev.map((s) => (s.id === id ? data : s)))
   }
 
-  if (cargando) return <p className="sc-loading">Cargando documentos...</p>
-  if (!solicitudes.length) return <p className="sc-vacio">Sin solicitudes de documentos.</p>
+  if (cargando) return <StaffEstado tipo="cargando" filas={3} />
+  if (error) return <StaffEstado tipo="error" mensaje={error} onReintentar={() => { setCargando(true); setIntento((n) => n + 1) }} />
+  if (!solicitudes.length) return <StaffEstado tipo="vacio" titulo="Sin solicitudes de documentos." />
 
   return (
     <>
@@ -452,38 +481,34 @@ function ModalDocumentoCompacto({ solicitud, onClose, onAprobar, onRechazar }) {
   }
 
   return (
-    <div className="odm-overlay" onClick={onClose}>
-      <div className="odm-content" onClick={(e) => e.stopPropagation()}>
-        <button className="odm-close" onClick={onClose}>✕</button>
-        <div className="odm-header">
-          <div>
-            <p className="odm-numero">Solicitud #{solicitud.id}</p>
-            <p className="odm-fecha">{formatFecha(solicitud.fecha_solicitud)}</p>
-          </div>
-          <span className="odm-badge" style={{
-            background: solicitud.estado === 'pendiente' ? '#fef3c7' : solicitud.estado === 'aprobada' ? '#d1fae5' : '#fee2e2',
-            color: solicitud.estado === 'pendiente' ? '#f59e0b' : solicitud.estado === 'aprobada' ? '#059669' : '#dc2626',
-          }}>{solicitud.estado}</span>
+    <StaffModal titulo={`Solicitud #${solicitud.id}`} ancho="sm" onCerrar={onClose} bloqueado={enviando}>
+      <div className="odm-header">
+        <div>
+          <p className="odm-fecha">{formatFecha(solicitud.fecha_solicitud)}</p>
         </div>
-        <div className="odm-section" style={{ marginTop: 12 }}>
-          <p className="odm-section-title">{DOC_LABELS[solicitud.tipo_documento]}</p>
-          {solicitud.descripcion && <p className="odm-notas">{solicitud.descripcion}</p>}
-        </div>
-        {solicitud.estado === 'pendiente' && !solicitud.es_automatica && (
-          <div className="odm-section" style={{ marginTop: 12 }}>
-            <textarea placeholder="Nota (opcional)" value={nota} onChange={(e) => setNota(e.target.value)}
-              rows={2} className="odm-estado-select" style={{ resize: 'vertical', marginBottom: 10, width: '100%', boxSizing: 'border-box' }} />
-            {error && <p className="kb-error">{error}</p>}
-            <div className="kb-modal-acciones">
-              <button className="kb-btn-rechazar" onClick={handleRechazar} disabled={enviando}>Rechazar</button>
-              <button className="kb-btn-responder" onClick={handleAprobar} disabled={enviando}>
-                {enviando ? 'Guardando...' : 'Marcar como enviado'}
-              </button>
-            </div>
-          </div>
-        )}
+        <span className="odm-badge" style={{
+          background: solicitud.estado === 'pendiente' ? '#fef3c7' : solicitud.estado === 'aprobada' ? '#d1fae5' : '#fee2e2',
+          color: solicitud.estado === 'pendiente' ? '#f59e0b' : solicitud.estado === 'aprobada' ? '#059669' : '#dc2626',
+        }}>{solicitud.estado}</span>
       </div>
-    </div>
+      <div className="odm-section" style={{ marginTop: 12 }}>
+        <p className="odm-section-title">{DOC_LABELS[solicitud.tipo_documento]}</p>
+        {solicitud.descripcion && <p className="odm-notas">{solicitud.descripcion}</p>}
+      </div>
+      {solicitud.estado === 'pendiente' && !solicitud.es_automatica && (
+        <div className="odm-section" style={{ marginTop: 12 }}>
+          <textarea placeholder="Nota (opcional)" value={nota} onChange={(e) => setNota(e.target.value)}
+            rows={2} className="odm-estado-select" style={{ resize: 'vertical', marginBottom: 10, width: '100%', boxSizing: 'border-box' }} />
+          {error && <p className="kb-error">{error}</p>}
+          <div className="kb-modal-acciones">
+            <button className="kb-btn-rechazar" onClick={handleRechazar} disabled={enviando}>Rechazar</button>
+            <button className="kb-btn-responder" onClick={handleAprobar} disabled={enviando}>
+              {enviando ? 'Guardando...' : 'Marcar como enviado'}
+            </button>
+          </div>
+        </div>
+      )}
+    </StaffModal>
   )
 }
 
@@ -558,7 +583,7 @@ function StaffClienteFicha() {
   if (cargando) {
     return (
       <LayoutDepartamento departamento="comercial" activo="clientes" titulo="Ficha del cliente">
-        <p className="sc-loading">Cargando ficha...</p>
+        <StaffEstado tipo="cargando" filas={4} />
       </LayoutDepartamento>
     )
   }
@@ -606,7 +631,7 @@ function StaffClienteFicha() {
                 </span>
               )}
               {!editandoEtiqueta && (
-                <button className="sc-etiqueta-editar" onClick={iniciarEdicionEtiqueta}>✎ Cambiar etiqueta</button>
+                <button className="sc-etiqueta-editar" onClick={iniciarEdicionEtiqueta}><Pencil size={12} /> Cambiar etiqueta</button>
               )}
               {!cliente?.activo && <span className="sc-badge sc-badge--bloqueado">Inactivo</span>}
               {credito?.credito_bloqueado && <span className="sc-badge sc-badge--bloqueado">Crédito bloqueado</span>}

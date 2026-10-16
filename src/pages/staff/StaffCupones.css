@@ -191,6 +191,9 @@
 }
 
 .cup-copiar {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   background: none;
   border: none;
   color: #6B7280;

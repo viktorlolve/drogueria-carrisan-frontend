@@ -4,10 +4,8 @@ import { useNavigate } from 'react-router-dom'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import './StaffClientes.css'
-
-function formatUSD(valor) {
-  return Number(valor).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
+import StaffEstado from '../../components/staff/StaffEstado'
+import { formatearUSD } from '../../utils/formato'
 
 function StaffClientes({ departamento = 'comercial', activo = 'clientes', titulo = 'Clientes' }) {
   const navigate = useNavigate()
@@ -22,8 +20,12 @@ function StaffClientes({ departamento = 'comercial', activo = 'clientes', titulo
   const [etiqueta, setEtiqueta] = useState('')
   const [etiquetas, setEtiquetas] = useState([])
   const debounceRef = useRef(null)
+  const peticion = useRef(0)
+  const [error, setError] = useState('')
 
   const cargar = useCallback(async (pag) => {
+    // Solo cuenta la última petición: una búsqueda lenta no debe pisar a otra más reciente.
+    const id = ++peticion.current
     setCargando(true)
     try {
       const params = { pagina: pag, por_pagina: 20 }
@@ -32,15 +34,19 @@ function StaffClientes({ departamento = 'comercial', activo = 'clientes', titulo
       if (etiqueta) params.etiqueta = etiqueta
 
       const { data } = await staffApi.get('/staff/clientes', { params })
+      if (id !== peticion.current) return
+      setError('')
       setClientes(data?.clientes || [])
       setTotal(data?.total || 0)
       setPagina(data?.pagina || 1)
       setTotalPaginas(data?.total_paginas || 1)
       setEtiquetas(data?.etiquetas || [])
-    } catch {
+    } catch (err) {
+      if (id !== peticion.current) return
       setClientes([])
+      setError(err.response?.data?.error || 'No se pudieron cargar los clientes')
     } finally {
-      setCargando(false)
+      if (id === peticion.current) setCargando(false)
     }
   }, [buscar, tipo, etiqueta])
 
@@ -81,9 +87,11 @@ function StaffClientes({ departamento = 'comercial', activo = 'clientes', titulo
       </div>
 
       {cargando ? (
-        <p className="sc-cargando">Cargando clientes...</p>
+        <StaffEstado tipo="cargando" filas={5} />
+      ) : error ? (
+        <StaffEstado tipo="error" mensaje={error} onReintentar={() => cargar(1)} />
       ) : clientes.length === 0 ? (
-        <p className="sc-vacio">No se encontraron clientes.</p>
+        <StaffEstado tipo="vacio" titulo="No se encontraron clientes." />
       ) : (
         <>
           <div className="sc-table-wrap">
@@ -123,9 +131,9 @@ function StaffClientes({ departamento = 'comercial', activo = 'clientes', titulo
                         </span>
                       ) : '—'}
                     </td>
-                    <td className="sc-money">{c.linea_credito > 0 ? `$${formatUSD(c.linea_credito)}` : '—'}</td>
+                    <td className="sc-money">{c.linea_credito > 0 ? formatearUSD(c.linea_credito) : '—'}</td>
                     <td className={`sc-money ${c.deuda_actual > 0 ? 'sc-money--warn' : ''}`}>
-                      {c.deuda_actual > 0 ? `$${formatUSD(c.deuda_actual)}` : '$0'}
+                      {c.deuda_actual > 0 ? formatearUSD(c.deuda_actual) : formatearUSD(0)}
                     </td>
                     <td>
                       {c.credito_bloqueado

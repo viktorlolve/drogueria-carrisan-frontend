@@ -5,6 +5,7 @@ import StaffTabs from '../../components/staff/StaffTabs'
 import { ModalCotizacion, ModalRequerimientoDetalle } from '../../components/staff/StaffComercialModals'
 import './StaffComercial.css'
 import './StaffClientes.css'
+import StaffEstado from '../../components/staff/StaffEstado'
 
 const COLUMNAS_COTIZACION = [
   { estado: 'pendiente', titulo: 'Pendientes', color: '#f59e0b', bg: '#fef3c7' },
@@ -74,16 +75,30 @@ function RequerimientoCardKanban({ requerimiento, onClick }) {
 function TabCotizaciones() {
   const [cotizaciones, setCotizaciones] = useState([])
   const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState('')
+  const [intento, setIntento] = useState(0)
   const [seleccionada, setSeleccionada] = useState(null)
 
   useEffect(() => {
     let vivo = true
     staffApi.get('/staff/cotizaciones')
-      .then(({ data }) => { if (vivo) setCotizaciones(Array.isArray(data) ? data : []) })
-      .catch((err) => { console.error('Error al cargar cotizaciones', err) })
+      .then(({ data }) => {
+        if (!vivo) return
+        setCotizaciones(Array.isArray(data) ? data : [])
+        setError('')
+      })
+      .catch((err) => {
+        console.error('Error al cargar cotizaciones', err)
+        if (vivo) setError(err.response?.data?.error || 'No se pudieron cargar las cotizaciones')
+      })
       .finally(() => { if (vivo) setCargando(false) })
     return () => { vivo = false }
-  }, [])
+  }, [intento])
+
+  function reintentar() {
+    setCargando(true)
+    setIntento((n) => n + 1)
+  }
 
   async function handleResponder(id, payload) {
     const { data } = await staffApi.patch(`/staff/cotizaciones/${id}/responder`, payload)
@@ -102,7 +117,8 @@ function TabCotizaciones() {
     }))
   }, [cotizaciones])
 
-  if (cargando) return <p className="sc-loading">Cargando cotizaciones...</p>
+  if (cargando) return <StaffEstado tipo="cargando" filas={3} />
+  if (error) return <StaffEstado tipo="error" mensaje={error} onReintentar={reintentar} />
 
   return (
     <div className="kb-board-wrap">
@@ -140,16 +156,30 @@ function TabCotizaciones() {
 function TabRequerimientos() {
   const [requerimientos, setRequerimientos] = useState([])
   const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState('')
+  const [intento, setIntento] = useState(0)
   const [seleccionado, setSeleccionado] = useState(null)
 
   useEffect(() => {
     let vivo = true
     staffApi.get('/staff/requerimientos')
-      .then(({ data }) => { if (vivo) setRequerimientos(Array.isArray(data) ? data : []) })
-      .catch((err) => { console.error('Error al cargar requerimientos', err) })
+      .then(({ data }) => {
+        if (!vivo) return
+        setRequerimientos(Array.isArray(data) ? data : [])
+        setError('')
+      })
+      .catch((err) => {
+        console.error('Error al cargar requerimientos', err)
+        if (vivo) setError(err.response?.data?.error || 'No se pudieron cargar los requerimientos')
+      })
       .finally(() => { if (vivo) setCargando(false) })
     return () => { vivo = false }
-  }, [])
+  }, [intento])
+
+  function reintentar() {
+    setCargando(true)
+    setIntento((n) => n + 1)
+  }
 
   async function handleResponder(id, payload) {
     const { data } = await staffApi.patch(`/staff/requerimientos/${id}/responder`, payload)
@@ -163,7 +193,8 @@ function TabRequerimientos() {
     }))
   }, [requerimientos])
 
-  if (cargando) return <p className="sc-loading">Cargando requerimientos...</p>
+  if (cargando) return <StaffEstado tipo="cargando" filas={3} />
+  if (error) return <StaffEstado tipo="error" mensaje={error} onReintentar={reintentar} />
 
   return (
     <div className="kb-board-wrap">

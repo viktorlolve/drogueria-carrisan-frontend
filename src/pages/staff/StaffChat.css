@@ -76,9 +76,11 @@
 }
 
 .scc-buscar__icon {
-  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
   opacity: 0.6;
 }
+.scc-vacio__icono { display: inline-flex; opacity: 0.55; }
 
 .scc-buscar__input {
   flex: 1;
@@ -92,6 +94,10 @@
 }
 
 .scc-refrescar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
   border: none;
   background: #f1f5f9;
   border-radius: 8px;

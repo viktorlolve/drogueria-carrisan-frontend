@@ -53,3 +53,12 @@
 @media (prefers-reduced-motion: reduce) {
   .stfm-overlay, .stfm-panel { animation: none; }
 }
+
+/* iOS hace zoom al enfocar campos con menos de 16px: en móvil, todo campo de
+   formulario dentro de un modal del staff usa 16px (gana por especificidad a
+   los tamaños de cada página). */
+@media (max-width: 640px) {
+  .stfm-portal .stfm-cuerpo input:not([type='checkbox']):not([type='radio']),
+  .stfm-portal .stfm-cuerpo textarea,
+  .stfm-portal .stfm-cuerpo select { font-size: 16px; }
+}

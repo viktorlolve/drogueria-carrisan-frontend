@@ -312,69 +312,19 @@
 .ra-fila__resultado--ok { color: #10b981; }
 .ra-fila__resultado--rechazado { color: #ef4444; }
 
-/* ============ MODAL odm-* (scope bajo .kb-board-wrap) ============
-   Mismas reglas que OrdenDetalleModal.css pero scoped y con los
-   tokens locales — el staff no debe depender del CSS del panel. */
-.kb-board-wrap .odm-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(16, 16, 38, 0.5);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  z-index: 1000;
-  font-family: var(--font-body);
-  backdrop-filter: blur(2px);
-}
+/* ============ CONTENIDO de los modales odm-* (scope .stfm-portal) ============
+   El marco (overlay, cerrar, hoja inferior en móvil) lo pone StaffModal, que
+   se monta en document.body. Antes estas reglas colgaban de .kb-board-wrap,
+   que solo existe en Solicitudes: en Ficha y Presupuestos los modales
+   quedaban sin estilo. */
 
-.kb-board-wrap .odm-content {
-  position: relative;
-  background: var(--surface);
-  width: 100%;
-  max-width: 520px;
-  max-height: 85vh;
-  overflow-y: auto;
-  border-radius: 20px 20px 0 0;
-  padding: 24px 20px calc(20px + env(safe-area-inset-bottom));
-  animation: sd-odm-slide-up 0.2s ease-out;
-  box-shadow: var(--shadow-lg);
-}
 
-@keyframes sd-odm-slide-up {
-  from { transform: translateY(24px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
 
-@media (min-width: 640px) {
-  .kb-board-wrap .odm-overlay { align-items: center; padding: 1rem; }
-  .kb-board-wrap .odm-content { border-radius: var(--radius-lg); max-height: 80vh; }
-}
 
-.kb-board-wrap .odm-close {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: none;
-  background: var(--slate-100);
-  color: var(--slate-500);
-  font-size: 0.85rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s ease;
-}
 
-.kb-board-wrap .odm-close:hover {
-  background: var(--slate-200);
-  color: var(--ink);
-}
 
 /* ---------- Header ---------- */
-.kb-board-wrap .odm-header {
+.stfm-portal .odm-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -383,7 +333,7 @@
   margin-bottom: 4px;
 }
 
-.kb-board-wrap .odm-numero {
+.stfm-portal .odm-numero {
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 1.2rem;
@@ -391,28 +341,28 @@
   margin: 0;
 }
 
-.kb-board-wrap .odm-fecha {
+.stfm-portal .odm-fecha {
   font-size: 0.85rem;
   color: var(--slate-500);
   margin: 0 0 10px;
   text-transform: capitalize;
 }
 
-.kb-board-wrap .odm-divider {
+.stfm-portal .odm-divider {
   height: 1px;
   background: var(--slate-200);
   margin: 16px 0;
 }
 
 /* ---------- Cliente ---------- */
-.kb-board-wrap .odm-cliente {
+.stfm-portal .odm-cliente {
   display: flex;
   align-items: center;
   gap: 12px;
   margin: 4px 0 0;
 }
 
-.kb-board-wrap .odm-cliente-avatar {
+.stfm-portal .odm-cliente-avatar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -426,25 +376,25 @@
   flex-shrink: 0;
 }
 
-.kb-board-wrap .odm-cliente-info {
+.stfm-portal .odm-cliente-info {
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
 }
 
-.kb-board-wrap .odm-cliente-info strong {
+.stfm-portal .odm-cliente-info strong {
   color: var(--ink);
   font-size: 0.9rem;
 }
 
-.kb-board-wrap .odm-cliente-info span {
+.stfm-portal .odm-cliente-info span {
   color: var(--slate-500);
   font-size: 0.8rem;
 }
 
 /* ---------- Badge de estado ---------- */
-.kb-board-wrap .odm-badge {
+.stfm-portal .odm-badge {
   flex-shrink: 0;
   font-size: 0.72rem;
   font-weight: 700;
@@ -456,11 +406,11 @@
 }
 
 /* ---------- Secciones genéricas ---------- */
-.kb-board-wrap .odm-section {
+.stfm-portal .odm-section {
   margin: 0;
 }
 
-.kb-board-wrap .odm-section-title {
+.stfm-portal .odm-section-title {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -473,18 +423,18 @@
   letter-spacing: 0.03em;
 }
 
-.kb-board-wrap .odm-section-icon {
+.stfm-portal .odm-section-icon {
   font-size: 1rem;
 }
 
 /* ---------- Lista de productos ---------- */
-.kb-board-wrap .odm-item {
+.stfm-portal .odm-item {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.kb-board-wrap .odm-item-media {
+.stfm-portal .odm-item-media {
   width: 52px;
   height: 52px;
   flex-shrink: 0;
@@ -496,23 +446,23 @@
   justify-content: center;
 }
 
-.kb-board-wrap .odm-item-media img {
+.stfm-portal .odm-item-media img {
   width: 100%;
   height: 100%;
   object-fit: contain;
   padding: 4px;
 }
 
-.kb-board-wrap .odm-item-placeholder {
+.stfm-portal .odm-item-placeholder {
   font-size: 1.3rem;
 }
 
-.kb-board-wrap .odm-item-body {
+.stfm-portal .odm-item-body {
   flex: 1;
   min-width: 0;
 }
 
-.kb-board-wrap .odm-item-nombre {
+.stfm-portal .odm-item-nombre {
   font-weight: 600;
   font-size: 0.88rem;
   color: var(--ink);
@@ -520,7 +470,7 @@
   line-height: 1.3;
 }
 
-.kb-board-wrap .odm-item-cantidad {
+.stfm-portal .odm-item-cantidad {
   font-family: var(--font-display);
   font-size: 0.78rem;
   color: var(--slate-500);
@@ -528,20 +478,20 @@
 }
 
 /* ---------- Totales ---------- */
-.kb-board-wrap .odm-totales {
+.stfm-portal .odm-totales {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.kb-board-wrap .odm-total-row {
+.stfm-portal .odm-total-row {
   display: flex;
   justify-content: space-between;
   font-size: 0.85rem;
   color: var(--slate-500);
 }
 
-.kb-board-wrap .odm-total-final {
+.stfm-portal .odm-total-final {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -552,7 +502,7 @@
   color: var(--ink);
 }
 
-.kb-board-wrap .odm-total-valor {
+.stfm-portal .odm-total-valor {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 1.25rem;
@@ -560,7 +510,7 @@
 }
 
 /* ---------- Select/inputs del modal ---------- */
-.kb-board-wrap .odm-estado-select {
+.stfm-portal .odm-estado-select {
   width: 100%;
   padding: 10px 12px;
   border-radius: var(--radius-sm);
@@ -573,14 +523,14 @@
   cursor: pointer;
 }
 
-.kb-board-wrap .odm-estado-select:focus {
+.stfm-portal .odm-estado-select:focus {
   outline: none;
   border-color: var(--blue);
   box-shadow: 0 0 0 3px var(--blue-50);
 }
 
 /* ---------- Notas ---------- */
-.kb-board-wrap .odm-notas {
+.stfm-portal .odm-notas {
   font-size: 0.85rem;
   color: var(--slate-700);
   line-height: 1.5;
@@ -842,85 +792,53 @@
   color: #c62828;
 }
 
-/* Modal */
-.promo-admin__modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-}
-.promo-admin__modal {
-  background: #fff;
-  border-radius: 12px;
-  width: 100%;
-  max-width: 480px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-.promo-admin__modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid #eee;
-}
-.promo-admin__modal-header h3 {
-  margin: 0;
-  font-size: 1rem;
-}
-.promo-admin__modal-header button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #666;
-}
-.promo-admin__modal-body {
+/* Modal de plantillas: el marco (overlay, cabecera, cerrar) lo pone StaffModal;
+   aquí solo el contenido, con scope al portal para no mezclarse con
+   PromocionesAdmin.css (mismos nombres de clase, panel de administración). */
+.stfm-portal .promo-admin__modal-body {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding: 20px;
+  padding: 0;
 }
-.promo-admin__modal-body label {
+.stfm-portal .promo-admin__modal-body label {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-.promo-admin__modal-body label span {
+.stfm-portal .promo-admin__modal-body label span {
   font-size: 0.82rem;
   font-weight: 600;
-  color: #333;
+  color: var(--stf-indigo, #1A1A3A);
 }
-.promo-admin__modal-body input,
-.promo-admin__modal-body textarea {
+.stfm-portal .promo-admin__modal-body input,
+.stfm-portal .promo-admin__modal-body textarea {
   padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 0.88rem;
+  border: 1.5px solid var(--stf-borde, #E6E8F0);
+  border-radius: 10px;
+  font-size: 16px; /* iOS hace zoom al enfocar campos con menos de 16px */
   font-family: inherit;
   resize: vertical;
 }
-.promo-admin__modal-body input:focus,
-.promo-admin__modal-body textarea:focus {
-  outline: none;
-  border-color: #1a6b3c;
+.stfm-portal .promo-admin__modal-body input:focus,
+.stfm-portal .promo-admin__modal-body textarea:focus {
+  outline: 2px solid var(--stf-azul, #0052DC);
+  outline-offset: 1px;
+  border-color: transparent;
 }
-.promo-admin__modal-row {
+.stfm-portal .promo-admin__modal-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
-.promo-admin__modal-footer {
+.stfm-portal .promo-admin__modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  padding: 16px 20px;
-  border-top: 1px solid #eee;
+  padding: 16px 0 0;
+  margin-top: 16px;
+  border-top: 1px solid var(--stf-borde, #E6E8F0);
 }
-
 /* Responsive */
 @media (max-width: 900px) {
   .kb-board {
@@ -948,7 +866,7 @@
   .promo-admin__grid {
     grid-template-columns: 1fr;
   }
-  .promo-admin__modal-row {
+  .stfm-portal .promo-admin__modal-row {
     grid-template-columns: 1fr;
   }
 }/* ===== Modulo Precios (/staff/precios) ===== */

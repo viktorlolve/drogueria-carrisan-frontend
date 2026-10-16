@@ -4,6 +4,8 @@ import { Search, Plus, Minus, X } from 'lucide-react'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import './StaffOrdenes.css'
+import { useStaffUI } from '../../hooks/useStaffUI'
+import { formatearUSD } from '../../utils/formato'
 
 function formatUSD(valor) {
   return Number(valor).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -37,6 +39,9 @@ function StaffOrdenes() {
   const [ordenCreada, setOrdenCreada] = useState(null)
 
   const debounceCliente = useRef(null)
+  const seqCliente = useRef(0)
+  const seqProducto = useRef(0)
+  const { avisar } = useStaffUI()
   const debounceProducto = useRef(null)
 
   const [searchParams] = useSearchParams()
@@ -61,22 +66,25 @@ function StaffOrdenes() {
     if (queryCliente.trim().length < 2) return
 
     debounceCliente.current = setTimeout(async () => {
+      const id = ++seqCliente.current
       setBuscandoClientes(true)
       try {
         const { data } = await staffApi.get('/staff/clientes', {
           params: { buscar: queryCliente.trim() },
         })
-        setResultadosClientes(data?.clientes || data || [])
+        if (id === seqCliente.current) setResultadosClientes(data?.clientes || data || [])
       } catch (err) {
         console.error('Error buscando clientes', err)
+        if (id !== seqCliente.current) return
         setResultadosClientes([])
+        avisar(err.response?.data?.error || 'No se pudo buscar clientes. Intenta de nuevo.', 'error')
       } finally {
-        setBuscandoClientes(false)
+        if (id === seqCliente.current) setBuscandoClientes(false)
       }
     }, 300)
 
     return () => clearTimeout(debounceCliente.current)
-  }, [queryCliente])
+  }, [queryCliente, avisar])
 
   // Direcciones del cliente elegido (solo si es delivery)
   useEffect(() => {
@@ -89,15 +97,16 @@ function StaffOrdenes() {
         setDirecciones(data)
         setDireccionId(data[0]?.id ? String(data[0].id) : '')
       })
-      .catch(() => {
+      .catch((err) => {
         if (!activo) return
         setDirecciones([])
         setDireccionId('')
+        avisar(err.response?.data?.error || 'No se pudieron cargar las direcciones del cliente', 'error')
       })
     return () => {
       activo = false
     }
-  }, [cliente, tipoEnvio])
+  }, [cliente, tipoEnvio, avisar])
 
   // Búsqueda de productos
   useEffect(() => {
@@ -106,22 +115,25 @@ function StaffOrdenes() {
     if (queryProducto.trim().length < 1) return
 
     debounceProducto.current = setTimeout(async () => {
+      const id = ++seqProducto.current
       setBuscandoProductos(true)
       try {
         const { data } = await staffApi.get('/staff/productos', {
           params: { buscar: queryProducto.trim() },
         })
-        setResultadosProductos(data.slice(0, 8))
+        if (id === seqProducto.current) setResultadosProductos(data.slice(0, 8))
       } catch (err) {
         console.error('Error buscando productos', err)
+        if (id !== seqProducto.current) return
         setResultadosProductos([])
+        avisar(err.response?.data?.error || 'No se pudo buscar productos. Intenta de nuevo.', 'error')
       } finally {
-        setBuscandoProductos(false)
+        if (id === seqProducto.current) setBuscandoProductos(false)
       }
     }, 250)
 
     return () => clearTimeout(debounceProducto.current)
-  }, [queryProducto])
+  }, [queryProducto, avisar])
 
   const clientesVisibles = queryCliente.trim().length < 2 ? [] : resultadosClientes
   const productosVisibles = queryProducto.trim().length < 1 ? [] : resultadosProductos
@@ -201,7 +213,7 @@ function StaffOrdenes() {
       const { data } = await staffApi.post('/staff/ordenes', payload)
       setOrdenCreada(data)
       setFilas([])
-      setMensaje({ tipo: 'exito', texto: `Orden #${data.id} creada por $${formatUSD(data.total_usd || total)}` })
+      setMensaje({ tipo: 'exito', texto: `Orden #${data.id} creada por ${formatearUSD(data.total_usd || total)}` })
     } catch (err) {
       setMensaje({ tipo: 'error', texto: err.response?.data?.error || 'No se pudo crear la orden' })
     } finally {
@@ -375,7 +387,7 @@ function StaffOrdenes() {
 
             <div className="so-footer-total">
               <span>Total</span>
-              <span>${formatUSD(total)}</span>
+              <span>{formatearUSD(total)}</span>
             </div>
 
             <button
@@ -384,7 +396,7 @@ function StaffOrdenes() {
               onClick={crearOrden}
               disabled={filas.length === 0 || creando}
             >
-              {creando ? 'Creando orden...' : `Crear orden · $${formatUSD(total)}`}
+              {creando ? 'Creando orden...' : `Crear orden · ${formatearUSD(total)}`}
             </button>
           </div>
         </>

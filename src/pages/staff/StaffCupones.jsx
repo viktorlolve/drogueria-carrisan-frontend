@@ -3,10 +3,9 @@ import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import './StaffCupones.css'
 import { useStaffUI } from '../../hooks/useStaffUI'
-
-function formatUSD(valor) {
-  return Number(valor || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
+import { Check } from 'lucide-react'
+import StaffEstado from '../../components/staff/StaffEstado'
+import { formatearUSD } from '../../utils/formato'
 
 function formatFecha(iso) {
   if (!iso) return '—'
@@ -112,7 +111,7 @@ export default function StaffCupones() {
   }
 
   const textoValor = (cupon) => (
-    cupon.tipo === 'porcentaje' ? `${Number(cupon.valor)}%` : `$${formatUSD(cupon.valor)}`
+    cupon.tipo === 'porcentaje' ? `${Number(cupon.valor)}%` : formatearUSD(cupon.valor)
   )
 
   return (
@@ -240,7 +239,7 @@ export default function StaffCupones() {
           <div className="cup-panel">
             <h3 className="cup-panel__titulo">Cupones generados</h3>
             {cargando ? (
-              <p className="cup-vacio">Cargando…</p>
+              <StaffEstado tipo="cargando" filas={3} />
             ) : cupones.length === 0 ? (
               <p className="cup-vacio">Todavía no hay cupones generados.</p>
             ) : (
@@ -268,7 +267,7 @@ export default function StaffCupones() {
                               className="cup-copiar"
                               onClick={() => handleCopiar(cupon)}
                             >
-                              {copiado === cupon.id ? '✓ Copiado' : 'Copiar'}
+                              {copiado === cupon.id ? <><Check size={13} /> Copiado</> : 'Copiar'}
                             </button>
                           </td>
                           <td>{textoValor(cupon)}</td>

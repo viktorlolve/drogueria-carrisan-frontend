@@ -19,20 +19,20 @@ function detectarPlataforma() {
 }
 
 const PASOS_IOS = [
-  { fuerte: 'Tocá el botón Compartir', detalle: 'El ícono del cuadro con flecha ↑ en la barra de abajo' },
-  { fuerte: 'Seleccioná "Agregar a pantalla de inicio"', detalle: 'Desplazate hacia abajo si no lo ves de inmediato' },
-  { fuerte: 'Tocá "Agregar"', detalle: 'Listo, la app queda en tu pantalla de inicio' },
+  { fuerte: 'Toca el botón Compartir', detalle: 'El ícono del cuadro con flecha ↑ en la barra de abajo' },
+  { fuerte: 'Selecciona "Agregar a pantalla de inicio"', detalle: 'Desplázate hacia abajo si no lo ves de inmediato' },
+  { fuerte: 'Toca "Agregar"', detalle: 'Listo, la app queda en tu pantalla de inicio' },
 ]
 
 const PASOS_ANDROID = [
-  { fuerte: 'Tocá el menú ⋮ de Chrome', detalle: 'Los tres puntos, arriba a la derecha' },
-  { fuerte: 'Elegí "Instalar aplicación"', detalle: 'Aparece dentro del menú de opciones' },
-  { fuerte: 'Tocá "Instalar"', detalle: 'La app se agrega sola a tu pantalla de inicio' },
+  { fuerte: 'Toca el menú ⋮ de Chrome', detalle: 'Los tres puntos, arriba a la derecha' },
+  { fuerte: 'Elige "Instalar aplicación"', detalle: 'Aparece dentro del menú de opciones' },
+  { fuerte: 'Toca "Instalar"', detalle: 'La app se agrega sola a tu pantalla de inicio' },
 ]
 
 const PASOS_DESKTOP = [
-  { fuerte: 'Tocá el icono de instalar', detalle: 'En la barra de direcciones de Chrome o Edge' },
-  { fuerte: 'Confirmá con "Instalar"', detalle: 'El navegador la abre como una aplicación propia' },
+  { fuerte: 'Toca el icono de instalar', detalle: 'En la barra de direcciones de Chrome o Edge' },
+  { fuerte: 'Confirma con "Instalar"', detalle: 'El navegador la abre como una aplicación propia' },
   { fuerte: 'Usala desde tu escritorio', detalle: 'Queda un acceso directo a "Carrisan Staff"' },
 ]
 
@@ -43,7 +43,7 @@ function ModalInstalarStaff({ onClose }) {
   const sub =
     esAndroid
       ? 'Tu navegador no mostró la pregunta de instalación todavía. Puedes instalarla manualmente en unos segundos:'
-      : 'Instalá la app para acceder más rápido al panel interno.'
+      : 'Instala la app para acceder más rápido al panel interno.'
 
   return (
     <div className="sim-overlay" onClick={onClose}>

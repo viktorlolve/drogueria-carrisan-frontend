@@ -301,6 +301,17 @@ button.pg-paso__btn { cursor: pointer; }
   font-size: 0.78rem;
   color: var(--pg-apagado);
 }
+
+/* Días por vencer (verde = al día, rojo = vencida) */
+.pg-dias {
+  font-weight: 700;
+}
+.pg-dias--verde {
+  color: #16a34a;
+}
+.pg-dias--rojo {
+  color: #dc2626;
+}
 .pg-orden__monto {
   font-size: 1rem;
   font-weight: 800;

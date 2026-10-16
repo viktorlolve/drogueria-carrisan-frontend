@@ -1,8 +1,7 @@
 .sv { padding: 1rem 0; --sv-accent: var(--ldep-color, #2563EB); }
-.sv-cargando { padding: 3rem 1rem; text-align: center; color: #232B45; }
 .sv-error { background: #FEF2F2; color: #B91C1C; border: 1px solid #FECACA; border-radius: 8px; padding: .6rem 1rem; margin: .8rem 0; }
 .sv-toolbar { display: flex; gap: .6rem; margin: 1rem 0; flex-wrap: wrap; }
-.sv-btn { border: 1px solid #ddd; background: #fff; color: #232B45; border-radius: 8px; padding: .5rem .9rem; cursor: pointer; font-weight: 600; }
+.sv-btn { border: 1px solid #ddd; background: #fff; color: var(--stf-indigo, #1A1A3A); border-radius: 8px; padding: .5rem .9rem; cursor: pointer; font-weight: 600; }
 .sv-btn--guardar { background: var(--sv-accent); border-color: var(--sv-accent); color: #fff; }
 .sv-btn:disabled { opacity: .6; cursor: not-allowed; }
 .sv-link { background: none; border: none; color: var(--sv-accent); cursor: pointer; font-weight: 600; }

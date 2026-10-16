@@ -4,6 +4,7 @@ import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import StaffTabs from '../../components/staff/StaffTabs'
 import './StaffVitrina.css'
 import { useStaffUI } from '../../hooks/useStaffUI'
+import StaffEstado from '../../components/staff/StaffEstado'
 
 const BLOQUES = [
   { id: 'hero', label: 'Hero' },
@@ -58,7 +59,7 @@ export default function StaffVitrina() {
     }
   }
 
-  if (cargando) return <LayoutDepartamento departamento="comercial" activo="vitrina" titulo="Vitrina"><div className="sv-cargando">Cargando…</div></LayoutDepartamento>
+  if (cargando) return <LayoutDepartamento departamento="comercial" activo="vitrina" titulo="Vitrina"><StaffEstado tipo="cargando" filas={3} /></LayoutDepartamento>
 
   return (
     <LayoutDepartamento departamento="comercial" activo="vitrina" titulo="Vitrina">

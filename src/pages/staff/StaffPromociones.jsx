@@ -1,21 +1,23 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Edit3, Percent, Tag, Clock, X } from 'lucide-react'
+import { Plus, Trash2, Edit3, Percent, Tag, Clock } from 'lucide-react'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import './StaffComercial.css'
 import { useStaffUI } from '../../hooks/useStaffUI'
+import StaffModal from '../../components/staff/StaffModal'
+import StaffEstado from '../../components/staff/StaffEstado'
 
 const PLANTILLAS_PRECARGADAS = [
   { titulo: '¡20% en toda la farmacia!', mensaje: 'Aprovechá un 20% de descuento en todos los productos de línea farmacéutica. Solo por tiempo limitado.', descuento_pct: 20 },
   { titulo: 'Envío gratis en tu próximo pedido', mensaje: 'Hoy no pagás envío. Combiná lo que necesités y recibilo en tu puerta sin costo.', descuento_pct: null },
   { titulo: '3x2 en productos seleccionados', mensaje: 'Comprá 2 y llevá 3 en productos seleccionados del catálogo. ¡No te lo pierdas!', descuento_pct: null, codigo_cupon: '3X2' },
-  { titulo: 'Descuento exclusivo para clientes de crédito', mensaje: 'Si tenés línea de crédito activa, disfrutá un 15% extra en tu próxima compra.', descuento_pct: 15 },
+  { titulo: 'Descuento exclusivo para clientes de crédito', mensaje: 'Si tienes línea de crédito activa, disfruta un 15% extra en tu próxima compra.', descuento_pct: 15 },
   { titulo: 'Semana de la salud — hasta 30% OFF', mensaje: 'Semana especial con descuentos de hasta 30% en medicamentos y suplementos.', descuento_pct: 30 },
   { titulo: 'Nuevo producto disponible', mensaje: 'Llegó un producto nuevo al catálogo. ¡Sé de los primeros en pedirlo!', descuento_pct: null },
 ]
 
 function StaffPromociones({ departamento = 'comercial', activo = 'promociones', titulo = 'Promociones' }) {
-  const { confirmar } = useStaffUI()
+  const { confirmar, avisar } = useStaffUI()
   const [plantillas, setPlantillas] = useState([])
   const [historial, setHistorial] = useState([])
   const [cargando, setCargando] = useState(true)
@@ -25,6 +27,7 @@ function StaffPromociones({ departamento = 'comercial', activo = 'promociones', 
   const [tab, setTab] = useState('plantillas')
 
   const [form, setForm] = useState({ titulo: '', mensaje: '', descuento_pct: '', codigo_cupon: '' })
+  const [error, setError] = useState('')
 
   useEffect(() => {
     cargarDatos()
@@ -33,12 +36,17 @@ function StaffPromociones({ departamento = 'comercial', activo = 'promociones', 
   async function cargarDatos() {
     setCargando(true)
     try {
+      // El historial es secundario: si falla, la página sigue con las plantillas.
       const [plantillasRes, historialRes] = await Promise.all([
-        staffApi.get('/staff/promociones/templates').catch(() => ({ data: [] })),
+        staffApi.get('/staff/promociones/templates'),
         staffApi.get('/staff/promociones/history').catch(() => ({ data: [] })),
       ])
       setPlantillas(plantillasRes.data)
       setHistorial(historialRes.data)
+      setError('')
+    } catch (err) {
+      console.error('Error al cargar promociones', err)
+      setError(err.response?.data?.error || 'No se pudieron cargar las promociones')
     } finally {
       setCargando(false)
     }
@@ -80,6 +88,7 @@ function StaffPromociones({ departamento = 'comercial', activo = 'promociones', 
       cargarDatos()
     } catch (err) {
       console.error(err)
+      avisar(err.response?.data?.error || 'No se pudo guardar la plantilla', 'error')
     } finally {
       setGuardando(false)
     }
@@ -87,8 +96,12 @@ function StaffPromociones({ departamento = 'comercial', activo = 'promociones', 
 
   async function eliminarPlantilla(id) {
     if (!(await confirmar({ titulo: '¿Eliminar esta plantilla?', textoConfirmar: 'Eliminar', peligro: true }))) return
-    await staffApi.delete(`/staff/promociones/templates/${id}`)
-    cargarDatos()
+    try {
+      await staffApi.delete(`/staff/promociones/templates/${id}`)
+      cargarDatos()
+    } catch (err) {
+      avisar(err.response?.data?.error || 'No se pudo eliminar la plantilla', 'error')
+    }
   }
 
   function cargarPlantillaPrecargada(p) {
@@ -100,10 +113,15 @@ function StaffPromociones({ departamento = 'comercial', activo = 'promociones', 
   if (cargando) {
     return (
       <LayoutDepartamento departamento={departamento} activo={activo} titulo={titulo}>
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Cargando promociones...</p>
-        </div>
+        <StaffEstado tipo="cargando" filas={3} />
+      </LayoutDepartamento>
+    )
+  }
+
+  if (error) {
+    return (
+      <LayoutDepartamento departamento={departamento} activo={activo} titulo={titulo}>
+        <StaffEstado tipo="error" mensaje={error} onReintentar={cargarDatos} />
       </LayoutDepartamento>
     )
   }
@@ -127,7 +145,7 @@ function StaffPromociones({ departamento = 'comercial', activo = 'promociones', 
         {tab === 'plantillas' && (
           <div className="promo-admin__grid">
             {plantillas.length === 0 && (
-              <p className="promo-admin__vacio">No hay plantillas creadas. Creá una o usá las precargadas.</p>
+              <p className="promo-admin__vacio">No hay plantillas creadas. Crea una o usa las precargadas.</p>
             )}
             {plantillas.map(p => (
               <div className={`promo-admin__card ${!p.activa ? 'promo-admin__card--inactiva' : ''}`} key={p.id}>
@@ -202,12 +220,7 @@ function StaffPromociones({ departamento = 'comercial', activo = 'promociones', 
         )}
 
         {modalCrear && (
-          <div className="promo-admin__modal-overlay" onClick={() => setModalCrear(false)}>
-            <div className="promo-admin__modal" onClick={e => e.stopPropagation()}>
-              <div className="promo-admin__modal-header">
-                <h3>{editando ? 'Editar plantilla' : 'Nueva plantilla'}</h3>
-                <button onClick={() => setModalCrear(false)}><X size={18} /></button>
-              </div>
+          <StaffModal titulo={editando ? 'Editar plantilla' : 'Nueva plantilla'} ancho="sm" onCerrar={() => setModalCrear(false)} bloqueado={guardando}>
               <div className="promo-admin__modal-body">
                 <label>
                   <span>Título</span>
@@ -238,8 +251,7 @@ function StaffPromociones({ departamento = 'comercial', activo = 'promociones', 
                   {guardando ? 'Guardando…' : editando ? 'Guardar cambios' : 'Crear plantilla'}
                 </button>
               </div>
-            </div>
-          </div>
+          </StaffModal>
         )}
       </div>
     </LayoutDepartamento>

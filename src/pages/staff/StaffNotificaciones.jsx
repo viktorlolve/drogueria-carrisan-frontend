@@ -377,7 +377,7 @@ export default function StaffNotificaciones({ departamento }) {
             </div>
           ) : filtradas.length === 0 ? (
             <div className="notif-vacio">
-              <div className="notif-vacio__icon">🔔</div>
+              <div className="notif-vacio__icon"><Bell size={32} /></div>
               <h2>
                 No hay notificaciones
                 {filtro !== 'todas' ? ' en esta categoría' : soloNoLeidas ? ' sin leer' : ''}

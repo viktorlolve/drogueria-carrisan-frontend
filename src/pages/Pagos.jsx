@@ -18,7 +18,7 @@ import {
   X,
 } from 'lucide-react'
 import api from '../api/axios'
-import { formatearUSD, formatearVES, formatearFechaCorta } from '../utils/formato'
+import { formatearUSD, formatearVES } from '../utils/formato'
 import './Pagos.css'
 
 // ---------------------------------------------------------------
@@ -101,12 +101,7 @@ const formatearDiasVencer = (dias) => {
   return `Vence en ${dias} ${dias === 1 ? 'día' : 'días'}`
 }
 
-const claseDiasVencer = (dias) => {
-  if (dias === null || dias === undefined) return ''
-  if (dias < 0) return 'badge bg-danger'
-  if (dias === 0) return 'badge bg-warning text-dark'
-  return 'badge bg-success'
-}
+const estiloDiasVencer = (dias) => (dias < 0 ? 'pg-dias pg-dias--rojo' : 'pg-dias pg-dias--verde')
 
 // ---------------------------------------------------------------
 // Piezas
@@ -537,9 +532,9 @@ function Pagos() {
                 <div className="pg-ordenes">
                   {ordenes.map((orden) => {
                     const activa = seleccionadas.includes(orden.id)
-                    const fecha = formatearFechaCorta(orden.created_at)
+                    const dias = orden.dias_por_vencer
+                    const diasTxt = formatearDiasVencer(dias)
                     const articulos = textoArticulos(orden)
-                    const meta = [fecha, articulos].filter(Boolean).join(' · ')
                     return (
                       <label key={orden.id} className={`pg-orden ${activa ? 'pg-orden--activa' : ''}`}>
                         <input
@@ -553,15 +548,16 @@ function Pagos() {
                         </span>
                         <span className="pg-orden__info">
                           <span className="pg-orden__numero">Orden #{orden.id}</span>
-                          {meta && <span className="pg-orden__meta">{meta}</span>}
+                          <span className="pg-orden__meta">
+                            {diasTxt && (
+                              <span className={estiloDiasVencer(dias)}>{diasTxt}</span>
+                            )}
+                            {diasTxt && articulos && ' · '}
+                            {articulos}
+                          </span>
                           {orden.estado_pago === 'rechazado' && (
                             <span className="pg-chip pg-chip--error">
                               <AlertCircle size={12} /> Pago rechazado: vuelve a reportarlo
-                            </span>
-                          )}
-                          {orden.dias_por_vencer !== null && orden.dias_por_vencer !== undefined && (
-                            <span className={`pg-chip ${claseDiasVencer(orden.dias_por_vencer)}`}>
-                              {formatearDiasVencer(orden.dias_por_vencer)}
                             </span>
                           )}
                         </span>
