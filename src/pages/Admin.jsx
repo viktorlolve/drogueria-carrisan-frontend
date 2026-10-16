@@ -5,6 +5,7 @@ import OrdenesAdmin from '../components/admin/OrdenesAdmin'
 import NuevaOrdenRapida from '../components/admin/NuevaOrdenRapida'
 import ProductosAdmin from '../components/admin/ProductosAdmin'
 import UsuariosAdmin from '../components/admin/UsuariosAdmin'
+import PersonalAdmin from '../components/admin/PersonalAdmin'
 import EstadoCuentaAdmin from '../components/admin/EstadoCuentaAdmin'
 import DescuentosPanel from '../components/admin/DescuentosAdmin'
 import PagosAdmin from '../components/admin/PagosAdmin'
@@ -57,6 +58,7 @@ const TITULOS_SECCION = {
   requerimientos: 'Requerimientos',
   documentos: 'Documentos',
   usuarios: 'Usuarios',
+  personal: 'Personal',
   chat: 'Chat',
   promociones: 'Promociones',
   delivery: 'Delivery',
@@ -81,6 +83,7 @@ const SEGMENTO_A_ID = {
   requerimientos: 'requerimientos',
   documentos: 'documentos',
   usuarios: 'usuarios',
+  personal: 'personal',
   chat: 'chat',
   promociones: 'promociones',
   delivery: 'delivery',
@@ -118,6 +121,7 @@ function Admin() {
           <Route path="requerimientos" element={<RequerimientosAdmin />} />
           <Route path="documentos" element={<DocumentosAdmin />} />
           <Route path="usuarios" element={<UsuariosAdmin />} />
+          <Route path="personal" element={<PersonalAdmin />} />
           <Route path="gestion-codigos" element={<GestionCodigos />} />
           <Route path="chat" element={<ChatAdmin />} />
           <Route path="promociones" element={<PromocionesAdmin />} />

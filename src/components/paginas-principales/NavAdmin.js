@@ -11,7 +11,7 @@
 import {
   LayoutDashboard, Package, ShoppingCart, Users, Wallet, CreditCard,
   Tag, FileText, Inbox, MessagesSquare, DollarSign, Files, ReceiptText, Megaphone, Truck, FlaskConical, KeyRound, Activity,
-  Settings, ClipboardList,
+  Settings, ClipboardList, UserCog,
 } from 'lucide-react'
 
 export const NAV_ADMIN = [
@@ -65,6 +65,7 @@ export const NAV_ADMIN = [
     pie: true,
     items: [
       { id: 'usuarios', to: '/admin/usuarios', icono: Users, texto: 'Usuarios' },
+      { id: 'personal', to: '/admin/personal', icono: UserCog, texto: 'Personal' },
       { id: 'gestionCodigos', to: '/admin/gestion-codigos', icono: KeyRound, texto: 'Gestionar códigos' },
       { id: 'chat', to: '/admin/chat', icono: MessagesSquare, texto: 'Chat' },
     ],

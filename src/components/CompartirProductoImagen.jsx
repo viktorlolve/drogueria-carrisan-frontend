@@ -55,7 +55,6 @@ import {
   QR_Y,
   QR_LEYENDA,
   QR_LEYENDA_FUENTE,
-  QR_LEYENDA_LH,
   posicionLeyendaQR,
   fmtUsd,
   precioNumerico,
