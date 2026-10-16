@@ -21,11 +21,20 @@ import {
   altoBloqueFilas,
   escalaAutofit,
   escalaFilaPrecio,
+  centrarZonaMedia,
+  posicionLeyendaQR,
   armarTiraContacto,
   medirTiraContacto,
   CONTENIDO_ALTO,
   ALTO_CHECKS,
   ALTO_SEPARADOR,
+  MEDIA_H,
+  PIE_Y,
+  QR_X,
+  QR_Y,
+  QR_TAM,
+  QR_LEYENDA_GAP,
+  QR_LEYENDA_LH,
 } from '../src/components/compartirImagenHelpers.js'
 
 const PRODUCTO = {
@@ -199,6 +208,50 @@ test('escalaFilaPrecio: respeta x, gap y margen personalizados', () => {
   // left = (1000 - 200) / 2 = 400; disponible = 400 - 50 - 10 - 6 = 334; suma = 400
   const k = escalaFilaPrecio(300, 100, 200, { ancho: 1000, x: 50, gap: 10 })
   assert.ok(Math.abs(k - 334 / 400) < 1e-9)
+})
+
+/* ---------------- zona media centrada ---------------- */
+
+test('centrarZonaMedia: mismo aire arriba y abajo con el encabezado medido', () => {
+  // 1 línea: banda 388 → 388 + (1020 - 388 - 540) / 2 = 388 + 46 = 434
+  assert.equal(centrarZonaMedia(388), 434)
+  // 2 líneas: banda 458 → 458 + (1020 - 458 - 540) / 2 = 458 + 11 = 469
+  assert.equal(centrarZonaMedia(458), 469)
+})
+
+test('centrarZonaMedia: usa MEDIA_H y PIE_Y de la geometría (banda 0 → 240)', () => {
+  assert.equal(centrarZonaMedia(0), (PIE_Y - MEDIA_H) / 2)
+  assert.equal(centrarZonaMedia(0), 240)
+})
+
+test('centrarZonaMedia: el Math.max evita un Y negativo con encabezados muy altos', () => {
+  // (1020 - 1060 - 540) / 2 = -290 → el máximo lo deja pegado a la banda, sin solaparla
+  assert.equal(centrarZonaMedia(PIE_Y + 40), PIE_Y + 40)
+})
+
+/* ---------------- leyenda del QR ---------------- */
+
+test('posicionLeyendaQR: 3 líneas centradas contra la tarjeta y alineadas a su izquierda', () => {
+  const { xFin, baselines } = posicionLeyendaQR()
+  assert.equal(xFin, QR_X - QR_LEYENDA_GAP) // 864 - 18 = 846
+  assert.equal(baselines.length, 3)
+  const top = QR_Y + (QR_TAM - 3 * QR_LEYENDA_LH) / 2
+  assert.deepEqual(baselines, [0, 1, 2].map((i) => top + QR_LEYENDA_LH * (i + 0.78)))
+})
+
+test('posicionLeyendaQR: respeta overrides (x, y, tam, lineas, lh, gap)', () => {
+  const { xFin, baselines } = posicionLeyendaQR({
+    x: 200, y: 100, tam: 60, lineas: ['a', 'b'], lh: 20, gap: 10,
+  })
+  assert.equal(xFin, 190)
+  const top = 100 + (60 - 2 * 20) / 2
+  assert.deepEqual(baselines, [top + 20 * 0.78, top + 20 * 1.78])
+})
+
+test('posicionLeyendaQR: el bloque de tinta queda dentro de la tarjeta', () => {
+  const { baselines } = posicionLeyendaQR()
+  assert.ok(baselines[0] > QR_Y)
+  assert.ok(baselines[2] < QR_Y + QR_TAM)
 })
 
 /* ---------------- tira de contacto ---------------- */
