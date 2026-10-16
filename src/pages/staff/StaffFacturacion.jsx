@@ -125,20 +125,19 @@ function BuscadorCliente({ onElegir, autoFocus }) {
   const [buscando, setBuscando] = useState(false)
   const debounce = useRef(null)
 
-  // OJO (rol): `/staff/clientes` es el endpoint de Comercial
-  // (ROLES_VENTAS = vendedor/administrador/director/admin). Una cuenta de
-  // `contabilidad` pura recibe 403 aquí. Fue el comportamiento pre-existente
-  // (la búsqueda vivía dentro del tab Emitir) y se conserva a propósito: la
-  // fase de diseño NO toca la lógica. Para el ajuste de lógica: exponer un
-  // buscador de clientes bajo /staff/contabilidad (hoy `GET /clientes` de
-  // contabilidad solo devuelve clientes con crédito y no soporta `buscar`).
+  // Buscador de clientes de Finanzas. Usa el endpoint propio del modulo
+  // `/staff/contabilidad/clientes/buscar`, que reutiliza `listarClientes` de
+  // Comercial (buscar + paginacion + linea/deuda/saldo) pero con los roles de
+  // contabilidad. Antes pegaba contra `/staff/clientes` (Comercial, ROLES_VENTAS
+  // = vendedor/administrador/director/admin) y una cuenta de `contabilidad` pura
+  // recibia 403. Ver AGENTS raiz, seccion "Fase de pulido".
   useEffect(() => {
     if (debounce.current) clearTimeout(debounce.current)
     if (query.trim().length < 2) return
     debounce.current = setTimeout(() => {
       setBuscando(true)
       staffApi
-        .get('/staff/clientes', { params: { buscar: query.trim() } })
+        .get('/staff/contabilidad/clientes/buscar', { params: { buscar: query.trim() } })
         .then(({ data }) => setResultados(data?.clientes || data || []))
         .catch(() => setResultados([]))
         .finally(() => setBuscando(false))

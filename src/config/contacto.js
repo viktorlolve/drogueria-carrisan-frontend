@@ -26,6 +26,20 @@ export const CONTACTO = {
     tel: '+584145949532',
   },
 
+  // Redes sociales. `url` queda vacío a propósito: el dueño dio el nombre de usuario
+  // pero no el enlace, y la tira de contacto de la imagen solo muestra el texto
+  // (no enlaza). Cuando dé las URLs, se completan acá y las pantallas que enlacen
+  // las toman solas.
+  instagram: {
+    texto: '@dcarrisan',
+    url: '',
+  },
+
+  facebook: {
+    texto: 'Drogueria Carrisan',
+    url: '',
+  },
+
   horario: [
     { dias: 'Lunes a viernes', rango: '8:00 AM – 5:00 PM' },
     { dias: 'Sábado', rango: '8:00 AM – 12:00 PM' },

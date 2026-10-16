@@ -27,7 +27,7 @@ import { validarEmail, validarPassword } from '../../utils/validadores'
 import { useStaffAuth } from '../../context/StaffAuthContext'
 import api from '../../api/axios'
 import staffApi from '../../api/staffAxios'
-import { MINI_LOGO_COLOR as logo } from '../../config/logos'
+import logo from '../../assets/minilogo color sin fondo.png'
 
 /* Paleta de marca (staff = teal, no azul de cliente) */
 const TEAL = '#12A594'

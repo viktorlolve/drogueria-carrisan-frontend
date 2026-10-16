@@ -601,6 +601,7 @@ function ProductoDetalle() {
               </button>
               <CompartirProductoImagen
                 producto={producto}
+                detalles={detalles}
                 imagenUrl={galeria[imagenActiva] || producto.foto_url}
                 tasaVes={tasaVes}
               />

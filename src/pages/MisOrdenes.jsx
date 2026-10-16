@@ -116,14 +116,15 @@ function MisOrdenes() {
       <div className="mo-page">
         {error && <p className="mo-error">{error}</p>}
 
-        {!user?.es_admin && ordenesPendientesPago.length > 0 && (
+        {!user?.es_admin && (ordenesPendientesPago.length > 0 || true) && (
           <button type="button" className="mo-banner-pago" onClick={() => navigate('/pagos')}>
             <span>
-              Tienes {ordenesPendientesPago.length}{' '}
-              {ordenesPendientesPago.length === 1 ? 'orden pendiente de pago' : 'órdenes pendientes de pago'}
+              {ordenesPendientesPago.length > 0
+                ? `Tienes ${ordenesPendientesPago.length} ${ordenesPendientesPago.length === 1 ? 'orden pendiente de pago' : 'órdenes pendientes de pago'}`
+                : 'Gestiona y reporta tus pagos pendientes'}
             </span>
             <span className="mo-banner-pago__cta">
-              Gestionar pagos <ArrowRight size={15} />
+              Ir a Pagos <ArrowRight size={15} />
             </span>
           </button>
         )}

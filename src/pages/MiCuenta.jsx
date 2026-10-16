@@ -570,7 +570,7 @@ function MiCuenta() {
         id: 'pagos',
         label: 'Pagos por reportar',
         cantidad: calcularPagosPendientes(ordenes),
-        to: '/orders',
+        to: '/pagos',
         icono: CreditCard,
         tone: 'naranja',
       },

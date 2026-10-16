@@ -546,10 +546,11 @@ de layout elegida explícitamente, verificación `npm run lint` + `npx vite buil
   endpoint nuevo → lógica diferida). El título de la sección de arriba es **dinámico** ("Órdenes por
   cerrar (todavía sin documento)" vs "Datos de la nota") porque el selector de tipo va **debajo** de lo
   que controla.
-- **🔴 Hallazgo de lógica (diferido, reportado)**: la búsqueda usa `GET /staff/clientes` (Comercial,
-  `ROLES_VENTAS`); una cuenta **`contabilidad` pura recibe 403**. Pre-existente (el buscador vivía en el
-  tab Emitir con el mismo endpoint); el rediseño lo hace visible. **No se corrigió** (es lógica). El
-  código lo documenta en un comentario dentro de `BuscadorCliente`.
+- **✅ Hallazgo de lógica — RESUELTO (2026-10-15)**: la búsqueda usaba `GET /staff/clientes` (Comercial,
+  `ROLES_VENTAS`); una cuenta **`contabilidad` pura recibía 403**. Pre-existente (el buscador vivía en el
+  tab Emitir con el mismo endpoint); el rediseño lo hizo visible. **Arreglo (Opción B)**: `BuscadorCliente`
+  pega contra `GET /staff/contabilidad/clientes/buscar` (`staff.contabilidad.routes.js`, roles
+  `ROLES_CONTABILIDAD`), que reutiliza `listarClientes` de Comercial (`staff.clientes.controller.js`).
 - **Deuda de lógica conocida (fuera de esta fase)**: "no toda orden es facturada pero lo ideal es cerrar
   todas las órdenes a un recibo de cobro o factura" — la lógica de cierre puede tener bugs.
 
@@ -589,19 +590,20 @@ inalcanzable, imposible de scrollear.
 Todos los logos de la empresa viven en **Supabase Storage** (bucket `crsnimages`, carpeta
 `logodrogueria/`) y se consumen desde **una sola fuente**: `src/config/logos.js`
 (`LOGO_COLOR_HORIZONTAL`, `LOGO_BLANCO`, `MINI_LOGO_COLOR`, `MINI_LOGO_TEAL`, `MINI_LOGO_AZUL` — con
-`%20` codificado). **Excepciones (decisión del dueño, 2026-10-14)** — el **Navbar** y el **login de
-clientes** (`Login.jsx`) siguen usando los mini logos locales `src/assets/minilogo blanco sin fondo.png`
-(Navbar) y `src/assets/minilogo color sin fondo.png` (login) — quiere el **mini logo** ahí (el de login es
-el mismo del navbar pero a color), no el wordmark horizontal; Supabase no tiene esa variante (solo el
-wordmark horizontal y los mini logos *con fondo de color*, que en esos fondos se ve como un recuadro). El
-resto de `minilogo *.png` locales queda sin uso.
+`%20` codificado). **Excepciones (decisión del dueño, 2026-10-14)** — el **Navbar** y **todas las
+pantallas de auth** (login de clientes, los 5 registros y el login/registro de staff) siguen usando los
+mini logos locales `src/assets/minilogo blanco sin fondo.png` (Navbar) y
+`src/assets/minilogo color sin fondo.png` (auth) — quiere el **mini logo** ahí (el de auth es el mismo del
+navbar pero a color), no el wordmark horizontal; Supabase no tiene esa variante (solo el wordmark
+horizontal y los mini logos *con fondo de color*, que en esos fondos se ve como un recuadro). Los demás
+`minilogo *.png` locales quedan sin uso.
 
 | Constante | Fondo | Consumidor |
 |---|---|---|
 | `LOGO_BLANCO` | oscuro (`#0052DC` StaffNavbar, `#1a1a3a` Footer) | `Footer.jsx`, `config/empresa.js` (`logoStaffUrl` → `StaffNavbar.jsx`) |
 | — (asset local) | `#0052DC` Navbar | `Navbar.jsx` → `src/assets/minilogo blanco sin fondo.png` |
-| — (asset local) | claro (login clientes) | `Login.jsx` → `src/assets/minilogo color sin fondo.png` (mismo del navbar pero a color) |
-| `MINI_LOGO_COLOR` | claro (cards de auth) | `RegistroConTipo/Institucional/Profesional/Honorifico/Invita.jsx`, `staff/StaffLogin.jsx`, `staff/StaffRegistro.jsx` |
+| — (asset local) | claro (login + 5 registros + staff auth) | `Login.jsx`, `RegistroConTipo/Institucional/Profesional/Honorifico/Invita.jsx`, `staff/StaffLogin.jsx`, `staff/StaffRegistro.jsx` → `src/assets/minilogo color sin fondo.png` (mismo mini logo del navbar, pero a color) |
+| `MINI_LOGO_COLOR` | claro | **sin consumidores** (queda disponible en `config/logos.js`) |
 | `LOGO_COLOR_HORIZONTAL` | pill blanca | `CompartirProductoImagen.jsx` (`LOGO_URL`) |
 | `MINI_LOGO_TEAL` / `MINI_LOGO_AZUL` | badges | `Landing.jsx` (footer) |
 

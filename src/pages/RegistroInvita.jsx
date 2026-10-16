@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
-import { MINI_LOGO_COLOR as logo } from '../config/logos'
+import logo from '../assets/minilogo color sin fondo.png'
 import api from '../api/axios'
 import EnlaceInvalido from '../components/registro/EnlaceInvalido'
 import { LegalLink } from '../components/legal/LegalModal'

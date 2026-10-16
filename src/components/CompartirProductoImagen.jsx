@@ -1,32 +1,83 @@
 // src/components/CompartirProductoImagen.jsx
-// Botón + modal que genera una imagen 1080×1350 (Instagram vertical) del producto
-// con foto, nombre, laboratorio, presentación y precio, lista para compartir.
-// Diseño: lienzo blanco (las fotos del catálogo tienen fondo blanco y se funden
-// con el halo vía 'multiply'), franja de marca arriba (logo + nombre) y abajo (precio).
-// Se dibuja con Canvas 2D (cero dependencias nuevas).
-// Compartir: menú nativo del celular (Web Share con archivo) + descarga PNG de respaldo.
+// Botón + modal que genera una imagen 1080×1350 (Instagram vertical) del producto,
+// lista para compartir por WhatsApp o redes.
+// Rediseño (Opción 1, aprobada por el dueño 2026-10-15): lienzo BLANCO puro, sin halo
+// ni anillo sobre la foto, sin decoración de cruces/puntos; encabezado con logo + estado
+// + laboratorio + nombre; zona media con la foto a la izquierda (con sombra de contacto)
+// y un panel de información a la derecha (checks + hasta 7 filas); insignia de descuento
+// conservada; franja de precio con "Ahorras", referencia en Bs y QR al producto; y una
+// tira de contacto (WhatsApp · Instagram · Facebook) que cierra la pieza.
+// Se dibuja con Canvas 2D (cero dependencias nuevas; el QR usa `qrcode`, ya presente).
+//
+// Geometría y reglas: analisis/design-compartir-imagen-2026-10-15.md
+// Lógica pura testeable: ./compartirImagenHelpers.js (scripts/compartirImagenHelpers.test.mjs)
 //
 // Uso:
 //   <CompartirProductoImagen producto={producto} detalles={detalles} imagenUrl={galeria[imagenActiva]} tasaVes={tasaVes} />
-// (`detalles` es opcional: aporta el registro sanitario a la lista de checks.)
+// (`detalles` es opcional: aporta el registro sanitario a la lista de filas.)
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { ImageDown, X, Share2, Download, Loader2 } from 'lucide-react'
 import { LOGO_COLOR_HORIZONTAL } from '../config/logos'
+import { toaster } from './ui/toaster'
+import {
+  W,
+  H,
+  PAD,
+  MEDIA_Y,
+  MEDIA_H,
+  PRODUCTO_W,
+  PRODUCTO_CX,
+  PRODUCTO_CY,
+  PANEL_X,
+  PANEL_W,
+  PANEL_PAD,
+  CONTENIDO_ANCHO,
+  ALTO_CHECKS,
+  CHECK_R,
+  FILA_LH,
+  FILA_PAD,
+  BADGE_CX,
+  BADGE_CY,
+  BADGE_R,
+  BADGE_ANILLO_R,
+  PIE_Y,
+  PIE_H,
+  TIRA_Y,
+  TIRA_H,
+  TIRA_ICONO,
+  fmtUsd,
+  precioNumerico,
+  tieneDescuento,
+  mensajeNoGenerable,
+  armarChecks,
+  armarFilas,
+  altoFila,
+  altoUltimaFila,
+  altoBloqueFilas,
+  escalaAutofit,
+  escalaFilaPrecio,
+  altoFilasDisponible,
+  formatearDescuento,
+  tamanoTextoDescuento,
+  armarTiraContacto,
+  medirTiraContacto,
+  PIE_PRECIO_FUENTE,
+  PIE_ORIG_FUENTE,
+  PIE_PILL_FUENTE,
+  PIE_PRECIO_GAP,
+} from './compartirImagenHelpers'
 import './CompartirProductoImagen.css'
-
-const W = 1080
-const H = 1350
-const PAD = 72
 
 // Paleta de marca
 const AZUL = '#0052DC'
 const INDIGO = '#1A1A3A'
 const TEAL = '#12A594'
 const ORO = '#F59E0B'
+const MENTA = '#5EEAD4'
 
-// ── Pendientes de marca ──────────────────────────────────────────────────
+// ── Pendientes de marca ──────────────────────────────────────────────────────
 // LOGO_URL: logo real que se dibuja sobre la pill blanca de la franja superior.
 // Si estuviera vacío se dibujaría el recuadro "LOGO" de placeholder.
 const LOGO_URL = LOGO_COLOR_HORIZONTAL
@@ -109,7 +160,6 @@ function dibujarCapsula(ctx, cx, cy, largo, ancho, ang, alpha, colorBase = '#FFF
   ctx.restore()
 }
 
-const fmtUsd = (n) => `$${Number(n).toFixed(2)}`
 const fmtBs = (n) =>
   `Bs. ${Number(n).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
@@ -130,40 +180,6 @@ function trazarBanda(ctx, x, y, w, h, [tl, tr, br, bl]) {
   ctx.closePath()
 }
 
-function dibujarCruz(ctx, cx, cy, s, color, lw) {
-  const a = s / 3
-  const h = s / 2
-  ctx.beginPath()
-  ctx.moveTo(cx - a / 2, cy - h)
-  ctx.lineTo(cx + a / 2, cy - h)
-  ctx.lineTo(cx + a / 2, cy - a / 2)
-  ctx.lineTo(cx + h, cy - a / 2)
-  ctx.lineTo(cx + h, cy + a / 2)
-  ctx.lineTo(cx + a / 2, cy + a / 2)
-  ctx.lineTo(cx + a / 2, cy + h)
-  ctx.lineTo(cx - a / 2, cy + h)
-  ctx.lineTo(cx - a / 2, cy + a / 2)
-  ctx.lineTo(cx - h, cy + a / 2)
-  ctx.lineTo(cx - h, cy - a / 2)
-  ctx.lineTo(cx - a / 2, cy - a / 2)
-  ctx.closePath()
-  ctx.lineJoin = 'round'
-  ctx.lineWidth = lw
-  ctx.strokeStyle = color
-  ctx.stroke()
-}
-
-function dibujarPuntos(ctx, x, y, cols, rows, gap, r, color) {
-  ctx.fillStyle = color
-  for (let i = 0; i < cols; i++) {
-    for (let j = 0; j < rows; j++) {
-      ctx.beginPath()
-      ctx.arc(x + i * gap, y + j * gap, r, 0, Math.PI * 2)
-      ctx.fill()
-    }
-  }
-}
-
 function dibujarCheck(ctx, cx, cy, r) {
   ctx.beginPath()
   ctx.arc(cx, cy, r, 0, Math.PI * 2)
@@ -181,7 +197,7 @@ function dibujarCheck(ctx, cx, cy, r) {
   ctx.lineCap = 'butt'
 }
 
-// Franja de marca: degradado + brillo + puntos + cápsulas, recortado a la forma.
+// Franja de marca: degradado + brillo + textura de puntos + cápsulas, recortado a la forma.
 function pintarBanda(ctx, { y, h, radios, desde, hasta, stops, brillo, capsulas = [] }) {
   ctx.save()
   ctx.shadowColor = 'rgba(10, 20, 80, 0.30)'
@@ -214,16 +230,89 @@ function pintarBanda(ctx, { y, h, radios, desde, hasta, stops, brillo, capsulas 
   ctx.restore()
 }
 
+// Íconos de la tira de contacto (decoración reconocible; el dato real es el texto).
+function dibujarIconoContacto(ctx, tipo, x, y, s) {
+  ctx.save()
+  ctx.strokeStyle = MENTA
+  ctx.fillStyle = MENTA
+  ctx.lineWidth = 2.4
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  const c = s / 2
+
+  if (tipo === 'whatsapp') {
+    // Globo de diálogo con la colita abajo a la izquierda + auricular
+    ctx.beginPath()
+    ctx.arc(x + c, y + c - 1, c - 2, 0, Math.PI * 2)
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.moveTo(x + 3, y + s - 6)
+    ctx.lineTo(x + 3.5, y + s - 1)
+    ctx.lineTo(x + 9.5, y + s - 5.5)
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.moveTo(x + c - 6, y + c - 5)
+    ctx.quadraticCurveTo(x + c + 3, y + c + 2, x + c + 1, y + c + 7)
+    ctx.stroke()
+  } else if (tipo === 'instagram') {
+    rr(ctx, x + 2, y + 2, s - 4, s - 4, 7)
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.arc(x + c, y + c, s * 0.21, 0, Math.PI * 2)
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.arc(x + s - 9, y + 9, 1.9, 0, Math.PI * 2)
+    ctx.fill()
+  } else if (tipo === 'facebook') {
+    ctx.beginPath()
+    ctx.arc(x + c, y + c, c - 1, 0, Math.PI * 2)
+    ctx.stroke()
+    ctx.font = `700 ${Math.round(s * 0.62)}px ${F_TEXTO}`
+    ctx.textAlign = 'center'
+    ctx.fillText('f', x + c + 1, y + s * 0.78)
+    ctx.textAlign = 'left'
+  }
+  ctx.restore()
+}
+
+// QR real: se pinta módulo a módulo (síncrono, sin pasar por el DOM/canvas del navegador).
+function dibujarQR(ctx, qr, x, y, tam, color) {
+  const mod = qr?.modules
+  if (!mod || !mod.size) return
+  const celda = tam / mod.size
+  ctx.fillStyle = color
+  for (let r = 0; r < mod.size; r++) {
+    for (let c = 0; c < mod.size; c++) {
+      if (mod.data[r * mod.size + c]) {
+        ctx.fillRect(x + c * celda, y + r * celda, Math.ceil(celda), Math.ceil(celda))
+      }
+    }
+  }
+}
+
 /* ---------------- render principal ---------------- */
 
 async function renderizarTarjeta(canvas, { producto, detalles, imagenUrl, tasaVes }) {
   // Asegura que las fuentes de marca estén listas antes de dibujar
   try {
     await Promise.all([
-      document.fonts.load(`700 62px ${F_TITULO}`),
-      document.fonts.load(`800 96px ${F_NUM}`),
-      document.fonts.load(`600 26px ${F_TEXTO}`),
-      document.fonts.load(`500 26px ${F_TEXTO}`),
+      document.fonts.load(`700 64px ${F_TITULO}`),
+      document.fonts.load(`700 24px ${F_TEXTO}`),
+      document.fonts.load(`500 22px ${F_TEXTO}`),
+      document.fonts.load(`500 19px ${F_TEXTO}`),
+      document.fonts.load(`600 19px ${F_TEXTO}`),
+      document.fonts.load(`700 19px ${F_TEXTO}`),
+      document.fonts.load(`700 20px ${F_TEXTO}`),
+      document.fonts.load(`500 20px ${F_TEXTO}`),
+      document.fonts.load(`700 25px ${F_TEXTO}`),
+      document.fonts.load(`600 17px ${F_TEXTO}`),
+      document.fonts.load(`800 64px ${F_NUM}`),
+      document.fonts.load(`800 54px ${F_NUM}`),
+      document.fonts.load(`800 38px ${F_NUM}`),
+      document.fonts.load(`800 ${PIE_PILL_FUENTE}px ${F_NUM}`),
+      document.fonts.load(`700 24px ${F_NUM}`),
+      document.fonts.load(`700 20px ${F_NUM}`),
+      document.fonts.load(`600 ${PIE_ORIG_FUENTE}px ${F_NUM}`),
     ])
   } catch { /* si falla, se usa la fuente de respaldo */ }
 
@@ -235,17 +324,22 @@ async function renderizarTarjeta(canvas, { producto, detalles, imagenUrl, tasaVe
   if (LOGO_URL) {
     try { logo = await cargarImagen(LOGO_URL) } catch { logo = null }
   }
+  let qr = null
+  try {
+    const QRCode = (await import('qrcode')).default
+    qr = QRCode.create(`${window.location.origin}/producto/${producto.id}`, { errorCorrectionLevel: 'M' })
+  } catch { /* sin QR: la pieza sigue siendo válida */ }
 
   canvas.width = W
   canvas.height = H
   const ctx = canvas.getContext('2d')
   ctx.textBaseline = 'alphabetic'
 
-  const precio = producto.precio_usd != null && Number(producto.precio_usd) > 0 ? Number(producto.precio_usd) : null
-  const tieneDescuento = precio != null && producto.precio_original_usd != null && producto.descuento_activo
+  const precio = precioNumerico(producto)
+  const conDescuento = tieneDescuento(producto)
   const disponible = !!producto.disponible
 
-  /* ---- Pre-medición del bloque de texto (define la altura de la franja superior) ---- */
+  /* ---- Pre-medición del encabezado (define la altura de la franja superior) ---- */
   const anchoTexto = W - PAD * 2
   const lab = (producto.laboratorio || '').toUpperCase()
   let labLinea = ''
@@ -257,11 +351,6 @@ async function renderizarTarjeta(canvas, { producto, detalles, imagenUrl, tasaVe
   }
   ctx.font = `700 64px ${F_TITULO}`
   const lineasTitulo = envolverTexto(ctx, producto.nombre_comercial || 'Producto', anchoTexto, 2)
-  const sub = [producto.presentacion, producto.forma].filter(Boolean).join('  ·  ')
-  ctx.font = `500 30px ${F_TEXTO}`
-  const subLinea = sub ? envolverTexto(ctx, sub, anchoTexto, 1)[0] : ''
-  ctx.font = `500 26px ${F_TEXTO}`
-  const molLinea = producto.molecula ? envolverTexto(ctx, producto.molecula, anchoTexto, 1)[0] : ''
 
   let yy = 196
   let yLab = null
@@ -269,87 +358,13 @@ async function renderizarTarjeta(canvas, { producto, detalles, imagenUrl, tasaVe
   const yTitulo0 = yy + 52
   yy = yTitulo0 + (lineasTitulo.length - 1) * 70
   const yRegla = yy + 28
-  yy = yRegla + 4
-  let ySub = null
-  if (subLinea) { yy += 44; ySub = yy }
-  let yMol = null
-  if (molLinea) { yy += subLinea ? 42 : 44; yMol = yy }
-  const bandaH = yy + 62
+  const bandaH = yRegla + 4 + 62
 
-  const PIE_Y = 1096 // inicio de la franja inferior
-  const fotoTop = bandaH + 14
-  const fotoBot = 984
-  const fotoH = fotoBot - fotoTop
-  const cyF = (fotoTop + fotoBot) / 2
-  const rHalo = Math.min(fotoH / 2 - 24, 310) // el anillo exterior (+22) queda dentro de la zona de foto
-
-  /* ---- Lienzo blanco con un toque de color hacia abajo ---- */
-  const lienzo = ctx.createLinearGradient(0, 0, 0, H)
-  lienzo.addColorStop(0, '#FFFFFF')
-  lienzo.addColorStop(0.7, '#F4F8FD')
-  lienzo.addColorStop(1, '#E8F1FB')
-  ctx.fillStyle = lienzo
+  /* ---- Lienzo blanco puro ---- */
+  ctx.fillStyle = '#FFFFFF'
   ctx.fillRect(0, 0, W, H)
 
-  // Decoración de línea fina (cruces, anillos, puntos)
-  dibujarCruz(ctx, 122, fotoTop + fotoH * 0.62, 84, 'rgba(0,82,220,0.16)', 4)
-  dibujarCruz(ctx, W - 112, fotoBot - 56, 62, 'rgba(18,165,148,0.28)', 4)
-  ctx.lineWidth = 3
-  ctx.strokeStyle = 'rgba(0,82,220,0.16)'
-  ctx.beginPath(); ctx.arc(156, fotoTop + 44, 17, 0, Math.PI * 2); ctx.stroke()
-  ctx.strokeStyle = 'rgba(18,165,148,0.30)'
-  ctx.beginPath(); ctx.arc(W - 176, fotoBot - 132, 24, 0, Math.PI * 2); ctx.stroke()
-  dibujarPuntos(ctx, PAD, fotoTop + 18, 5, 4, 18, 2.6, 'rgba(0,82,220,0.20)')
-  dibujarPuntos(ctx, W - PAD - 72, fotoBot - 168, 5, 4, 18, 2.6, 'rgba(0,82,220,0.20)')
-
-  /* ---- Halo + producto ---- */
-  const cxH = W / 2
-  const halo = ctx.createRadialGradient(cxH, cyF, 10, cxH, cyF, rHalo)
-  halo.addColorStop(0, '#FFFFFF')
-  halo.addColorStop(0.65, 'rgba(0,82,220,0.05)')
-  halo.addColorStop(1, 'rgba(0,82,220,0.14)')
-  ctx.beginPath()
-  ctx.arc(cxH, cyF, rHalo, 0, Math.PI * 2)
-  ctx.fillStyle = halo
-  ctx.fill()
-  ctx.beginPath()
-  ctx.arc(cxH, cyF, rHalo + 22, 0, Math.PI * 2)
-  ctx.lineWidth = 2.5
-  ctx.strokeStyle = 'rgba(0,82,220,0.13)'
-  ctx.stroke()
-
-  if (img) {
-    const bw = 800
-    const bh = fotoH - 24
-    const esc = Math.min(bw / img.naturalWidth, bh / img.naturalHeight)
-    const dw = img.naturalWidth * esc
-    const dh = img.naturalHeight * esc
-    const dx = cxH - dw / 2
-    const dy = cyF - dh / 2
-    // sombra de contacto (elipse suave) bajo el producto
-    const rx = Math.min(dw * 0.42, 300)
-    ctx.save()
-    ctx.translate(cxH, dy + dh - 14)
-    ctx.scale(1, 0.14)
-    const sombra = ctx.createRadialGradient(0, 0, 0, 0, 0, rx)
-    sombra.addColorStop(0, 'rgba(26,26,58,0.30)')
-    sombra.addColorStop(1, 'rgba(26,26,58,0)')
-    ctx.fillStyle = sombra
-    ctx.beginPath()
-    ctx.arc(0, 0, rx, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.restore()
-    // 'multiply': el blanco de la foto desaparece sobre el halo (no se ve el rectángulo)
-    ctx.save()
-    ctx.globalCompositeOperation = 'multiply'
-    ctx.drawImage(img, dx, dy, dw, dh)
-    ctx.restore()
-  } else {
-    // Sin foto: cápsula de marca como en el resto de la plataforma
-    dibujarCapsula(ctx, cxH, cyF, 380, 140, -0.35, 1, '#C7D2E4')
-  }
-
-  /* ---- Franja superior (logo + nombre) ---- */
+  /* ---- Franja superior (logo + estado + nombre) ---- */
   pintarBanda(ctx, {
     y: 0,
     h: bandaH,
@@ -410,11 +425,11 @@ async function renderizarTarjeta(canvas, { producto, detalles, imagenUrl, tasaVe
   ctx.fillText(estadoTxt, W - PAD - ew + 50, 105)
   conEspaciado(ctx, 0)
 
-  // Textos del producto
+  // Textos del producto (laboratorio + nombre + regla)
   if (labLinea) {
     ctx.font = `700 24px ${F_TEXTO}`
     conEspaciado(ctx, 4)
-    ctx.fillStyle = '#5EEAD4'
+    ctx.fillStyle = MENTA
     ctx.fillText(labLinea, PAD, yLab)
     conEspaciado(ctx, 0)
   }
@@ -424,37 +439,61 @@ async function renderizarTarjeta(canvas, { producto, detalles, imagenUrl, tasaVe
   rr(ctx, PAD, yRegla, 96, 4, 2)
   ctx.fillStyle = 'rgba(255,255,255,0.85)'
   ctx.fill()
-  if (subLinea) {
-    ctx.font = `500 30px ${F_TEXTO}`
-    ctx.fillStyle = 'rgba(255,255,255,0.82)'
-    ctx.fillText(subLinea, PAD, ySub)
-  }
-  if (molLinea) {
-    ctx.font = `500 26px ${F_TEXTO}`
-    ctx.fillStyle = 'rgba(255,255,255,0.6)'
-    ctx.fillText(molLinea, PAD, yMol)
+
+  /* ---- Zona media: producto (izquierda) ---- */
+  const fotoTop = MEDIA_Y + 12
+  const fotoBot = MEDIA_Y + MEDIA_H - 12
+  const cajaFotoW = PRODUCTO_W
+  const cajaFotoH = fotoBot - fotoTop
+
+  if (img) {
+    const esc = Math.min(cajaFotoW / img.naturalWidth, cajaFotoH / img.naturalHeight)
+    const dw = img.naturalWidth * esc
+    const dh = img.naturalHeight * esc
+    const dx = PRODUCTO_CX - dw / 2
+    const dy = PRODUCTO_CY - dh / 2
+
+    // Sombra de contacto (elipse aplastada bajo el producto)
+    const rx = Math.min(dw * 0.42, 300)
+    ctx.save()
+    ctx.translate(PRODUCTO_CX, dy + dh - 14)
+    ctx.scale(1, 0.14)
+    const sombra = ctx.createRadialGradient(0, 0, 0, 0, 0, rx)
+    sombra.addColorStop(0, 'rgba(26,26,58,0.30)')
+    sombra.addColorStop(1, 'rgba(26,26,58,0)')
+    ctx.fillStyle = sombra
+    ctx.beginPath()
+    ctx.arc(0, 0, rx, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.restore()
+
+    // 'multiply': el blanco de la foto desaparece sobre el fondo blanco puro
+    ctx.save()
+    ctx.globalCompositeOperation = 'multiply'
+    ctx.drawImage(img, dx, dy, dw, dh)
+    ctx.restore()
+  } else {
+    // Sin foto: cápsula de marca como en el resto de la plataforma
+    dibujarCapsula(ctx, PRODUCTO_CX, PRODUCTO_CY, 380, 140, -0.35, 1, '#C7D2E4')
   }
 
-  /* ---- Insignia de descuento (flota sobre la zona de la foto) ---- */
-  if (disponible && tieneDescuento) {
-    const d = producto.descuento_activo
-    // descuento_activo.tipo es 'porcentaje' o monto fijo (ver
-    // calcularDescuentoUSD en descuentos.controller.js): hardcodear "%"
-    // mentiría en los descuentos de monto ("-$5.00" impreso como "-5%").
-    const txt = d.tipo === 'porcentaje' ? `-${d.valor}%` : `-${fmtUsd(d.valor)}`
-    const bx = W - PAD - 92
-    const by = fotoTop + 112
+  /* ---- Insignia de descuento (sobre la zona del producto) ---- */
+  if (disponible && conDescuento) {
+    const txt = formatearDescuento(producto.descuento_activo)
+    const bx = BADGE_CX
+    const by = BADGE_CY
     ctx.save()
     ctx.shadowColor = 'rgba(180, 100, 0, 0.35)'
     ctx.shadowBlur = 30
     ctx.shadowOffsetY = 12
     ctx.beginPath()
-    ctx.arc(bx, by, 92, 0, Math.PI * 2)
+    ctx.arc(bx, by, BADGE_R, 0, Math.PI * 2)
     ctx.fillStyle = ORO
     ctx.fill()
     ctx.restore()
+    // Anillo interior punteado (se conserva del diseño anterior)
     ctx.beginPath()
-    ctx.arc(bx, by, 80, 0, Math.PI * 2)
+    ctx.arc(bx, by, BADGE_ANILLO_R, 0, Math.PI * 2)
     ctx.lineWidth = 3
     ctx.strokeStyle = 'rgba(26,26,58,0.28)'
     ctx.setLineDash([3, 9])
@@ -464,7 +503,7 @@ async function renderizarTarjeta(canvas, { producto, detalles, imagenUrl, tasaVe
     ctx.lineCap = 'butt'
     ctx.fillStyle = INDIGO
     ctx.textAlign = 'center'
-    ctx.font = `800 ${txt.length > 5 ? 38 : 54}px ${F_NUM}`
+    ctx.font = `800 ${tamanoTextoDescuento(txt)}px ${F_NUM}`
     ctx.fillText(txt, bx, by + 12)
     ctx.font = `800 22px ${F_NUM}`
     conEspaciado(ctx, 4)
@@ -473,114 +512,238 @@ async function renderizarTarjeta(canvas, { producto, detalles, imagenUrl, tasaVe
     ctx.textAlign = 'left'
   }
 
-  /* ---- Lista de checks (solo datos reales del producto) ---- */
-  const checks = [
-    detalles?.registro_sanitario && 'Registro sanitario verificado',
-    disponible && 'Disponible para despacho',
-    'Vendido por Droguería Carrisán',
-    producto.pais_origen && `Origen: ${producto.pais_origen}`,
-    producto.forma && `Forma: ${producto.forma}`,
-  ].filter(Boolean).slice(0, 4)
+  /* ---- Panel de información (derecha) ---- */
+  ctx.save()
+  ctx.shadowColor = 'rgba(16, 32, 80, 0.10)'
+  ctx.shadowBlur = 36
+  ctx.shadowOffsetY = 14
+  rr(ctx, PANEL_X, MEDIA_Y, PANEL_W, MEDIA_H, 28)
+  ctx.fillStyle = '#F7F9FE'
+  ctx.fill()
+  ctx.restore()
+  rr(ctx, PANEL_X, MEDIA_Y, PANEL_W, MEDIA_H, 28)
+  ctx.lineWidth = 2
+  ctx.strokeStyle = '#E4EAF6'
+  ctx.stroke()
 
-  const colW = (W - PAD * 2) / 2
-  ctx.font = `600 25px ${F_TEXTO}`
-  checks.forEach((txt, i) => {
-    const col = i % 2
-    const fila = Math.floor(i / 2)
-    const x = PAD + col * colW
-    const yBase = 1018 + fila * 52
-    dibujarCheck(ctx, x + 17, yBase - 9, 17)
+  // Contenido del panel, recortado a su forma (equivale al overflow:hidden del mockup)
+  ctx.save()
+  rr(ctx, PANEL_X, MEDIA_Y, PANEL_W, MEDIA_H, 28)
+  ctx.clip()
+
+  const x0 = PANEL_X + PANEL_PAD
+  let yc = MEDIA_Y + PANEL_PAD
+
+  // Checks
+  const checks = armarChecks({ disponible, tieneDescuento: conDescuento })
+  ctx.font = `600 19px ${F_TEXTO}`
+  const anchoCheckTexto = CONTENIDO_ANCHO - (CHECK_R * 2 + 12)
+  checks.forEach((txt) => {
+    dibujarCheck(ctx, x0 + CHECK_R, yc + 12.5, CHECK_R)
     ctx.fillStyle = INDIGO
-    ctx.fillText(envolverTexto(ctx, txt, colW - 56, 1)[0], x + 46, yBase)
+    ctx.fillText(envolverTexto(ctx, txt, anchoCheckTexto, 1)[0], x0 + CHECK_R * 2 + 12, yc + 18)
+    yc += ALTO_CHECKS
   })
 
-  /* ---- Franja inferior (precio) ---- */
+  // Separador
+  yc += 12
+  ctx.fillStyle = '#E4EAF6'
+  rr(ctx, x0, yc, CONTENIDO_ANCHO, 2, 1)
+  ctx.fill()
+  yc += 2 + 14
+
+  // Filas (con autofit si el contenido no entra)
+  const filas = armarFilas(producto, detalles)
+  const medirFilas = (k) => {
+    const fLabel = `600 ${19 * k}px ${F_TEXTO}`
+    const fValor = `700 ${20 * k}px ${F_NUM}`
+    return filas.map((f) => {
+      ctx.font = fLabel
+      const anchoLabel = ctx.measureText(f.label).width
+      ctx.font = fValor
+      const lineas = envolverTexto(ctx, f.valor, Math.max(48, CONTENIDO_ANCHO - anchoLabel - 24), 2)
+      return { ...f, lineas }
+    })
+  }
+  let k = 1
+  let medidas = medirFilas(1)
+  const altoNatural = altoBloqueFilas(medidas.map((m) => m.lineas.length), 1)
+  const disponibleFilas = altoFilasDisponible(checks.length)
+  if (altoNatural > disponibleFilas) {
+    k = escalaAutofit(altoNatural, disponibleFilas)
+    medidas = medirFilas(k)
+  }
+
+  const padF = FILA_PAD * k
+  const lhF = FILA_LH * k
+  medidas.forEach((m, i) => {
+    const ultima = i === medidas.length - 1
+    const altoBloque = ultima ? altoUltimaFila(m.lineas.length, k) : altoFila(m.lineas.length, k)
+    const baseY = yc + padF + lhF * 0.78
+
+    ctx.font = `600 ${19 * k}px ${F_TEXTO}`
+    ctx.fillStyle = '#7A8699'
+    ctx.fillText(envolverTexto(ctx, m.label, CONTENIDO_ANCHO, 1)[0], x0, baseY)
+
+    ctx.font = `700 ${20 * k}px ${F_NUM}`
+    ctx.fillStyle = INDIGO
+    ctx.textAlign = 'right'
+    m.lineas.forEach((ln, j) => ctx.fillText(ln, x0 + CONTENIDO_ANCHO, baseY + j * lhF))
+    ctx.textAlign = 'left'
+
+    yc += altoBloque
+    if (!ultima) {
+      ctx.fillStyle = '#E9EEF8'
+      rr(ctx, x0, yc - 1, CONTENIDO_ANCHO, 1, 0.5)
+      ctx.fill()
+    }
+  })
+  ctx.restore() // fin del clip del panel
+
+  /* ---- Franja de precio ---- */
   pintarBanda(ctx, {
     y: PIE_Y,
-    h: H - PIE_Y,
+    h: PIE_H,
     radios: [150, 56, 0, 0],
     desde: [0, H],
     hasta: [W, PIE_Y],
     stops: [[0, '#0A2E8F'], [0.5, AZUL], [1, TEAL]],
-    brillo: { x: 120, y: H - 20, r: 520, color: 'rgba(70,140,255,0.40)' },
-    capsulas: [[900, 1290, 460, 168, 0.5, 0.06]],
+    brillo: { x: 320, y: 1360, r: 520, color: 'rgba(70,140,255,0.40)' },
+    capsulas: [],
   })
 
   if (precio != null) {
-    ctx.font = `700 22px ${F_TEXTO}`
+    ctx.font = `700 20px ${F_TEXTO}`
     conEspaciado(ctx, 3)
     ctx.fillStyle = 'rgba(255,255,255,0.72)'
-    ctx.fillText('PRECIO', PAD + 4, 1172)
+    ctx.fillText('PRECIO', PAD + 4, 1080)
     conEspaciado(ctx, 0)
 
-    ctx.font = `800 96px ${F_NUM}`
-    ctx.fillStyle = '#FFFFFF'
-    ctx.fillText(fmtUsd(precio), PAD, 1262)
-    const anchoPrecio = ctx.measureText(fmtUsd(precio)).width
+    // Fila de precio. La pill "Ahorras" va centrada y NO se encoge, así que el precio
+    // (y el original tachado) se escalan juntos para no montarse sobre ella — ver
+    // escalaFilaPrecio en compartirImagenHelpers.js (defecto medido con precios altos).
+    const txtPrecio = fmtUsd(precio)
+    const orig = conDescuento ? fmtUsd(producto.precio_original_usd) : null
+    const ahorro = conDescuento ? Number(producto.precio_original_usd) - precio : 0
+    const conPill = !!orig && ahorro > 0
 
-    if (tieneDescuento) {
-      ctx.font = `600 34px ${F_NUM}`
-      const orig = fmtUsd(producto.precio_original_usd)
-      const ox = PAD + anchoPrecio + 24
-      ctx.fillStyle = 'rgba(255,255,255,0.6)'
-      ctx.fillText(orig, ox, 1260)
+    // Ancho de la pill con su fuente fija (no participa del autofit)
+    let anchoPill = 0
+    if (conPill) {
+      ctx.font = `800 ${PIE_PILL_FUENTE}px ${F_NUM}`
+      anchoPill = ctx.measureText(`Ahorras ${fmtUsd(ahorro)}`).width + 44
+    }
+
+    // Anchos naturales de precio y original para calcular el factor
+    ctx.font = `800 ${PIE_PRECIO_FUENTE}px ${F_NUM}`
+    let anchoPrecio = ctx.measureText(txtPrecio).width
+    let anchoOrig = 0
+    if (orig) {
+      ctx.font = `600 ${PIE_ORIG_FUENTE}px ${F_NUM}`
+      anchoOrig = ctx.measureText(orig).width
+    }
+    const kp = conPill ? escalaFilaPrecio(anchoPrecio, anchoOrig, anchoPill) : 1
+
+    ctx.font = `800 ${Math.round(PIE_PRECIO_FUENTE * kp)}px ${F_NUM}`
+    ctx.fillStyle = '#FFFFFF'
+    ctx.fillText(txtPrecio, PAD, 1167)
+    anchoPrecio = ctx.measureText(txtPrecio).width
+
+    if (orig) {
+      ctx.font = `600 ${Math.round(PIE_ORIG_FUENTE * kp)}px ${F_NUM}`
+      const ox = PAD + anchoPrecio + PIE_PRECIO_GAP
+      ctx.fillStyle = 'rgba(255,255,255,0.55)'
+      ctx.fillText(orig, ox, 1160)
       const ow = ctx.measureText(orig).width
       ctx.beginPath()
-      ctx.moveTo(ox - 2, 1248)
-      ctx.lineTo(ox + ow + 2, 1248)
+      ctx.moveTo(ox - 2, 1150)
+      ctx.lineTo(ox + ow + 2, 1150)
       ctx.strokeStyle = 'rgba(255,255,255,0.75)'
       ctx.lineWidth = 3
       ctx.stroke()
     }
 
-    // Columna derecha: referencia en Bs y ahorro
-    const derX = W - PAD - 8
-    ctx.textAlign = 'right'
+    // Referencia en Bs (si hay tasa)
     if (tasaVes) {
-      ctx.font = `700 22px ${F_TEXTO}`
+      ctx.font = `700 20px ${F_TEXTO}`
       conEspaciado(ctx, 3)
-      ctx.fillStyle = 'rgba(255,255,255,0.78)'
-      ctx.fillText('REFERENCIA', derX, 1172)
+      ctx.fillStyle = 'rgba(255,255,255,0.66)'
+      ctx.fillText('REF.', PAD + 4, 1218)
+      const anchoREF = ctx.measureText('REF.').width
       conEspaciado(ctx, 0)
-      ctx.font = `800 38px ${F_NUM}`
+      ctx.font = `700 24px ${F_NUM}`
+      ctx.fillStyle = 'rgba(255,255,255,0.9)'
+      ctx.fillText(fmtBs(precio * Number(tasaVes)), PAD + anchoREF + 12, 1218)
+    }
+
+    // Pill de ahorro (centrada en la franja; ancho ya calculado arriba)
+    if (conPill) {
+      const t = `Ahorras ${fmtUsd(ahorro)}`
+      rr(ctx, (W - anchoPill) / 2, 1096, anchoPill, 46, 23)
       ctx.fillStyle = '#FFFFFF'
-      ctx.fillText(fmtBs(precio * Number(tasaVes)), derX, 1220)
+      ctx.fill()
+      ctx.font = `800 ${PIE_PILL_FUENTE}px ${F_NUM}`
+      ctx.fillStyle = AZUL
+      ctx.textAlign = 'center'
+      ctx.fillText(t, W / 2, 1096 + 32)
+      ctx.textAlign = 'left'
     }
-    if (tieneDescuento) {
-      const ahorro = Number(producto.precio_original_usd) - precio
-      if (ahorro > 0) {
-        const t = `Ahorras ${fmtUsd(ahorro)}`
-        ctx.font = `800 26px ${F_NUM}`
-        const tw = ctx.measureText(t).width + 40
-        const py = tasaVes ? 1238 : 1190
-        rr(ctx, derX - tw, py, tw, 44, 22)
-        ctx.fillStyle = '#FFFFFF'
-        ctx.fill()
-        ctx.fillStyle = AZUL
-        ctx.textAlign = 'center'
-        ctx.fillText(t, derX - tw / 2, py + 31)
-      }
+
+    // QR al producto (si el generador falló, no se promete un código que no existe)
+    if (qr) {
+      ctx.save()
+      ctx.shadowColor = 'rgba(6, 20, 60, 0.28)'
+      ctx.shadowBlur = 18
+      ctx.shadowOffsetY = 6
+      rr(ctx, 896, 1084, 112, 112, 12)
+      ctx.fillStyle = '#FFFFFF'
+      ctx.fill()
+      ctx.restore()
+      dibujarQR(ctx, qr, 904, 1092, 96, INDIGO)
+      ctx.font = `600 17px ${F_TEXTO}`
+      ctx.textAlign = 'right'
+      ctx.fillStyle = 'rgba(255,255,255,0.78)'
+      ctx.fillText('Escanea para ver el producto', 1008, 1218)
+      ctx.textAlign = 'left'
     }
+
+    // Pie de la franja
+    const hoy = new Date().toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    ctx.font = `500 19px ${F_TEXTO}`
+    ctx.fillStyle = 'rgba(255,255,255,0.66)'
+    ctx.textAlign = 'center'
+    ctx.fillText(
+      [SITIO_WEB, `Precio vigente al ${hoy}`, 'Sujeto a disponibilidad'].filter(Boolean).join('  ·  '),
+      W / 2,
+      1258
+    )
     ctx.textAlign = 'left'
   } else {
+    // Red de seguridad: el gating del componente evita llegar aquí
     ctx.font = `800 64px ${F_NUM}`
     ctx.fillStyle = '#FFFFFF'
     ctx.textAlign = 'center'
-    ctx.fillText('Consultar precio', W / 2, 1250)
+    ctx.fillText('Consultar precio', W / 2, 1160)
     ctx.textAlign = 'left'
   }
 
-  /* ---- Pie ---- */
-  const hoy = new Date().toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric' })
-  ctx.font = `500 22px ${F_TEXTO}`
-  ctx.fillStyle = 'rgba(255,255,255,0.65)'
-  ctx.textAlign = 'center'
-  ctx.fillText(
-    [SITIO_WEB, `Precio vigente al ${hoy}`, 'Sujeto a disponibilidad'].filter(Boolean).join('  ·  '),
-    W / 2,
-    1325
-  )
-  ctx.textAlign = 'left'
+  /* ---- Tira de contacto ---- */
+  ctx.fillStyle = '#071F63'
+  ctx.fillRect(0, TIRA_Y, W, TIRA_H)
+  ctx.fillStyle = 'rgba(255,255,255,0.16)'
+  ctx.fillRect(0, TIRA_Y, W, 1)
+
+  const tira = armarTiraContacto()
+  ctx.font = `700 25px ${F_TEXTO}`
+  const anchosTira = tira.map((it) => ctx.measureText(it.texto).width)
+  const { items: posTira } = medirTiraContacto(anchosTira)
+  const cyTira = TIRA_Y + TIRA_H / 2
+  posTira.forEach((p, i) => {
+    dibujarIconoContacto(ctx, tira[i].icono, p.x, cyTira - TIRA_ICONO / 2, TIRA_ICONO)
+    ctx.font = `700 25px ${F_TEXTO}`
+    ctx.fillStyle = '#FFFFFF'
+    ctx.fillText(tira[i].texto, p.xTexto, cyTira + 9)
+  })
 
   return { conFoto: !!img || !imagenUrl }
 }
@@ -619,6 +782,16 @@ export default function CompartirProductoImagen({ producto, detalles, imagenUrl,
       setEstado('error')
     }
   }, [producto, detalles, imagenUrl, tasaVes])
+
+  // El botón sigue habilitado (así el usuario recibe la explicación); el corte está acá.
+  const abrir = useCallback(() => {
+    const msg = mensajeNoGenerable(producto)
+    if (msg) {
+      toaster.create({ title: msg, type: 'warning', duration: 5000 })
+      return
+    }
+    setAbierto(true)
+  }, [producto])
 
   useEffect(() => {
     if (abierto) generar()
@@ -671,7 +844,7 @@ export default function CompartirProductoImagen({ producto, detalles, imagenUrl,
       <button
         type="button"
         className="pd-icon-btn"
-        onClick={() => setAbierto(true)}
+        onClick={abrir}
         aria-label="Compartir como imagen"
         title="Compartir como imagen"
       >

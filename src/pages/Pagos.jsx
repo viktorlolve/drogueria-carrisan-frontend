@@ -94,6 +94,20 @@ function textoArticulos(orden) {
   return n === 1 ? '1 artículo' : `${n} artículos`
 }
 
+const formatearDiasVencer = (dias) => {
+  if (dias === null || dias === undefined) return null
+  if (dias < 0) return `Vencida hace ${Math.abs(dias)} ${Math.abs(dias) === 1 ? 'día' : 'días'}`
+  if (dias === 0) return 'Vence hoy'
+  return `Vence en ${dias} ${dias === 1 ? 'día' : 'días'}`
+}
+
+const claseDiasVencer = (dias) => {
+  if (dias === null || dias === undefined) return ''
+  if (dias < 0) return 'badge bg-danger'
+  if (dias === 0) return 'badge bg-warning text-dark'
+  return 'badge bg-success'
+}
+
 // ---------------------------------------------------------------
 // Piezas
 // ---------------------------------------------------------------
@@ -543,6 +557,11 @@ function Pagos() {
                           {orden.estado_pago === 'rechazado' && (
                             <span className="pg-chip pg-chip--error">
                               <AlertCircle size={12} /> Pago rechazado: vuelve a reportarlo
+                            </span>
+                          )}
+                          {orden.dias_por_vencer !== null && orden.dias_por_vencer !== undefined && (
+                            <span className={`pg-chip ${claseDiasVencer(orden.dias_por_vencer)}`}>
+                              {formatearDiasVencer(orden.dias_por_vencer)}
                             </span>
                           )}
                         </span>

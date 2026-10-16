@@ -74,7 +74,7 @@ export const NAV_UNIFICADO = {
       icono: Wallet,
       items: [
         { id: 'estado-cuenta', to: '/estado-de-cuenta', icono: Wallet, texto: 'Resumen' },
-        { id: 'pagos-ec', to: '/estado-de-cuenta/pagos', icono: DollarSign, texto: 'Historial de pagos' },
+        { id: 'pagos-ec', to: '/pagos', icono: DollarSign, texto: 'Pagos' },
         { id: 'facturas', to: '/estado-de-cuenta/facturas', icono: FileText, texto: 'Historial de facturas' },
         { id: 'reportes', to: '/estado-de-cuenta/reportes', icono: FileBarChart, texto: 'Reportes' },
         { id: 'ampliacion', to: '/estado-de-cuenta/ampliacion', icono: TrendingUp, texto: 'Solicitar ampliación' },

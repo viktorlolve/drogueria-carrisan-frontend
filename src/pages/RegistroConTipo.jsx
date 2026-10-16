@@ -1,5 +1,5 @@
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
-import { MINI_LOGO_COLOR as logo } from '../config/logos'
+import logo from '../assets/minilogo color sin fondo.png'
 import { LegalLink } from '../components/legal/LegalModal'
 import { SupportLink } from '../components/registro/SupportModal'
 import './Auth.css'

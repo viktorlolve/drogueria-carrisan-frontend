@@ -15,7 +15,7 @@ import {
 } from '@chakra-ui/react'
 import { ShieldCheck, ClipboardCheck, Truck, Lock } from 'lucide-react'
 import { useStaffAuth } from '../../context/StaffAuthContext'
-import { MINI_LOGO_COLOR as logo } from '../../config/logos'
+import logo from '../../assets/minilogo color sin fondo.png'
 
 /* Paleta de marca */
 const TEAL = '#12A594'
