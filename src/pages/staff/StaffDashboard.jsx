@@ -73,7 +73,7 @@ function StaffDashboard() {
                 return (
                   <Link
                     key={modulo.id}
-                    to={`/staff/${deptoFoco.id}/${modulo.id}`}
+                    to={modulo.to}
                     className="sd-foco__btn"
                     style={{
                       '--sd-card-color': deptoFoco.color,
