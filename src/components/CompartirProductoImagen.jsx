@@ -25,11 +25,11 @@ import {
   W,
   H,
   PAD,
-  MEDIA_Y,
   MEDIA_H,
+  centrarZonaMedia,
   PRODUCTO_W,
   PRODUCTO_CX,
-  PRODUCTO_CY,
+  PRODUCTO_DY,
   PANEL_X,
   PANEL_W,
   PANEL_PAD,
@@ -39,7 +39,7 @@ import {
   FILA_LH,
   FILA_PAD,
   BADGE_CX,
-  BADGE_CY,
+  BADGE_DY,
   BADGE_R,
   BADGE_ANILLO_R,
   PIE_Y,
@@ -47,6 +47,14 @@ import {
   TIRA_Y,
   TIRA_H,
   TIRA_ICONO,
+  QR_TAM,
+  QR_PAD,
+  QR_X,
+  QR_Y,
+  QR_LEYENDA,
+  QR_LEYENDA_FUENTE,
+  QR_LEYENDA_LH,
+  posicionLeyendaQR,
   fmtUsd,
   precioNumerico,
   tieneDescuento,
@@ -360,6 +368,12 @@ async function renderizarTarjeta(canvas, { producto, detalles, imagenUrl, tasaVe
   const yRegla = yy + 28
   const bandaH = yRegla + 4 + 62
 
+  // Zona media centrada entre el encabezado y la franja de precio (mismo aire arriba y
+  // abajo). `mediaY` reemplaza a mediaY; producto y badge cuelgan de ella por offset.
+  const mediaY = centrarZonaMedia(bandaH)
+  const prodCY = mediaY + PRODUCTO_DY
+  const badgeCY = mediaY + BADGE_DY
+
   /* ---- Lienzo blanco puro ---- */
   ctx.fillStyle = '#FFFFFF'
   ctx.fillRect(0, 0, W, H)
@@ -441,8 +455,8 @@ async function renderizarTarjeta(canvas, { producto, detalles, imagenUrl, tasaVe
   ctx.fill()
 
   /* ---- Zona media: producto (izquierda) ---- */
-  const fotoTop = MEDIA_Y + 12
-  const fotoBot = MEDIA_Y + MEDIA_H - 12
+  const fotoTop = mediaY + 12
+  const fotoBot = mediaY + MEDIA_H - 12
   const cajaFotoW = PRODUCTO_W
   const cajaFotoH = fotoBot - fotoTop
 
@@ -451,7 +465,7 @@ async function renderizarTarjeta(canvas, { producto, detalles, imagenUrl, tasaVe
     const dw = img.naturalWidth * esc
     const dh = img.naturalHeight * esc
     const dx = PRODUCTO_CX - dw / 2
-    const dy = PRODUCTO_CY - dh / 2
+    const dy = prodCY - dh / 2
 
     // Sombra de contacto (elipse aplastada bajo el producto)
     const rx = Math.min(dw * 0.42, 300)
@@ -474,14 +488,14 @@ async function renderizarTarjeta(canvas, { producto, detalles, imagenUrl, tasaVe
     ctx.restore()
   } else {
     // Sin foto: cápsula de marca como en el resto de la plataforma
-    dibujarCapsula(ctx, PRODUCTO_CX, PRODUCTO_CY, 380, 140, -0.35, 1, '#C7D2E4')
+    dibujarCapsula(ctx, PRODUCTO_CX, prodCY, 380, 140, -0.35, 1, '#C7D2E4')
   }
 
   /* ---- Insignia de descuento (sobre la zona del producto) ---- */
   if (disponible && conDescuento) {
     const txt = formatearDescuento(producto.descuento_activo)
     const bx = BADGE_CX
-    const by = BADGE_CY
+    const by = badgeCY
     ctx.save()
     ctx.shadowColor = 'rgba(180, 100, 0, 0.35)'
     ctx.shadowBlur = 30
@@ -517,22 +531,22 @@ async function renderizarTarjeta(canvas, { producto, detalles, imagenUrl, tasaVe
   ctx.shadowColor = 'rgba(16, 32, 80, 0.10)'
   ctx.shadowBlur = 36
   ctx.shadowOffsetY = 14
-  rr(ctx, PANEL_X, MEDIA_Y, PANEL_W, MEDIA_H, 28)
+  rr(ctx, PANEL_X, mediaY, PANEL_W, MEDIA_H, 28)
   ctx.fillStyle = '#F7F9FE'
   ctx.fill()
   ctx.restore()
-  rr(ctx, PANEL_X, MEDIA_Y, PANEL_W, MEDIA_H, 28)
+  rr(ctx, PANEL_X, mediaY, PANEL_W, MEDIA_H, 28)
   ctx.lineWidth = 2
   ctx.strokeStyle = '#E4EAF6'
   ctx.stroke()
 
   // Contenido del panel, recortado a su forma (equivale al overflow:hidden del mockup)
   ctx.save()
-  rr(ctx, PANEL_X, MEDIA_Y, PANEL_W, MEDIA_H, 28)
+  rr(ctx, PANEL_X, mediaY, PANEL_W, MEDIA_H, 28)
   ctx.clip()
 
   const x0 = PANEL_X + PANEL_PAD
-  let yc = MEDIA_Y + PANEL_PAD
+  let yc = mediaY + PANEL_PAD
 
   // Checks
   const checks = armarChecks({ disponible, tieneDescuento: conDescuento })

@@ -15,15 +15,26 @@ export const W = 1080
 export const H = 1350
 export const PAD = 72
 
-// Zona media: arranca siempre en y=470 (el encabezado crece hasta 458 y nunca la pisa)
+// Zona media (producto + panel). Su ALTO es fijo; su Y la decide centrarZonaMedia():
+// el bloque se centraba en 470 fijo y el dueño lo vio "muy abajo" (aire de 82 arriba,
+// 10 abajo con encabezado de 1 línea). MEDIA_Y queda como referencia del cálculo manual.
 export const MEDIA_Y = 470
-export const MEDIA_H = 540 // 470..1010
+export const MEDIA_H = 540 // alto fijo del bloque
+
+// Centra la zona media entre el borde inferior del encabezado (bandaH) y la franja de
+// precio (PIE_Y), dejando el MISMO aire arriba y abajo — el "mismo padding o espacio que
+// arriba" que pidió el dueño. Encabezado 1 línea (388) → y=434 (46/46); 2 líneas (458)
+// → y=469 (11/11). El `Math.max(0, …)` es red de seguridad: si un título llegara a 3
+// líneas la zona no pisaría el encabezado (pegada, pero sin solaparse).
+export function centrarZonaMedia(bandaH) {
+  return bandaH + Math.max(0, (PIE_Y - bandaH - MEDIA_H) / 2)
+}
 
 // B1. Producto (izquierda)
 export const PRODUCTO_X = 72
 export const PRODUCTO_W = 436
 export const PRODUCTO_CX = PRODUCTO_X + PRODUCTO_W / 2 // 290
-export const PRODUCTO_CY = MEDIA_Y + MEDIA_H / 2 // 740
+export const PRODUCTO_DY = MEDIA_H / 2 // centro vertical respecto al tope de la zona
 
 // B2. Panel de información (derecha)
 export const PANEL_X = 548
@@ -46,7 +57,7 @@ export const FILA_PAD = 8
 
 // B3. Badge de descuento
 export const BADGE_CX = 428
-export const BADGE_CY = 597
+export const BADGE_DY = 127 // altura del badge respecto al tope de la zona media (597-470)
 export const BADGE_R = 92
 export const BADGE_ANILLO_R = 80
 
@@ -68,6 +79,21 @@ export const TIRA_H = 80
 export const TIRA_ICONO = 30
 export const TIRA_SEP = 12
 export const TIRA_GAP = 44
+
+// C.2 QR al producto (derecha de la franja de precio).
+// El dueño pidió agrandarlo: la tarjeta pasa de 112 a 144 (el código de 96 a 128) y la
+// leyenda "Escanea para ver el producto" se va de abajo a la IZQUIERDA en 3 líneas.
+// La tarjeta mantiene su borde derecho alineado al PAD (1008) y su centro vertical en
+// 1140 (el mismo que tenía el QR de 112) → 1068..1212, entre la franja (1020) y el
+// pie de la franja (texto con baseline 1258, tinta desde ~1244).
+export const QR_TAM = 144
+export const QR_PAD = 8 // aire blanco entre el borde de la tarjeta y el código
+export const QR_X = W - PAD - QR_TAM // 864 → 864..1008
+export const QR_Y = 1068
+export const QR_LEYENDA = ['Escanea', 'para ver el', 'producto'] // verbatim del dueño
+export const QR_LEYENDA_FUENTE = 17
+export const QR_LEYENDA_LH = 22
+export const QR_LEYENDA_GAP = 18 // aire entre la leyenda y la tarjeta del QR
 
 /* ---------------- precios y gating ---------------- */
 
@@ -198,6 +224,27 @@ export function escalaFilaPrecio(
   if (!(suma > 0)) return 1
   const disponible = (ancho - anchoPill) / 2 - x - gap - margen
   return Math.min(1, Math.max(min, disponible / suma))
+}
+
+/* ---------------- leyenda del QR ---------------- */
+
+// Leyenda del QR: 3 líneas a la IZQUIERDA del código, con el bloque (de tinta capital,
+// igual criterio que el resto del lienzo: baseline a 0.78 del renglón) centrado contra la
+// tarjeta. `xFin` es el borde derecho donde alinear el texto; `baselines` el Y de cada línea.
+export function posicionLeyendaQR({
+  x = QR_X,
+  y = QR_Y,
+  tam = QR_TAM,
+  lineas = QR_LEYENDA,
+  lh = QR_LEYENDA_LH,
+  gap = QR_LEYENDA_GAP,
+} = {}) {
+  const alto = lineas.length * lh
+  const top = y + (tam - alto) / 2
+  return {
+    xFin: x - gap,
+    baselines: lineas.map((_, i) => top + lh * (i + 0.78)),
+  }
 }
 
 /* ---------------- tira de contacto ---------------- */

@@ -855,7 +855,7 @@ button.pg-paso__btn:focus-visible {
 }
 .pg-exito__texto strong { color: var(--pg-indigo); }
 
-.pg-exito__check { width: 76px; height: 76px; }
+.pg-exito__check { width: 76px; height: 76px; display: block; margin: 0 auto; }
 .pg-exito__circulo {
   stroke: var(--pg-teal);
   stroke-width: 3;
