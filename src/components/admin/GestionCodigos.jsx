@@ -27,20 +27,9 @@ import {
 } from 'lucide-react'
 import api from '../../api/axios'
 import { toaster } from '../ui/toaster'
+import { ROLES_STAFF, ETIQUETA_ROL } from '../../utils/rolesStaff.js'
 
 const AZUL = '#0052DC'
-
-const ROLES_STAFF = [
-  { valor: 'vendedor', etiqueta: 'Vendedor' },
-  { valor: 'despachador', etiqueta: 'Despachador' },
-  { valor: 'almacenista', etiqueta: 'Almacenista' },
-  { valor: 'contabilidad', etiqueta: 'Contabilidad' },
-  { valor: 'administrador', etiqueta: 'Administrador' },
-  { valor: 'director', etiqueta: 'Director' },
-  { valor: 'admin', etiqueta: 'Admin' },
-]
-
-const ETIQUETA_ROL = Object.fromEntries(ROLES_STAFF.map((r) => [r.valor, r.etiqueta]))
 
 function formatoFecha(iso) {
   if (!iso) return '—'
@@ -316,8 +305,8 @@ function GestionCodigos() {
                   onChange={(e) => setRolStaff(e.target.value)}
                   aria-label="Rol del personal"
                 >
-                  {ROLES_STAFF.map((r) => (
-                    <option key={r.valor} value={r.valor}>{r.etiqueta}</option>
+                  {ROLES_STAFF.map((rol) => (
+                    <option key={rol} value={rol}>{ETIQUETA_ROL[rol]}</option>
                   ))}
                 </NativeSelect.Field>
                 <NativeSelect.Indicator />
