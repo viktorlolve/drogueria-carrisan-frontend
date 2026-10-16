@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { X, Download } from 'lucide-react'
 import './ModalInstalarStaff.css'
 
@@ -45,7 +46,9 @@ function ModalInstalarStaff({ onClose }) {
       ? 'Tu navegador no mostró la pregunta de instalación todavía. Puedes instalarla manualmente en unos segundos:'
       : 'Instala la app para acceder más rápido al panel interno.'
 
-  return (
+  // En portal: el layout usa `will-change: transform` y un overlay fijo dentro de él
+  // se posiciona respecto a la página, no a la pantalla.
+  return createPortal(
     <div className="sim-overlay" onClick={onClose}>
       <div className="sim-card" onClick={(e) => e.stopPropagation()}>
         <button type="button" className="sim-cerrar" onClick={onClose} aria-label="Cerrar">
@@ -75,7 +78,8 @@ function ModalInstalarStaff({ onClose }) {
           Entendido
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

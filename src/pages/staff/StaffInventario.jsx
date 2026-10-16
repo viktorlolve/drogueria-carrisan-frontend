@@ -23,8 +23,12 @@
 // página lleva prefijo `.si-*` y vive en `StaffInventario.css`.
 
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { X } from 'lucide-react'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
+import StaffEstado from '../../components/staff/StaffEstado'
+import { DEPARTAMENTOS } from '../../components/staff/NavStaff'
 import { useEsMobile } from '../../hooks/useEsMobile'
 import { IconoProducto } from '../../components/icons/ProductoImagen'
 import './StaffComercial.css'
@@ -32,6 +36,19 @@ import './StaffInventario.css'
 import { useStaffUI } from '../../hooks/useStaffUI'
 
 const POR_PAGINA = 20
+
+// El drawer y la hoja de filtros se montan en document.body (portal): el layout
+// usa `will-change: transform`, que convierte a `.ldep-shift` en el bloque de
+// referencia de todo `position: fixed` descendiente. Con la lista larga y la
+// página con scroll, un drawer fijo dentro del layout quedaba anclado al borde
+// superior de la página y no a la pantalla. Fuera del layout hay que repetir las
+// variables del departamento que LayoutDepartamento inyecta en `.ldep-root`.
+const DEPTO_LOGISTICA = DEPARTAMENTOS.find((d) => d.id === 'logistica')
+const VARS_DEPTO = {
+  '--ldep-color': DEPTO_LOGISTICA?.color || '#D97706',
+  '--ldep-color-strong': DEPTO_LOGISTICA?.colorStrong || '#B45309',
+  '--ldep-color-soft': DEPTO_LOGISTICA?.colorLight || '#FFF4E0',
+}
 // Espejo de los límites del backend. Acá solo evita gastar un request; el
 // mensaje que decide es el del servidor y se muestra tal cual.
 const URL_FOTO_MAX = 2000
@@ -496,6 +513,12 @@ function StaffInventario() {
 
   // --- helpers de la UI ---------------------------------------------------
 
+  function reintentarListado() {
+    setError('')
+    setCargando(true)
+    setRecarga((n) => n + 1)
+  }
+
   function cambiarFiltro(campo, valor) {
     if (pagina !== 1) setPagina(1)
     if (campo === 'buscar') { setBuscar(valor); return }
@@ -860,17 +883,13 @@ function StaffInventario() {
             : ''}
         </div>
 
-        {error && <p className="sp-error">{error}</p>}
-
-        {cargando || paginaVaciaFueraDeRango ? (
-          <div className="sp-loading">
-            {/* Si además falló el fetch correctivo, no hay carga en curso:
-                decirlo, en vez de un spinner que promete un progreso que no
-                va a llegar. El error real ya se muestra arriba con `sp-error`. */}
-            {error ? 'No se pudo mostrar esta página.' : 'Cargando inventario...'}
-          </div>
+        {/* Con error no se muestra la lista anterior (podía ser de otros filtros). */}
+        {error ? (
+          <StaffEstado tipo="error" mensaje={error} onReintentar={reintentarListado} />
+        ) : cargando || paginaVaciaFueraDeRango ? (
+          <StaffEstado tipo="cargando" filas={5} />
         ) : vacio ? (
-          <div className="sp-loading">No hay productos con esos filtros.</div>
+          <StaffEstado tipo="vacio" titulo="No hay productos con esos filtros." />
         ) : esMobile ? (
           <div className="si-tarjetas">
             {productos.map((p) => (
@@ -1008,458 +1027,464 @@ function StaffInventario() {
         )}
 
         {/* Hoja de filtros en móvil */}
-        {esMobile && filtrosAbiertos && (
-          <div className="si-sheet">
-            <div className="si-sheet__overlay" onClick={() => setFiltrosAbiertos(false)} />
-            <div className="si-sheet__panel" role="dialog" aria-modal="true" aria-label="Filtros del inventario">
-              <div className="si-sheet__header">
-                <span className="si-sheet__titulo">Filtros</span>
-                <button
-                  type="button"
-                  className="si-sheet__cerrar"
-                  onClick={() => setFiltrosAbiertos(false)}
-                >
-                  Cerrar
-                </button>
-              </div>
-              <div className="sp-toolbar">
-                <BarraFiltros
-                  filtros={{ ...filtros, buscar, molecula }}
-                  cambiarFiltro={cambiarFiltro}
-                  opciones={opciones}
-                  onLimpiar={limpiarFiltros}
-                />
-              </div>
-              <button
-                type="button"
-                className="si-btn si-btn--principal"
-                onClick={() => setFiltrosAbiertos(false)}
-              >
-                Ver {total} producto{total === 1 ? '' : 's'}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Drawer del producto */}
-        {drawerId != null && (
-          <div className="si-drawer" role="dialog" aria-modal="true" aria-label="Detalle del producto">
-            <div className="si-drawer__overlay" onClick={() => setDrawerId(null)} />
-            <div className="si-drawer__panel">
-              <div className="si-drawer__header">
-                <div className="si-drawer__head-textos">
-                  <p className="si-drawer__eyebrow">Producto #{drawerId}</p>
-                  <h2 className="si-drawer__titulo">
-                    {producto?.nombre_comercial || 'Cargando...'}
-                  </h2>
-                  {producto?.sku && <p className="si-drawer__sku">{producto.sku}</p>}
+        {esMobile && filtrosAbiertos && createPortal(
+          <div className="si-portal" style={VARS_DEPTO}>
+            <div className="si-sheet">
+              <div className="si-sheet__overlay" onClick={() => setFiltrosAbiertos(false)} />
+              <div className="si-sheet__panel" role="dialog" aria-modal="true" aria-label="Filtros del inventario">
+                <div className="si-sheet__header">
+                  <span className="si-sheet__titulo">Filtros</span>
+                  <button
+                    type="button"
+                    className="si-sheet__cerrar"
+                    onClick={() => setFiltrosAbiertos(false)}
+                  >
+                    Cerrar
+                  </button>
+                </div>
+                <div className="sp-toolbar">
+                  <BarraFiltros
+                    filtros={{ ...filtros, buscar, molecula }}
+                    cambiarFiltro={cambiarFiltro}
+                    opciones={opciones}
+                    onLimpiar={limpiarFiltros}
+                  />
                 </div>
                 <button
                   type="button"
-                  className="si-drawer__cerrar"
-                  onClick={() => setDrawerId(null)}
-                  aria-label="Cerrar"
+                  className="si-btn si-btn--principal"
+                  onClick={() => setFiltrosAbiertos(false)}
                 >
-                  ✕
+                  Ver {total} producto{total === 1 ? '' : 's'}
                 </button>
               </div>
+            </div>
+          </div>,
+          document.body
+        )}
 
-              <div className="si-drawer__body">
-                {detalleError && <p className="si-nota si-nota--error" role="alert">{detalleError}</p>}
-{drawerError && <p className="si-nota si-nota--error" role="alert">{drawerError}</p>}
-{fotoOk && <p className="si-nota si-nota--ok" role="status">{fotoOk}</p>}
+        {/* Drawer del producto */}
+        {drawerId != null && createPortal(
+          <div className="si-portal" style={VARS_DEPTO}>
+            <div className="si-drawer" role="dialog" aria-modal="true" aria-label="Detalle del producto">
+              <div className="si-drawer__overlay" onClick={() => setDrawerId(null)} />
+              <div className="si-drawer__panel">
+                <div className="si-drawer__header">
+                  <div className="si-drawer__head-textos">
+                    <p className="si-drawer__eyebrow">Producto #{drawerId}</p>
+                    <h2 className="si-drawer__titulo">
+                      {producto?.nombre_comercial || 'Cargando...'}
+                    </h2>
+                    {producto?.sku && <p className="si-drawer__sku">{producto.sku}</p>}
+                  </div>
+                  <button
+                    type="button"
+                    className="si-drawer__cerrar"
+                    onClick={() => setDrawerId(null)}
+                    aria-label="Cerrar"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
 
-                {producto && (
-                  <>
-                    {/* 1. Foto */}
-                    <section className="si-fieldset">
-                      <h3 className="si-fieldset__titulo">Foto</h3>
-                      <ImagenProducto
-                        src={producto.foto_url}
-                        alt={producto.nombre_comercial}
-                        className="si-preview"
-                        vacio="Este producto no tiene foto"
-                      />
-                      {!hayFoto && (
-                        <p className="sp-hint">
-                          Sin foto: es lo que aparece en el catálogo hasta que le pongas una.
-                        </p>
-                      )}
+                <div className="si-drawer__body">
+                  {detalleError && <p className="si-nota si-nota--error" role="alert">{detalleError}</p>}
+  {drawerError && <p className="si-nota si-nota--error" role="alert">{drawerError}</p>}
+  {fotoOk && <p className="si-nota si-nota--ok" role="status">{fotoOk}</p>}
 
-                      <div className="si-fila-botones">
-                        <label className="sp-importar__file si-file">
-                          {archivo ? archivo.name : 'Elegir imagen...'}
-                          <input
-                            key={subidaId}
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => setArchivo(e.target.files?.[0] || null)}
-                          />
-                        </label>
-                        <button
-                          type="button"
-                          className="si-btn si-btn--principal"
-                          onClick={subirArchivo}
-                          disabled={!archivo || subiendoFoto}
-                        >
-                          {subiendoFoto ? 'Subiendo...' : 'Subir foto'}
-                        </button>
-                      </div>
-                      <p className="sp-hint">
-                        Se re-codifica a JPEG (máx 800 px) y se guarda en nuestro Storage. La
-                        imagen anterior no se borra del bucket.
-                      </p>
-
-                      <div className="si-fila-botones">
-                        <input
-                          type="text"
-                          className="sp-input si-input-url"
-                          placeholder="https://... (URL de la foto)"
-                          value={urlFoto}
-                          onChange={(e) => { setUrlFoto(e.target.value); setDrawerError('') }}
+                  {producto && (
+                    <>
+                      {/* 1. Foto */}
+                      <section className="si-fieldset">
+                        <h3 className="si-fieldset__titulo">Foto</h3>
+                        <ImagenProducto
+                          src={producto.foto_url}
+                          alt={producto.nombre_comercial}
+                          className="si-preview"
+                          vacio="Este producto no tiene foto"
                         />
-                        <button
-                          type="button"
-                          className="si-btn"
-                          onClick={guardarUrl}
-                          disabled={guardandoFoto || urlFoto.trim() === fotoUrlActual}
-                        >
-                          Guardar URL
-                        </button>
-                      </div>
+                        {!hayFoto && (
+                          <p className="sp-hint">
+                            Sin foto: es lo que aparece en el catálogo hasta que le pongas una.
+                          </p>
+                        )}
 
-                      <div className="si-fila-botones">
-                        <button
-                          type="button"
-                          className="si-btn si-btn--peligro"
-                          onClick={quitarFoto}
-                          disabled={!hayFoto || guardandoFoto}
-                        >
-                          Quitar foto
-                        </button>
-                        <a
-                          className="si-btn si-btn--sutil"
-                          href={`/producto/${producto.id}`}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Abrir en el catálogo público
-                        </a>
-                      </div>
-                    </section>
-
-                    {/* 2. Estado de la foto */}
-                    <section className="si-fieldset">
-                      <label className="si-label" htmlFor="si-select-estado">
-                          <span>Estado de la foto</span>
-                          <select
-                            id="si-select-estado"
-                            className="sp-select si-select-estado"
-                            value={producto.foto_estado || 'sin_foto'}
-                            disabled={guardandoFoto}
-                            onChange={(e) => cambiarEstadoFoto(e.target.value)}
+                        <div className="si-fila-botones">
+                          <label className="sp-importar__file si-file">
+                            {archivo ? archivo.name : 'Elegir imagen...'}
+                            <input
+                              key={subidaId}
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => setArchivo(e.target.files?.[0] || null)}
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            className="si-btn si-btn--principal"
+                            onClick={subirArchivo}
+                            disabled={!archivo || subiendoFoto}
                           >
-                            {FOTO_ESTADOS.map((e) => {
-                              // Coherencia (la misma regla del server): con foto no se
-                              // puede elegir "sin foto", y sin foto no se puede elegir
-                              // "ok" ni "manual". Se deshabilitan en vez de dejar que
-                              // el servidor las rechace con un 400.
-                              const imposible = hayFoto
-                                ? e.valor === 'sin_foto'
-                                : (e.valor === 'ok' || e.valor === 'manual')
-                              return (
-                                <option key={e.valor} value={e.valor} disabled={imposible}>
-                                  {e.etiqueta}
-                                </option>
-                              )
-                            })}
-                          </select>
-                        </label>
-                      <p className="sp-hint">
-                        {(FOTO_ESTADOS.find((e) => e.valor === producto.foto_estado)
-                          || FOTO_ESTADOS[0]).ayuda}
-                      </p>
-                    </section>
+                            {subiendoFoto ? 'Subiendo...' : 'Subir foto'}
+                          </button>
+                        </div>
+                        <p className="sp-hint">
+                          Se re-codifica a JPEG (máx 800 px) y se guarda en nuestro Storage. La
+                          imagen anterior no se borra del bucket.
+                        </p>
 
-                    {/* 3. Precio */}
-                    <section className="si-fieldset">
-                      <h3 className="si-fieldset__titulo">Precio</h3>
-                      <div className="si-grid-precio">
-                        <label className="si-label">
-                          <span>Precio USD (editable)</span>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            className="sp-input"
-                            value={precioTexto}
-                            disabled={!puedeEditarPrecio}
-                            onChange={(e) => { setPrecioTexto(e.target.value); setNotaPrecio('') }}
-                          />
-                        </label>
-                        <label className="si-label">
-                          <span>Costo USD (derivado)</span>
+                        <div className="si-fila-botones">
                           <input
                             type="text"
-                            readOnly
-                            className="sp-input si-input--readonly"
-                            value={
-                              producto.costo_usd != null ? `$${formato(producto.costo_usd)}` : ''
-                            }
+                            className="sp-input si-input-url"
+                            placeholder="https://... (URL de la foto)"
+                            value={urlFoto}
+                            onChange={(e) => { setUrlFoto(e.target.value); setDrawerError('') }}
                           />
-                        </label>
-                      </div>
-
-                      <p className="sp-hint">
-                        El costo no se escribe: sale del precio (costo = precio × 0.6) y lo calcula
-                        el servidor. Si el producto tiene proveedor, el costo que ves es el más
-                        barato: <strong>{costoMasBarato ? costoMasBarato.proveedor : 'ninguno'}</strong>
-                        {detalle.costos.length > 1 &&
-                          ` (de ${detalle.costos.length} proveedores; gana el mínimo)`}.
-                      </p>
-
-                      {detalle.sin_proveedor ? (
-                        <p className="si-nota">
-                          Este producto no tiene ninguna fila de proveedor: el precio se escribe
-                          directo en el catálogo y no viene de ningún Excel. La próxima importación
-                          de proveedor no lo toca (no hay fila que pisar).
-                        </p>
-                      ) : (
-                        <p className="si-nota">
-                          El ajuste manual se guarda en la fila del proveedor y la próxima
-                          importación de ese proveedor lo pisa: no hay marca de «editado a mano».
-                        </p>
-                      )}
-
-                      {!puedeEditarPrecio && (
-                        <p className="si-sin-permiso">El precio se cambia en Comercial</p>
-                      )}
-
-                      <div className="si-fila-botones">
-                        <button
-                          type="button"
-                          className="si-btn si-btn--principal"
-                          onClick={guardarPrecio}
-                          disabled={!puedeEditarPrecio || guardandoPrecio}
-                        >
-                          {guardandoPrecio ? 'Guardando...' : 'Guardar precio'}
-                        </button>
-                        <button
-                          type="button"
-                          className="si-btn si-btn--sutil"
-                          onClick={() => {
-                            setPrecioTexto(
-                              producto.precio_usd != null ? String(producto.precio_usd) : '',
-                            )
-                            setNotaPrecio('')
-                            setDrawerError('')
-                          }}
-                          disabled={!puedeEditarPrecio}
-                        >
-                          Descartar
-                        </button>
-                      </div>
-                      <p className="sp-hint">
-                        Un precio de <strong>0</strong> no es un error: quita el precio y despublica
-                        el producto.
-                      </p>
-                      {notaPrecio && <p className="si-nota si-nota--ok" role="status">{notaPrecio}</p>}
-                    </section>
-
-                    {/* 4. Datos del producto (texto; lo edita la gerencia) */}
-                    <section className="si-fieldset">
-                      <div className="si-head-datos">
-                        <h3 className="si-fieldset__titulo">Datos</h3>
-                        {puedeEditarDatos && !editandoDatos && (
                           <button
                             type="button"
                             className="si-btn"
-                            onClick={empezarEditarDatos}
-                            disabled={guardandoDatos}
+                            onClick={guardarUrl}
+                            disabled={guardandoFoto || urlFoto.trim() === fotoUrlActual}
                           >
-                            Editar datos
+                            Guardar URL
                           </button>
-                        )}
-                      </div>
-
-                      {editandoDatos && formDatos && (
-                        <div className="si-form-datos">
-                          <label className="si-label">
-                            <span>Nombre comercial</span>
-                            <input
-                              type="text"
-                              className="sp-input"
-                              value={formDatos.nombre_comercial}
-                              maxLength={500}
-                              onChange={(e) => cambiarDato('nombre_comercial', e.target.value)}
-                            />
-                          </label>
-
-                          <label className="si-label">
-                            <span>Descripción</span>
-                            <textarea
-                              className="sp-input si-textarea"
-                              rows={3}
-                              value={formDatos.descripcion}
-                              onChange={(e) => cambiarDato('descripcion', e.target.value)}
-                            />
-                          </label>
-
-                          <div className="si-grid-2">
-                            <label className="si-label">
-                              <span>Laboratorio</span>
-                              <input
-                                type="text"
-                                className="sp-input"
-                                list="si-labs-datos"
-                                value={formDatos.laboratorio}
-                                onChange={(e) => cambiarDato('laboratorio', e.target.value)}
-                              />
-                            </label>
-                            <label className="si-label">
-                              <span>Línea</span>
-                              <input
-                                type="text"
-                                className="sp-input"
-                                list="si-lineas-datos"
-                                value={formDatos.linea}
-                                onChange={(e) => cambiarDato('linea', e.target.value)}
-                              />
-                            </label>
-                            <label className="si-label">
-                              <span>Forma</span>
-                              <input
-                                type="text"
-                                className="sp-input"
-                                list="si-formas-datos"
-                                value={formDatos.forma}
-                                onChange={(e) => cambiarDato('forma', e.target.value)}
-                              />
-                            </label>
-                          </div>
-
-                          <label className="si-label">
-                            <span>Molécula (columna)</span>
-                            <input
-                              type="text"
-                              className="sp-input si-input-molecula"
-                              list="si-moleculas-datos"
-                              value={formDatos.molecula}
-                              onChange={(e) => cambiarDato('molecula', e.target.value)}
-                            />
-                          </label>
-                          <p className="si-nota">
-                            Cambiar la molécula actualiza solo el texto de la columna; el enlace a
-                            la ficha clínica/vademécum (ATC) NO se recalcula desde acá.
-                          </p>
-                          <p className="sp-hint">
-                            El laboratorio se guarda sin comas ni comillas dobles: una coma ahí
-                            rompe el filtro del catálogo por laboratorio.
-                          </p>
-
-                          <div className="si-grid-2">
-                            <label className="sp-check">
-                              <input
-                                type="checkbox"
-                                checked={formDatos.activo}
-                                onChange={(e) => cambiarDato('activo', e.target.checked)}
-                              />
-                              Activo
-                            </label>
-                            <label className="sp-check">
-                              <input
-                                type="checkbox"
-                                checked={formDatos.visible_catalogo}
-                                onChange={(e) => cambiarDato('visible_catalogo', e.target.checked)}
-                              />
-                              Visible en el catálogo
-                            </label>
-                          </div>
-
-                          <div className="si-fila-botones">
-                            <button
-                              type="button"
-                              className="si-btn si-btn--principal"
-                              onClick={guardarDatos}
-                              disabled={guardandoDatos}
-                            >
-                              {guardandoDatos ? 'Guardando...' : 'Guardar datos'}
-                            </button>
-                            <button
-                              type="button"
-                              className="si-btn si-btn--sutil"
-                              onClick={descartarDatos}
-                              disabled={guardandoDatos}
-                            >
-                              Descartar
-                            </button>
-                          </div>
-
-                          {/* Sugerencias: el mismo contenido que los filtros. Va como
-                              datalist (campo libre) porque corregir un dato puede requerir
-                              un valor que todavía no está en la BD. */}
-                          <datalist id="si-labs-datos">
-                            {labsDatos.map((v) => <option key={v} value={v} />)}
-                          </datalist>
-                          <datalist id="si-lineas-datos">
-                            {lineasDatos.map((v) => <option key={v} value={v} />)}
-                          </datalist>
-                          <datalist id="si-formas-datos">
-                            {formasDatos.map((v) => <option key={v} value={v} />)}
-                          </datalist>
-                          <datalist id="si-moleculas-datos">
-                            {moleculasDatos.map((m) => <option key={m.nombre} value={m.nombre} />)}
-                          </datalist>
                         </div>
-                      )}
 
-                      {notaDatos && <p className="si-nota si-nota--ok" role="status">{notaDatos}</p>}
+                        <div className="si-fila-botones">
+                          <button
+                            type="button"
+                            className="si-btn si-btn--peligro"
+                            onClick={quitarFoto}
+                            disabled={!hayFoto || guardandoFoto}
+                          >
+                            Quitar foto
+                          </button>
+                          <a
+                            className="si-btn si-btn--sutil"
+                            href={`/producto/${producto.id}`}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Abrir en el catálogo público
+                          </a>
+                        </div>
+                      </section>
 
-                      {!puedeEditarDatos && (
-                        <p className="si-sin-permiso">
-                          Los datos del producto los corrige la gerencia (administrador/director)
+                      {/* 2. Estado de la foto */}
+                      <section className="si-fieldset">
+                        <label className="si-label" htmlFor="si-select-estado">
+                            <span>Estado de la foto</span>
+                            <select
+                              id="si-select-estado"
+                              className="sp-select si-select-estado"
+                              value={producto.foto_estado || 'sin_foto'}
+                              disabled={guardandoFoto}
+                              onChange={(e) => cambiarEstadoFoto(e.target.value)}
+                            >
+                              {FOTO_ESTADOS.map((e) => {
+                                // Coherencia (la misma regla del server): con foto no se
+                                // puede elegir "sin foto", y sin foto no se puede elegir
+                                // "ok" ni "manual". Se deshabilitan en vez de dejar que
+                                // el servidor las rechace con un 400.
+                                const imposible = hayFoto
+                                  ? e.valor === 'sin_foto'
+                                  : (e.valor === 'ok' || e.valor === 'manual')
+                                return (
+                                  <option key={e.valor} value={e.valor} disabled={imposible}>
+                                    {e.etiqueta}
+                                  </option>
+                                )
+                              })}
+                            </select>
+                          </label>
+                        <p className="sp-hint">
+                          {(FOTO_ESTADOS.find((e) => e.valor === producto.foto_estado)
+                            || FOTO_ESTADOS[0]).ayuda}
                         </p>
-                      )}
+                      </section>
 
-                      {/* Registro + estado derivado. NO se editan desde acá y siguen
-                          visibles mientras se edita, para tener el contexto. */}
-                      <div className="si-datos">
-                        {!editandoDatos && (
-                          <>
-                            <Dato etiqueta="Laboratorio" valor={producto.laboratorio} />
-                            <Dato etiqueta="Línea" valor={producto.linea} />
-                            <Dato etiqueta="Forma" valor={producto.forma} />
-                            <Dato etiqueta="Molécula (columna)" valor={producto.molecula} />
-                            <Dato etiqueta="Descripción" valor={producto.descripcion} />
-                          </>
+                      {/* 3. Precio */}
+                      <section className="si-fieldset">
+                        <h3 className="si-fieldset__titulo">Precio</h3>
+                        <div className="si-grid-precio">
+                          <label className="si-label">
+                            <span>Precio USD (editable)</span>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              className="sp-input"
+                              value={precioTexto}
+                              disabled={!puedeEditarPrecio}
+                              onChange={(e) => { setPrecioTexto(e.target.value); setNotaPrecio('') }}
+                            />
+                          </label>
+                          <label className="si-label">
+                            <span>Costo USD (derivado)</span>
+                            <input
+                              type="text"
+                              readOnly
+                              className="sp-input si-input--readonly"
+                              value={
+                                producto.costo_usd != null ? `$${formato(producto.costo_usd)}` : ''
+                              }
+                            />
+                          </label>
+                        </div>
+
+                        <p className="sp-hint">
+                          El costo no se escribe: sale del precio (costo = precio × 0.6) y lo calcula
+                          el servidor. Si el producto tiene proveedor, el costo que ves es el más
+                          barato: <strong>{costoMasBarato ? costoMasBarato.proveedor : 'ninguno'}</strong>
+                          {detalle.costos.length > 1 &&
+                            ` (de ${detalle.costos.length} proveedores; gana el mínimo)`}.
+                        </p>
+
+                        {detalle.sin_proveedor ? (
+                          <p className="si-nota">
+                            Este producto no tiene ninguna fila de proveedor: el precio se escribe
+                            directo en el catálogo y no viene de ningún Excel. La próxima importación
+                            de proveedor no lo toca (no hay fila que pisar).
+                          </p>
+                        ) : (
+                          <p className="si-nota">
+                            El ajuste manual se guarda en la fila del proveedor y la próxima
+                            importación de ese proveedor lo pisa: no hay marca de «editado a mano».
+                          </p>
                         )}
-                        <Dato etiqueta="SKU" valor={producto.sku} mono />
-                        <Dato etiqueta="Registro INHRR" valor={producto.fuente_inhrr_ef} mono />
-                        <Dato
-                          etiqueta="Moléculas (vademécum)"
-                          valor={refs.map((r) => r.nombre).join(', ')}
-                        />
-                        <Dato
-                          etiqueta="ATC"
-                          valor={atcs.length > 0 ? atcs.join(', ') : '—'}
-                          mono
-                        />
-                        <Dato
-                          etiqueta="Publicación"
-                          valor={`activo: ${siNo(producto.activo)} · visible: ${siNo(
-                            producto.visible_catalogo,
-                          )} · disponible: ${siNo(producto.disponible)}`}
-                        />
-                        <Dato etiqueta="Creado" valor={formatoFecha(producto.created_at)} />
-                        <Dato etiqueta="Actualizado" valor={formatoFecha(producto.updated_at)} />
-                        <Dato etiqueta="URL de la foto" valor={fotoUrlActual} mono />
-                      </div>
-                    </section>
-                  </>
-                )}
+
+                        {!puedeEditarPrecio && (
+                          <p className="si-sin-permiso">El precio se cambia en Comercial</p>
+                        )}
+
+                        <div className="si-fila-botones">
+                          <button
+                            type="button"
+                            className="si-btn si-btn--principal"
+                            onClick={guardarPrecio}
+                            disabled={!puedeEditarPrecio || guardandoPrecio}
+                          >
+                            {guardandoPrecio ? 'Guardando...' : 'Guardar precio'}
+                          </button>
+                          <button
+                            type="button"
+                            className="si-btn si-btn--sutil"
+                            onClick={() => {
+                              setPrecioTexto(
+                                producto.precio_usd != null ? String(producto.precio_usd) : '',
+                              )
+                              setNotaPrecio('')
+                              setDrawerError('')
+                            }}
+                            disabled={!puedeEditarPrecio}
+                          >
+                            Descartar
+                          </button>
+                        </div>
+                        <p className="sp-hint">
+                          Un precio de <strong>0</strong> no es un error: quita el precio y despublica
+                          el producto.
+                        </p>
+                        {notaPrecio && <p className="si-nota si-nota--ok" role="status">{notaPrecio}</p>}
+                      </section>
+
+                      {/* 4. Datos del producto (texto; lo edita la gerencia) */}
+                      <section className="si-fieldset">
+                        <div className="si-head-datos">
+                          <h3 className="si-fieldset__titulo">Datos</h3>
+                          {puedeEditarDatos && !editandoDatos && (
+                            <button
+                              type="button"
+                              className="si-btn"
+                              onClick={empezarEditarDatos}
+                              disabled={guardandoDatos}
+                            >
+                              Editar datos
+                            </button>
+                          )}
+                        </div>
+
+                        {editandoDatos && formDatos && (
+                          <div className="si-form-datos">
+                            <label className="si-label">
+                              <span>Nombre comercial</span>
+                              <input
+                                type="text"
+                                className="sp-input"
+                                value={formDatos.nombre_comercial}
+                                maxLength={500}
+                                onChange={(e) => cambiarDato('nombre_comercial', e.target.value)}
+                              />
+                            </label>
+
+                            <label className="si-label">
+                              <span>Descripción</span>
+                              <textarea
+                                className="sp-input si-textarea"
+                                rows={3}
+                                value={formDatos.descripcion}
+                                onChange={(e) => cambiarDato('descripcion', e.target.value)}
+                              />
+                            </label>
+
+                            <div className="si-grid-2">
+                              <label className="si-label">
+                                <span>Laboratorio</span>
+                                <input
+                                  type="text"
+                                  className="sp-input"
+                                  list="si-labs-datos"
+                                  value={formDatos.laboratorio}
+                                  onChange={(e) => cambiarDato('laboratorio', e.target.value)}
+                                />
+                              </label>
+                              <label className="si-label">
+                                <span>Línea</span>
+                                <input
+                                  type="text"
+                                  className="sp-input"
+                                  list="si-lineas-datos"
+                                  value={formDatos.linea}
+                                  onChange={(e) => cambiarDato('linea', e.target.value)}
+                                />
+                              </label>
+                              <label className="si-label">
+                                <span>Forma</span>
+                                <input
+                                  type="text"
+                                  className="sp-input"
+                                  list="si-formas-datos"
+                                  value={formDatos.forma}
+                                  onChange={(e) => cambiarDato('forma', e.target.value)}
+                                />
+                              </label>
+                            </div>
+
+                            <label className="si-label">
+                              <span>Molécula (columna)</span>
+                              <input
+                                type="text"
+                                className="sp-input si-input-molecula"
+                                list="si-moleculas-datos"
+                                value={formDatos.molecula}
+                                onChange={(e) => cambiarDato('molecula', e.target.value)}
+                              />
+                            </label>
+                            <p className="si-nota">
+                              Cambiar la molécula actualiza solo el texto de la columna; el enlace a
+                              la ficha clínica/vademécum (ATC) NO se recalcula desde acá.
+                            </p>
+                            <p className="sp-hint">
+                              El laboratorio se guarda sin comas ni comillas dobles: una coma ahí
+                              rompe el filtro del catálogo por laboratorio.
+                            </p>
+
+                            <div className="si-grid-2">
+                              <label className="sp-check">
+                                <input
+                                  type="checkbox"
+                                  checked={formDatos.activo}
+                                  onChange={(e) => cambiarDato('activo', e.target.checked)}
+                                />
+                                Activo
+                              </label>
+                              <label className="sp-check">
+                                <input
+                                  type="checkbox"
+                                  checked={formDatos.visible_catalogo}
+                                  onChange={(e) => cambiarDato('visible_catalogo', e.target.checked)}
+                                />
+                                Visible en el catálogo
+                              </label>
+                            </div>
+
+                            <div className="si-fila-botones">
+                              <button
+                                type="button"
+                                className="si-btn si-btn--principal"
+                                onClick={guardarDatos}
+                                disabled={guardandoDatos}
+                              >
+                                {guardandoDatos ? 'Guardando...' : 'Guardar datos'}
+                              </button>
+                              <button
+                                type="button"
+                                className="si-btn si-btn--sutil"
+                                onClick={descartarDatos}
+                                disabled={guardandoDatos}
+                              >
+                                Descartar
+                              </button>
+                            </div>
+
+                            {/* Sugerencias: el mismo contenido que los filtros. Va como
+                                datalist (campo libre) porque corregir un dato puede requerir
+                                un valor que todavía no está en la BD. */}
+                            <datalist id="si-labs-datos">
+                              {labsDatos.map((v) => <option key={v} value={v} />)}
+                            </datalist>
+                            <datalist id="si-lineas-datos">
+                              {lineasDatos.map((v) => <option key={v} value={v} />)}
+                            </datalist>
+                            <datalist id="si-formas-datos">
+                              {formasDatos.map((v) => <option key={v} value={v} />)}
+                            </datalist>
+                            <datalist id="si-moleculas-datos">
+                              {moleculasDatos.map((m) => <option key={m.nombre} value={m.nombre} />)}
+                            </datalist>
+                          </div>
+                        )}
+
+                        {notaDatos && <p className="si-nota si-nota--ok" role="status">{notaDatos}</p>}
+
+                        {!puedeEditarDatos && (
+                          <p className="si-sin-permiso">
+                            Los datos del producto los corrige la gerencia (administrador/director)
+                          </p>
+                        )}
+
+                        {/* Registro + estado derivado. NO se editan desde acá y siguen
+                            visibles mientras se edita, para tener el contexto. */}
+                        <div className="si-datos">
+                          {!editandoDatos && (
+                            <>
+                              <Dato etiqueta="Laboratorio" valor={producto.laboratorio} />
+                              <Dato etiqueta="Línea" valor={producto.linea} />
+                              <Dato etiqueta="Forma" valor={producto.forma} />
+                              <Dato etiqueta="Molécula (columna)" valor={producto.molecula} />
+                              <Dato etiqueta="Descripción" valor={producto.descripcion} />
+                            </>
+                          )}
+                          <Dato etiqueta="SKU" valor={producto.sku} mono />
+                          <Dato etiqueta="Registro INHRR" valor={producto.fuente_inhrr_ef} mono />
+                          <Dato
+                            etiqueta="Moléculas (vademécum)"
+                            valor={refs.map((r) => r.nombre).join(', ')}
+                          />
+                          <Dato
+                            etiqueta="ATC"
+                            valor={atcs.length > 0 ? atcs.join(', ') : '—'}
+                            mono
+                          />
+                          <Dato
+                            etiqueta="Publicación"
+                            valor={`activo: ${siNo(producto.activo)} · visible: ${siNo(
+                              producto.visible_catalogo,
+                            )} · disponible: ${siNo(producto.disponible)}`}
+                          />
+                          <Dato etiqueta="Creado" valor={formatoFecha(producto.created_at)} />
+                          <Dato etiqueta="Actualizado" valor={formatoFecha(producto.updated_at)} />
+                          <Dato etiqueta="URL de la foto" valor={fotoUrlActual} mono />
+                        </div>
+                      </section>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
       </div>
     </LayoutDepartamento>

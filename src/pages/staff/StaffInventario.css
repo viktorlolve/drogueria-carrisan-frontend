@@ -31,11 +31,11 @@
 .si-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .si-btn--principal {
-  background: var(--ldep-color, #D97706);
-  border-color: var(--ldep-color, #D97706);
+  background: var(--ldep-color-strong, #B45309);
+  border-color: var(--ldep-color-strong, #B45309);
   color: #fff;
 }
-.si-btn--principal:hover:not(:disabled) { filter: brightness(0.95); background: var(--ldep-color, #D97706); }
+.si-btn--principal:hover:not(:disabled) { filter: brightness(0.95); background: var(--ldep-color-strong, #B45309); }
 
 .si-btn--peligro { background: #fee2e2; border-color: #fecaca; color: #b91c1c; }
 .si-btn--peligro:hover:not(:disabled) { background: #fecaca; }
@@ -92,8 +92,8 @@
 }
 /* La cola activa se marca con el color del departamento (`.si-queue__btn--on`). */
 .si-queue__btn--on {
-  background: var(--ldep-color, #D97706);
-  border-color: var(--ldep-color, #D97706);
+  background: var(--ldep-color-strong, #B45309);
+  border-color: var(--ldep-color-strong, #B45309);
   color: #fff;
 }
 .si-queue__btn--on .si-queue__conteo { background: rgba(255, 255, 255, 0.28); color: #fff; }
@@ -507,4 +507,14 @@
   min-height: 64px;
   resize: vertical;
   font-family: inherit;
+}
+
+/* iOS hace zoom al enfocar campos con menos de 16px: en móvil, los campos de la
+   barra de filtros y del drawer/hoja (que viven en un portal) usan 16px. */
+@media (max-width: 768px) {
+  .sp-toolbar input:not([type='checkbox']):not([type='radio']),
+  .sp-toolbar select,
+  .si-portal input:not([type='checkbox']):not([type='radio']),
+  .si-portal select,
+  .si-portal textarea { font-size: 16px; }
 }

@@ -21,7 +21,7 @@
 }
 
 .smp-card__titulo {
-  color: #232b45;
+  color: var(--stf-indigo, #1A1A3A);
   font-size: 20px;
   font-weight: 800;
   margin: 0 0 8px;
