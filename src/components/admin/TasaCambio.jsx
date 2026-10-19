@@ -173,7 +173,7 @@ function TasaCambio() {
               <div>
                 <strong>Actualización Automática</strong>
                 <span className="auto-update-detalle">
-                  Se actualiza automáticamente cada día hábil a las 6pm (hora Venezuela)
+                  Se actualiza automáticamente todos los días a las 9pm (hora Venezuela)
                 </span>
               </div>
             </div>
