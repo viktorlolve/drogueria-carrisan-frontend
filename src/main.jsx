@@ -26,8 +26,25 @@ function logCrash(type, detail) {
   } catch { /* ignore */ }
 }
 
-window.addEventListener('error', (e) => logCrash('error', e.error || e))
-window.addEventListener('unhandledrejection', (e) => logCrash('unhandledrejection', e.reason))
+window.addEventListener('error', (e) => {
+  logCrash('error', e.error || e)
+  const msg = e?.message || ''
+  if (
+    msg.includes('Failed to fetch dynamically imported module') ||
+    msg.includes('error loading dynamically imported module') ||
+    msg.includes('Importing a module script failed')
+  ) {
+    window.location.reload()
+  }
+})
+window.addEventListener('unhandledrejection', (e) => {
+  logCrash('unhandledrejection', e.reason)
+  const reason = String(e?.reason || '')
+  if (reason.includes('dynamically imported module')) {
+    e.preventDefault()
+    window.location.reload()
+  }
+})
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
