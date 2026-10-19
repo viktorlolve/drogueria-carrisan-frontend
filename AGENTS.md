@@ -141,12 +141,16 @@ export const NAV_UNIFICADO = {
 
 ```bash
 node scripts/verificar-nav.mjs                    # guard: 20/20 rutas del nav existen en App.jsx
+node scripts/verificar-nav-admin.mjs              # guard: cada `to` de NavAdmin.js tiene su <Route> en Admin.jsx
 node --test scripts/navUnificadoHelpers.test.mjs  # 11 tests de los helpers
 npm run lint && npx vite build --mode development
 ```
 
 Al **agregar un item al nav**, creá la ruta en `App.jsx` en el mismo commit o el guard falla.
 Un `to` con query (`?tab=`) se compara por su **ruta base** (`scripts/verificar-nav.mjs`).
+
+- **`scripts/verificar-nav.mjs`** cubre SOLO `NavUnificado.js` + `App.jsx` (nav de cliente).
+- **`scripts/verificar-nav-admin.mjs`** es el guard del **nav de `/admin`**: `NavAdmin.js` (`NAV_ADMIN`) y el `<Routes>` **anidado** de `Admin.jsx` quedan fuera del primero, y `Admin.jsx` **no tiene catch-all** (`<Route path="*">`). Un `to` mal escrito en `NAV_ADMIN` volvería a renderizar **página en blanco sin error en consola** (mismo bug silencioso). Ver la sección "Paginas admin" abajo. Correrlo al **agregar un item a `NAV_ADMIN`**.
 
 ### Preferencias de notificación (2 cosas distintas — no las mezcles)
 
@@ -363,6 +367,24 @@ El Admin.jsx usa rutas anidadas. Componentes en `src/components/admin/`:
 - MonitoreoAdmin (2026-09-29) — estado del sistema: servidor, BD, tareas cron, tráfico, 5xx y pendientes del negocio. Ruta `/admin/monitoreo`, item en el grupo "General" de `NavAdmin.js` (icono `Activity`). CSS propio `.mon-*` reusando los tokens de `Admin.css`. Consume `GET /admin/monitoreo` con el `api` de cliente (`verifyJWT` + `verifyAdmin` = dueño vía bridge).
 
   **Detalle de lint**: su `cargar()` es una **cadena de `.then()`**, no `async`/`await` — ver la sección "Lint" de este archivo. Si alguien lo convierte a `async` con `setState` después del `await`, `react-hooks/set-state-in-effect` lo va a marcar. El ref `enCurso` evita superponer peticiones y el refresh solo corre con la pestaña visible.
+- **PersonalAdmin** (2026-10-16) — sección **Personal** (`/admin/personal`, item `personal` con icono `UserCog` en el grupo **Cuenta** de `NavAdmin.js`, con `<Route>` en `Admin.jsx` + `TITULOS_SECCION`/`SEGMENTO_A_ID`): CRUD de las cuentas del personal interno (`staff`) — listar, crear (eligiendo rol), editar (nombre/email/rol/estado), cambiar contraseña y eliminar. Consume **`/admin/staff`** con el `api` de **cliente admin** (`verifyJWT` + `verifyAdmin`), **NUNCA `staffApi`** (es el dueño gestionando a su personal; el mismo supuesto del bridge `staff rol='admin'` → `users.es_admin`). El selector de rol sale de `rolesStaff.js` (ver abajo).
+
+### Roles de staff — `src/utils/rolesStaff.js`
+
+**Fuente ÚNICA** de los roles de staff en el frontend (los mismos 7 del backend `ROLES_TODOS_STAFF` y del CHECK de `009_roles_staff.sql`): `ROLES_STAFF` + `ETIQUETA_ROL` (`{ vendedor:'Vendedor', despachador:'Despachador', almacenista:'Almacenista', contabilidad:'Contabilidad', administrador:'Administrador', director:'Director', admin:'Admin' }`). Los textos de `ETIQUETA_ROL` coinciden con los que ya mostraba `GestionCodigos.jsx`, así que la migración fue visualmente neutral. Consumidores: `GestionCodigos.jsx` (rol del código de invitación staff) y `PersonalAdmin.jsx` (rol al crear/editar personal). **NO dupliques la lista ni las etiquetas de roles en componentes** — importá de aquí.
+
+### Guard `verificar-nav-admin.mjs` (admin)
+
+`script` propio del nav de `/admin` (`NavAdmin.js` + las rutas **anidadas** de `Admin.jsx`), separado de
+`scripts/verificar-nav.mjs` (ese cubre SOLO `NavUnificado.js` + `App.jsx`). Extrae cada `to: '/admin…'`
+de `NAV_ADMIN` y falla si su ruta no está declarada en el `<Routes>` de `Admin.jsx`. Correrlo al
+**agregar una sección al panel**:
+
+```bash
+node scripts/verificar-nav-admin.mjs
+```
+
+Al agregar una sección, creá el **item en `NAV_ADMIN`** y su **`<Route>` en `Admin.jsx`** en el mismo commit o el guard falla.
 
 ## PWA / Service Worker
 
