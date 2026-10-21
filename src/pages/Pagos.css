@@ -487,17 +487,27 @@ button.pg-paso__btn:focus-visible {
   gap: 12px;
   margin-bottom: 8px;
 }
-.pg-cuenta__icono {
-  width: 40px;
-  height: 40px;
+.pg-cuenta__logo {
+  width: 46px;
+  height: 46px;
   border-radius: 12px;
-  background: var(--pg-azul-suave);
-  color: var(--pg-azul);
+  background: #fff;
+  border: 1px solid var(--pg-borde);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  padding: 6px;
+  overflow: hidden;
+  color: var(--pg-azul);
 }
+.pg-cuenta__logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.pg-cuenta__ident { min-width: 0; }
 .pg-cuenta__titulo {
   display: block;
   font-size: 0.95rem;
@@ -508,6 +518,80 @@ button.pg-paso__btn:focus-visible {
   display: block;
   font-size: 0.78rem;
   color: var(--pg-apagado);
+}
+
+/* Cuerpo: campos a la izquierda, espacio del QR a la derecha (pago móvil) */
+.pg-cuenta__cuerpo {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.pg-cuenta__cuerpo .pg-cuenta__campos { flex: 1; min-width: 0; }
+
+.pg-cuenta__qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin: 0;
+}
+.pg-cuenta__qr-caja {
+  width: 112px;
+  height: 112px;
+  border-radius: 12px;
+  border: 1.5px solid var(--pg-borde);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 4px;
+  box-sizing: border-box;
+}
+.pg-cuenta__qr-caja img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.pg-cuenta__qr-vacio {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #9AA0B0;
+}
+.pg-cuenta__qr-caja:has(img) { border-style: solid; }
+.pg-cuenta__qr-nota {
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--pg-apagado);
+}
+
+/* "Copiar todos los datos" (solo pago móvil) */
+.pg-copiar-todo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 12px;
+  padding: 11px 14px;
+  border-radius: 11px;
+  border: 1.5px solid var(--pg-azul);
+  background: var(--pg-azul);
+  color: #fff;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.pg-copiar-todo:hover { background: var(--pg-indigo); border-color: var(--pg-indigo); }
+.pg-copiar-todo--ok,
+.pg-copiar-todo--ok:hover {
+  background: var(--pg-teal);
+  border-color: var(--pg-teal);
 }
 
 .pg-cuenta__campos { margin: 0; }
@@ -1026,6 +1110,12 @@ button.pg-paso__btn:focus-visible {
 
   .pg-cuentas { grid-template-columns: 1fr; }
   .pg-skel--resumen { height: 280px; }
+}
+
+/* ---------- Móvil angosto: el QR baja debajo de los datos ---------- */
+@media (max-width: 380px) {
+  .pg-cuenta__cuerpo { flex-direction: column; }
+  .pg-cuenta__qr { align-self: center; }
 }
 
 @media (min-width: 1280px) {

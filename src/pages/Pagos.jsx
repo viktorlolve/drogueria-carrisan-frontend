@@ -10,49 +10,16 @@ import {
   Copy,
   FileText,
   Info,
-  Landmark,
   RefreshCw,
   ShieldCheck,
-  Smartphone,
   UploadCloud,
   X,
 } from 'lucide-react'
 import api from '../api/axios'
+import { useAuth } from '../context/AuthContext'
+import { cuentasDe } from '../config/cuentasBancarias'
 import { formatearUSD, formatearVES } from '../utils/formato'
 import './Pagos.css'
-
-// ---------------------------------------------------------------
-// Datos de pago de la empresa. Fijos por ahora (igual que el resto
-// del proyecto trata sus constantes de marca); si más adelante se
-// necesita editarlos desde el admin, se puede mover a una tabla como
-// se hizo con la tasa de cambio.
-// Cada `campos[]` es una fila con botón de copiar.
-// TODO: reemplazar los valores XXXX por los datos reales antes de publicar.
-// ---------------------------------------------------------------
-const CUENTAS = [
-  {
-    id: 'banesco',
-    Icono: Landmark,
-    titulo: 'Transferencia Banesco',
-    subtitulo: 'Cuenta corriente',
-    campos: [
-      { label: 'Número de cuenta', valor: '0134-XXXX-XX-XXXXXXXXXX' },
-      { label: 'Titular', valor: 'Droguería Carrisan, C.A.' },
-      { label: 'RIF', valor: 'J-XXXXXXXX-X' },
-    ],
-  },
-  {
-    id: 'pago-movil',
-    Icono: Smartphone,
-    titulo: 'Pago Móvil',
-    subtitulo: 'Pago inmediato desde tu app bancaria',
-    campos: [
-      { label: 'Teléfono', valor: '0414-XXXXXXX' },
-      { label: 'Titular', valor: 'Droguería Carrisan, C.A.' },
-      { label: 'RIF', valor: 'J-XXXXXXXX-X' },
-    ],
-  },
-]
 
 const PASOS = ['Órdenes', 'Datos de pago', 'Comprobante']
 const TAMANO_MAX_MB = 10
@@ -129,6 +96,33 @@ function BotonCopiar({ valor, etiqueta, conTexto = false }) {
     >
       {copiado ? <Check size={15} strokeWidth={2.5} /> : <Copy size={15} />}
       {conTexto && <span aria-live="polite">{copiado ? 'Copiado' : etiqueta}</span>}
+    </button>
+  )
+}
+
+function BotonCopiarBloque({ valor, etiqueta }) {
+  const [copiado, setCopiado] = useState(false)
+  const timer = useRef(null)
+
+  useEffect(() => () => clearTimeout(timer.current), [])
+
+  async function copiar() {
+    const ok = await copiarTexto(valor)
+    if (!ok) return
+    setCopiado(true)
+    clearTimeout(timer.current)
+    timer.current = setTimeout(() => setCopiado(false), 1800)
+  }
+
+  return (
+    <button
+      type="button"
+      className={`pg-copiar-todo ${copiado ? 'pg-copiar-todo--ok' : ''}`}
+      onClick={copiar}
+      aria-label={etiqueta}
+    >
+      {copiado ? <Check size={16} strokeWidth={2.5} /> : <Copy size={16} />}
+      <span aria-live="polite">{copiado ? '¡Copiado!' : etiqueta}</span>
     </button>
   )
 }
@@ -232,6 +226,9 @@ function PantallaCentrada({ children }) {
 // ---------------------------------------------------------------
 function Pagos() {
   const location = useLocation()
+  const { user } = useAuth()
+  // Cuentas bancarias del grupo del cliente (institucional / profesional / honorifico)
+  const cuentas = useMemo(() => cuentasDe(user?.tipo_usuario), [user?.tipo_usuario])
 
   const [ordenes, setOrdenes] = useState([])
   const [seleccionadas, setSeleccionadas] = useState(() => location.state?.ordenIds || [])
@@ -604,28 +601,82 @@ function Pagos() {
                 </div>
 
                 <div className="pg-cuentas">
-                  {CUENTAS.map(({ id, Icono, titulo, subtitulo, campos }) => (
-                    <article key={id} className="pg-cuenta">
-                      <header className="pg-cuenta__cab">
-                        <span className="pg-cuenta__icono"><Icono size={20} /></span>
-                        <span>
-                          <span className="pg-cuenta__titulo">{titulo}</span>
-                          <span className="pg-cuenta__sub">{subtitulo}</span>
-                        </span>
-                      </header>
-                      <dl className="pg-cuenta__campos">
-                        {campos.map((c) => (
-                          <div key={c.label} className="pg-cuenta__campo">
-                            <div>
-                              <dt>{c.label}</dt>
-                              <dd>{c.valor}</dd>
-                            </div>
-                            <BotonCopiar valor={c.valor} etiqueta={`Copiar ${c.label.toLowerCase()}`} />
-                          </div>
-                        ))}
-                      </dl>
-                    </article>
-                  ))}
+                  {cuentas.map((cuenta) => {
+                    const {
+                      id,
+                      Icono,
+                      titulo,
+                      subtitulo,
+                      logo,
+                      metodo,
+                      campos,
+                      copiarTodo,
+                      etiquetaTodo,
+                      qr,
+                      qrImagen,
+                      qrNota,
+                    } = cuenta
+                    const esPagoMovil = metodo === 'pago_movil'
+                    return (
+                      <article
+                        key={id}
+                        className={`pg-cuenta ${esPagoMovil ? 'pg-cuenta--movil' : ''}`}
+                      >
+                        <header className="pg-cuenta__cab">
+                          <span className="pg-cuenta__logo">
+                            {logo ? (
+                              <img src={logo} alt="" loading="lazy" />
+                            ) : (
+                              <Icono size={22} />
+                            )}
+                          </span>
+                          <span className="pg-cuenta__ident">
+                            <span className="pg-cuenta__titulo">{titulo}</span>
+                            <span className="pg-cuenta__sub">{subtitulo}</span>
+                          </span>
+                        </header>
+
+                        <div className="pg-cuenta__cuerpo">
+                          <dl className="pg-cuenta__campos">
+                            {campos.map((c) => (
+                              <div key={c.label} className="pg-cuenta__campo">
+                                <div>
+                                  <dt>{c.label}</dt>
+                                  <dd>{c.valor}</dd>
+                                </div>
+                                <BotonCopiar
+                                  valor={c.copiar ?? c.valor}
+                                  etiqueta={`Copiar ${c.label.toLowerCase()}`}
+                                />
+                              </div>
+                            ))}
+                          </dl>
+
+                          {qr && (
+                            <figure className="pg-cuenta__qr">
+                              <span className="pg-cuenta__qr-caja">
+                                {qrImagen ? (
+                                  <img src={qrImagen} alt="Código QR para pagar" loading="lazy" />
+                                ) : (
+                                  <span className="pg-cuenta__qr-vacio">QR</span>
+                                )}
+                              </span>
+                              {qrNota && (
+                                <figcaption className="pg-cuenta__qr-nota">{qrNota}</figcaption>
+                              )}
+                            </figure>
+                          )}
+                        </div>
+
+                        {copiarTodo && (
+                          <BotonCopiarBloque
+                            valor={copiarTodo}
+                            etiqueta={etiquetaTodo || 'Copiar todos los datos'}
+                          />
+                        )}
+                      </article>
+                    )
+                  })}
                 </div>
 
                 <p className="pg-aviso">
