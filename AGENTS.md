@@ -607,6 +607,63 @@ inalcanzable, imposible de scrollear.
   card escala (280/320/335/350/374/388) tras el fix. **`StaffLogin.jsx` usa el MISMO patrón pero su card
   no supera el ancho → NO lo necesita** (no le agregues `minW="0"` "por simetría").
 
+## Plan de corrección rápida — gotchas de UI/CSS
+
+Cambios chicos que se olvidan y se repiten. Antes de dar por terminado un modal/lightbox/drawer,
+repasa esta lista.
+
+### 1. Todo overlay que cubre la pantalla debe bloquear el scroll del fondo
+
+Un modal/lightbox/drawer con `position: fixed; inset: 0` **no bloquea el scroll solo**: en móvil el
+dedo sigue desplazando la página que hay detrás (el overlay se ve quieto pero el contenido de atrás
+se mueve, y al cerrar quedas en otra parte de la página).
+
+**Patrón del proyecto** (usado en ~15 componentes: `LegalModal`, `InfoModal`, `HojaInferior`,
+`SupportModal`, `ModalPoliticaDevolucion`, `InhrrFichaModal`, `CarruselCortos`, `CompartirProductoImagen`,
+`StaffModal`, `StaffUIProvider`, `LayoutDepartamento`, `MenuDrawer`, `AmpliacionEstadoCuenta`,
+`Direcciones`, `StaffInventario`…). **Guardar y restaurar** el valor previo — nunca pisarlo con `''`:
+
+```js
+useEffect(() => {
+  const previo = document.body.style.overflow
+  document.body.style.overflow = 'hidden'
+  return () => { document.body.style.overflow = previo }
+}, [abierto])   // o [] si el componente solo existe cuando está abierto
+```
+
+- **Restaurar el previo, no `''`**: si hay dos overlays superpuestos, poner `''` al cerrar el de
+  arriba desbloquea el de abajo. El par save/restore lo deja correcto.
+- El **cleanup `return`** es la parte que importa: React lo corre al desmontar y al cambiar la dep.
+- **No hace falta** si el overlay se renderiza condicionalmente (`{abierto && <Modal/>}`) y el
+  componente monta su propio `useEffect` con `[]` — el desmontaje hace el restore solo.
+- **Verificación manual**: abre el overlay en un teléfono, arrastra el dedo sobre él y confirma que
+  el fondo NO se mueve; ciérralo y confirma que la página quedó en el mismo scroll.
+
+### 2. Contenedor de imagen "viewer" — tamaño por el lado corto
+
+Para un lightbox de imagen cuadrada (QR, foto, comprobante), el tamaño debe caber en **ambos** ejes;
+si solo usas `vw`, en un teléfono apaisado o con la barra de direcciones visible se sale:
+
+```css
+.pg-qr-modal__img { width: min(84vw, 78vh, 420px); height: auto; aspect-ratio: 1 / 1; object-fit: contain; }
+```
+
+Fondo blanco + `padding` en el contenedor de la imagen (las fotos/QR suelen venir con fondo
+transparente o con márgenes) y `object-fit: contain` para no deformar.
+
+### 3. `onClick` del backdrop vs. del contenido
+
+Si el cierre es "tocar fuera", el `onClick` de cierre va en el **backdrop** y el contenido lo
+**detiene**:
+
+```jsx
+<div className="overlay" onClick={cerrar}>
+  <img src={src} onClick={(e) => e.stopPropagation()} />
+</div>
+```
+
+Sin el `stopPropagation`, cualquier toque sobre la imagen/el panel cierra el modal.
+
 ## Logos — fuente única (Supabase Storage, IMPLEMENTADO 2026-10-14)
 
 Todos los logos de la empresa viven en **Supabase Storage** (bucket `crsnimages`, carpeta

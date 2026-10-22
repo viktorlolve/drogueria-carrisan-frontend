@@ -78,7 +78,7 @@ const CUENTAS_PROFESIONAL_HONORIFICO = [
     logo: LOGO_MERCANTIL,
     qr: true,
     qrImagen: QR_CARRISAN,
-    qrNota: 'Escanea para pagar',
+    qrNota: 'Toca para ampliar',
     campos: [
       { label: 'Banco', valor: 'Mercantil', copiar: '0105' },
       { label: 'Cédula', valor: 'V-5.073.225', copiar: '5073225' },

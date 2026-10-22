@@ -243,6 +243,8 @@ function Pagos() {
   const [arrastrando, setArrastrando] = useState(false)
   const [subiendo, setSubiendo] = useState(false)
   const [reporteCreado, setReporteCreado] = useState(null)
+  // QR ampliado (lightbox) — null = cerrado
+  const [qrAmpliado, setQrAmpliado] = useState(null)
 
   const primerRender = useRef(true)
 
@@ -302,6 +304,14 @@ function Pagos() {
     [comprobante]
   )
   useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl) }, [previewUrl])
+
+  // Bloquea el scroll del fondo mientras el QR está ampliado (ver AGENTS → "Plan de corrección rápida")
+  useEffect(() => {
+    if (!qrAmpliado) return
+    const previo = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = previo }
+  }, [qrAmpliado])
 
   function toggleOrden(id) {
     setSeleccionadas((prev) =>
@@ -654,13 +664,19 @@ function Pagos() {
 
                           {qr && (
                             <figure className="pg-cuenta__qr">
-                              <span className="pg-cuenta__qr-caja">
+                              <button
+                                type="button"
+                                className="pg-cuenta__qr-caja"
+                                onClick={() => qrImagen && setQrAmpliado(qrImagen)}
+                                disabled={!qrImagen}
+                                aria-label={qrImagen ? 'Ampliar código QR' : 'Código QR no disponible'}
+                              >
                                 {qrImagen ? (
                                   <img src={qrImagen} alt="Código QR para pagar" loading="lazy" />
                                 ) : (
                                   <span className="pg-cuenta__qr-vacio">QR</span>
                                 )}
-                              </span>
+                              </button>
                               {qrNota && (
                                 <figcaption className="pg-cuenta__qr-nota">{qrNota}</figcaption>
                               )}
@@ -804,6 +820,32 @@ function Pagos() {
           </aside>
         </div>
       </div>
+
+      {qrAmpliado && (
+        <div
+          className="pg-qr-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Código QR de pago"
+          onClick={() => setQrAmpliado(null)}
+        >
+          <button
+            type="button"
+            className="pg-qr-modal__cerrar"
+            onClick={() => setQrAmpliado(null)}
+            aria-label="Cerrar"
+          >
+            <X size={22} />
+          </button>
+          <img
+            className="pg-qr-modal__img"
+            src={qrAmpliado}
+            alt="Código QR para pagar"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <p className="pg-qr-modal__nota">Escanea este código desde tu app bancaria</p>
+        </div>
+      )}
     </div>
   )
 }
