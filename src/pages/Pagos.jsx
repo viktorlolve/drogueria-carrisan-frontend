@@ -18,7 +18,7 @@ import {
 import api from '../api/axios'
 import { useAuth } from '../context/AuthContext'
 import { cuentasDe } from '../config/cuentasBancarias'
-import { formatearUSD, formatearVES } from '../utils/formato'
+import { formatearUSD, formatearVES, formatearTasa } from '../utils/formato'
 import './Pagos.css'
 
 const PASOS = ['Órdenes', 'Datos de pago', 'Comprobante']
@@ -203,8 +203,11 @@ function Resumen({ ordenes, totalUsd, totalVes, tasaVes }) {
         </div>
         {tasaVes && (
           <div className="pg-resumen__fila">
-            <span>Tasa de cambio</span>
-            <span>{formatearVES(tasaVes)} / USD</span>
+            <span>Tasa BCV</span>
+            <span className="pg-resumen__tasa">
+              <strong>{formatearTasa(tasaVes)}</strong>
+              <span className="pg-resumen__tasa-bs">Bs.</span>
+            </span>
           </div>
         )}
 
@@ -602,7 +605,7 @@ function Pagos() {
                     <strong className="pg-monto__valor">{formatearVES(totalVes)}</strong>
                     <span className="pg-monto__ref">
                       Equivale a {formatearUSD(totalUsd)}
-                      {tasaVes ? ` · tasa ${formatearVES(tasaVes)}` : ''}
+                      {tasaVes ? ` · tasa BCV ${formatearTasa(tasaVes)} Bs.` : ''}
                     </span>
                   </div>
                   {montoCopiable && (

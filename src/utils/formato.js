@@ -17,6 +17,12 @@ export function formatearVES(valor) {
   return `VES ${Number(valor || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
+// Tasa de cambio USD→Bs sin prefijo de moneda: "36,50". Se usa cuando la
+// unidad la aporta el consumidor (p. ej. "36,50 Bs." al lado derecho).
+export function formatearTasa(valor) {
+  return Number(valor || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
 // Monto en USD con el formato de Venezuela. `valor` nulo/vacío → "USD 0.00".
 export function formatearMonto(valor) {
   return formatearUSD(valor)

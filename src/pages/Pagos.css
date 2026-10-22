@@ -497,14 +497,13 @@ button.pg-paso__btn:focus-visible {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  padding: 6px;
   overflow: hidden;
   color: var(--pg-azul);
 }
 .pg-cuenta__logo img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   display: block;
 }
 .pg-cuenta__ident { min-width: 0; }
@@ -914,9 +913,22 @@ button.pg-paso__btn:focus-visible {
   color: var(--pg-apagado);
   border-top: 1px dashed var(--pg-borde);
 }
-.pg-resumen__fila span:last-child {
+/* `>` (hijo directo) a propósito: sin él, el `span:last-child` anidado
+   (.pg-resumen__tasa-bs) también entraba y su especificidad (0,2,1) le ganaba
+   a la regla del "Bs." (0,1,0) → el sufijo salía índigo en vez de atenuado. */
+.pg-resumen__fila > span:last-child {
   font-weight: 600;
   color: var(--pg-indigo);
+}
+.pg-resumen__tasa {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+}
+.pg-resumen__tasa-bs {
+  font-size: 0.78em;
+  font-weight: 600;
+  color: var(--pg-apagado);
 }
 
 .pg-resumen__total {
