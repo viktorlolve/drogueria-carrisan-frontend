@@ -1173,16 +1173,6 @@ button.pg-paso__btn:focus-visible {
 }
 
 /* ---------- Móvil: el QR baja debajo de los datos y ocupa el ancho ---------- */
-@media (max-width: 560px) {
-  .pg-cuenta__cuerpo { flex-direction: column; }
-  .pg-cuenta__qr { align-self: center; width: 100%; }
-  .pg-cuenta__qr-caja {
-    width: min(64vw, 240px);
-    height: min(64vw, 240px);
-    padding: 8px;
-  }
-}
-
 @media (min-width: 1280px) {
   .pg-layout { grid-template-columns: minmax(0, 1fr) 400px; }
 }
