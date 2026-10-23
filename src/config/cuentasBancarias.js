@@ -29,7 +29,7 @@ import { Landmark, Smartphone } from 'lucide-react'
 
 // Logo del banco (Supabase Storage, carpeta raíz del bucket y SIN %20)
 const LOGO_MERCANTIL =
-  'https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/mercantil.png'
+  'https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages/mercantil.webp'
 
 // QR de pago (imagen subida por el dueño a la raíz del bucket, SIN %20)
 const QR_CARRISAN =
