@@ -101,6 +101,69 @@
   pointer-events: none;
 }
 
+/* ---------- Movimiento sin pipeline: 3 fotogramas reales del video ----------
+   Fallback de `.cc__preview-frame` cuando todavía no hay clip generado.
+   Las tres capas comparten la MISMA animación de 12s y se desfasan con delays
+   negativos (ver FOTOGRAMAS en el JSX): cada una se ve ~3.6s y el crossfade de
+   entrada de la siguiente se solapa con el de salida de la anterior, así que el
+   ciclo es continuo y no se ve el hueco entre fotogramas. */
+.cc__fotogramas {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  animation: cc-zoom-fotogramas 12s ease-in-out infinite alternate;
+}
+
+.cc__fotograma {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  animation: cc-fotograma 12s linear infinite;
+  will-change: opacity;
+}
+
+@keyframes cc-fotograma {
+  0%,
+  27% {
+    opacity: 1;
+  }
+  33%,
+  96% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes cc-zoom-fotogramas {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+
+/* Menos movimiento = fotograma fijo (el hq1). Sigue siendo mejor que la
+   miniatura del carrusel, pero sin animación. */
+@media (prefers-reduced-motion: reduce) {
+  .cc__fotogramas {
+    animation: none;
+  }
+  .cc__fotograma {
+    animation: none;
+  }
+  .cc__fotograma:first-child {
+    opacity: 1;
+  }
+}
+
 .cc__preview-play {
   position: absolute;
   top: 50%;

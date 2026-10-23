@@ -135,28 +135,64 @@ function ShortsPlayer({ videoId, conSonido, enPausa, jugadorRef }) {
   return <div className="cc-slide__video" ref={contenedorRef} />
 }
 
-// Preview con movimiento: clip propio (mudo, corto) autoalojado en Supabase
-// Storage — ya NO es un iframe de YouTube, así que no hay overhead del
-// reproductor de un tercero por cada tarjeta. Se monta mientras la tarjeta
-// está visible en la fila (no solo la central) y hay un preview_url
-// disponible (el pipeline de GitHub Actions puede no haberlo generado
-// todavía; en ese caso simplemente no hay movimiento y se queda la miniatura
-// estática). Como es mudo y de BUCLE la tasa de reproducción es mínima: un
-// clip de ~4s por tarjeta repetido en loop, y se desmonta al salir del
-// viewport horizontal de la fila (nunca reproducen todas a la vez).
+// Preview con movimiento, en dos niveles:
+//
+// 1) Si el pipeline de GitHub Actions ya generó el clip (~4s, mudo) y lo subió
+//    a Supabase Storage, se reproduce ese <video>. Es el mejor resultado.
+// 2) Si no hay clip, se animan TRES fotogramas reales del propio video
+//    (hq1/hq2/hq3 de ytimg) con un crossfade + zoom lento en CSS. Esto NO
+//    depende de yt-dlp, de cookies ni de ningún pipeline: YouTube sirve esos
+//    fotogramas para casi todos los videos, así que la tarjeta se mueve
+//    aunque la generación de clips esté caída (fue justo lo que pasó: el
+//    secret de cookies caducó el 2026-09-23 y todo el carrusel quedó quieto).
+//
+// Ambos caminos se montan solo mientras la tarjeta está visible en la fila
+// (prop `activo`), así nunca reproducen/animan todas a la vez. Si un fotograma
+// no existe se oculta y queda la miniatura estática de fondo
+// (.cc__preview-img), nunca un hueco.
+//
+// Los delays negativos desfasan las tres capas que comparten la MISMA
+// animación de 12s: sin delay el fotograma se ve al inicio de su ciclo
+// (-8s lo adelanta 8s, -4s lo adelanta 4s), o sea el orden visible es
+// hq1 -> hq2 -> hq3. Si se cambia la duración del ciclo hay que recalcularlos.
+const FOTOGRAMAS = [
+  { nombre: 'hq1', delay: '0s' },
+  { nombre: 'hq2', delay: '-8s' },
+  { nombre: 'hq3', delay: '-4s' },
+]
+
 function MiniaturaMovimiento({ video, activo }) {
-  if (!video.preview_url || !activo) return null
+  if (!activo) return null
+  if (video.preview_url) {
+    return (
+      <video
+        key={video.id}
+        src={video.preview_url}
+        className="cc__preview-frame"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="none"
+      />
+    )
+  }
   return (
-    <video
-      key={video.id}
-      src={video.preview_url}
-      className="cc__preview-frame"
-      autoPlay
-      muted
-      loop
-      playsInline
-      preload="none"
-    />
+    <div className="cc__fotogramas" aria-hidden="true">
+      {FOTOGRAMAS.map((f) => (
+        <img
+          key={f.nombre}
+          src={`https://i.ytimg.com/vi/${video.id}/${f.nombre}.jpg`}
+          alt=""
+          className="cc__fotograma"
+          style={{ animationDelay: f.delay }}
+          loading="lazy"
+          onError={(e) => {
+            e.currentTarget.hidden = true
+          }}
+        />
+      ))}
+    </div>
   )
 }
 

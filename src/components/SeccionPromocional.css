@@ -20,6 +20,9 @@
   position: relative;
   width: 100%;
   overflow: hidden;
+  /* Fondo blanco explícito: con `object-fit: contain` las franjas que sobran
+     a los lados (desktop) o arriba/abajo (tablet) muestran este color. */
+  background: #FFFFFF;
 }
 
 .seccion-promo__panel-link {
@@ -36,10 +39,12 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  /* Recorte centrado: el sujeto de la campaña queda en el medio y se pierde
-     simétricamente por los lados. Con `left center` el recorte se comía
-     siempre el lado derecho y descolocaba composiciones centradas. */
+  /* `contain`: la imagen se ve COMPLETA dentro del panel (nunca se recorta).
+     Como las campañas vienen 1:1, en las cajas anchas (desktop 1.02–1.20:1)
+     quedan dos franjas blancas laterales y en la tira vertical de tablet
+     quedan franjas arriba/abajo. Con `cover` se llenaba todo pero se comía
+     hasta 43% de la imagen. */
+  object-fit: contain;
   object-position: center center;
 }
 
@@ -219,8 +224,8 @@
     min-height: 0;
     aspect-ratio: 1 / 1;
     /* Techo para pantallas anchas o apaisadas: un cuadrado de 735px de alto
-       se come la pantalla entera. Por encima del techo la imagen se recorta
-       a los lados (cover), nunca se deforma. */
+       se come la pantalla entera. Por encima del techo la imagen se achica
+       dentro de la caja (contain), nunca se recorta ni se deforma. */
     max-height: min(70vh, 440px);
   }
 }
