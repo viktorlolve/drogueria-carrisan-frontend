@@ -18,7 +18,7 @@ import {
 import api from '../api/axios'
 import { useAuth } from '../context/AuthContext'
 import { cuentasDe } from '../config/cuentasBancarias'
-import { formatearUSD, formatearVES, formatearTasa } from '../utils/formato'
+import { formatearUSD, formatearUSDNumerico, formatearVES, formatearTasa } from '../utils/formato'
 import './Pagos.css'
 
 const PASOS = ['Órdenes', 'Datos de pago', 'Comprobante']
@@ -191,7 +191,7 @@ function Resumen({ ordenes, totalUsd, totalVes, tasaVes }) {
             {ordenes.map((o) => (
               <li key={o.id}>
                 <span>Orden #{o.id}</span>
-                <span>{formatearUSD(o.total_usd)}</span>
+                <span>{formatearUSDNumerico(o.total_usd)}</span>
               </li>
             ))}
           </ul>

@@ -584,15 +584,15 @@ button.pg-paso__btn:focus-visible {
   margin-top: 12px;
   padding: 11px 14px;
   border-radius: 11px;
-  border: 1.5px solid var(--pg-azul);
-  background: var(--pg-azul);
+  border: 1.5px solid var(--pg-indigo);
+  background: var(--pg-indigo);
   color: #fff;
   font-size: 0.84rem;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
-.pg-copiar-todo:hover { background: var(--pg-indigo); border-color: var(--pg-indigo); }
+.pg-copiar-todo:hover { background: var(--pg-azul); border-color: var(--pg-azul); }
 .pg-copiar-todo--ok,
 .pg-copiar-todo--ok:hover {
   background: var(--pg-teal);
@@ -902,6 +902,7 @@ button.pg-paso__btn:focus-visible {
   font-weight: 600;
   color: var(--pg-indigo);
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .pg-resumen__fila {

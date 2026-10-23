@@ -11,6 +11,13 @@ export function formatearUSD(valor) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', currencyDisplay: 'code' }).format(valor || 0)
 }
 
+// Monto en USD sin código de moneda ni símbolo: "1,234.56". Se usa en listados
+// donde la unidad ya la da el contexto (p. ej. el subtotal de abajo dice "USD")
+// y repetirla en cada fila ensucia la columna.
+export function formatearUSDNumerico(valor) {
+  return Number(valor || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
 // Monto en bolívares con el código ISO al inicio (área bancaria): "VES 1.234,56".
 // En los precios de productos se sigue usando "Bs." aparte.
 export function formatearVES(valor) {

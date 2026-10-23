@@ -86,7 +86,7 @@ const CUENTAS_PROFESIONAL_HONORIFICO = [
     ],
     // Bloque de 3 líneas en ese orden exacto (así lo lee la app bancaria)
     copiarTodo: '0105\n5073225\n04166411160',
-    etiquetaTodo: 'Copiar todos los datos de Pago Móvil',
+    etiquetaTodo: 'Copiar todos los datos',
   },
 ]
 
