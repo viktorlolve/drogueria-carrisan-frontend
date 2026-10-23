@@ -1,25 +1,48 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useSyncExternalStore } from 'react'
 import { Link } from 'react-router-dom'
+import { useEsMobile } from '../hooks/useEsMobile'
+import { adsVisibles, arteDe, indiceSeguro, debeRotar } from './adRotativoArtes'
 import './AdRotativo.css'
 
 // Banner de ads rotativo, full-width — cicla entre varias creatividades en
-// orden aleatorio. Un mismo ad se muestra con dos artes distintos según el
-// dispositivo (formato banner panorámico en desktop, más cuadrado en móvil);
-// el CSS muestra uno u otro visualizador según el breakpoint.
+// orden aleatorio.
+//
+// DIRECCIÓN DE ARTE (2026-10-23): cada dispositivo tiene SU caja y SU arte.
+//   desktop → caja 4:1     (arte ideal 2048×512)
+//   móvil   → caja 16:9    (arte ideal 1280×720)
+// La caja la fija el CSS (aspect-ratio), no el archivo: así el banner no
+// cambia de alto al rotar. El arte entra con object-fit: cover centrado.
+//
+// Una ad que no tiene el arte del dispositivo actual NO se muestra en ese
+// dispositivo (una panorámica 4:1 en el celular quedaría ilegible y una
+// vertical en desktop se recortaría). Una ad sin ningún arte es una
+// maqueta: pinta el placeholder en ambos.
 //
 // Props:
-//   ads       — array de items (requerido, al menos 1). Cada item:
+//   ads       — array de items. Cada item:
 //                 { id, imagenDesktop, imagenMovil, link, alt } → slide con
-//                   imagen real por vista (la url de cada formato se edita en
-//                   src/config/adRotativoTemporada.js)
+//                   arte real por vista (URLs en src/config/adRotativoTemporada.js)
 //                 { titulo, subtitulo, variante, link } (sin imágenes) → slide
 //                   en modo placeholder, para maquetar antes de tener el arte.
 //   intervalo — ms entre cada rotación (default 6000)
 //   dots      — mostrar puntitos indicadores debajo del banner (default true)
 //
-// Sin transición: la imagen se ve directa y solo se reemplaza en cada
-// rotación. object-fit: cover en ambas vistas para que el arte siempre llene
-// el contenedor sin dejar ver el fondo.
+// Solo se descarga el arte que se está viendo. Se precarga el siguiente para
+// que el cambio no parpadee.
+
+const MQ_REDUCIDO = '(prefers-reduced-motion: reduce)'
+
+function suscribirMovimientoReducido(alCambiar) {
+  if (typeof window === 'undefined' || !window.matchMedia) return () => {}
+  const mq = window.matchMedia(MQ_REDUCIDO)
+  mq.addEventListener('change', alCambiar)
+  return () => mq.removeEventListener('change', alCambiar)
+}
+
+function leerMovimientoReducido() {
+  if (typeof window === 'undefined' || !window.matchMedia) return false
+  return window.matchMedia(MQ_REDUCIDO).matches
+}
 
 function barajar(array) {
   const copia = [...array]
@@ -31,71 +54,107 @@ function barajar(array) {
 }
 
 function AdRotativo({ ads = [], intervalo = 6000, dots = true }) {
-  const [orden] = useState(() => barajar(ads))
+  const esMovil = useEsMobile(768)
+  const reducido = useSyncExternalStore(
+    suscribirMovimientoReducido,
+    leerMovimientoReducido,
+    () => false
+  )
+
+  const listaBase = Array.isArray(ads) ? ads : []
+  // Firma estable de la config: la prop llega como un array nuevo en cada
+  // render del Home, así que el orden solo se rebaraja cuando cambian las ads
+  // (no en cada re-render).
+  const firma = listaBase.map((ad) => (ad && (ad.id || ad.imagenDesktop || ad.imagenMovil)) || '').join('|')
+
+  const [firmaPrevia, setFirmaPrevia] = useState(firma)
+  const [orden, setOrden] = useState(() => barajar(listaBase))
   const [indice, setIndice] = useState(0)
   const [pausado, setPausado] = useState(false)
-  const timerRef = useRef(null)
+
+  // Ajuste de estado durante el render (patrón del proyecto): cuando llega la
+  // config real de la vitrina o cambia la lista, se rebaraja y se vuelve al
+  // primer ad. Sin esto el componente se quedaba con las ads del fallback.
+  if (firma !== firmaPrevia) {
+    setFirmaPrevia(firma)
+    setOrden(barajar(listaBase))
+    setIndice(0)
+  }
+
+  const lista = adsVisibles(orden, esMovil)
+  const actual = indiceSeguro(indice, lista.length)
+  const item = lista[actual] || null
 
   useEffect(() => {
-    if (orden.length <= 1 || pausado) return
-    timerRef.current = setInterval(() => {
-      setIndice((i) => (i + 1) % orden.length)
+    if (!debeRotar({ cantidad: lista.length, pausado, reducido })) return
+    const timer = setInterval(() => {
+      setIndice((i) => (i + 1) % lista.length)
     }, intervalo)
-    return () => clearInterval(timerRef.current)
-  }, [orden.length, intervalo, pausado])
+    return () => clearInterval(timer)
+  }, [lista.length, intervalo, pausado, reducido])
 
-  if (orden.length === 0) return null
+  // Precarga el arte siguiente (una imagen, no el carrusel entero).
+  const siguienteArte =
+    lista.length > 1 ? arteDe(lista[(actual + 1) % lista.length], esMovil) : null
 
-  const mostrarDots = dots && orden.length > 1
-  const item = orden[indice]
+  useEffect(() => {
+    if (!siguienteArte) return
+    const img = new Image()
+    img.src = siguienteArte
+  }, [siguienteArte])
 
-  const renderSlide = (imagen) => {
-    const contenido = imagen ? (
-      <img
-        src={imagen}
-        alt={item.alt || ''}
-        className="ad-rotativo__img"
-        loading="lazy"
-      />
-    ) : (
-      <div className={`ad-rotativo__placeholder ad-rotativo__placeholder--${item.variante || 'default'}`}>
-        <div className="ad-rotativo__textos">
-          <h3 className="ad-rotativo__titulo">{item.titulo || 'Próximamente'}</h3>
-          {item.subtitulo && <p className="ad-rotativo__subtitulo">{item.subtitulo}</p>}
-        </div>
+  if (!item) return null
+
+  const arte = arteDe(item, esMovil)
+  const mostrarDots = dots && lista.length > 1
+
+  const contenido = arte ? (
+    <img
+      src={arte}
+      alt={item.alt || ''}
+      className="ad-rotativo__img"
+      loading="lazy"
+      decoding="async"
+    />
+  ) : (
+    <div className={`ad-rotativo__placeholder ad-rotativo__placeholder--${item.variante || 'default'}`}>
+      <div className="ad-rotativo__textos">
+        <h3 className="ad-rotativo__titulo">{item.titulo || 'Próximamente'}</h3>
+        {item.subtitulo && <p className="ad-rotativo__subtitulo">{item.subtitulo}</p>}
       </div>
-    )
-
-    return item.link ? (
-      <Link to={item.link} className="ad-rotativo__slide" tabIndex={0}>
-        {contenido}
-      </Link>
-    ) : (
-      <div className="ad-rotativo__slide">{contenido}</div>
-    )
-  }
+    </div>
+  )
 
   return (
     <div
-      className={`ad-rotativo ${mostrarDots ? 'ad-rotativo--dots' : ''}`}
+      className="ad-rotativo"
       onMouseEnter={() => setPausado(true)}
       onMouseLeave={() => setPausado(false)}
+      onFocus={() => setPausado(true)}
+      onBlur={() => setPausado(false)}
+      role="region"
+      aria-roledescription="carrusel"
+      aria-label="Anuncios destacados"
     >
-      <div className="ad-rotativo__vista ad-rotativo__vista--movil">
-        {renderSlide(item.imagenMovil)}
-      </div>
-      <div className="ad-rotativo__vista ad-rotativo__vista--desktop">
-        {renderSlide(item.imagenDesktop)}
+      <div className="ad-rotativo__marco">
+        {item.link ? (
+          <Link to={item.link} className="ad-rotativo__slide">
+            {contenido}
+          </Link>
+        ) : (
+          <div className="ad-rotativo__slide">{contenido}</div>
+        )}
       </div>
 
       {mostrarDots && (
         <div className="ad-rotativo__dots">
-          {orden.map((_, i) => (
+          {lista.map((ad, i) => (
             <button
-              key={i}
+              key={ad.id || i}
               type="button"
-              className={`ad-rotativo__dot ${i === indice ? 'ad-rotativo__dot--activo' : ''}`}
-              aria-label={`Ver ad ${i + 1}`}
+              className={`ad-rotativo__dot ${i === actual ? 'ad-rotativo__dot--activo' : ''}`}
+              aria-label={`Ver anuncio ${i + 1} de ${lista.length}`}
+              aria-current={i === actual ? 'true' : undefined}
               onClick={() => setIndice(i)}
             />
           ))}

@@ -223,7 +223,7 @@ function SeccionEditor({ label, valor, setValor }) {
   )
 }
 
-function ListaEditor({ titulo, items, setItems, campos }) {
+function ListaEditor({ titulo, items, setItems, campos, nota }) {
   function agregar() {
     const base = {}
     campos.forEach(([campo]) => { base[campo] = '' })
@@ -235,6 +235,7 @@ function ListaEditor({ titulo, items, setItems, campos }) {
         <strong>{titulo}</strong>
         <button type="button" className="sv-link" onClick={agregar}>+ Agregar</button>
       </div>
+      {nota && <p className="sv-hint">{nota}</p>}
       {items.map((it, idx) => (
         <div key={it.id} className="sv-subcard">
           <div className="sv-card-head">
@@ -276,7 +277,8 @@ function EditorPromos({ config, onChange }) {
       <SeccionEditor label="Sección promocional #1 (superior)" valor={seccion1} setValor={(v) => patch({ seccion1: v })} />
       <SeccionEditor label="Sección promocional #2 (inferior, invertida)" valor={seccion2} setValor={(v) => patch({ seccion2: v })} />
       <ListaEditor titulo="AdRotativo (banner deslizante)" items={rotativo} setItems={(v) => patch({ rotativo: v })}
-        campos={[['imagenDesktop', 'Imagen desktop (URL)'], ['imagenMovil', 'Imagen móvil (URL)'], ['alt', 'Alt'], ['link', 'Link']]} />
+        nota="Desktop: arte 2048×512 (caja 4:1). Móvil: arte 1280×720 (caja 16:9). Una ad solo se muestra en el dispositivo donde tiene imagen: dejá vacía la URL del otro para excluirla ahí."
+        campos={[['imagenDesktop', 'Imagen desktop (URL) — 2048×512 · 4:1'], ['imagenMovil', 'Imagen móvil (URL) — 1280×720 · 16:9'], ['alt', 'Alt'], ['link', 'Link']]} />
       <ListaEditor titulo="Ads en par (inferior)" items={adsPar} setItems={(v) => patch({ adsPar: v })}
         campos={[['imagen', 'Imagen (URL)'], ['alt', 'Alt'], ['link', 'Link']]} />
     </div>

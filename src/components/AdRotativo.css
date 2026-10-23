@@ -1,48 +1,59 @@
 /* ── AdRotativo: banner que rota entre varias ads ──
-   Sin cuadro ni ratio fijo: la imagen carga sola con su tamaño natural
-   (width 100%, alto libre). Tomá el ancho del contenedor y el alto lo pone
-   el arte subido — por eso conviene que todas las ads de un mismo formato
-   compartan proporción para que el banner no "salte" al rotar.
-   Móvil y desktop usan visualizadores distintos (imagen propia por ad). */
+   Caja FIJA por dispositivo (aspect-ratio), NO el tamaño natural del
+   archivo: así el banner no cambia de alto al rotar (una 4:1 y una 3:1
+   conviviendo hacían "saltar" la página) y una foto chica no se estira.
+
+     móvil   → 16:9    (arte ideal 1280×720)
+     desktop → 4:1     (arte ideal 2048×512)
+
+   Qué arte ve cada dispositivo lo decide `adRotativoArtes.js` + el hook
+   `useEsMobile(768)` (la URL desktop y la móvil son distintas); el CSS
+   solo dibuja la caja. El breakpoint de abajo (768px) debe coincidir con
+   el del hook. */
 .ad-rotativo {
-  position: relative;
   width: 100%;
   margin: 6px 0 10px;
 }
 
-/* Dos visualizadores sincronizados: móvil y desktop. El CSS muestra uno
-   según el breakpoint (mismo índice activo del componente). */
-.ad-rotativo__vista {
-  display: none;
-}
-
-.ad-rotativo__vista--movil {
-  display: block;
+.ad-rotativo__marco {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 14px;
+  /* Fondo mientras carga el arte (evita el "hueco" blanco). */
+  background: #eef2f7;
 }
 
 .ad-rotativo__slide {
   display: block;
+  width: 100%;
+  height: 100%;
 }
 
+/* cover + centrado: si la proporción del arte no es exactamente la de la
+   caja se recorta por los lados, nunca se deforma. */
 .ad-rotativo__img {
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
   display: block;
 }
 
-/* Placeholder unificado: aparece si la creatividad no carga (URL rota o
-   campaña sin arte definitivo todavía) */
+/* Placeholder: aparece cuando la ad no tiene ningún arte todavía (maqueta
+   con titulo/subtitulo) — ocupa la misma caja que la imagen. */
 .ad-rotativo__placeholder {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 120px;
+  width: 100%;
+  height: 100%;
   background: linear-gradient(135deg, #f0f4ff 0%, #e8f4f0 100%);
   text-align: center;
   padding: 24px;
-  border-radius: 14px;
 }
 
 .ad-rotativo__placeholder--oferta {
@@ -72,14 +83,14 @@
   margin: 0;
 }
 
+/* Puntitos DEBAJO del banner (antes iban encima del arte y se perdían
+   sobre fotos claras). */
 .ad-rotativo__dots {
-  position: absolute;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
   display: flex;
+  justify-content: center;
+  align-items: center;
   gap: 6px;
-  z-index: 2;
+  margin-top: 8px;
 }
 
 .ad-rotativo__dot {
@@ -87,26 +98,22 @@
   height: 6px;
   border-radius: 50%;
   border: none;
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(35, 43, 69, 0.22);
   cursor: pointer;
   padding: 0;
   transition: background 0.3s, width 0.3s;
 }
 
 .ad-rotativo__dot--activo {
-  background: rgba(0, 0, 0, 0.6);
+  background: #0052dc;
   width: 16px;
   border-radius: 3px;
 }
 
-/* Desktop: visualizador panorámico y se oculta el móvil */
-@media (min-width: 769px) {
-  .ad-rotativo__vista--movil {
-    display: none;
-  }
-
-  .ad-rotativo__vista--desktop {
-    display: block;
+/* Desktop: caja panorámica 4:1 y textos algo más grandes. */
+@media (min-width: 768px) {
+  .ad-rotativo__marco {
+    aspect-ratio: 4 / 1;
   }
 
   .ad-rotativo__titulo {
