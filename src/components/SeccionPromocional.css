@@ -37,7 +37,10 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: left center;
+  /* Recorte centrado: el sujeto de la campaña queda en el medio y se pierde
+     simétricamente por los lados. Con `left center` el recorte se comía
+     siempre el lado derecho y descolocaba composiciones centradas. */
+  object-position: center center;
 }
 
 .seccion-promo__overlay {
@@ -203,6 +206,23 @@
 @keyframes seccion-promo-shimmer {
   0% { background-position: 100% 50%; }
   100% { background-position: 0 50%; }
+}
+
+/* ---------- Móvil: panel cuadrado (imágenes 1:1) ---------- */
+/* Sin esto el alto era SIEMPRE 220px con el ancho del viewport, así que la
+   caja iba de 1.3:1 a 3.3:1 y cualquier imagen 1:1 perdía más de la mitad.
+   OJO: este bloque NO puede salir de aquí — en ≥768 el `height: 100%` de la
+   regla base es lo que estira el panel a la altura del carrusel. */
+@media (max-width: 767px) {
+  .seccion-promo__panel-link {
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 1 / 1;
+    /* Techo para pantallas anchas o apaisadas: un cuadrado de 735px de alto
+       se come la pantalla entera. Por encima del techo la imagen se recorta
+       a los lados (cover), nunca se deforma. */
+    max-height: min(70vh, 440px);
+  }
 }
 
 /* ---------- Tablet / Desktop: split en dos columnas ---------- */
