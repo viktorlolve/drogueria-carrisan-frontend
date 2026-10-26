@@ -1,0 +1,20 @@
+.spp-page { padding: 16px; }
+.spp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.spp-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+.spp-card__titulo { font-weight: 600; margin-bottom: 12px; }
+.spp-fila { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.spp-select, .spp-file { border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 10px; background: #fff; }
+.spp-file input { display: none; }
+.spp-btn { border: 1px solid #d1d5db; background: #fff; border-radius: 8px; padding: 8px 12px; cursor: pointer; }
+.spp-btn--primary { background: #1B4B8F; color: #fff; border-color: #1B4B8F; }
+.spp-hint { color: #6b7280; font-size: 12px; margin-top: 8px; }
+.spp-error { color: #dc2626; margin-top: 8px; }
+.spp-recibo { margin-top: 12px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; background: #f9fafb; }
+.spp-recibo__titulo { font-weight: 600; margin-bottom: 8px; }
+.spp-recibo__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.spp-recibo__grid > div { display: flex; flex-direction: column; }
+.spp-recibo__grid span { color: #6b7280; font-size: 12px; }
+.spp-table { width: 100%; border-collapse: collapse; }
+.spp-table th, .spp-table td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; text-align: left; }
+.spp-totales { display: flex; gap: 16px; align-items: center; margin-top: 12px; }
+@media (max-width: 1024px) { .spp-grid { grid-template-columns: 1fr; } .spp-recibo__grid { grid-template-columns: repeat(2, 1fr); } }

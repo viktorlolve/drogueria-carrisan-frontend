@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Search, Plus, Minus, X, ShoppingCart, ArrowLeft, Filter, ChevronDown,
@@ -17,34 +17,50 @@ function formatUSD(valor) {
 function PresupuestoCrear() {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
-  const [sugerencias, setSugerencias] = useState([])
+  const [resultado, setResultado] = useState({ termino: '', items: [] })
   const [buscando, setBuscando] = useState(false)
   const [borrador, setBorrador] = useState([])
   const [creando, setCreando] = useState(false)
   const [mostrarFiltros, setMostrarFiltros] = useState(false)
   const [filtroLaboratorio, setFiltroLaboratorio] = useState('')
   const [filtroForma, setFiltroForma] = useState('')
+  const termino = query.trim()
+  const [terminoAnterior, setTerminoAnterior] = useState('')
+
+  // Los resultados se derivan del término con el que se pidieron: al cambiar la
+  // búsqueda la lista queda vacía (sin flashing de resultados viejos) hasta que
+  // llega la respuesta del nuevo término.
+  const sugerencias = useMemo(
+    () => (resultado.termino === termino ? resultado.items : []),
+    [resultado, termino]
+  )
+  const buscandoAhora = buscando || resultado.termino !== termino
+
+  // Cada búsqueda nueva arranca sin filtros: los filtros de la búsqueda anterior
+  // no aplican a otro término (dejaban la lista vacía o incompleta sin avisar).
+  // Se ajusta durante el render (patrón del proyecto), no en un useEffect.
+  if (termino !== terminoAnterior) {
+    setTerminoAnterior(termino)
+    setFiltroLaboratorio('')
+    setFiltroForma('')
+  }
 
   useEffect(() => {
-    const termino = query.trim()
-    if (termino.length < 1) {
-      setSugerencias([])
-      return undefined
-    }
+    if (termino.length < 1) return undefined
 
     let activo = true
     const debounce = setTimeout(() => {
       setBuscando(true)
-      api.get(`/products/buscar?q=${encodeURIComponent(termino)}&limit=30`)
+      api.get(`/products/buscar?q=${encodeURIComponent(termino)}&limit=20`)
         .then(({ data }) => {
           if (!activo) return
-          setSugerencias(data || [])
+          setResultado({ termino, items: data || [] })
           setBuscando(false)
         })
         .catch((err) => {
           console.error('Error buscando productos', err)
           if (!activo) return
-          setSugerencias([])
+          setResultado({ termino, items: [] })
           setBuscando(false)
         })
     }, 250)
@@ -53,7 +69,7 @@ function PresupuestoCrear() {
       activo = false
       clearTimeout(debounce)
     }
-  }, [query])
+  }, [termino])
 
   const laboratoriosDisponibles = useMemo(() => {
     const set = new Set()
@@ -232,7 +248,7 @@ function PresupuestoCrear() {
                     <p>Empieza a escribir para buscar productos</p>
                     <span>Escribe al menos una letra para ver resultados</span>
                   </div>
-                ) : buscando ? (
+                ) : buscandoAhora ? (
                   <div className="presc-resultados__vacio">
                     <p>Buscando productos...</p>
                   </div>

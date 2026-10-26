@@ -13,7 +13,7 @@ import {
   Landmark, TrendingUp, Truck, Receipt, Banknote, CalendarX2,
   Inbox, FileText, Megaphone, MapPin, BadgeDollarSign, Users,
   Shield, BarChart3, MessageSquare, Gift, AlertTriangle,
-  CheckCircle2, Images, Scooter,
+  CheckCircle2, Images, Scooter
 } from 'lucide-react'
 
 const ROLES_TODOS = ['vendedor', 'despachador', 'almacenista', 'contabilidad', 'administrador', 'director', 'admin']
@@ -43,7 +43,7 @@ export const DEPARTAMENTOS = [
   {
     id: 'logistica',
     nombre: 'Logística',
-    descripcion: 'Almacén, preparación, despacho y operaciones',
+    descripcion: 'Pedidos, despachos, envíos, inventario y proveedores',
     color: '#D97706',
     colorStrong: '#B45309',
     colorLight: '#FFF4E0',

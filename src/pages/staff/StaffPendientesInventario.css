@@ -1,0 +1,14 @@
+.spi-page { padding: 16px; }
+.spi-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+.spi-tab { border: 1px solid #d1d5db; background: #fff; border-radius: 8px; padding: 6px 12px; }
+.spi-tab--active { background: #1B4B8F; color: #fff; border-color: #1B4B8F; }
+.spi-toolbar { display: flex; gap: 8px; margin-bottom: 12px; }
+.spi-input { border: 1px solid #d1d5db; border-radius: 8px; padding: 6px 10px; }
+.spi-input--sm { padding: 4px 8px; }
+.spi-btn { border: 1px solid #d1d5db; background: #fff; border-radius: 8px; padding: 6px 10px; }
+.spi-btn--xs { padding: 4px 8px; font-size: 12px; }
+.spi-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.spi-table { width: 100%; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; }
+.spi-table th, .spi-table td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; text-align: left; }
+.spi-error { color: #dc2626; }
+.spi-inline { display: flex; gap: 6px; align-items: center; }

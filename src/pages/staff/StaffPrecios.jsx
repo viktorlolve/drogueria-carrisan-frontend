@@ -34,53 +34,6 @@ function StaffPrecios() {
   const [aplicando, setAplicando] = useState(false)
   const [recarga, setRecarga] = useState(0)
 
-  // Importación de precios por proveedor (COBECA / Drovencentro)
-  const [importProveedorSel, setImportProveedorSel] = useState('cobeca')
-  const [importArchivo, setImportArchivo] = useState(null)
-  const [importCargando, setImportCargando] = useState(false)
-  const [importResultado, setImportResultado] = useState(null)
-  const [importError, setImportError] = useState('')
-
-  const PROVEEDORES_IMPORT = [
-    { id: 'cobeca', nombre: 'COBECA', ext: '.xlsx', ejemplo: 'inventario-cobeca.xlsx' },
-    { id: 'drovencentro', nombre: 'Drovencentro', ext: '.xls / .xlsx', ejemplo: 'inventario-drovencentro.XLS' },
-  ]
-
-  async function subirImportacion() {
-    if (!importArchivo) { setImportError('Selecciona un archivo del proveedor'); return }
-    setImportCargando(true)
-    setImportError('')
-    setImportResultado(null)
-    const fd = new FormData()
-    fd.append('proveedor', importProveedorSel)
-    fd.append('archivo', importArchivo)
-    try {
-      const { data } = await staffApi.post('/staff/precios/importar-proveedor', fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 240000,
-      })
-      setImportResultado(data)
-    } catch (err) {
-      setImportError(err.response?.data?.error || 'Error al importar precios del proveedor')
-      console.error(err)
-    } finally {
-      setImportCargando(false)
-    }
-  }
-
-  function descargarCsv() {
-    if (!importResultado?.csv) return
-    const blob = new Blob([importResultado.csv], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `precios_${importProveedorSel}_${new Date().toISOString().slice(0, 10)}.csv`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }
-
   // Opciones de filtros (laboratorios, formas, grupos ATC nivel 2)
   useEffect(() => {
     Promise.all([
@@ -241,57 +194,6 @@ function StaffPrecios() {
             />
             Solo sin precio
           </label>
-        </div>
-
-        <div className="sp-importar">
-          <div className="sp-importar__titulo">Importar precios de proveedor</div>
-          <div className="sp-importar__fila">
-            <select
-              value={importProveedorSel}
-              onChange={(e) => setImportProveedorSel(e.target.value)}
-              className="sp-select"
-            >
-              {PROVEEDORES_IMPORT.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-            </select>
-            <label className="sp-importar__file">
-              {importArchivo ? importArchivo.name : 'Elegir archivo'}
-              <input
-                type="file"
-                accept={PROVEEDORES_IMPORT.find((p) => p.id === importProveedorSel)?.ext || ''}
-                onChange={(e) => setImportArchivo(e.target.files?.[0] || null)}
-              />
-            </label>
-            <button className="sp-btn-aplicar" onClick={subirImportacion} disabled={importCargando}>
-              {importCargando ? 'Importando...' : 'Importar'}
-            </button>
-          </div>
-          <div className="sp-importar__hint">
-            Formato esperado: {PROVEEDORES_IMPORT.find((p) => p.id === importProveedorSel)?.ejemplo}. La importación actualiza costos ({PROVEEDORES_IMPORT.find((p) => p.id === importProveedorSel)?.nombre}
-            ), recalcula precio = costo / 0.6 y aplica "el más barato gana". Los sin-match salen en el CSV de control.
-          </div>
-          {importError && <p className="sp-error">{importError}</p>}
-          {importResultado?.resumen && (
-            <div className="sp-importar__resumen">
-              <div className="sp-importar__resumen-item">
-                <span>Filas</span><strong>{importResultado.resumen.total}</strong>
-              </div>
-              <div className="sp-importar__resumen-item">
-                <span>Matched</span><strong>{importResultado.resumen.matched}</strong>
-              </div>
-              <div className="sp-importar__resumen-item">
-                <span>Sin match</span><strong>{importResultado.resumen.sinMatch}</strong>
-              </div>
-              <div className="sp-importar__resumen-item">
-                <span>Actualizados</span><strong>{importResultado.resumen.actualizados}</strong>
-              </div>
-              <div className="sp-importar__resumen-item">
-                <span>Publicados</span><strong>{importResultado.resumen.publicados}</strong>
-              </div>
-              {importResultado.csv && (
-                <button className="sp-btn-descargar" onClick={descargarCsv}>Descargar CSV</button>
-              )}
-            </div>
-          )}
         </div>
 
         <div className="sp-resumen">

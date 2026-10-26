@@ -22,6 +22,17 @@
   gap: 18px;
 }
 
+/* index.css define `h2 { color: var(--text-h) }` y en modo oscuro del sistema
+   `--text-h` es casi blanco (#f3f4f6) mientras el fondo del body y de las
+   tarjetas es blanco fijo → los títulos quedaban invisibles. El color se fija
+   aquí explícitamente (mismo criterio que `.pres-page h2` en Presupuesto.css
+   y `.section-header h2` en Admin.css). */
+.presc-page h1,
+.presc-page h2,
+.presc-page h3 {
+  color: var(--pres-text);
+}
+
 .presc-header {
   display: flex;
   align-items: center;
@@ -246,13 +257,21 @@
   border-bottom: none;
 }
 
-.presc-item img {
+.presc-item img,
+.presc-item .placeholder-icono {
   width: 56px;
   height: 56px;
   border-radius: 12px;
   object-fit: cover;
   flex-shrink: 0;
   background: var(--pres-bg);
+}
+
+/* El placeholder es un <div> (no <img>): necesita su tamaño explícito o el
+   icono se expande y rompe la fila. Mismo patrón que
+   `.pres-buscador__item .placeholder-icono` en ProductoImagen.css. */
+.presc-item .placeholder-icono {
+  padding: 8px;
 }
 
 .presc-item__info {
@@ -368,12 +387,17 @@
   border-bottom: none;
 }
 
-.presc-cart__item img {
+.presc-cart__item img,
+.presc-cart__item .placeholder-icono {
   width: 56px;
   height: 56px;
   border-radius: 12px;
   object-fit: cover;
   flex-shrink: 0;
+}
+
+.presc-cart__item .placeholder-icono {
+  padding: 8px;
 }
 
 .presc-cart__info {

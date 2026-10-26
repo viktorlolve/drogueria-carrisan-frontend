@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
-  Search, Plus, Minus, X, ShoppingCart, FileDown, RefreshCw, ArrowUp, ArrowDown, Calendar,
+  Plus, X, ShoppingCart, FileDown, RefreshCw, ArrowUp, ArrowDown, Calendar,
 } from 'lucide-react'
 import api from '../api/axios'
 import { useCart } from '../context/CartContext'
@@ -66,230 +66,6 @@ function IndicadorPrecio({ cambio }) {
     return <span className="pres-indicador pres-indicador--igual">= igual</span>
   }
   return null
-}
-
-// ---------------------------------------------------------------
-// Modal de creación rápida: buscador + listado con cantidades.
-// Es el mismo flujo que antes vivía en la página, movido aquí para
-// que la página sea solo el historial. Los productos sin precio se
-// muestran pero NO se pueden agregar (el presupuesto guardaría un
-// snapshot de $0).
-// ---------------------------------------------------------------
-function NuevoPresupuestoModal({ onClose, onCreado }) {
-  const [query, setQuery] = useState('')
-  const [sugerencias, setSugerencias] = useState([])
-  const [buscando, setBuscando] = useState(false)
-  const [borrador, setBorrador] = useState([])
-  const [creando, setCreando] = useState(false)
-
-  useEffect(() => {
-    const termino = query.trim()
-    if (termino.length < 1) return undefined
-
-    let activo = true
-    const debounce = setTimeout(() => {
-      setBuscando(true)
-      api.get(`/products/buscar?q=${encodeURIComponent(termino)}&limit=8`)
-        .then(({ data }) => {
-          if (!activo) return
-          setSugerencias(data || [])
-          setBuscando(false)
-        })
-        .catch((err) => {
-          console.error('Error buscando productos', err)
-          if (!activo) return
-          setSugerencias([])
-          setBuscando(false)
-        })
-    }, 250)
-
-    return () => {
-      activo = false
-      clearTimeout(debounce)
-    }
-  }, [query])
-
-  const sugerenciasVisibles = query.trim().length < 1 ? [] : sugerencias
-
-  function agregarAlBorrador(producto) {
-    if (producto.precio_usd == null) return
-    setBorrador((prev) => {
-      const existente = prev.find((i) => i.producto.id === producto.id)
-      if (existente) {
-        return prev.map((i) => (i.producto.id === producto.id ? { ...i, cantidad: i.cantidad + 1 } : i))
-      }
-      return [...prev, { producto, cantidad: 1 }]
-    })
-    setQuery('')
-  }
-
-  function alTeclar(e) {
-    if (e.key !== 'Enter') return
-    e.preventDefault()
-    const primero = sugerenciasVisibles.find((p) => p.precio_usd != null)
-    if (primero) agregarAlBorrador(primero)
-  }
-
-  function cambiarCantidad(productoId, delta) {
-    setBorrador((prev) =>
-      prev
-        .map((i) => (i.producto.id === productoId ? { ...i, cantidad: i.cantidad + delta } : i))
-        .filter((i) => i.cantidad > 0)
-    )
-  }
-
-  function quitarDelBorrador(productoId) {
-    setBorrador((prev) => prev.filter((i) => i.producto.id !== productoId))
-  }
-
-  const subtotalBorrador = borrador.reduce(
-    (acc, i) => acc + Number(i.producto.precio_usd ?? 0) * i.cantidad,
-    0
-  )
-
-  function cerrar() {
-    if (borrador.length > 0 && !window.confirm('Tienes productos en el listado. ¿Quieres descartarlos?')) {
-      return
-    }
-    onClose()
-  }
-
-  async function crearPresupuesto() {
-    const items = borrador.map((i) => ({ producto_id: i.producto.id, cantidad: i.cantidad }))
-    if (items.length === 0) return
-
-    setCreando(true)
-    try {
-      const { data } = await api.post('/presupuestos', { items })
-      toaster.create({ title: `Presupuesto #${data.numero} generado`, type: 'success' })
-      onCreado(data.id)
-    } catch (err) {
-      console.error('Error al crear presupuesto', err)
-      toaster.create({
-        title: err.response?.data?.error || 'No se pudo crear el presupuesto',
-        type: 'error',
-      })
-    } finally {
-      setCreando(false)
-    }
-  }
-
-  return (
-    <div className="pres-modal-overlay" onClick={cerrar}>
-      <div className="pres-modal pres-modal--nuevo" onClick={(e) => e.stopPropagation()}>
-        <div className="pres-modal__header">
-          <div>
-            <h2>Nuevo presupuesto</h2>
-            <p className="pres-modal__subtitulo">Agrega productos y bloquea sus precios por 24 horas</p>
-          </div>
-          <button type="button" className="pres-modal__cerrar" onClick={cerrar} aria-label="Cerrar">
-            <X size={20} />
-          </button>
-        </div>
-
-        <div className="pres-buscador pres-buscador--modal">
-          <div className="pres-buscador__input-wrap">
-            <Search size={18} />
-            <input
-              type="text"
-              placeholder="Buscar producto para agregar..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={alTeclar}
-            />
-          </div>
-
-          {query.trim() && (
-            <div className="pres-buscador__resultados">
-              {buscando ? (
-                <div className="pres-buscador__mensaje">Buscando...</div>
-              ) : sugerenciasVisibles.length === 0 ? (
-                <div className="pres-buscador__mensaje">Sin resultados para "{query}"</div>
-              ) : (
-                sugerenciasVisibles.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    className="pres-buscador__item"
-                    onClick={() => agregarAlBorrador(p)}
-                    disabled={p.precio_usd == null}
-                    title={p.precio_usd == null ? 'Este producto todavía no tiene precio' : undefined}
-                  >
-                    <ProductoImagen src={p.foto_url} alt={p.nombre_comercial} />
-                    <span className="pres-buscador__nombre">{p.nombre_comercial}</span>
-                    {p.precio_usd != null ? (
-                      <span className="pres-buscador__precio">${formatUSD(p.precio_usd)}</span>
-                    ) : (
-                      <span className="pres-buscador__sin-precio">Sin precio</span>
-                    )}
-                    {p.precio_usd != null && <Plus size={16} />}
-                  </button>
-                ))
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="pres-modal__body">
-          {borrador.length === 0 ? (
-            <div className="pres-nuevo__vacio">
-              <ShoppingCart size={26} />
-              <p>Busca productos arriba para armar tu listado.</p>
-            </div>
-          ) : (
-            <div className="pres-borrador">
-              {borrador.map((i) => (
-                <div key={i.producto.id} className="pres-borrador__item">
-                  <ProductoImagen src={i.producto.foto_url} alt={i.producto.nombre_comercial} />
-                  <div className="pres-borrador__info">
-                    <p className="pres-borrador__nombre">{i.producto.nombre_comercial}</p>
-                    <p className="pres-borrador__precio">${formatUSD(i.producto.precio_usd)} c/u</p>
-                  </div>
-                  <div className="pres-borrador__stepper">
-                    <button type="button" onClick={() => cambiarCantidad(i.producto.id, -1)} aria-label="Restar">
-                      <Minus size={14} />
-                    </button>
-                    <span>{i.cantidad}</span>
-                    <button type="button" onClick={() => cambiarCantidad(i.producto.id, 1)} aria-label="Sumar">
-                      <Plus size={14} />
-                    </button>
-                  </div>
-                  <span className="pres-borrador__subtotal">
-                    ${formatUSD(Number(i.producto.precio_usd ?? 0) * i.cantidad)}
-                  </span>
-                  <button
-                    type="button"
-                    className="pres-borrador__quitar"
-                    onClick={() => quitarDelBorrador(i.producto.id)}
-                    aria-label="Quitar del listado"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="pres-modal__footer pres-nuevo__footer">
-          <div className="pres-modal__total">
-            <span>
-              {borrador.length} {borrador.length === 1 ? 'producto' : 'productos'}
-            </span>
-            <span>${formatUSD(subtotalBorrador)}</span>
-          </div>
-          <button
-            type="button"
-            className="pres-nuevo__crear"
-            onClick={crearPresupuesto}
-            disabled={borrador.length === 0 || creando}
-          >
-            {creando ? 'Generando...' : 'Generar presupuesto'}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
 }
 
 // ---------------------------------------------------------------
@@ -489,29 +265,27 @@ function PresupuestoModal({ presupuestoId, onClose, onRecotizado }) {
 }
 
 // ---------------------------------------------------------------
-// Página principal: solo el historial de presupuestos, con un CTA
-// que abre el modal de creación rápida.
+// Página principal: historial de presupuestos + CTA que lleva a la
+// página dedicada de creación (`/presupuesto/crear`). El detalle de
+// cada presupuesto se abre en un modal.
 // ---------------------------------------------------------------
 function Presupuesto() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [historial, setHistorial] = useState([])
   const [cargandoHistorial, setCargandoHistorial] = useState(true)
-  const [modalId, setModalId] = useState(null)
+  const [modalIdManual, setModalIdManual] = useState(null)
+
+  // La URL manda: al crear un presupuesto se navega a
+  // `/presupuesto?ver=<id>` y ese parámetro abre su detalle. Se DERIVA del
+  // searchParams (no se espeja en estado con un useEffect: evita el
+  // setState-en-efecto y el render de más).
+  const verId = searchParams.get('ver')
+  const modalId = verId ? Number(verId) || null : modalIdManual
 
   useEffect(() => {
     cargarHistorial()
   }, [])
-
-  useEffect(() => {
-    const verId = searchParams.get('ver')
-    if (verId) {
-      setModalId(Number(verId))
-      const next = new URLSearchParams(searchParams)
-      next.delete('ver')
-      setSearchParams(next, { replace: true })
-    }
-  }, [searchParams, setSearchParams])
 
   async function cargarHistorial() {
     setCargandoHistorial(true)
@@ -527,6 +301,29 @@ function Presupuesto() {
 
   function abrirCreacion() {
     navigate('/presupuesto/crear')
+  }
+
+  // Cerrar el detalle: limpia el estado local y, si veníamos de crear
+  // (`?ver=<id>`), quita el parámetro de la URL para no reabrirlo.
+  function cerrarDetalle() {
+    setModalIdManual(null)
+    if (verId) {
+      const next = new URLSearchParams(searchParams)
+      next.delete('ver')
+      setSearchParams(next, { replace: true })
+    }
+  }
+
+  // Recotizar devuelve un presupuesto NUEVO: se abre ese y el historial se
+  // recarga. Si el detalle se abrió desde `?ver=`, el parámetro deja de mandar.
+  function alRecotizar(nuevoId) {
+    if (verId) {
+      const next = new URLSearchParams(searchParams)
+      next.delete('ver')
+      setSearchParams(next, { replace: true })
+    }
+    setModalIdManual(nuevoId)
+    cargarHistorial()
   }
 
   return (
@@ -574,7 +371,7 @@ function Presupuesto() {
                     key={p.id}
                     type="button"
                     className={`pres-historial__card ${vencido ? 'pres-historial__card--vencido' : 'pres-historial__card--vigente'}`}
-                    onClick={() => setModalId(p.id)}
+                    onClick={() => setModalIdManual(p.id)}
                     title={fechaTitulo(p.fecha_creacion)}
                   >
                     <div className="pres-historial__info">
@@ -604,11 +401,8 @@ function Presupuesto() {
       {modalId && (
         <PresupuestoModal
           presupuestoId={modalId}
-          onClose={() => setModalId(null)}
-          onRecotizado={(nuevoId) => {
-            setModalId(nuevoId)
-            cargarHistorial()
-          }}
+          onClose={cerrarDetalle}
+          onRecotizado={alRecotizar}
         />
       )}
     </LayoutPaginaPrincipal>
