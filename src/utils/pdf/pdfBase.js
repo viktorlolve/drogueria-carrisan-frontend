@@ -190,6 +190,60 @@ function dibujarLogoMembrete(doc) {
   }
 }
 
+/* ---------- Logo a color sobre fondo blanco ----------
+   Para documentos de fondo claro (el comprobante de pago, por ejemplo) hace
+   falta el wordmark a color. Se rasteriza igual que el del membrete — con
+   fondo blanco en vez del degradado — y se exporta como JPEG por la misma
+   razón: jsPDF copia el JPEG tal cual y el PNG lo embebe como RGBA crudo.
+
+   Devuelve { data, ratio } o null si no se pudo cargar (Node, CORS, red). El
+   generador cae entonces al nombre de la empresa en texto: nunca rompe el PDF. */
+const LOGO_CLARO_PX = 440 // ancho en px con que se rasteriza (≈400 dpi a 26 mm)
+
+let logoClaro = null
+let logoClaroPromesa = null
+
+export async function cargarLogoClaro() {
+  if (logoClaro) return logoClaro
+  if (logoClaroPromesa) return logoClaroPromesa
+  logoClaroPromesa = (async () => {
+    try {
+      const { LOGO_COLOR_HORIZONTAL } = await import('../../config/logos')
+      const res = await fetch(LOGO_COLOR_HORIZONTAL, { mode: 'cors', signal: AbortSignal.timeout(8000) })
+      if (!res.ok) throw new Error(`logo ${res.status}`)
+      const blob = await res.blob()
+      const dataUrl = await new Promise((resolve, reject) => {
+        const fr = new FileReader()
+        fr.onload = () => resolve(fr.result)
+        fr.onerror = reject
+        fr.readAsDataURL(blob)
+      })
+      const img = new Image()
+      img.src = dataUrl
+      await img.decode()
+
+      const ratio = img.naturalWidth / img.naturalHeight
+      const canvas = document.createElement('canvas')
+      canvas.width = LOGO_CLARO_PX
+      canvas.height = Math.max(1, Math.round(LOGO_CLARO_PX / ratio))
+      const ctx = canvas.getContext('2d')
+      if (!ctx) throw new Error('canvas 2d no disponible')
+
+      // Fondo blanco: el logo se dibuja sobre blanco en el documento, así que
+      // el JPEG no arrastra el transparente (que saldría negro).
+      ctx.fillStyle = '#FFFFFF'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+
+      logoClaro = { data: canvas.toDataURL('image/jpeg', 0.95), ratio }
+    } catch {
+      logoClaro = null
+    }
+    return logoClaro
+  })()
+  return logoClaroPromesa
+}
+
 /* ---------- Marca: círculo teal con cruz ---------- */
 export function dibujarMarca(doc, cx, cy, r = 6) {
   doc.setFillColor(...C.teal)
