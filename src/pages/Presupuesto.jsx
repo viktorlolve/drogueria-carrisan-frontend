@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Search, Plus, Minus, X, ShoppingCart, FileDown, RefreshCw, ArrowUp, ArrowDown, Calendar,
 } from 'lucide-react'
@@ -492,14 +493,25 @@ function PresupuestoModal({ presupuestoId, onClose, onRecotizado }) {
 // que abre el modal de creación rápida.
 // ---------------------------------------------------------------
 function Presupuesto() {
+  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [historial, setHistorial] = useState([])
   const [cargandoHistorial, setCargandoHistorial] = useState(true)
   const [modalId, setModalId] = useState(null)
-  const [creandoNuevo, setCreandoNuevo] = useState(false)
 
   useEffect(() => {
     cargarHistorial()
   }, [])
+
+  useEffect(() => {
+    const verId = searchParams.get('ver')
+    if (verId) {
+      setModalId(Number(verId))
+      const next = new URLSearchParams(searchParams)
+      next.delete('ver')
+      setSearchParams(next, { replace: true })
+    }
+  }, [searchParams, setSearchParams])
 
   async function cargarHistorial() {
     setCargandoHistorial(true)
@@ -514,7 +526,7 @@ function Presupuesto() {
   }
 
   function abrirCreacion() {
-    setCreandoNuevo(true)
+    navigate('/presupuesto/crear')
   }
 
   return (
@@ -588,17 +600,6 @@ function Presupuesto() {
           )}
         </div>
       </div>
-
-      {creandoNuevo && (
-        <NuevoPresupuestoModal
-          onClose={() => setCreandoNuevo(false)}
-          onCreado={(nuevoId) => {
-            setCreandoNuevo(false)
-            cargarHistorial()
-            setModalId(nuevoId)
-          }}
-        />
-      )}
 
       {modalId && (
         <PresupuestoModal

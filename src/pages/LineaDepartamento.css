@@ -730,10 +730,14 @@
 }
 .lin-activos__limpiar:hover { color: var(--lin-ink); }
 
+/* Mismo comportamiento que el catálogo (.product-grid):
+   1 columna en móvil → 2 en tablet → 3 en tablet grande/laptop → 4 en desktop.
+   En móvil la ProductCard pasa a layout horizontal, así que una sola
+   columna es imprescindible para que no se monte. */
 .lin-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: 1fr;
+  gap: 20px;
   margin-top: 18px;
 }
 .lin-grid__item { min-width: 0; }
@@ -874,8 +878,14 @@
   .lin-toggles { flex: 0 0 auto; align-self: flex-end; }
 }
 
-@media (min-width: 700px) {
-  .lin-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+/* 2 columnas — tablets pequeñas / landscape (idéntico al catálogo) */
+@media (min-width: 660px) {
+  .lin-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* 3 columnas — tablets grandes / laptops */
+@media (min-width: 900px) {
+  .lin-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (min-width: 769px) {
@@ -936,12 +946,15 @@
   .lin-forma,
   .lin-lab { flex: none; }
 
-  .lin-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .lin-espaciador { height: 24px; }
 }
 
+/* 4 columnas — desktop (mismo corte que el catálogo) */
+@media (min-width: 1200px) {
+  .lin-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
 @media (min-width: 1360px) {
-  .lin-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
   .lin-formas { grid-template-columns: repeat(8, minmax(0, 1fr)); }
 }
 
