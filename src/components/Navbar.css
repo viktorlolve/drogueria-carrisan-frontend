@@ -4,6 +4,10 @@
 ;
   --wm-dark-blue: #0052dc
 ;
+  /* Color de fondo de la barra superior del navbar. Los acentos
+     (botones, íconos, pills, dropdowns) siguen usando --wm-blue. */
+  --wm-navbar-bg: #1E2E4F
+;
   --wm-teal: #12A594
 ;
   --wm-blue-light: #EAF1FB
@@ -26,7 +30,7 @@ body
 }
 /* 1. FIJAR LA BARRA */.navbar-container 
 {
-  background-color: var(--wm-blue)
+  background-color: var(--wm-navbar-bg)
 ;
   color: white
 ;
@@ -60,7 +64,7 @@ body
 }
 .navbar__menu-mobile 
 {
-  background-color: #0052dc
+  background-color: var(--wm-navbar-bg)
 ;
   border: none
 ;
@@ -958,7 +962,7 @@ body
 }
   .navbar-container 
 {
-    background: #0052dc
+    background: var(--wm-navbar-bg)
 ;
     backdrop-filter: blur(20px)
 ;
