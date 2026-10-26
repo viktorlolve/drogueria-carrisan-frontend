@@ -135,64 +135,30 @@ function ShortsPlayer({ videoId, conSonido, enPausa, jugadorRef }) {
   return <div className="cc-slide__video" ref={contenedorRef} />
 }
 
-// Preview con movimiento, en dos niveles:
+// Preview de la tarjeta: SOLO el clip real (~4s, mudo) que el pipeline de
+// GitHub Actions generó y subió a Supabase Storage. Si el video no tiene clip,
+// la tarjeta se queda con la miniatura estática de YouTube (.cc__preview-img).
 //
-// 1) Si el pipeline de GitHub Actions ya generó el clip (~4s, mudo) y lo subió
-//    a Supabase Storage, se reproduce ese <video>. Es el mejor resultado.
-// 2) Si no hay clip, se animan TRES fotogramas reales del propio video
-//    (hq1/hq2/hq3 de ytimg) con un crossfade + zoom lento en CSS. Esto NO
-//    depende de yt-dlp, de cookies ni de ningún pipeline: YouTube sirve esos
-//    fotogramas para casi todos los videos, así que la tarjeta se mueve
-//    aunque la generación de clips esté caída (fue justo lo que pasó: el
-//    secret de cookies caducó el 2026-09-23 y todo el carrusel quedó quieto).
+// El fallback de fotogramas animados (hq1/hq2/hq3 de ytimg con crossfade +
+// zoom) se descartó por decisión del dueño: esos frames son de baja resolución
+// y al estirarlos al formato vertical se veían borrosos, así que se prefiere
+// una imagen fija nítida antes que una animación sucia.
 //
-// Ambos caminos se montan solo mientras la tarjeta está visible en la fila
-// (prop `activo`), así nunca reproducen/animan todas a la vez. Si un fotograma
-// no existe se oculta y queda la miniatura estática de fondo
-// (.cc__preview-img), nunca un hueco.
-//
-// Los delays negativos desfasan las tres capas que comparten la MISMA
-// animación de 12s: sin delay el fotograma se ve al inicio de su ciclo
-// (-8s lo adelanta 8s, -4s lo adelanta 4s), o sea el orden visible es
-// hq1 -> hq2 -> hq3. Si se cambia la duración del ciclo hay que recalcularlos.
-const FOTOGRAMAS = [
-  { nombre: 'hq1', delay: '0s' },
-  { nombre: 'hq2', delay: '-8s' },
-  { nombre: 'hq3', delay: '-4s' },
-]
-
+// El clip se monta solo mientras la tarjeta está visible en la fila (prop
+// `activo`), así nunca reproducen todas a la vez.
 function MiniaturaMovimiento({ video, activo }) {
-  if (!activo) return null
-  if (video.preview_url) {
-    return (
-      <video
-        key={video.id}
-        src={video.preview_url}
-        className="cc__preview-frame"
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="none"
-      />
-    )
-  }
+  if (!activo || !video.preview_url) return null
   return (
-    <div className="cc__fotogramas" aria-hidden="true">
-      {FOTOGRAMAS.map((f) => (
-        <img
-          key={f.nombre}
-          src={`https://i.ytimg.com/vi/${video.id}/${f.nombre}.jpg`}
-          alt=""
-          className="cc__fotograma"
-          style={{ animationDelay: f.delay }}
-          loading="lazy"
-          onError={(e) => {
-            e.currentTarget.hidden = true
-          }}
-        />
-      ))}
-    </div>
+    <video
+      key={video.id}
+      src={video.preview_url}
+      className="cc__preview-frame"
+      autoPlay
+      muted
+      loop
+      playsInline
+      preload="none"
+    />
   )
 }
 

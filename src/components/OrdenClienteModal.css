@@ -192,37 +192,3 @@
   justify-content: center;
   gap: 6px;
 }
-
-.pcm-monto-hero {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 12px 0 4px;
-}
-
-.pcm-monto-hero__valor {
-  font-family: 'Courier New', monospace;
-  font-size: 2.1rem;
-  font-weight: 800;
-  color: #16a34a;
-  line-height: 1;
-}
-
-.pcm-monto-hero__bs {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #64748b;
-}
-
-.pcm-tasa {
-  text-align: center;
-  font-size: 0.8rem;
-  color: #94a3b8;
-  margin: 0 0 8px;
-}
-
-.pcm-tasa strong {
-  color: #64748b;
-}

@@ -66,6 +66,19 @@ const METODOS = {
   otro: 'Otro',
 }
 
+// Etiqueta legible del método de pago. Fuente ÚNICA: la usan el comprobante
+// (aquí abajo) y el modal de detalle del pago, para que el mismo `tipo` no se
+// lea de dos formas distintas. El staff escribe tipos propios además de los
+// del formulario del cliente (`reporte_cliente`, `verificacion_staff`), así que
+// cualquier tipo desconocido se muestra sin guiones en vez de desaparecer.
+export function etiquetaMetodo(tipo) {
+  const t = String(tipo ?? '').trim()
+  if (!t) return 'No especificado'
+  if (METODOS[t]) return METODOS[t]
+  const legible = t.replace(/_/g, ' ')
+  return legible.charAt(0).toUpperCase() + legible.slice(1)
+}
+
 const PAGINA_COMPROBANTE = { ancho: 160, alto: 94, margen: 6.5 }
 
 // jsPDF normaliza a vertical (intercambia ancho y alto) cuando el formato es
@@ -162,7 +175,7 @@ function construir(doc, datos) {
   const totalTexto = usdCode(pago.monto)
   const moneda = usdCode(0).replace(/[^A-Za-z]/g, '') || 'USD'
   const montoTexto = numero(pago.monto)
-  const metodo = METODOS[pago.tipo] || pago.tipo || 'No especificado'
+  const metodo = etiquetaMetodo(pago.tipo)
   const fechaLargaPago = fechaLarga(pago.created_at)
   const horaPago = hora(pago.created_at)
 
@@ -617,6 +630,11 @@ export async function generarComprobantePagoPDF({ pago, cliente, facturas = [] }
 
   doc.save(`comprobante-pago-${pago.id}.pdf`)
 }
+
+// Los consumidores lo importan por defecto (`import generarComprobantePagoPDF
+// from ...`): sin este alias el botón "Descargar comprobante" quedaba muerto
+// (el import resolvía a `undefined`). Se mantiene además el export nombrado.
+export default generarComprobantePagoPDF
 
 // Los consumidores (EstadoCuenta, PagosEstadoCuenta, PagoClienteModal) importan
 // el módulo por defecto.
