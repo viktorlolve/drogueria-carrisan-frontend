@@ -20,7 +20,7 @@
 // importar: nuevoDoc, dibujarTarjetaCliente, dibujarTarjetaDatos,
 //   dibujarSeccion, dibujarPildora, dibujarTabla
 
-import { PAG, usdCode, bs, fechaLarga, fechaHora, conOpacidad, nuevoDoc } from './pdf/pdfBase'
+import { PAG, C, usdCode, bs, fechaLarga, fechaHora, conOpacidad, nuevoDoc } from './pdf/pdfBase'
 
 const METODOS = {
   transferencia: 'Transferencia bancaria',
