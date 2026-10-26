@@ -30,10 +30,29 @@ export const C = {
   luz: [214, 222, 244], // texto claro sobre degradado
 }
 
-/* ---------- Página ---------- */
-export const PAG = { ancho: 210, alto: 297, margen: 16 }
+/* ---------- Página ----------
+   `PAG` es estado de módulo y se muta con `configurarPagina`. Para que un
+   formato chico (A5, media carta) no contamine al PDF siguiente, `nuevoDoc`
+   la vuelve a A4 en CADA llamada: el que quiere otro tamaño lo pide explícito
+   con `nuevoDoc({ pagina: { ancho, alto, margen } })`. */
+export const PAGINA_A4 = { ancho: 210, alto: 297, margen: 16 }
+
+export const PAG = { ...PAGINA_A4 }
 PAG.contenido = PAG.ancho - PAG.margen * 2
-export const Y_LIMITE = PAG.alto - 26 // bajo este punto se salta de página
+
+// `let` (no `const`) para que `configurarPagina` lo reajuste. Los generadores
+// que lo importan lo leen en cada uso y ven el valor vivo.
+export let Y_LIMITE = PAG.alto - 26 // bajo este punto se salta de página
+
+/* Reajusta la página del documento EN CURSO. Devuelve `PAG` por comodidad. */
+export function configurarPagina({ ancho = PAGINA_A4.ancho, alto = PAGINA_A4.alto, margen = PAGINA_A4.margen } = {}) {
+  PAG.ancho = ancho
+  PAG.alto = alto
+  PAG.margen = margen
+  PAG.contenido = ancho - margen * 2
+  Y_LIMITE = alto - 26
+  return PAG
+}
 
 /* ---------- Formateadores ---------- */
 export const usd = (v) =>
@@ -276,21 +295,28 @@ export function dibujarMembrete(doc, { etiqueta, numero, sub, alto = 50, numeroS
 export function dibujarPie(doc, texto = 'Documento generado automáticamente por la plataforma.') {
   const e = datosEmpresa()
   const total = doc.internal.getNumberOfPages()
+  const yBase = PAG.alto - 15
   for (let i = 1; i <= total; i++) {
     doc.setPage(i)
     doc.setFillColor(...C.teal)
-    doc.rect(PAG.margen, PAG.alto - 15, 12, 0.9, 'F')
+    doc.rect(PAG.margen, yBase, 12, 0.9, 'F')
     doc.setDrawColor(...C.borde)
     doc.setLineWidth(0.2)
-    doc.line(PAG.margen + 12, PAG.alto - 14.55, PAG.ancho - PAG.margen, PAG.alto - 14.55)
+    doc.line(PAG.margen + 12, yBase + 0.45, PAG.ancho - PAG.margen, yBase + 0.45)
 
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(7.5)
     doc.setTextColor(...C.indigo)
     doc.text(e.nombre, PAG.margen, PAG.alto - 9.5)
+
+    // Una sola línea: en media hoja no queda alto para que el pie envuelva y
+    // la segunda línea se salga del papel. Se recorta con puntos suspensivos.
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(...C.muted)
-    doc.text(texto, PAG.margen, PAG.alto - 5.5, { maxWidth: 150 })
+    const lineas = doc.splitTextToSize(texto, PAG.contenido - 26)
+    const linea = lineas.length > 1 ? `${lineas[0].replace(/[\s,;:·-]+$/, '')}…` : lineas[0] || texto
+    doc.text(linea, PAG.margen, PAG.alto - 5.5)
+
     doc.text(`Página ${i} de ${total}`, PAG.ancho - PAG.margen, PAG.alto - 9.5, { align: 'right' })
   }
 }
@@ -338,6 +364,76 @@ export function dibujarTarjetaDatos(doc, y, titulo, campos, { columnas = 3 } = {
     doc.setFontSize(c.destacado ? 10.5 : 9)
     doc.setTextColor(...(c.destacado ? C.indigo : C.texto))
     doc.text(String(c.valor ?? '—'), x, yy + 5, { maxWidth: colAncho - 4 })
+  })
+  return y + alto + 7
+}
+
+/* ---------- Tarjeta de campos con filas de alto variable ----------
+   Igual que `dibujarTarjetaDatos` pero mide cada fila antes de dibujarla, así
+   un valor largo NO se sale de la tarjeta cuando la página es angosta (A5).
+   `dibujarTarjetaDatos` mantiene sus filas fijas de 12 mm por compatibilidad
+   con la factura; los formatos nuevos usan esta.
+   campos: [{ label, valor, destacado?, completo? }] — `completo` ocupa la fila
+   entera (útil para direcciones o referencias largas). */
+export function dibujarTarjetaCampos(doc, y, { titulo, campos, columnas = 2 } = {}) {
+  const pad = 6
+  const anchoUtil = PAG.contenido - pad * 2
+  const anchoCol = anchoUtil / columnas
+  const altoTitulo = titulo ? 7.5 : 2
+
+  // 1) Agrupar en filas (una fila por campo `completo`)
+  const filasCfg = []
+  campos.forEach((c) => {
+    if (c.completo) {
+      filasCfg.push({ campos: [c], completo: true })
+      return
+    }
+    const ultima = filasCfg[filasCfg.length - 1]
+    if (ultima && !ultima.completo && ultima.campos.length < columnas) ultima.campos.push(c)
+    else filasCfg.push({ campos: [c], completo: false })
+  })
+
+  // 2) Medir con la tipografía real de cada valor
+  const filas = filasCfg.map((f) => {
+    const medidos = f.campos.map((c) => {
+      const ancho = f.completo ? anchoUtil - 2 : anchoCol - 2
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(c.destacado ? 10 : 9)
+      return { ...c, ancho, lineas: doc.splitTextToSize(String(c.valor ?? '—'), ancho) }
+    })
+    // 9 pt ocupa ~3.65 mm de interlineado; 3.7 deja el valor pegado a su label.
+    const alto = 8.6 + Math.max(...medidos.map((m) => m.lineas.length)) * 3.7
+    return { medidos, alto }
+  })
+
+  const alto = altoTitulo + filas.reduce((s, f) => s + f.alto, 0) + 2
+  doc.setFillColor(...C.gris)
+  doc.setDrawColor(...C.borde)
+  doc.setLineWidth(0.2)
+  doc.roundedRect(PAG.margen, y, PAG.contenido, alto, 3, 3, 'FD')
+
+  if (titulo) {
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(6.5)
+    doc.setTextColor(...C.teal)
+    doc.text(titulo.toUpperCase(), PAG.margen + pad, y + 5.5, { charSpace: 0.8 })
+  }
+
+  // 3) Dibujar
+  let yy = y + altoTitulo
+  filas.forEach((fila) => {
+    fila.medidos.forEach((c, k) => {
+      const x = PAG.margen + pad + (fila.completo ? 0 : k * anchoCol)
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(6.5)
+      doc.setTextColor(...C.muted)
+      doc.text(String(c.label).toUpperCase(), x, yy + 4, { charSpace: 0.4 })
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(c.destacado ? 10 : 9)
+      doc.setTextColor(...(c.destacado ? C.indigo : C.texto))
+      doc.text(c.lineas, x, yy + 8.2)
+    })
+    yy += fila.alto
   })
   return y + alto + 7
 }
@@ -475,14 +571,22 @@ export function urlVerificacion(tipo, id, codigo) {
   return `${base}/verificar/${tipo}/${id}?c=${encodeURIComponent(codigo)}`
 }
 
-export async function dibujarVerificacion(doc, y, { tipo, id, codigo, folio }) {
-  if (!codigo) return y
+/* QR como data URL (PNG). Lo usan tanto la tarjeta de verificación como los
+   formatos que incrustan el QR en su propio encabezado. */
+export async function qrDataUrl(texto, { width = 320, errorCorrectionLevel = 'M' } = {}) {
   const QRCode = (await import('qrcode')).default
-  const url = urlVerificacion(tipo, id, codigo)
-  const dataUrl = await QRCode.toDataURL(url, {
-    margin: 0, width: 320, errorCorrectionLevel: 'M',
+  return QRCode.toDataURL(texto, {
+    margin: 0,
+    width,
+    errorCorrectionLevel,
     color: { dark: '#1A1A3A', light: '#FFFFFF' },
   })
+}
+
+export async function dibujarVerificacion(doc, y, { tipo, id, codigo, folio }) {
+  if (!codigo) return y
+  const url = urlVerificacion(tipo, id, codigo)
+  const dataUrl = await qrDataUrl(url, { width: 320, errorCorrectionLevel: 'M' })
 
   const alto = 36
   if (y + alto > Y_LIMITE) { doc.addPage(); y = 20 }
@@ -523,13 +627,17 @@ export async function dibujarVerificacion(doc, y, { tipo, id, codigo, folio }) {
   return y + alto + 6
 }
 
-/* ---------- Guardar ---------- */
+/* ---------- Guardar ----------
+   `pagina` es opcional: { ancho, alto, margen } en mm. Sin ella se genera A4,
+   que es el tamaño por defecto de todos los formatos. */
 export async function nuevoDoc(opciones = {}) {
   const { jsPDF } = await import('jspdf')
+  const { pagina, ...resto } = opciones
+  configurarPagina(pagina)
   // Precarga el logo del membrete: `nuevoDoc` es el punto único por el que
   // pasan todos los generadores, así el membrete ya lo tiene al dibujarse.
   await cargarLogoMembrete()
-  return new jsPDF({ unit: 'mm', format: 'a4', ...opciones })
+  return new jsPDF({ unit: 'mm', format: [PAG.ancho, PAG.alto], ...resto })
 }
 
 /* ---------- Datos para pagar (solo si están configurados en config/empresa.js) ----------
