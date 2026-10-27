@@ -174,3 +174,32 @@
   color: #7c3aed
 ;
 }
+
+/* Etiqueta de urgencia (tiempo restante de la oferta) */
+.oferta-card__urgencia {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: calc(100% - 56px);
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #1A1A3A;
+  box-shadow: 0 1px 4px rgba(26, 26, 58, 0.18);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.oferta-card__urgencia--critica {
+  background: #dc2626;
+  color: #FFFFFF;
+}
+.oferta-card__urgencia--alta {
+  color: #dc2626;
+}

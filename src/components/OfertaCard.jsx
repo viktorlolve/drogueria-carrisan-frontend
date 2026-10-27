@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Check } from 'lucide-react'
+import { Plus, Check, Clock } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 import { getEstadoProducto } from '../utils/productoEstado'
+import { finDe, etiquetaUrgencia } from '../utils/tiempoOferta'
 import { ProductoImagen } from './icons/ProductoImagen'
 import './OfertaCard.css'
  
@@ -12,13 +13,14 @@ function formatUSD(valor) {
   return Number(valor).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-function OfertaCard({ producto, tasaVes }) {
+function OfertaCard({ producto, tasaVes, ahora }) {
   const { user } = useAuth()
   const { addItem } = useCart()
   const navigate = useNavigate()
   const [agregado, setAgregado] = useState(false)
 
   const estado = getEstadoProducto(producto)
+  const urgencia = etiquetaUrgencia(finDe(producto), ahora)
   const precioVes = tasaVes && producto.precio_usd
     ? (Number(producto.precio_usd) * tasaVes).toLocaleString('es-VE', { maximumFractionDigits: 0 })
     : null
@@ -45,6 +47,12 @@ function OfertaCard({ producto, tasaVes }) {
             -{producto.descuento_activo.tipo === 'porcentaje'
               ? `${producto.descuento_activo.valor}%`
               : `$${producto.descuento_activo.valor}`}
+          </span>
+        )}
+        {urgencia && (
+          <span className={`oferta-card__urgencia oferta-card__urgencia--${urgencia.nivel}`}>
+            <Clock size={11} aria-hidden="true" />
+            {urgencia.texto}
           </span>
         )}
         {estado === 'normal' && producto.disponible && (

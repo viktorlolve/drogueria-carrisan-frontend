@@ -1,493 +1,622 @@
-﻿/* ==========================================================   Ofertas â€” DroguerÃ­a CarrisÃ¡n   Paleta: Ãndigo #232B45 Â· Azul #1B4B8F Â· Teal #12A594           Ink #14182A Â· Paper #FBFAF7   ========================================================== */.ofertas-layout 
-{
-  width: 100%
-;
-  min-width: 0
-;
-  max-width: 1400px
-;
-  margin: 0 auto
-;
-  padding: 24px
-;
-  box-sizing: border-box
-;
-  font-family: 'Inter', sans-serif
-;
-  color: #14182A
-;
-  background: #FFFFFF
-;
+/* ============================================================
+   OFERTAS — Droguería Carrisan
+   Prefijo de clases: of-  (el CSS del proyecto es global)
+   Tokens de marca: tokens.css. El rojo de oferta (#dc2626) es el mismo
+   del badge de OfertaCard.css.
+   ============================================================ */
+
+.of {
+  --of-ink: var(--brand-navy, #1A1A3A);
+  --of-blue: var(--brand-blue, #0052DC);
+  --of-teal: var(--brand-teal, #12A594);
+  --of-paper: var(--brand-cream, #FBFAF7);
+  --of-rojo: #dc2626;
+  --of-rojo-suave: rgba(220, 38, 38, 0.1);
+
+  --of-linea: rgba(26, 26, 58, 0.1);
+  --of-linea-fuerte: rgba(26, 26, 58, 0.18);
+  --of-texto-suave: rgba(26, 26, 58, 0.68);
+
+  --of-fuente-titulo: var(--font-heading, 'Manrope', sans-serif);
+  --of-fuente-texto: var(--font-text, 'Inter', system-ui, sans-serif);
+
+  width: 100%;
+  background: #FFFFFF;
+  color: var(--of-ink);
+  font-family: var(--of-fuente-texto);
 }
-/* ---------- Header ---------- */.ofertas-header 
-{
-  margin-bottom: 20px
-;
+.of *, .of *::before, .of *::after { box-sizing: border-box; }
+.of :focus-visible { outline: 2px solid var(--of-blue); outline-offset: 2px; }
+
+.of-contenedor {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 16px;
 }
-.header-titles h1 
-{
-  font-family: 'Manrope', sans-serif
-;
-  font-size: 1.4rem
-;
-  font-weight: 800
-;
-  margin: 0 0 4px 0
-;
-  color: #14182A
-;
+
+/* ── Skeleton ────────────────────────────────────────────── */
+.of-skel {
+  display: block;
+  border-radius: 10px;
+  background: linear-gradient(90deg, rgba(128, 128, 150, 0.18) 25%, rgba(128, 128, 150, 0.32) 50%, rgba(128, 128, 150, 0.18) 75%);
+  background-size: 200% 100%;
+  animation: of-shimmer 1.3s linear infinite;
 }
-.header-titles h1 span 
-{
-  color: #74767c
-;
-  font-family: 'Inter', sans-serif
-;
-  font-weight: 500
-;
-  font-size: 1rem
-;
+@keyframes of-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
 }
-.header-subtitle 
-{
-  font-size: 0.85rem
-;
-  color: #74767c
-;
-  margin: 0
-;
+
+/* ── Botones ─────────────────────────────────────────────── */
+.of-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 22px;
+  border-radius: var(--radius-pill, 999px);
+  border: 1.5px solid transparent;
+  font-family: var(--of-fuente-texto);
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
-/* ---------- Banner promocional ---------- */.ofertas-banner 
-{
-  display: flex
-;
-  align-items: center
-;
-  justify-content: space-between
-;
-  gap: 24px
-;
-  background: linear-gradient(135deg, #232B45 0%, #1B4B8F 100%)
-;
-  border-radius: 20px
-;
-  padding: 32px
-;
-  margin-bottom: 24px
-;
-  overflow: hidden
-;
-  position: relative
-;
+.of-btn:hover { transform: translateY(-1px); }
+.of-btn--primario { background: var(--of-blue); color: #FFFFFF; }
+.of-btn--claro { background: #FFFFFF; color: var(--of-ink); }
+.of-btn--fantasma { background: transparent; color: #FFFFFF; border-color: rgba(255, 255, 255, 0.4); }
+.of-btn--fantasma:hover { border-color: #FFFFFF; }
+.of-btn--contorno { background: transparent; color: var(--of-ink); border-color: var(--of-linea-fuerte); }
+.of-btn--contorno:hover { border-color: var(--of-ink); }
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.of-hero {
+  position: relative;
+  isolation: isolate;
+  margin: 12px 12px 0;
+  border-radius: 24px;
+  overflow: hidden;
+  background: var(--of-ink);
+  color: #FFFFFF;
 }
-.ofertas-banner__texto 
-{
-  position: relative
-;
-  z-index: 1
-;
-  max-width: 460px
-;
+.of-hero__brillo {
+  position: absolute;
+  z-index: -1;
+  right: -140px;
+  top: -180px;
+  width: 560px;
+  height: 560px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(220, 38, 38, 0.55), transparent);
+  pointer-events: none;
 }
-.ofertas-banner__eyebrow 
-{
-  display: inline-block
-;
-  background: rgba(18, 165, 148, 0.18)
-;
-  color: #5FE8D3
-;
-  font-size: 0.72rem
-;
-  font-weight: 700
-;
-  text-transform: uppercase
-;
-  letter-spacing: 0.04em
-;
-  padding: 5px 12px
-;
-  border-radius: 999px
-;
-  margin-bottom: 12px
-;
+.of-hero__puntos {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: radial-gradient(#FFFFFF 1px, transparent 1.2px);
+  background-size: 22px 22px;
+  opacity: 0.06;
+  -webkit-mask-image: linear-gradient(to right, #000 0%, transparent 70%);
+  mask-image: linear-gradient(to right, #000 0%, transparent 70%);
 }
-.ofertas-banner__texto h2 
-{
-  font-family: 'Manrope', sans-serif
-;
-  font-size: 1.7rem
-;
-  font-weight: 800
-;
-  color: #FBFAF7
-;
-  margin: 0 0 8px
-;
-  line-height: 1.15
-;
+.of-hero__interior {
+  display: grid;
+  gap: 28px;
+  padding: 28px 20px 28px;
 }
-.ofertas-banner__texto p 
-{
-  font-size: 0.88rem
-;
-  color: rgba(251, 250, 247, 0.78)
-;
-  margin: 0 0 20px
-;
-  line-height: 1.5
-;
+.of-hero__texto { min-width: 0; animation: of-entrada 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+@keyframes of-entrada {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-.ofertas-banner__cta 
-{
-  display: inline-block
-;
-  background: #12A594
-;
-  color: #FFFFFF
-;
-  font-weight: 700
-;
-  font-size: 0.88rem
-;
-  padding: 12px 26px
-;
-  border-radius: 999px
-;
-  text-decoration: none
-;
-  transition: background 0.2s ease
-;
+
+.of-migas {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 18px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.72);
 }
-.ofertas-banner__cta:hover 
-{
-  background: #0d8a7c
-;
+.of-migas a { color: inherit; text-decoration: none; }
+.of-migas a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.of-migas span[aria-current] { font-weight: 600; color: #FFFFFF; }
+
+.of-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill, 999px);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
-.ofertas-banner__grafico 
-{
-  position: relative
-;
-  z-index: 1
-;
-  flex-shrink: 0
-;
-  width: 120px
-;
-  height: 120px
-;
-  border-radius: 50%
-;
-  background: rgba(255, 255, 255, 0.08)
-;
-  display: flex
-;
-  align-items: center
-;
-  justify-content: center
-;
+.of-pulso {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--of-rojo);
 }
-.ofertas-banner__badge 
-{
-  font-family: 'Manrope', sans-serif
-;
-  font-size: 2.6rem
-;
-  font-weight: 800
-;
-  color: #FBFAF7
-;
+.of-pulso::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--of-rojo);
+  animation: of-pulso 1.8s ease-out infinite;
 }
-/* ---------- Chips rÃ¡pidos ---------- */.ofertas-chips 
-{
-  display: flex
-;
-  gap: 10px
-;
-  flex-wrap: wrap
-;
-  margin-bottom: 24px
-;
+@keyframes of-pulso {
+  from { transform: scale(1); opacity: 0.7; }
+  to { transform: scale(3.2); opacity: 0; }
 }
-.ofertas-chip 
-{
-  background: #FFFFFF
-;
-  border: 1px solid #c7cbd6
-;
-  border-radius: 999px
-;
-  padding: 8px 16px
-;
-  font-family: 'Inter', sans-serif
-;
-  font-size: 0.82rem
-;
-  font-weight: 600
-;
-  color: #14182A
-;
-  cursor: pointer
-;
-  transition: border-color 0.2s ease, background 0.2s ease
-;
+
+.of-hero__titulo {
+  margin: 16px 0 0;
+  font-family: var(--of-fuente-titulo);
+  font-weight: 800;
+  font-size: clamp(2.1rem, 1.2rem + 3.8vw, 3.8rem);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
 }
-.ofertas-chip:hover 
-{
-  border-color: #1B4B8F
-;
-  background: #F4F6F8
-;
+.of-hero__acento { color: var(--of-rojo); }
+.of-hero__bajada {
+  max-width: 50ch;
+  margin: 14px 0 0;
+  font-size: 1.02rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.78);
 }
-.ofertas-chip--activo 
-{
-  background: #14182A
-;
-  border-color: #14182A
-;
-  color: #FFFFFF
-;
+.of-hero__aviso {
+  margin: 22px 0 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.72);
 }
-/* ---------- Grid de productos (mismo patrÃ³n que CatÃ¡logo) ---------- */.ofertas-main 
-{
-  min-width: 0
-;
+
+.of-reloj {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 24px;
+  padding: 16px 18px 14px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
-.product-grid 
-{
-  display: grid
-;
-  gap: 20px
-;
+.of-reloj--cargando { min-width: 280px; }
+.of-reloj__skel { width: 240px; height: 64px; }
+.of-reloj__etiqueta {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
 }
-@media (min-width: 1024px) 
-{
-  .product-grid 
-{
-    grid-template-columns: repeat(4, 1fr)
-;
+.of-reloj__detalle {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.78);
 }
+
+.of-hero__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
 }
-@media (min-width: 768px) and (max-width: 1023px) 
-{
-  .product-grid 
-{
-    grid-template-columns: repeat(3, 1fr)
-;
+
+/* ── Mosaico de destacados ───────────────────────────────── */
+.of-mosaico {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 2px 2px 8px;
+  margin: 0 -2px;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
 }
+.of-mosaico::-webkit-scrollbar { display: none; }
+
+.of-dest {
+  flex: 0 0 168px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 20px;
+  background: #FFFFFF;
+  color: var(--of-ink);
+  text-decoration: none;
+  box-shadow: 0 18px 36px -22px rgba(0, 0, 0, 0.7);
+  transition: transform 0.18s ease;
 }
-@media (min-width: 480px) and (max-width: 767px) 
-{
-  .product-grid 
-{
-    grid-template-columns: repeat(2, 1fr)
-;
+.of-dest:hover { transform: translateY(-3px); }
+.of-dest__marco {
+  position: relative;
+  display: block;
+  aspect-ratio: 1 / 1;
+  border-radius: 14px;
+  background: var(--of-paper);
+  overflow: hidden;
 }
+.of-dest__img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 8px;
+  display: block;
 }
-@media (max-width: 479px) 
-{
-  .product-grid 
-{
-    grid-template-columns: 1fr
-;
+.of-dest__pct {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--of-rojo);
+  color: #FFFFFF;
+  font-size: 0.76rem;
+  font-weight: 800;
 }
+.of-dest__nombre {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.5em;
+  padding: 0 2px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.25;
 }
-/* ---------- Estado vacÃ­o ---------- */.ofertas-vacio 
-{
-  text-align: center
-;
-  padding: 64px 24px
-;
-  background: #FFFFFF
-;
-  border-radius: 16px
-;
+.of-dest__precios {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 0 2px 2px;
 }
-.ofertas-vacio__icono 
-{
-  font-size: 2.2rem
-;
-  display: block
-;
-  margin-bottom: 12px
-;
+.of-dest__precios strong {
+  font-family: var(--of-fuente-titulo);
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--of-teal);
 }
-.ofertas-vacio h3 
-{
-  font-family: 'Manrope', sans-serif
-;
-  font-size: 1.1rem
-;
-  color: #14182A
-;
-  margin: 0 0 6px
-;
+.of-dest__precios s { font-size: 0.78rem; color: var(--of-texto-suave); }
+
+.of-dest-skel { flex: 0 0 168px; height: 236px; border-radius: 20px; }
+
+/* ============================================================
+   SECCIONES
+   ============================================================ */
+.of-seccion { margin-top: 28px; }
+.of-seccion__cabecera {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 18px;
 }
-.ofertas-vacio p 
-{
-  font-size: 0.85rem
-;
-  color: #74767c
-;
-  margin: 0 0 20px
-;
+.of-seccion__titulo {
+  margin: 0;
+  font-family: var(--of-fuente-titulo);
+  font-weight: 800;
+  font-size: clamp(1.25rem, 0.9rem + 1.2vw, 1.75rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
 }
-.ofertas-vacio__cta 
-{
-  display: inline-block
-;
-  background: #1B4B8F
-;
-  color: #FFFFFF
-;
-  font-weight: 700
-;
-  font-size: 0.85rem
-;
-  padding: 10px 24px
-;
-  border-radius: 999px
-;
-  text-decoration: none
-;
+.of-seccion__sub {
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+  color: var(--of-texto-suave);
 }
-.ofertas-vacio__cta:hover 
-{
-  background: #163c72
-;
+
+/* ── Bento ───────────────────────────────────────────────── */
+.of-bento {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "a a"
+    "b c"
+    "d d";
+  gap: 12px;
 }
-.ofertas-estado 
-{
-  text-align: center
-;
-  padding: 60px 0
-;
-  color: #74767c
-;
+.of-bento__a { grid-area: a; }
+.of-bento__b { grid-area: b; }
+.of-bento__c { grid-area: c; }
+.of-bento__d { grid-area: d; }
+
+.of-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 150px;
+  padding: 18px;
+  border-radius: 22px;
+  border: 1.5px solid transparent;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
-.ofertas-error 
-{
-  color: #c0392b
-;
+.of-tile:hover { transform: translateY(-3px); box-shadow: 0 18px 34px -20px rgba(26, 26, 58, 0.5); }
+.of-tile--activo { outline: 3px solid var(--of-blue); outline-offset: 2px; }
+
+.of-tile__icono {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  margin-bottom: auto;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.18);
 }
-/* ============================================   MOBILE   ============================================ */@media (max-width: 768px) 
-{
-  .ofertas-layout 
-{
-    padding: 16px
-;
+.of-tile__valor {
+  margin-top: 14px;
+  font-family: var(--of-fuente-titulo);
+  font-weight: 800;
+  font-size: clamp(2rem, 1.4rem + 2.2vw, 3.2rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
 }
-  .ofertas-banner 
-{
-    padding: 24px 20px
-;
+.of-tile__skel { width: 90px; height: 40px; margin-top: 14px; }
+.of-tile__titulo { margin-top: 6px; font-weight: 800; font-size: 1rem; }
+.of-tile__texto { font-size: 0.82rem; line-height: 1.35; opacity: 0.82; }
+.of-tile__flecha {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  opacity: 0.6;
+  transition: transform 0.18s ease, opacity 0.18s ease;
 }
-  .ofertas-banner__texto h2 
-{
-    font-size: 1.4rem
-;
+.of-tile:hover .of-tile__flecha { transform: translateX(3px); opacity: 1; }
+
+.of-tile--vencer {
+  background: linear-gradient(145deg, var(--of-rojo) 0%, #9f1d1d 100%);
+  color: #FFFFFF;
+  min-height: 190px;
 }
-  .ofertas-banner__grafico 
-{
-    width: 80px
-;
-    height: 80px
-;
+.of-tile--descuento { background: var(--of-ink); color: #FFFFFF; }
+.of-tile--nuevas { background: var(--of-teal); color: #FFFFFF; }
+.of-tile--todas {
+  background: var(--of-paper);
+  color: var(--of-ink);
+  border-color: var(--of-linea-fuerte);
 }
-  .ofertas-banner__badge 
-{
-    font-size: 1.8rem
-;
+.of-tile--todas .of-tile__icono { background: rgba(26, 26, 58, 0.08); }
+
+/* ── Grilla ──────────────────────────────────────────────── */
+.of-grid-seccion { scroll-margin-top: 96px; }
+
+.of-segmentos {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
 }
-  .ofertas-chips 
-{
-    flex-wrap: nowrap
-;
-    overflow-x: auto
-;
-    scrollbar-width: none
-;
+.of-segmentos::-webkit-scrollbar { display: none; }
+.of-segmento {
+  flex: none;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill, 999px);
+  border: 1.5px solid var(--of-linea-fuerte);
+  background: #FFFFFF;
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--of-ink);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
-  .ofertas-chips::-webkit-scrollbar 
-{
-    display: none
-;
+.of-segmento:hover { border-color: var(--of-ink); }
+.of-segmento--activo { background: var(--of-ink); border-color: var(--of-ink); color: #FFFFFF; }
+
+.of-nota {
+  margin: -6px 0 14px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--of-rojo-suave);
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #9f1d1d;
 }
-  .ofertas-chip 
-{
-    flex-shrink: 0
-;
-    white-space: nowrap
-;
+
+.of-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 10px;
 }
+.of-mas { display: flex; justify-content: center; margin-top: 28px; }
+.of-mas__resto {
+  padding: 4px 10px;
+  border-radius: var(--radius-pill, 999px);
+  background: var(--of-linea);
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--of-texto-suave);
 }
-@media (max-width: 480px) 
-{
-  .ofertas-banner 
-{
-    flex-direction: column
-;
-    align-items: flex-start
-;
-    text-align: left
-;
+
+/* ── Estados ─────────────────────────────────────────────── */
+.of-estado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 28px;
+  padding: 44px 20px;
+  text-align: center;
+  border-radius: 22px;
+  border: 1.5px dashed var(--of-linea-fuerte);
+  background: var(--of-paper);
 }
-  .ofertas-banner__grafico 
-{
-    display: none
-;
+.of-estado h2, .of-estado h3 {
+  margin: 6px 0 0;
+  font-family: var(--of-fuente-titulo);
+  font-weight: 800;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
 }
+.of-estado p {
+  max-width: 46ch;
+  margin: 0 0 8px;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--of-texto-suave);
 }
-/* Agregar/reemplazar en Ofertas.css â€” mantiene tus clases existentes   (ofertas-layout, ofertas-header, ofertas-banner, ofertas-vacio) y   agrega lo nuevo: */.ofertas-layout 
-{
-  display: flex
-;
-  flex-direction: column
-;
-  gap: 20px
-;
-  padding: 0 12px
-;
+.of-estado__icono {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(0, 82, 220, 0.09);
+  color: var(--of-blue);
 }
-.ofertas-tabs 
-{
-  overflow-x: auto
-;
+.of-estado__icono--alerta { background: var(--of-rojo-suave); color: var(--of-rojo); }
+
+/* ── Cierre ──────────────────────────────────────────────── */
+.of-cierre {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  margin: 56px 0 48px;
+  padding: 32px 24px;
+  border-radius: 24px;
+  overflow: hidden;
+  background: var(--of-ink);
+  color: #FFFFFF;
 }
-/* Reemplaza tu .ofertas-chips anterior â€” ya no hace falta, Tabs.Root   trae su propio estilo base
-;
- si quieres, puedes borrar las clases   .ofertas-chip / .ofertas-chip--activo de tu CSS actual. */.oferta-grid 
-{
-  display: grid
-;
-  grid-template-columns: repeat(2, 1fr)
-;
-  gap: 14px 10px
-;
+.of-cierre__brillo {
+  position: absolute;
+  z-index: -1;
+  right: -120px;
+  top: -140px;
+  width: 440px;
+  height: 440px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(220, 38, 38, 0.4), transparent);
 }
-@media (min-width: 640px) 
-{
-  .oferta-grid 
-{
-    grid-template-columns: repeat(3, 1fr)
-;
+.of-cierre h2 {
+  margin: 0;
+  font-family: var(--of-fuente-titulo);
+  font-weight: 800;
+  font-size: clamp(1.4rem, 1rem + 1.4vw, 2rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
 }
+.of-cierre p {
+  max-width: 52ch;
+  margin: 8px 0 0;
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.78);
 }
-@media (min-width: 900px) 
-{
-  .oferta-grid 
-{
-    grid-template-columns: repeat(4, 1fr)
-;
+.of-cierre__acciones { display: flex; flex-wrap: wrap; gap: 12px; }
+
+.of-espaciador { height: 92px; }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (min-width: 640px) {
+  .of-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+@media (min-width: 769px) {
+  .of-contenedor { padding: 0 24px; }
+
+  .of-bento {
+    grid-template-columns: 1.3fr 1fr 1fr;
+    grid-template-rows: repeat(2, minmax(150px, 1fr));
+    grid-template-areas:
+      "a b b"
+      "a c d";
+    gap: 16px;
+  }
+  .of-tile--vencer { min-height: 0; }
+
+  .of-seccion__cabecera {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+
+  .of-cierre {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 40px 48px;
+  }
 }
-@media (min-width: 1200px) 
-{
-  .oferta-grid 
-{
-    grid-template-columns: repeat(6, 1fr)
-;
-    gap: 20px 16px
-;
+
+@media (min-width: 900px) {
+  .of-hero { margin: 16px 24px 0; border-radius: 28px; }
+  .of-hero__interior {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    align-items: center;
+    gap: 48px;
+    padding: 56px 56px 60px;
+  }
+
+  .of-mosaico {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 14px;
+    overflow: visible;
+    padding: 0;
+    margin: 0;
+  }
+  .of-dest { flex: none; }
+  .of-dest--grande { grid-row: span 2; padding: 14px; gap: 10px; }
+  .of-dest--grande .of-dest__nombre { font-size: 1rem; }
+  .of-dest--grande .of-dest__precios strong { font-size: 1.4rem; }
+  .of-dest-skel { flex: none; height: auto; min-height: 150px; }
+  .of-dest-skel--grande { grid-row: span 2; }
+
+  .of-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
+
+@media (min-width: 1024px) {
+  .of-seccion { margin-top: 44px; }
+  .of-espaciador { height: 24px; }
+}
+
+@media (min-width: 1200px) {
+  .of-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 20px 16px; }
+}
+
+/* ============================================================
+   MOVIMIENTO REDUCIDO
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .of *, .of *::before, .of *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }
