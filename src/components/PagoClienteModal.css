@@ -62,30 +62,36 @@
 
 .pcm-perforacion {
   position: relative;
-  margin: 20px calc(-1 * var(--pcm-pad-x, 20px)) 16px;
-  border-top: 2px dashed #E1E5F0;
+  height: 16px;
+  margin: 16px calc(-1 * var(--pcm-pad-x, 20px));
+  overflow: hidden;
+  background-image: repeating-linear-gradient(to right, #E1E5F0 0 6px, transparent 6px 12px);
+  background-size: 100% 2px;
+  background-position: 0 50%;
+  background-repeat: no-repeat;
 }
 
-/* Dos medio-círculos en los bordes simulan el troquelado del papel. El trozo
-   que queda fuera del panel lo recorta el overflow del propio modal. */
+/* Dos medio-círculos en los bordes simulan el troquelado del papel: el overflow
+   recorta la mitad que sobra, así la perforación no genera scroll horizontal. */
 .pcm-perforacion::before,
 .pcm-perforacion::after {
   content: '';
   position: absolute;
-  top: -9px;
+  top: 50%;
   width: 16px;
   height: 16px;
+  margin-top: -8px;
   border-radius: 50%;
   background: #fff;
   border: 1px solid #E1E5F0;
 }
 
 .pcm-perforacion::before {
-  left: -9px;
+  left: -8px;
 }
 
 .pcm-perforacion::after {
-  right: -9px;
+  right: -8px;
 }
 
 /* --- Datos del pago ------------------------------------------------------- */

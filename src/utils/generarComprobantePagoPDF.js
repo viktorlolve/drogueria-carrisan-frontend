@@ -631,11 +631,6 @@ export async function generarComprobantePagoPDF({ pago, cliente, facturas = [] }
   doc.save(`comprobante-pago-${pago.id}.pdf`)
 }
 
-// Los consumidores lo importan por defecto (`import generarComprobantePagoPDF
-// from ...`): sin este alias el botón "Descargar comprobante" quedaba muerto
-// (el import resolvía a `undefined`). Se mantiene además el export nombrado.
-export default generarComprobantePagoPDF
-
 // Los consumidores (EstadoCuenta, PagosEstadoCuenta, PagoClienteModal) importan
 // el módulo por defecto.
 export default generarComprobantePagoPDF
