@@ -1,0 +1,47 @@
+/* Cuenta regresiva (hero de /ofertas). Hereda el color del contenedor. */
+.cr {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+.cr__unidad {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 62px;
+}
+.cr__valor {
+  display: block;
+  width: 100%;
+  padding: 10px 6px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  text-align: center;
+  font-family: var(--font-heading, 'Manrope', sans-serif);
+  font-weight: 800;
+  font-size: clamp(1.6rem, 1.1rem + 2vw, 2.3rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.cr__etiqueta {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+.cr__sep {
+  padding-top: 10px;
+  font-family: var(--font-heading, 'Manrope', sans-serif);
+  font-weight: 800;
+  font-size: 1.5rem;
+  line-height: 1;
+  opacity: 0.45;
+}
+@media (max-width: 380px) {
+  .cr { gap: 3px; }
+  .cr__unidad { min-width: 54px; }
+}
