@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import api from '../api/axios'
 import { useCart } from '../context/CartContext'
+import { useAuth } from '../context/AuthContext'
 import './OrdenDetalle.css'
-import { MessageCircle } from 'lucide-react'
+import { MessageCircle, Download } from 'lucide-react'
 import { getEtapas, getEstadoConfig, getLabelEstado, normalizarEstado } from '../config/estadosOrden'
 import { formatearUSD } from '../utils/formato'
 
@@ -76,10 +77,12 @@ function OrdenDetalle() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { addItem } = useCart()
+  const { user } = useAuth()
   const [orden, setOrden] = useState(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
   const [pidiendoDeNuevo, setPidiendoDeNuevo] = useState(false)
+  const [descargando, setDescargando] = useState(false)
 
   useEffect(() => {
     api
@@ -114,6 +117,23 @@ function OrdenDetalle() {
       alert(`${fallidos} producto(s) de esta orden ya no están disponibles y no se agregaron.`)
     }
     navigate('/carrito')
+  }
+
+  // PDF de la orden. El generador se carga bajo demanda para que jsPDF no pese
+  // en esta página hasta que el cliente lo pide. Si quien mira es un admin, NO
+  // se pasa su usuario como comprador: los datos del comprador vienen de la orden.
+  async function descargarPDF() {
+    if (!orden) return
+    setDescargando(true)
+    try {
+      const { default: generarOrdenPDF } = await import('../utils/generarOrdenPDF')
+      await generarOrdenPDF({ orden, cliente: user?.es_admin ? null : user })
+    } catch (err) {
+      console.error(err)
+      alert('No pudimos generar el PDF de la orden. Intenta de nuevo.')
+    } finally {
+      setDescargando(false)
+    }
   }
 
   if (cargando) {
@@ -251,6 +271,15 @@ function OrdenDetalle() {
             disabled={pidiendoDeNuevo}
           >
             {pidiendoDeNuevo ? 'Agregando...' : 'Volver a pedir'}
+          </button>
+          <button
+            type="button"
+            className="od-boton od-boton--secundario"
+            onClick={descargarPDF}
+            disabled={descargando}
+          >
+            <Download size={16} style={{ marginRight: 6 }} />
+            {descargando ? 'Generando PDF...' : 'Descargar orden en PDF'}
           </button>
           <button
   type="button"
