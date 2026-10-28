@@ -33,6 +33,10 @@
    ----------------------------------------------------------------- */
 .sd-hero {
   position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px 28px;
   margin: 28px clamp(16px, 4vw, 40px) 8px;
   padding: 44px clamp(20px, 5vw, 56px);
   border-radius: 22px;
@@ -56,6 +60,10 @@
 .sd-hero__content {
   position: relative;
   z-index: 1;
+  flex: 1 1 260px;
+  /* flex-item: sin min-width:0 no baja de su min-content (ver AGENTS,
+     "Trampa CSS: flex-item y ancho mínimo"). */
+  min-width: 0;
 }
 
 .sd-hero__eyebrow {
@@ -82,6 +90,112 @@
   margin: 8px 0 0;
   font-size: 15px;
   opacity: 0.85;
+}
+
+/* -----------------------------------------------------------------
+   Tarjeta de tasa BCV (solo lectura, lado derecho del hero)
+   ----------------------------------------------------------------- */
+.sd-tasa {
+  position: relative;
+  z-index: 1;
+  flex: 0 1 288px;
+  min-width: 0;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #fff;
+}
+
+.sd-tasa__cab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sd-tasa__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.sd-tasa__var {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.sd-tasa__var--sube {
+  background: rgba(127, 233, 214, 0.18);
+  color: #7fe9d6;
+}
+
+.sd-tasa__var--baja {
+  background: rgba(255, 138, 138, 0.18);
+  color: #ffb3b3;
+}
+
+.sd-tasa__var--igual {
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.sd-tasa__valor {
+  margin: 4px 0 0;
+  font-size: clamp(22px, 3vw, 28px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+.sd-tasa__unidad {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+  opacity: 0.75;
+}
+
+.sd-tasa__meta {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+}
+
+.sd-tasa__aviso {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 10px 0 0;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.18);
+  color: #fde68a;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .sd-tasa {
+    flex: 1 1 100%;
+  }
 }
 
 /* -----------------------------------------------------------------

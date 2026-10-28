@@ -1,9 +1,18 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight } from 'lucide-react'
+import { AlertTriangle, ArrowDownRight, ArrowRight, ArrowUpRight, DollarSign, Minus } from 'lucide-react'
 import { useStaffAuth } from '../../context/StaffAuthContext'
 import { useStaffBadges } from '../../context/StaffBadgesContext'
 import { DEPARTAMENTOS, MODULOS } from '../../components/staff/NavStaff'
 import StaffNavbar from '../../components/staff/StaffNavbar'
+import staffApi from '../../api/staffAxios'
+import { formatearFechaCorta, formatearTasa } from '../../utils/formato'
+import {
+  esTasaVieja,
+  guardarUltimaTasaLocal,
+  leerUltimaTasaLocal,
+  variacionTasa,
+} from '../../utils/tasaCambio'
 import './StaffDashboard.css'
 
 const ICONOS_MAPA = {}
@@ -13,6 +22,96 @@ for (const depto of DEPARTAMENTOS) {
       ICONOS_MAPA[item.id] = item.icono
     }
   }
+}
+
+// Hora de la última actualización (24 h) para acompañar la fecha corta.
+// No usa toLocaleString completo porque ahí el navegador decide el formato.
+function horaCorta(iso) {
+  if (!iso) return null
+  const fecha = new Date(iso)
+  if (Number.isNaN(fecha.getTime())) return null
+  return fecha.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit', hour12: false })
+}
+
+// Lectura de la tasa oficial USD→Bs (la actualiza SOLO el dueño desde /admin).
+// Es informativa: el staff no la edita ni la confirma desde acá.
+function TasaBcv() {
+  const [tasa, setTasa] = useState(null)
+  const [variacion, setVariacion] = useState(null)
+  const [estado, setEstado] = useState('cargando') // cargando | lista | error
+
+  useEffect(() => {
+    let activo = true
+    staffApi
+      .get('/prices')
+      .then(({ data }) => {
+        if (!activo) return
+        // La fila anterior del backend puede no existir (primer día con el
+        // endpoint nuevo): en ese caso se compara contra la última tasa vista
+        // en este dispositivo. Se lee ANTES de guardar la actual.
+        const anterior = data?.anterior_usd_a_ves ?? leerUltimaTasaLocal()?.usd_a_ves ?? null
+        setTasa(data)
+        setVariacion(variacionTasa(data?.usd_a_ves, anterior))
+        setEstado('lista')
+        guardarUltimaTasaLocal(data)
+      })
+      .catch(() => { if (activo) setEstado('error') })
+    return () => { activo = false }
+  }, [])
+
+  const vieja = estado === 'lista' && esTasaVieja(tasa?.updated_at)
+  const fecha = estado === 'lista' ? formatearFechaCorta(tasa?.updated_at) : null
+  const hora = estado === 'lista' ? horaCorta(tasa?.updated_at) : null
+  const actualizado = fecha ? (hora ? `${fecha} · ${hora}` : fecha) : null
+
+  const sube = variacion?.abs > 0
+  const claseVar = sube
+    ? 'sd-tasa__var--sube'
+    : variacion?.abs < 0
+      ? 'sd-tasa__var--baja'
+      : 'sd-tasa__var--igual'
+  const IconoVar = sube ? ArrowUpRight : variacion?.abs < 0 ? ArrowDownRight : Minus
+
+  return (
+    <div className={`sd-tasa${vieja ? ' sd-tasa--vieja' : ''}`}>
+      <div className="sd-tasa__cab">
+        <span className="sd-tasa__label"><DollarSign size={12} /> Tasa BCV</span>
+        {variacion && (
+          <span className={`sd-tasa__var ${claseVar}`}>
+            <IconoVar size={12} />
+            {formatearTasa(variacion.pct)}%
+          </span>
+        )}
+      </div>
+
+      <p className="sd-tasa__valor">
+        {estado === 'lista' ? formatearTasa(tasa?.usd_a_ves) : '—'}
+        <span className="sd-tasa__unidad"> Bs/USD</span>
+      </p>
+
+      <p className="sd-tasa__meta">
+        {estado === 'lista' && (
+          <>
+            {variacion && (
+              <>
+                {sube ? '+' : ''}{formatearTasa(variacion.abs)} Bs ·{' '}
+              </>
+            )}
+            {actualizado ? `Actualizada ${actualizado}` : 'Sin fecha de actualización'}
+          </>
+        )}
+        {estado === 'cargando' && 'Cargando…'}
+        {estado === 'error' && 'No disponible ahora'}
+      </p>
+
+      {vieja && (
+        <p className="sd-tasa__aviso">
+          <AlertTriangle size={12} />
+          Sin actualizar hace más de 24 h
+        </p>
+      )}
+    </div>
+  )
 }
 
 function StaffDashboard() {
@@ -57,6 +156,7 @@ function StaffDashboard() {
             </h1>
             <p className="sd-hero__sub">Tu jornada de hoy está lista. ¿Por dónde empezamos?</p>
           </div>
+          <TasaBcv />
         </div>
 
         <main className="sd-main">
@@ -115,6 +215,7 @@ function StaffDashboard() {
           </h1>
           <p className="sd-hero__sub">Elige un departamento para comenzar tu jornada.</p>
         </div>
+        <TasaBcv />
       </div>
 
       <main className="sd-main">
