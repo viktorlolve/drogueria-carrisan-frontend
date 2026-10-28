@@ -435,10 +435,9 @@ function dibujarResumenPeriodo(doc, y, ctx, { totalCargos, totalAbonos, neto, nF
   relleno(doc, C.blanco)
   trazo(doc, C.borde, 0.25)
   doc.roundedRect(M, y, PAG.contenido, h, 3, 3, 'FD')
-  // Tercera celda (neto) en Índigo: esquinas redondeadas a la derecha
-  relleno(doc, C.indigo)
-  doc.roundedRect(M + w * 2, y, w, h, 3, 3, 'F')
-  doc.rect(M + w * 2, y, 6, h, 'F')
+  // Tercera celda (neto): solo marco monocromático, sin relleno
+  trazo(doc, C.texto, 0.4)
+  doc.roundedRect(M + w * 2, y, w, h, 3, 3, 'S')
 
   trazo(doc, C.borde, 0.25)
   doc.line(M + w, y + 4, M + w, y + h - 4)
@@ -446,7 +445,7 @@ function dibujarResumenPeriodo(doc, y, ctx, { totalCargos, totalAbonos, neto, nF
   const celdas = [
     { label: 'Total cargos (facturado)', valor: usdCode(totalCargos), color: C.texto, lab: C.muted },
     { label: 'Total abonos (pagado)', valor: usdCode(totalAbonos), color: C.verde, lab: C.muted },
-    { label: 'Neto del período', valor: conSigno(neto), color: C.blanco, lab: C.luz },
+    { label: 'Neto del período', valor: conSigno(neto), color: C.texto, lab: C.texto },
   ]
   celdas.forEach((c, i) => {
     const x = M + w * i + 7
