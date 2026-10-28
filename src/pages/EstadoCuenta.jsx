@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   AlertCircle,
@@ -803,21 +804,26 @@ export default function EstadoCuenta() {
         </div>
       )}
 
-      {ordenSeleccionada && <OrdenClienteModal orden={ordenSeleccionada} onClose={() => setOrdenSeleccionada(null)} />}
-      {facturaSeleccionada && (
+      {ordenSeleccionada && createPortal(
+        <OrdenClienteModal orden={ordenSeleccionada} onClose={() => setOrdenSeleccionada(null)} />,
+        document.body
+      )}
+      {facturaSeleccionada && createPortal(
         <FacturaClienteModal
           factura={facturaSeleccionada}
           cliente={datos?.cliente}
           onClose={() => setFacturaSeleccionada(null)}
-        />
+        />,
+        document.body
       )}
-      {pagoSeleccionado && (
+      {pagoSeleccionado && createPortal(
         <PagoClienteModal
           pago={pagoSeleccionado}
           cliente={datos?.cliente}
           facturas={datos?.facturas}
           onClose={() => setPagoSeleccionado(null)}
-        />
+        />,
+        document.body
       )}
     </LayoutPaginaPrincipal>
   )

@@ -1,9 +1,32 @@
+import { useEffect } from 'react'
 import { X, Package } from 'lucide-react'
 import { getEtapas, getLabelEstado, normalizarEstado } from '../config/estadosOrden'
 import { formatearUSD } from '../utils/formato'
 import './OrdenClienteModal.css'
 
 export default function OrdenClienteModal({ orden, onClose }) {
+  useEffect(() => {
+    if (!orden) return
+    const scrollY = window.scrollY
+    document.body.style.position = 'fixed'
+    document.body.style.top = `-${scrollY}px`
+    document.body.style.left = '0'
+    document.body.style.right = '0'
+    document.body.style.width = '100%'
+    document.body.dataset.modalScroll = String(scrollY)
+
+    return () => {
+      const y = parseInt(document.body.dataset.modalScroll || '0', 10)
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.left = ''
+      document.body.style.right = ''
+      document.body.style.width = ''
+      delete document.body.dataset.modalScroll
+      window.scrollTo(0, y)
+    }
+  }, [orden])
+
   if (!orden) return null
 
   const fulfillment = orden.tipo_envio || 'delivery'

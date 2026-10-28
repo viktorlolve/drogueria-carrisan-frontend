@@ -1,12 +1,19 @@
 .ocm-overlay {
   position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100dvh;
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  z-index: 1000;
+  z-index: 10005;
   animation: ocm-fadeIn 0.2s ease;
+  overscroll-behavior: contain;
+  touch-action: none;
 }
 
 @keyframes ocm-fadeIn {
@@ -19,15 +26,24 @@
   background: white;
   width: 100%;
   max-width: 460px;
-  max-height: 85vh;
+  max-height: 90dvh;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   border-radius: 20px 20px 0 0;
   padding: 24px 20px calc(20px + env(safe-area-inset-bottom));
 }
 
 @media (min-width: 640px) {
-  .ocm-overlay { align-items: center; padding: 1rem; }
-  .ocm-content { border-radius: 16px; padding: 28px 24px; }
+  .ocm-overlay {
+    align-items: center;
+    padding: 1rem;
+  }
+  .ocm-content {
+    border-radius: 16px;
+    padding: 28px 24px;
+    max-height: 85dvh;
+  }
 }
 
 .ocm-close {

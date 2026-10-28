@@ -23,6 +23,28 @@ function leerItem(item) {
 }
 
 export default function FacturaClienteModal({ factura, cliente, onClose }) {
+  useEffect(() => {
+    if (!factura) return
+    const scrollY = window.scrollY
+    document.body.style.position = 'fixed'
+    document.body.style.top = `-${scrollY}px`
+    document.body.style.left = '0'
+    document.body.style.right = '0'
+    document.body.style.width = '100%'
+    document.body.dataset.modalScroll = String(scrollY)
+
+    return () => {
+      const y = parseInt(document.body.dataset.modalScroll || '0', 10)
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.left = ''
+      document.body.style.right = ''
+      document.body.style.width = ''
+      delete document.body.dataset.modalScroll
+      window.scrollTo(0, y)
+    }
+  }, [factura])
+
   const [descargando, setDescargando] = useState(false)
   const [errorPdf, setErrorPdf] = useState('')
 

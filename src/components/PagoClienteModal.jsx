@@ -59,16 +59,27 @@ export default function PagoClienteModal({ pago, cliente, facturas = [], onClose
     return () => document.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  // El overlay tapa la pantalla: sin esto el dedo sigue desplazando la página
-  // de atrás en móvil. Se restaura el valor previo (no ''), por si hay otro
-  // overlay debajo.
   useEffect(() => {
-    const previo = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    if (!pago) return
+    const scrollY = window.scrollY
+    document.body.style.position = 'fixed'
+    document.body.style.top = `-${scrollY}px`
+    document.body.style.left = '0'
+    document.body.style.right = '0'
+    document.body.style.width = '100%'
+    document.body.dataset.modalScroll = String(scrollY)
+
     return () => {
-      document.body.style.overflow = previo
+      const y = parseInt(document.body.dataset.modalScroll || '0', 10)
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.left = ''
+      document.body.style.right = ''
+      document.body.style.width = ''
+      delete document.body.dataset.modalScroll
+      window.scrollTo(0, y)
     }
-  }, [])
+  }, [pago])
 
   if (!pago) return null
 
