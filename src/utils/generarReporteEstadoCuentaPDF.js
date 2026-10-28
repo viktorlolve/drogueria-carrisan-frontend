@@ -35,7 +35,6 @@
 //     vencimientos?   // (opcional) ordenes_pendientes completas, sin filtrar por período
 //   })
 
-import { LOGO_BLANCO } from '../config/logos'
 import {
   C, PAG, usdCode, fechaCorta, fechaLarga, fechaHora,
   nuevoDoc, datosEmpresa, textoEsp,
@@ -48,15 +47,15 @@ const Y_MAX = 297 - 24 // bajo este punto se salta de página (A4)
 const compacto = (v) => (v >= 1000 ? `$${(v / 1000).toFixed(1)}k` : `$${Math.round(v)}`)
 const conSigno = (v) => `${v < 0 ? '- ' : v > 0 ? '+ ' : ''}${usdCode(Math.abs(v))}`
 
-/* ---------- Logo blanco compuesto sobre el Índigo sólido de la banda ----------
-   El logo blanco es transparente; se pinta sobre un lienzo Índigo y se exporta
-   como JPEG (jsPDF lo copia tal cual). Si algo falla devuelve null y la banda
-   muestra el nombre de la empresa en texto: nunca rompe el PDF. */
+/* ---------- Logo a color sobre fondo blanco (monocromático para impresión) ----------
+   Se rasteriza sobre blanco para mantenerlo legible sin banda coloreada.
+   Si falla devuelve null y se usa el nombre de la empresa en texto. */
 let logoIndigo
 async function cargarLogoIndigo() {
   if (logoIndigo !== undefined) return logoIndigo
   try {
-    const res = await fetch(LOGO_BLANCO, { mode: 'cors', signal: AbortSignal.timeout(8000) })
+    const { LOGO_COLOR_HORIZONTAL } = await import('../config/logos')
+    const res = await fetch(LOGO_COLOR_HORIZONTAL, { mode: 'cors', signal: AbortSignal.timeout(8000) })
     if (!res.ok) throw new Error(`logo ${res.status}`)
     const blob = await res.blob()
     const dataUrl = await new Promise((resolve, reject) => {
@@ -76,7 +75,7 @@ async function cargarLogoIndigo() {
     canvas.height = H
     const ctx = canvas.getContext('2d')
     if (!ctx) throw new Error('canvas 2d no disponible')
-    ctx.fillStyle = `rgb(${C.indigo.join(',')})`
+    ctx.fillStyle = '#FFFFFF'
     ctx.fillRect(0, 0, W, H)
     ctx.drawImage(img, 0, 0, W, H)
     logoIndigo = { data: canvas.toDataURL('image/jpeg', 0.95), ratio }
@@ -141,12 +140,12 @@ function seccion(doc, y, titulo, nota) {
 /* Cabecera corrida de las páginas 2+ */
 function nuevaPagina(doc, ctx) {
   doc.addPage()
-  relleno(doc, C.indigo)
-  doc.roundedRect(12, 10, 186, 11, 2.5, 2.5, 'F')
-  etiqueta(doc, 'Estado de cuenta', 18, 16.8, { color: C.blanco, size: 7, cs: 0.9 })
+  trazo(doc, C.borde, 0.4)
+  doc.roundedRect(12, 10, 186, 11, 2.5, 2.5, 'S')
+  etiqueta(doc, 'Estado de cuenta', 18, 16.8, { color: C.texto, size: 7, cs: 0.9 })
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(7.5)
-  tinta(doc, C.luz)
+  tinta(doc, C.muted)
   doc.text(lineasMax(doc, `${ctx.titular}   ·   ${ctx.periodo}`, 120, 1), 192, 16.8, { align: 'right' })
   return 30
 }
@@ -224,14 +223,14 @@ function tabla(doc, y, ctx, { cols, filas, celda, vacio = 'Sin registros.', fuen
   return yy + 7
 }
 
-/* ---------- Portada: banda Índigo + tarjetas blancas ---------- */
+/* ---------- Portada: encabezado monocromático sin banda coloreada ---------- */
 function dibujarPortada(doc, { cliente, resumen, desde, hasta, logo, e }) {
   const xi = 20
   const xd = 190
 
-  // Banda: inset y con esquinas redondeadas (segura para impresión)
-  relleno(doc, C.indigo)
-  doc.roundedRect(12, 10, 186, 60, 3.5, 3.5, 'F')
+  // Marco monocromático para indicar el encabezado
+  trazo(doc, C.borde, 0.4)
+  doc.roundedRect(12, 10, 186, 60, 3.5, 3.5, 'S')
 
   // Marca
   if (logo) {
@@ -240,49 +239,48 @@ function dibujarPortada(doc, { cliente, resumen, desde, hasta, logo, e }) {
     try {
       doc.addImage(logo.data, 'JPEG', xi, 16, w, w / logo.ratio)
     } catch {
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(12); tinta(doc, C.blanco)
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(12); tinta(doc, C.texto)
       doc.text(String(e.nombre).toUpperCase(), xi, 23, { charSpace: 0.4 })
     }
   } else {
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(12); tinta(doc, C.blanco)
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(12); tinta(doc, C.texto)
     doc.text(String(e.nombre).toUpperCase(), xi, 23, { charSpace: 0.4 })
   }
 
   // Documento + período
-  etiqueta(doc, 'Estado de cuenta', xd, 18, { align: 'right', color: C.luz, size: 7, cs: 1 })
+  etiqueta(doc, 'Estado de cuenta', xd, 18, { align: 'right', color: C.muted, size: 7, cs: 1 })
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(11.5)
-  tinta(doc, C.blanco)
+  tinta(doc, C.texto)
   doc.text(`${fechaCorta(desde)}  –  ${fechaCorta(hasta)}`, xd, 24.8, { align: 'right' })
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(7.5)
-  tinta(doc, C.luz)
+  tinta(doc, C.muted)
   doc.text(`Generado el ${fechaHora(new Date())}`, xd, 29.6, { align: 'right' })
 
-  // Acento Azul + divisor fino
-  trazo(doc, C.azul, 1.2)
-  doc.line(xi, 34, xi + 16, 34)
-  trazo(doc, [58, 58, 104], 0.3)
-  doc.line(xi + 16, 34, xd, 34)
+  // Divisor fino
+  trazo(doc, C.borde, 0.3)
+  doc.line(xi, 34, xd, 34)
 
   // Titular
-  etiqueta(doc, 'Titular', xi, 40.5, { color: C.luz, size: 6.3, cs: 1 })
+  etiqueta(doc, 'Titular', xi, 40.5, { color: C.muted, size: 6.3, cs: 1 })
   doc.setFont('helvetica', 'bold')
   let tam = 17
   doc.setFontSize(tam)
   const nombre = String(cliente?.nombre || 'Cliente')
   while (doc.getTextWidth(nombre) > xd - xi && tam > 11) { tam -= 1; doc.setFontSize(tam) }
-  tinta(doc, C.blanco)
+  tinta(doc, C.texto)
   doc.text(nombre, xi, 48)
 
   const linea1 = [cliente?.rif_cedula && `RIF / C.I. ${cliente.rif_cedula}`, cliente?.telefono, cliente?.email]
     .filter(Boolean).join('   ·   ')
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(8.2)
-  tinta(doc, C.luz)
+  tinta(doc, C.muted)
   if (linea1) doc.text(lineasMax(doc, linea1, xd - xi, 1), xi, 54)
   if (cliente?.direccion_fiscal) {
     doc.setFontSize(7.5)
+    tinta(doc, C.muted)
     doc.text(lineasMax(doc, cliente.direccion_fiscal, xd - xi, 1), xi, 58.6)
   }
 
