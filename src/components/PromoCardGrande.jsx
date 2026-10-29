@@ -32,7 +32,7 @@ function obtenerEtiquetaDescuento(descuento) {
 // Card grande para carruseles de la sección promocional: misma
 // funcionalidad que PromoCard (favorito, agregar al carrito, precios)
 // pero con dimensiones más grandes para mostrar 3 por vez.
-function PromoCardGrande({ producto, tasaVes }) {
+function PromoCardGrande({ producto, tasaVes, prioridad = false }) {
   const navigate = useNavigate()
   const { items: cartItems, addItem, removeItem, updateCantidad } = useCart()
   const { user } = useAuth()
@@ -117,7 +117,7 @@ function PromoCardGrande({ producto, tasaVes }) {
           src={producto.foto_url}
           alt={producto.nombre_comercial}
           className="promocard-g__image"
-          loading="lazy"
+          loading={prioridad ? 'eager' : 'lazy'}
         />
       </div>
 

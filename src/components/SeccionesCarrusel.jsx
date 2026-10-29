@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import MiniPromoCard from './MiniPromoCard'
+import { useCercaDeViewport } from '../hooks/useCercaDeViewport'
 import './SeccionesCarrusel.css'
 
 // Bloque estilo "Rollbacks & more" de Walmart: varias columnas (una por
@@ -10,6 +11,8 @@ import './SeccionesCarrusel.css'
 // secciones: [{ id, titulo, verTodoTo, productos: [4 productos] }]
 function SeccionesCarrusel({ titulo = 'Rollbacks y más', secciones, cargando = false }) {
   const filaRef = useRef(null)
+  // Al acercarse al viewport se descargan todas las fotos de la fila de una vez.
+  const { refCerca, cerca } = useCercaDeViewport()
 
   function scrollFila(direccion) {
     filaRef.current?.scrollBy({ left: direccion * 340, behavior: 'smooth' })
@@ -18,7 +21,7 @@ function SeccionesCarrusel({ titulo = 'Rollbacks y más', secciones, cargando = 
   if (!cargando && (!secciones || secciones.length === 0)) return null
 
   return (
-    <section className="secciones-carrusel">
+    <section className="secciones-carrusel" ref={refCerca}>
       <div className="secciones-carrusel__header">
         <h2>{titulo}</h2>
         <div className="secciones-carrusel__flechas">
@@ -47,7 +50,7 @@ function SeccionesCarrusel({ titulo = 'Rollbacks y más', secciones, cargando = 
                 </div>
                 <div className="secciones-carrusel__grid">
                   {seccion.productos.slice(0, 4).map((producto) => (
-                    <MiniPromoCard key={producto.id} producto={producto} />
+                    <MiniPromoCard key={producto.id} producto={producto} prioridad={cerca} />
                   ))}
                 </div>
               </div>

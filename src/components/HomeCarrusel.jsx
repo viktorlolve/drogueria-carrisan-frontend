@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import PromoCard from './PromoCard'
+import { useCercaDeViewport } from '../hooks/useCercaDeViewport'
 import './HomeCarrusel.css'
 
 // Bloque de vitrina estilo Walmart: título + "Ver todo" + flechas de
@@ -8,6 +9,9 @@ import './HomeCarrusel.css'
 // Reutilizable: se usa tanto en Home.jsx (invitados) como en
 function HomeCarrusel({ titulo, subtitulo, productos, tasaVes, verTodoTo = '/catalogo', cargando = false }) {
   const carruselRef = useRef(null)
+  // Cuando el bloque se acerca al viewport, las tarjetas dejan de ser "lazy":
+  // así la fila entera ya está descargada antes de que el usuario deslice.
+  const { refCerca, cerca } = useCercaDeViewport()
 
   function scrollCarrusel(direccion) {
     carruselRef.current?.scrollBy({ left: direccion * 320, behavior: 'smooth' })
@@ -16,7 +20,7 @@ function HomeCarrusel({ titulo, subtitulo, productos, tasaVes, verTodoTo = '/cat
   if (!cargando && (!productos || productos.length === 0)) return null
 
   return (
-    <section className="home-carrusel">
+    <section className="home-carrusel" ref={refCerca}>
       <div className="home-carrusel__header">
           <div className="home-carrusel__header-textos">
             <h2>{titulo}</h2>
@@ -40,7 +44,7 @@ function HomeCarrusel({ titulo, subtitulo, productos, tasaVes, verTodoTo = '/cat
       ) : (
         <div className="home-carrusel__fila" ref={carruselRef}>
           {productos.map((producto) => (
-            <PromoCard key={producto.id} producto={producto} tasaVes={tasaVes} />
+            <PromoCard key={producto.id} producto={producto} tasaVes={tasaVes} prioridad={cerca} />
           ))}
         </div>
       )}

@@ -85,7 +85,11 @@ function HeroCarrusel({ slides = [], intervaloMs = 5000, altura }) {
               {slide.imagenMovil && (
                 <source media="(max-width: 640px)" srcSet={slide.imagenMovil} />
               )}
-              <img src={slide.imagen} alt={slide.alt || ''} loading="lazy" />
+              {/* El hero está siempre en la primera pantalla: todos sus slides
+                  se descargan juntos. Con loading="lazy" los slides fuera del
+                  viewport (la pista los esconde con translateX) se pedían recién
+                  al rotar el carrusel y el banner aparecía en blanco un instante. */}
+              <img src={slide.imagen} alt={slide.alt || ''} loading="eager" />
             </picture>
           )
           const tieneOverlay = slide.titulo || slide.botonTexto

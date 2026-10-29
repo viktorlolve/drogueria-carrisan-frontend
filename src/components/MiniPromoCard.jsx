@@ -32,7 +32,7 @@ function obtenerEtiquetaDescuento(descuento) {
 
 // Card mínima para los mini-grids de categoría (estilo "Rollbacks & more"
 // de Walmart): etiqueta, foto, precio USD y nombre.
-function MiniPromoCard({ producto }) {
+function MiniPromoCard({ producto, prioridad = false }) {
   const navigate = useNavigate()
 
   const tieneDescuento = producto.precio_original_usd != null && producto.descuento_activo
@@ -53,7 +53,7 @@ function MiniPromoCard({ producto }) {
           src={producto.foto_url}
           alt={producto.nombre_comercial}
           className="minipromocard__image"
-          loading="lazy"
+          loading={prioridad ? 'eager' : 'lazy'}
         />
       </div>
 

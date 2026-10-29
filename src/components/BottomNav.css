@@ -496,3 +496,39 @@
 ;
 }
 }
+
+/* ---------- Ancho útil de las etiquetas ----------
+   "Mis Órdenes" se recortaba con puntos suspensivos ("Mis Orden...") porque el
+   hueco por ítem quedaba justo: en 360px cada etiqueta tenía ~59px y el texto
+   pide ~60px, así que cualquier diferencia de tipografía/zoom del sistema la
+   cortaba. No se toca la tipografía base: se le regalan ~8px de ancho útil a
+   cada etiqueta achicando el relleno del dock, de los ítems y del FAB.
+   Solo aplica debajo de 600px; el layout de tablet conserva sus medidas. */
+@media (max-width: 599px) {
+  .bottom-nav {
+    gap: 1px;
+    padding: 6px 6px;
+  }
+
+  .bottom-nav__item {
+    padding: 6px 0;
+  }
+
+  .bottom-nav__fab-wrapper {
+    padding: 0 2px;
+  }
+
+  .bottom-nav__label {
+    letter-spacing: -0.01em;
+  }
+}
+
+/* Teléfonos muy angostos (<=380px): un punto menos de tipografía (9.92px ->
+   9.28px) para dejar margen extra si el usuario agrandó la letra del sistema.
+   No se tocan los íconos ni el tamaño del dock. */
+@media (max-width: 380px) {
+  .bottom-nav__item,
+  .bottom-nav__fab-wrapper {
+    font-size: 0.58rem;
+  }
+}

@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import PromoCardGrande from './PromoCardGrande'
+import { useCercaDeViewport } from '../hooks/useCercaDeViewport'
 import './SeccionPromocional.css'
 
 // Sección promocional tipo Walmart: split en dos mitades.
@@ -33,11 +34,17 @@ function PanelPromocional({
   textoCta,
   linkCta,
   linkImagen,
+  prioridad = false,
 }) {
   const tieneContenidoSuperpuesto = Boolean(titulo || subtitulo || textoCta)
   const contenido = (
     <>
-      <img src={imagen} alt={alt} className="seccion-promo__img" loading="lazy" />
+      <img
+        src={imagen}
+        alt={alt}
+        className="seccion-promo__img"
+        loading={prioridad ? 'eager' : 'lazy'}
+      />
       {tieneContenidoSuperpuesto && (
         <div className="seccion-promo__overlay" aria-hidden="true" />
       )}
@@ -86,6 +93,8 @@ function SeccionPromocional({
   cargando = false,
 }) {
   const filaRef = useRef(null)
+  // Al acercarse al viewport se descargan todas las fotos del carrusel de una vez.
+  const { refCerca, cerca } = useCercaDeViewport()
 
   function scroll(direccion) {
     const fila = filaRef.current
@@ -100,7 +109,7 @@ function SeccionPromocional({
   if (!cargando && (!productos || productos.length === 0)) return null
 
   return (
-    <section className={`seccion-promo ${invertido ? 'seccion-promo--invertido' : ''}`}>
+    <section className={`seccion-promo ${invertido ? 'seccion-promo--invertido' : ''}`} ref={refCerca}>
       <PanelPromocional
         imagen={imagen}
         alt={alt}
@@ -110,6 +119,7 @@ function SeccionPromocional({
         textoCta={textoCta}
         linkCta={linkCta}
         linkImagen={linkImagen}
+        prioridad={cerca}
       />
 
       <div className="seccion-promo__carrusel-wrap">
@@ -133,7 +143,7 @@ function SeccionPromocional({
         ) : (
           <div className="seccion-promo__fila" ref={filaRef}>
             {productos.map((producto) => (
-              <PromoCardGrande key={producto.id} producto={producto} tasaVes={tasaVes} />
+              <PromoCardGrande key={producto.id} producto={producto} tasaVes={tasaVes} prioridad={cerca} />
             ))}
           </div>
         )}

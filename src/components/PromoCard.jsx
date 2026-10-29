@@ -32,7 +32,7 @@ function obtenerEtiquetaDescuento(descuento) {
 // Card compacta para carruseles estilo Walmart/Amazon: etiqueta de
 // oferta arriba (sin tapar la imagen), imagen grande, botón de favorito,
 // botón de agregar al carrito, precio (USD + Bs. abajo) y nombre.
-function PromoCard({ producto, tasaVes }) {
+function PromoCard({ producto, tasaVes, prioridad = false }) {
   const navigate = useNavigate()
   const { items: cartItems, addItem, removeItem, updateCantidad } = useCart()
   const { user } = useAuth()
@@ -119,7 +119,7 @@ function PromoCard({ producto, tasaVes }) {
           src={producto.foto_url}
           alt={producto.nombre_comercial}
           className="promocard__image"
-          loading="lazy"
+          loading={prioridad ? 'eager' : 'lazy'}
         />
       </div>
 
