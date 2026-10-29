@@ -1,278 +1,287 @@
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import {
+  ArrowUpRight,
+  BadgePercent,
+  Bell,
+  ChevronDown,
+  ChevronRight,
+  Eye,
+  EyeOff,
+  Heart,
+  Hospital,
+  LayoutGrid,
+  LogOut,
+  Pill,
+  ShieldCheck,
+  ShoppingCart,
+  X,
+} from 'lucide-react'
+import api from '../api/axios'
 import { useAuth } from '../context/AuthContext'
+import { useCart } from '../context/CartContext'
+import { useFavoritos } from '../context/FavoritosContext'
+import { useNavBadges } from '../context/NavBadgesContext'
+import { NAV_UNIFICADO } from '../components/paginas-principales/NavUnificado'
+import HojaInferior from '../components/HojaInferior'
+import { formatearUSD } from '../utils/formato'
+import { safeGetItem, safeSetItem } from '../utils/safeStorage'
 import './Menu.css'
 
 // ---------------------------------------------------------------
-// Iconos SVG inline — stroke = currentColor (heredan el tinte del
-// contenedor). Todos comparten viewBox 24 y linecap/join redondeados.
+// Menú móvil (FAB central del BottomNav → /menu). Prefijo de clases
+// `mnu-` (el CSS es global).
+//
+// Fuente de los items:
+//  - Los grupos de cuenta, solicitudes y ayuda salen de NAV_UNIFICADO
+//    (la misma fuente que el sidebar de las páginas principales).
+//  - ACCESOS (catálogo, ofertas, líneas) no existen en NAV_UNIFICADO
+//    porque no son navegación de cuenta: viven acá como bento.
+//
+// Datos en vivo: badges (NavBadgesContext), crédito disponible
+// (GET /clientes/:id/estado-cuenta → resumen) y contadores de
+// carrito y favoritos (contextos ya montados en App.jsx).
 // ---------------------------------------------------------------
-function Icono({ size = 22, children }) {
+
+const CLAVE_OCULTAR = 'ec_ocultar_saldos' // compartida con Estado de cuenta
+const MASCARA = '••••••'
+
+const ACCESOS = [
+  { id: 'catalogo', to: '/catalogo', titulo: 'Catálogo', texto: 'Explora todos los productos', icono: LayoutGrid, variante: 'azul', ancho: true },
+  { id: 'ofertas', to: '/ofertas', titulo: 'Ofertas', texto: 'Descuentos y promociones', icono: BadgePercent, variante: 'indigo' },
+  { id: 'inhrr', to: '/registro-inhrr', titulo: 'Vademécum INHRR', texto: 'Registro sanitario oficial', icono: ShieldCheck, variante: 'teal', etiqueta: 'NUEVO' },
+  { id: 'farmacia', to: '/farmacia', titulo: 'Línea Farmacia', texto: 'Medicamentos y cuidado personal', icono: Pill, variante: 'claro' },
+  { id: 'hospitalaria', to: '/hospitalaria', titulo: 'Línea Hospitalaria', texto: 'Insumos para clínicas', icono: Hospital, variante: 'claro' },
+]
+
+const TINTES = ['azul', 'teal', 'indigo']
+
+const LINKS_PIE = [
+  { to: '/quienes-somos', texto: 'Quiénes somos' },
+  { to: '/terminos', texto: 'Términos' },
+  { to: '/privacidad', texto: 'Privacidad' },
+]
+
+const formatearConteo = (n) => (n >= 100 ? '99+' : String(n))
+
+function saludoSegunHora() {
+  const hora = new Date().getHours()
+  if (hora < 12) return 'Buenos días'
+  if (hora < 19) return 'Buenas tardes'
+  return 'Buenas noches'
+}
+
+// ---------------------------------------------------------------
+// Crédito disponible (misma cifra que "Disponible para comprar" de Mi Cuenta)
+// ---------------------------------------------------------------
+function useResumenCredito(userId) {
+  const [estado, setEstado] = useState({ cargando: true, resumen: null })
+
+  useEffect(() => {
+    if (!userId) return undefined
+    let cancelado = false
+
+    api
+      .get(`/clientes/${userId}/estado-cuenta`)
+      .then(({ data }) => {
+        if (!cancelado) setEstado({ cargando: false, resumen: data?.resumen || null })
+      })
+      .catch(() => {
+        // Sin dato no hay cifra: la tarjeta cae a un acceso simple.
+        if (!cancelado) setEstado({ cargando: false, resumen: null })
+      })
+
+    return () => {
+      cancelado = true
+    }
+  }, [userId])
+
+  return estado
+}
+
+function TarjetaCredito({ estado, oculto, onAlternar }) {
+  const { cargando, resumen } = estado
+
+  if (cargando) {
+    return (
+      <div className="mnu-credito mnu-credito--cargando" aria-busy="true" aria-label="Cargando crédito">
+        <span className="mnu-sk mnu-sk--corto" />
+        <span className="mnu-sk mnu-sk--monto" />
+        <span className="mnu-sk mnu-sk--barra" />
+      </div>
+    )
+  }
+
+  const tieneCredito = !!resumen && Number(resumen.linea_credito) > 0
+
+  if (!tieneCredito) {
+    return (
+      <Link to="/estado-de-cuenta" className="mnu-credito mnu-credito--simple">
+        <span className="mnu-credito__etiqueta">Estado de cuenta</span>
+        <span className="mnu-credito__simple-texto">
+          Facturas, pagos y reportes
+          <ChevronRight size={18} aria-hidden="true" />
+        </span>
+      </Link>
+    )
+  }
+
+  const porcentaje = Math.min((resumen.deuda_actual / resumen.linea_credito) * 100, 100) || 0
+  const nivel = porcentaje >= 90 ? 'critico' : porcentaje >= 80 ? 'alto' : 'ok'
+  const vencidas = Number(resumen.cantidad_ordenes_vencidas) || 0
+  const monto = (v) => (oculto ? `USD ${MASCARA}` : formatearUSD(v))
+
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-    >
-      {children}
-    </svg>
+    <div className="mnu-credito">
+      <div className="mnu-credito__top">
+        <span className="mnu-credito__etiqueta">Disponible para comprar</span>
+        <button
+          type="button"
+          className="mnu-credito__ojo"
+          onClick={onAlternar}
+          aria-pressed={oculto}
+          aria-label={oculto ? 'Mostrar montos' : 'Ocultar montos'}
+        >
+          {oculto ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+        </button>
+      </div>
+
+      <Link to="/estado-de-cuenta" className="mnu-credito__cuerpo">
+        <span className={`mnu-credito__monto${resumen.saldo <= 0 ? ' mnu-credito__monto--cero' : ''}`}>
+          {monto(resumen.saldo)}
+        </span>
+        <span className="mnu-credito__barra" role="presentation">
+          <span
+            className={`mnu-credito__relleno mnu-credito__relleno--${nivel}`}
+            style={{ width: `${porcentaje}%` }}
+          />
+        </span>
+        <span className="mnu-credito__pie">
+          <span>Línea {monto(resumen.linea_credito)}</span>
+          <span>{Math.round(porcentaje)}% usado</span>
+        </span>
+      </Link>
+
+      {(resumen.credito_bloqueado || vencidas > 0) && (
+        <div className="mnu-credito__alertas">
+          {resumen.credito_bloqueado && (
+            <span className="mnu-alerta">Crédito bloqueado</span>
+          )}
+          {vencidas > 0 && (
+            <span className="mnu-alerta">
+              {vencidas} {vencidas === 1 ? 'orden vencida' : 'órdenes vencidas'}
+            </span>
+          )}
+        </div>
+      )}
+    </div>
   )
 }
 
-const ICONOS = {
-  // Catálogo y productos
-  catalogo: (s) => (
-    <Icono size={s}>
-      <rect x="4" y="4" width="7" height="7" rx="1.5" />
-      <rect x="13" y="4" width="7" height="7" rx="1.5" />
-      <rect x="4" y="13" width="7" height="7" rx="1.5" />
-      <rect x="13" y="13" width="7" height="7" rx="1.5" />
-    </Icono>
-  ),
-  inhrr: (s) => (
-    <Icono size={s}>
-      <path d="M12 3 5 5.5v5.2c0 4.4 2.9 7.8 7 9.3 4.1-1.5 7-4.9 7-9.3V5.5L12 3Z" />
-      <path d="M12 8.5v5" />
-      <path d="M9.5 11h5" />
-    </Icono>
-  ),
-  ofertas: (s) => (
-    <Icono size={s}>
-      <path d="M13 3h8v8L9 23l-8-8L13 3Z" />
-      <circle cx="16.5" cy="6.5" r="1.5" />
-    </Icono>
-  ),
-  farmacia: (s) => (
-    <Icono size={s}>
-      <path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6V3Z" />
-    </Icono>
-  ),
-  hospitalaria: (s) => (
-    <Icono size={s}>
-      <path d="M4 21V8l8-5 8 5v13" />
-      <path d="M4 21h16" />
-      <path d="M12 9v6" />
-      <path d="M9 12h6" />
-    </Icono>
-  ),
-
-  // Mi cuenta
-  items: (s) => (
-    <Icono size={s}>
-      <path d="M7 3h10v18l-5-3.5L7 21V3Z" />
-    </Icono>
-  ),
-  pedidos: (s) => (
-    <Icono size={s}>
-      <path d="M21 8 12 3 3 8v8l9 5 9-5V8Z" />
-      <path d="M3 8l9 5 9-5" />
-      <path d="M12 13v8" />
-    </Icono>
-  ),
-  estadoCuenta: (s) => (
-    <Icono size={s}>
-      <path d="M6 2h9l5 5v15H6V2Z" />
-      <path d="M15 2v5h5" />
-      <path d="M9 12h6" />
-      <path d="M9 16h6" />
-    </Icono>
-  ),
-  cuenta: (s) => (
-    <Icono size={s}>
-      <circle cx="12" cy="8" r="4" />
-      <path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5" />
-    </Icono>
-  ),
-  notificaciones: (s) => (
-    <Icono size={s}>
-      <path d="M18 8a6 6 0 1 0-12 0c0 6-2.5 7-2.5 7h17S18 14 18 8Z" />
-      <path d="M10.3 20a1.9 1.9 0 0 0 3.4 0" />
-    </Icono>
-  ),
-
-  // Solicitudes
-  cotizaciones: (s) => (
-    <Icono size={s}>
-      <rect x="5" y="4" width="14" height="17" rx="2" />
-      <path d="M9 4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2H9V4Z" />
-      <path d="M9 12h6" />
-      <path d="M9 16h4" />
-    </Icono>
-  ),
-  requerimientos: (s) => (
-    <Icono size={s}>
-      <rect x="5" y="4" width="14" height="17" rx="2" />
-      <path d="M9 4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2H9V4Z" />
-      <path d="m9 13 2 2 4-4" />
-    </Icono>
-  ),
-  documentos: (s) => (
-    <Icono size={s}>
-      <path d="M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6Z" />
-    </Icono>
-  ),
-  presupuesto: (s) => (
-    <Icono size={s}>
-      <rect x="5" y="3" width="14" height="18" rx="2" />
-      <path d="M8 7h8" />
-      <path d="M8 12h.01" />
-      <path d="M12 12h.01" />
-      <path d="M16 12h.01" />
-      <path d="M8 16h.01" />
-      <path d="M12 16h.01" />
-      <path d="M16 16h.01" />
-    </Icono>
-  ),
-
-  // Soporte
-  ayuda: (s) => (
-    <Icono size={s}>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1.3 1-1.3 1.9" />
-      <path d="M12 17h.01" />
-    </Icono>
-  ),
-  contacto: (s) => (
-    <Icono size={s}>
-      <path d="M21 11.5a8.4 8.4 0 0 1-8.9 8.4 8.6 8.6 0 0 1-3.8-.9L3 20l1.1-5.1a8.4 8.4 0 1 1 16.9-3.4Z" />
-    </Icono>
-  ),
-  quienesSomos: (s) => (
-    <Icono size={s}>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 12v4" />
-      <path d="M12 8h.01" />
-    </Icono>
-  ),
-
-  // Legal
-  terminos: (s) => (
-    <Icono size={s}>
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6l-6-4Z" />
-      <path d="M14 2v4h6" />
-      <path d="M9 12h6" />
-      <path d="M9 16h6" />
-    </Icono>
-  ),
-  privacidad: (s) => (
-    <Icono size={s}>
-      <path d="M12 3 5 5.5v5.2c0 4.4 2.9 7.8 7 9.3 4.1-1.5 7-4.9 7-9.3V5.5L12 3Z" />
-      <rect x="9" y="10" width="6" height="4" rx="1" />
-      <path d="M10.5 10V9a1.5 1.5 0 0 1 3 0v1" />
-    </Icono>
-  ),
-
-  // CTA registro
-  registro: (s) => (
-    <Icono size={s}>
-      <circle cx="10" cy="8" r="4" />
-      <path d="M3.5 20c0-3.4 2.9-5.5 6.5-5.5s6.5 2.1 6.5 5.5" />
-      <path d="M19 8v6" />
-      <path d="M16 11h6" />
-    </Icono>
-  ),
-}
-
 // ---------------------------------------------------------------
-// Datos del menú — cada entrada mapea 1:1 con una ruta de App.jsx
+// Atajos con contador (carrito · favoritos · notificaciones)
 // ---------------------------------------------------------------
-const TILES_CATALOGO = [
-  { to: '/catalogo', label: 'Catálogo', descripcion: 'Explora todos los productos', icono: 'catalogo', tinte: 'azul' },
-  { to: '/registro-inhrr', label: 'Vademécum INHRR', descripcion: 'Registro sanitario oficial', icono: 'inhrr', tinte: 'teal', badge: 'NUEVO' },
-  { to: '/ofertas', label: 'Ofertas', descripcion: 'Descuentos y promociones', icono: 'ofertas', tinte: 'indigo' },
-]
-
-const LISTA_CATALOGO = [
-  { to: '/farmacia', titulo: 'Línea Farmacia', descripcion: 'Medicamentos, cuidado personal y productos de farmacia.', icono: 'farmacia' },
-  { to: '/hospitalaria', titulo: 'Línea Hospitalaria', descripcion: 'Insumos y equipos para clínicas e instituciones.', icono: 'hospitalaria' },
-]
-
-const LISTA_CUENTA = [
-  { to: '/mis-items', titulo: 'Mis Items', descripcion: 'Tus listas personalizadas de productos.', icono: 'items' },
-  { to: '/orders', titulo: 'Mis Órdenes', descripcion: 'Historial y seguimiento de tus pedidos.', icono: 'pedidos' },
-  { to: '/estado-de-cuenta', titulo: 'Mi Estado de Cuenta', descripcion: 'Saldo, facturas, reportes y más.', icono: 'estadoCuenta' },
-  { to: '/cuenta', titulo: 'Mi Perfil', descripcion: 'Datos personales y configuración de tu cuenta.', icono: 'cuenta' },
-  { to: '/notificaciones', titulo: 'Notificaciones', descripcion: 'Alertas de tus pedidos y tu cuenta.', icono: 'notificaciones' },
-]
-
-const LISTA_SOLICITUDES = [
-  { to: '/mis-solicitudes/cotizaciones', titulo: 'Cotizaciones', descripcion: 'Solicita y consulta tus cotizaciones.', icono: 'cotizaciones' },
-  { to: '/mis-solicitudes/requerimientos', titulo: 'Requerimientos', descripcion: 'Pide productos que no están en el catálogo.', icono: 'requerimientos' },
-  { to: '/mis-solicitudes/documentos', titulo: 'Documentos', descripcion: 'Envía los documentos de tu empresa (RIF, referencias).', icono: 'documentos' },
-  { to: '/presupuesto', titulo: 'Presupuesto Rápido', descripcion: 'Arma un presupuesto o requerimiento en minutos.', icono: 'presupuesto' },
-]
-
-const LISTA_SOPORTE = [
-  { to: '/ayuda', titulo: 'Preguntas Frecuentes', descripcion: 'Resuelve dudas sobre pedidos, pagos y entregas.', icono: 'ayuda' },
-  { to: '/contacto', titulo: 'Contáctanos', descripcion: 'Habla directo con nuestro equipo comercial.', icono: 'contacto' },
-  { to: '/quienes-somos', titulo: 'Quiénes Somos', descripcion: 'Conoce la trayectoria de Droguería Carrisan.', icono: 'quienesSomos' },
-]
-
-const LISTA_LEGAL = [
-  { to: '/terminos', titulo: 'Términos y Condiciones', descripcion: 'Condiciones de uso de la plataforma.', icono: 'terminos' },
-  { to: '/privacidad', titulo: 'Política de Privacidad', descripcion: 'Cómo protegemos y usamos tus datos.', icono: 'privacidad' },
-]
-
-// ---------------------------------------------------------------
-// Componentes
-// ---------------------------------------------------------------
-function MenuTile({ item }) {
+function Atajo({ to, icono: Icono, texto, cantidad, alerta = false }) {
   return (
-    <Link to={item.to} className="menu-tile">
-      <span className={`menu-tile__icono menu-tile__icono--${item.tinte}`}>
-        {ICONOS[item.icono](24)}
-      </span>
-      <span className="menu-tile__texto">
-        <span className="menu-tile__label">{item.label}</span>
-        {item.descripcion && (
-          <span className="menu-tile__descripcion">{item.descripcion}</span>
+    <Link to={to} className="mnu-atajo">
+      <span className="mnu-atajo__icono">
+        <Icono size={20} aria-hidden="true" />
+        {cantidad > 0 && (
+          <span
+            className={`mnu-atajo__conteo${alerta ? ' mnu-atajo__conteo--alerta' : ''}`}
+            aria-label={`${cantidad} pendientes`}
+          >
+            {formatearConteo(cantidad)}
+          </span>
         )}
       </span>
-      {item.badge && <span className="menu-tile__badge">{item.badge}</span>}
+      <span className="mnu-atajo__texto">{texto}</span>
     </Link>
   )
 }
 
-function MenuListaItem({ item }) {
+// ---------------------------------------------------------------
+// Bento
+// ---------------------------------------------------------------
+function TileBento({ acceso, indice }) {
+  const Icono = acceso.icono
   return (
-    <Link to={item.to} className="menu-lista__item">
-      <span className="menu-lista__icono">
-        {ICONOS[item.icono](22)}
+    <Link
+      to={acceso.to}
+      className={`mnu-tile mnu-tile--${acceso.variante}${acceso.ancho ? ' mnu-tile--ancho' : ''}`}
+      style={{ '--i': indice }}
+    >
+      <span className="mnu-tile__icono">
+        <Icono size={acceso.ancho ? 26 : 22} aria-hidden="true" />
       </span>
-      <span className="menu-lista__texto">
-        <span className="menu-lista__titulo">{item.titulo}</span>
-        <span className="menu-lista__descripcion">{item.descripcion}</span>
+      {acceso.etiqueta && <span className="mnu-tile__etiqueta">{acceso.etiqueta}</span>}
+      <ArrowUpRight className="mnu-tile__flecha" size={18} aria-hidden="true" />
+      <span className="mnu-tile__texto">
+        <strong className="mnu-tile__titulo">{acceso.titulo}</strong>
+        <span className="mnu-tile__desc">{acceso.texto}</span>
       </span>
-      <svg
-        className="menu-lista__flecha"
-        width="18"
-        height="18"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
+    </Link>
+  )
+}
+
+// ---------------------------------------------------------------
+// Grupos de NAV_UNIFICADO (acordeón)
+// ---------------------------------------------------------------
+function GrupoNav({ grupo, indice, abierto, onAlternar, conteos, esAdmin }) {
+  const items = grupo.items.filter((it) => !(it.soloCliente && esAdmin))
+  if (items.length === 0) return null
+
+  const IconoGrupo = grupo.icono
+  const pendientes = items.reduce((suma, it) => suma + (it.contador ? conteos[it.contador] || 0 : 0), 0)
+  const idCuerpo = `mnu-grupo-${grupo.id}`
+
+  return (
+    <div
+      className={`mnu-grupo mnu-grupo--${TINTES[indice % TINTES.length]}${abierto ? ' mnu-grupo--abierto' : ''}`}
+      style={{ '--i': indice }}
+    >
+      <button
+        type="button"
+        className="mnu-grupo__cabecera"
+        onClick={() => onAlternar(grupo.id)}
+        aria-expanded={abierto}
+        aria-controls={idCuerpo}
       >
-        <path d="m9 6 6 6-6 6" />
-      </svg>
-    </Link>
-  )
-}
+        <span className="mnu-grupo__icono">
+          <IconoGrupo size={20} aria-hidden="true" />
+        </span>
+        <span className="mnu-grupo__titulo">{grupo.titulo}</span>
+        {pendientes > 0 && !abierto && (
+          <span className="mnu-conteo" aria-label={`${pendientes} pendientes`}>
+            {formatearConteo(pendientes)}
+          </span>
+        )}
+        <ChevronDown className="mnu-grupo__chevron" size={18} aria-hidden="true" />
+      </button>
 
-function MenuSeccion({ titulo, tinte = 'teal', children }) {
-  return (
-    <section className={`menu-seccion menu-seccion--${tinte}`}>
-      <h2 className="menu-seccion__titulo">{titulo}</h2>
-      {children}
-    </section>
+      <div id={idCuerpo} className="mnu-grupo__cuerpo" inert={!abierto}>
+        <div className="mnu-grupo__interior">
+          {items.map((item) => {
+            const Icono = item.icono
+            const n = item.contador ? conteos[item.contador] || 0 : 0
+            return (
+              <Link key={item.id} to={item.to} className="mnu-item">
+                <span className="mnu-item__icono">
+                  <Icono size={18} aria-hidden="true" />
+                </span>
+                <span className="mnu-item__texto">{item.texto}</span>
+                {n > 0 && (
+                  <span className="mnu-conteo" aria-label={`${n} pendientes`}>
+                    {formatearConteo(n)}
+                  </span>
+                )}
+                <ChevronRight className="mnu-item__flecha" size={16} aria-hidden="true" />
+              </Link>
+            )
+          })}
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -281,8 +290,22 @@ function MenuSeccion({ titulo, tinte = 'teal', children }) {
 // ---------------------------------------------------------------
 function Menu() {
   const navigate = useNavigate()
-  const { user } = useAuth()
-  const logueado = Boolean(user)
+  const { user, logout } = useAuth()
+  const { items: itemsCarrito } = useCart()
+  const { favoritos } = useFavoritos()
+  const { conteos } = useNavBadges()
+
+  const [momento] = useState(saludoSegunHora)
+  const [abiertos, setAbiertos] = useState(() => new Set(['actividad']))
+  const [oculto, setOculto] = useState(() => safeGetItem(CLAVE_OCULTAR) === '1')
+  const [confirmarSalir, setConfirmarSalir] = useState(false)
+
+  const estadoCredito = useResumenCredito(user?.id)
+
+  const nombre = user?.nombre?.trim() || ''
+  const primerNombre = nombre ? nombre.split(' ')[0] : ''
+  const inicial = (nombre || user?.email || '?').charAt(0).toUpperCase()
+  const esAdmin = Boolean(user?.es_admin)
 
   function irAtras() {
     // Si llegamos desde el BottomNav hay historial que retroceder;
@@ -291,106 +314,125 @@ function Menu() {
     else navigate('/home')
   }
 
-  const saludo = logueado && user?.nombre
-    ? `Hola, ${user.nombre.split(' ')[0]} — ¿qué necesitas hoy?`
-    : '¿Qué necesitas hoy?'
+  function alternarGrupo(id) {
+    setAbiertos((prev) => {
+      const siguiente = new Set(prev)
+      if (siguiente.has(id)) siguiente.delete(id)
+      else siguiente.add(id)
+      return siguiente
+    })
+  }
+
+  function alternarOcultar() {
+    const nuevo = !oculto
+    setOculto(nuevo)
+    safeSetItem(CLAVE_OCULTAR, nuevo ? '1' : '0')
+  }
+
+  // Igual que Mi Cuenta: a "/" (Landing pública) y no a "/home", que está
+  // detrás de PrivateRoute y rebotaría al login sin dejar ver el toast.
+  function cerrarSesion() {
+    setConfirmarSalir(false)
+    logout()
+    navigate('/', { state: { toast: 'Cerraste sesión correctamente' } })
+  }
+
+  const grupos = NAV_UNIFICADO.grupos
+  const pie = NAV_UNIFICADO.pie
 
   return (
-    <div className="menu-page">
-      <header className="menu-page__header">
-        <div>
-          <h1 className="menu-page__titulo">Menú</h1>
-          <p className="menu-page__subtitulo">{saludo}</p>
+    <div className="mnu-page">
+      <header className="mnu-hero">
+        <span className="mnu-hero__fondo" aria-hidden="true" />
+
+        <div className="mnu-hero__fila">
+          <span className="mnu-avatar" aria-hidden="true">{inicial}</span>
+          <div className="mnu-hero__saludo">
+            <p className="mnu-hero__kicker">{momento}</p>
+            <h1 className="mnu-hero__titulo">{primerNombre ? `Hola, ${primerNombre}` : '¿Qué necesitas hoy?'}</h1>
+          </div>
+          <button type="button" className="mnu-hero__cerrar" onClick={irAtras} aria-label="Cerrar menú">
+            <X size={22} aria-hidden="true" />
+          </button>
         </div>
-        <button
-          type="button"
-          className="menu-page__close"
-          onClick={irAtras}
-          aria-label="Volver"
-        >
-          <svg
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M18 6 6 18" />
-            <path d="m6 6 12 12" />
-          </svg>
-        </button>
+
+        <TarjetaCredito estado={estadoCredito} oculto={oculto} onAlternar={alternarOcultar} />
+
+        <nav className="mnu-atajos" aria-label="Atajos">
+          <Atajo to="/carrito" icono={ShoppingCart} texto="Carrito" cantidad={itemsCarrito?.length || 0} />
+          <Atajo to="/mis-items" icono={Heart} texto="Favoritos" cantidad={favoritos?.length || 0} />
+          <Atajo to="/notificaciones" icono={Bell} texto="Alertas" cantidad={conteos.notificaciones || 0} alerta />
+        </nav>
       </header>
 
-      {!logueado && (
-        <section className="menu-seccion" aria-label="Crear cuenta">
-          <div className="menu-cta">
-            <div className="menu-cta__glow" aria-hidden="true" />
-            <div className="menu-cta__icono">{ICONOS.registro(26)}</div>
-            <div className="menu-cta__texto">
-              <h2 className="menu-cta__titulo">¿Aún no tienes cuenta?</h2>
-              <p className="menu-cta__descripcion">
-                Regístrate gratis y compra con precios mayoristas.
-              </p>
-            </div>
-            <Link to="/registro" className="menu-cta__boton">
-              Crear cuenta
-            </Link>
-          </div>
+      <section className="mnu-seccion" aria-labelledby="mnu-t-explorar">
+        <h2 id="mnu-t-explorar" className="mnu-seccion__titulo">Explorar</h2>
+        <div className="mnu-bento">
+          {ACCESOS.map((acceso, i) => (
+            <TileBento key={acceso.id} acceso={acceso} indice={i} />
+          ))}
+        </div>
+      </section>
+
+      <section className="mnu-seccion" aria-labelledby="mnu-t-espacio">
+        <h2 id="mnu-t-espacio" className="mnu-seccion__titulo">Tu espacio</h2>
+        {grupos.map((grupo, i) => (
+          <GrupoNav
+            key={grupo.id}
+            grupo={grupo}
+            indice={i}
+            abierto={abiertos.has(grupo.id)}
+            onAlternar={alternarGrupo}
+            conteos={conteos}
+            esAdmin={esAdmin}
+          />
+        ))}
+      </section>
+
+      {pie && (
+        <section className="mnu-seccion" aria-labelledby="mnu-t-ayuda">
+          <h2 id="mnu-t-ayuda" className="mnu-seccion__titulo">Ayuda</h2>
+          <GrupoNav
+            grupo={pie}
+            indice={grupos.length}
+            abierto={abiertos.has(pie.id)}
+            onAlternar={alternarGrupo}
+            conteos={conteos}
+            esAdmin={esAdmin}
+          />
         </section>
       )}
 
-      <MenuSeccion titulo="Catálogo y Productos" tinte="azul">
-        <div className="menu-grid">
-          {TILES_CATALOGO.map((item) => (
-            <MenuTile key={item.to} item={item} />
+      <footer className="mnu-pie">
+        <nav className="mnu-pie__links" aria-label="Información legal">
+          {LINKS_PIE.map((l) => (
+            <Link key={l.to} to={l.to}>{l.texto}</Link>
           ))}
-        </div>
-        <div className="menu-lista">
-          {LISTA_CATALOGO.map((item) => (
-            <MenuListaItem key={item.to} item={item} />
-          ))}
-        </div>
-      </MenuSeccion>
+        </nav>
+        <button type="button" className="mnu-salir" onClick={() => setConfirmarSalir(true)}>
+          <LogOut size={18} aria-hidden="true" />
+          Cerrar sesión
+        </button>
+        <p className="mnu-pie__marca">Droguería Carrisan</p>
+      </footer>
 
-      {logueado && (
-        <>
-          <MenuSeccion titulo="Mi Cuenta" tinte="azul">
-            <div className="menu-lista">
-              {LISTA_CUENTA.map((item) => (
-                <MenuListaItem key={item.to} item={item} />
-              ))}
+      {confirmarSalir && (
+        <HojaInferior titulo="Cerrar sesión" onCerrar={() => setConfirmarSalir(false)}>
+          <div className="mnu-sheet">
+            <p className="mnu-sheet__texto">
+              Tendrás que iniciar sesión de nuevo para acceder a tu cuenta.
+            </p>
+            <div className="mnu-sheet__acciones">
+              <button type="button" className="mnu-btn" onClick={() => setConfirmarSalir(false)}>
+                Cancelar
+              </button>
+              <button type="button" className="mnu-btn mnu-btn--peligro" onClick={cerrarSesion}>
+                Cerrar sesión
+              </button>
             </div>
-          </MenuSeccion>
-
-          <MenuSeccion titulo="Solicitudes" tinte="teal">
-            <div className="menu-lista">
-              {LISTA_SOLICITUDES.map((item) => (
-                <MenuListaItem key={item.to} item={item} />
-              ))}
-            </div>
-          </MenuSeccion>
-        </>
+          </div>
+        </HojaInferior>
       )}
-
-      <MenuSeccion titulo="Soporte" tinte="indigo">
-        <div className="menu-lista">
-          {LISTA_SOPORTE.map((item) => (
-            <MenuListaItem key={item.to} item={item} />
-          ))}
-        </div>
-      </MenuSeccion>
-
-      <MenuSeccion titulo="Legal" tinte="principal">
-        <div className="menu-lista">
-          {LISTA_LEGAL.map((item) => (
-            <MenuListaItem key={item.to} item={item} />
-          ))}
-        </div>
-      </MenuSeccion>
     </div>
   )
 }
