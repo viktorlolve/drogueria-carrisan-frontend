@@ -33,12 +33,12 @@ function NoticiasTeaser() {
       <div className="noticias-teaser__header">
         <div className="noticias-teaser__eyebrow">
           <span className="noticias-teaser__eyebrow-dot" aria-hidden="true" />
-          Noticias
+          Noticias del sector
         </div>
         <Link to="/noticias" className="noticias-teaser__ver-todas">Ver todas</Link>
       </div>
 
-      <h2 className="noticias-teaser__titulo">Noticias del sector farmacéutico</h2>
+      <h2 className="noticias-teaser__titulo">CRS News</h2>
 
       {cargando ? (
         <div className="noticias-teaser__cuerpo">

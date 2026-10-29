@@ -134,7 +134,7 @@ const SERVICIOS_PROPIOS = [
     icono: Newspaper,
     descripcion: 'Novedades, alertas y comunicados del sector farmacéutico.',
     subcategorias: [
-      { nombre: 'Noticias del sector', ruta: '/noticias' },
+      { nombre: 'CRS News', ruta: '/noticias' },
     ]
   },
   {

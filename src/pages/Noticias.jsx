@@ -436,8 +436,8 @@ function Noticias() {
             <span>Edición digital</span>
           </div>
           <div className="ntc-cabecera__marca">
-            <p className="ntc-cabecera__sup">Droguería Carrisan</p>
-            <h1 className="ntc-cabecera__titulo">Noticias del Sector</h1>
+            <p className="ntc-cabecera__sup">Drogueria Carrisan</p>
+            <h1 className="ntc-cabecera__titulo">CRS News</h1>
             <p className="ntc-cabecera__sub">Política, industria y gestión farmacéutica</p>
           </div>
         </header>
