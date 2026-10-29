@@ -51,7 +51,7 @@ const ACCESOS = [
   { id: 'ofertas', to: '/ofertas', titulo: 'Ofertas', texto: 'Descuentos y promociones', icono: BadgePercent, variante: 'indigo' },
   { id: 'inhrr', to: '/registro-inhrr', titulo: 'Vademécum INHRR', texto: 'Registro sanitario oficial', icono: ShieldCheck, variante: 'teal', etiqueta: 'NUEVO' },
   { id: 'farmacia', to: '/farmacia', titulo: 'Línea Farmacia', texto: 'Medicamentos y cuidado personal', icono: Pill, variante: 'claro' },
-  { id: 'hospitalaria', to: '/hospitalaria', titulo: 'Línea Hospitalaria', texto: 'Insumos para clínicas', icono: Hospital, variante: 'claro' },
+  { id: 'hospitalaria', to: '/hospitalaria', titulo: 'Línea Hospitalaria', texto: 'Insumos para clínicas y centros quirurgicos', icono: Hospital, variante: 'claro' },
 ]
 
 const TINTES = ['azul', 'teal', 'indigo']
@@ -413,7 +413,7 @@ function Menu() {
           <LogOut size={18} aria-hidden="true" />
           Cerrar sesión
         </button>
-        <p className="mnu-pie__marca">Droguería Carrisan</p>
+        <p className="mnu-pie__marca">Respaldando al médico venezolano</p>
       </footer>
 
       {confirmarSalir && (
