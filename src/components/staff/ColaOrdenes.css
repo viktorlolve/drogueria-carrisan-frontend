@@ -115,3 +115,17 @@
    .sp-acciones, y deben ocupar su propia linea completa. */
 .sp-acciones > .sp-aviso,
 .sp-acciones > .sp-ajuste { flex: 1 0 100%; }
+
+/* Confirmación del paquete en Preparar Órdenes: reemplaza a la caja de
+   verificación cuando el paquete ya quedó verificado. */
+.sp-confirmado {
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--stf-teal-suave, #E6F6F3);
+  border: 1px solid #BFE6DF;
+  color: var(--stf-teal-fuerte, #0E8577);
+  font-size: 12px;
+  font-weight: 700;
+}
+.sp-acciones > .sp-confirmado { flex: 1 0 100%; }
