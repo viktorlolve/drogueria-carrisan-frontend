@@ -9,23 +9,20 @@
 // del presupuesto:
 //   · Blanco, negro y gris. Sin rellenos, sin degradados y sin color de acento.
 //   · El número de orden va gigante: se identifica el paquete de un vistazo.
-//   · El destino va grande y a todo el ancho: es lo que lee quien despacha.
+//   · El destino va a todo el ancho: es lo que lee quien despacha.
 //   · Al pie, campos en blanco para llenar a mano (nombre, firma, fecha y
 //     observaciones).
 //
-// FORMATO: la página del PDF es una HOJA A4 APAISADA (297 × 210 mm) y la guía
-// —un bloque de A5 apaisado (210 × 148 mm, media hoja)— va centrada dentro.
-// Motivo: un PDF no puede "pedir" orientación al imprimir; solo declara el
-// tamaño de su página. Generando una página A5 suelta, el visor/la impresora
-// la mete en una hoja vertical (A4/Letter) y la rota 90°, así que la guía sale
-// vertical y diminuta. Con la página igual al papel real (A4 apaisado) el
-// diálogo de impresión abre en horizontal, sale 1:1 y la guía ocupa la mitad
-// del pliego con márgenes parejos.
+// FORMATO: la hoja del PDF ES la guía: 148 × 210 mm (A5 VERTICAL), justo la
+// mitad de un A4 por área. A diferencia de un formato apaisado —que un
+// visor/impresora puede rotar 90° por no coincidir con la orientación vertical
+// por defecto del papel—, una página vertical ya coincide con esa orientación,
+// así que no hace falta envolverla en una hoja A4 completa ni centrarla: se
+// imprime directo, ocupando solo media hoja.
 //
-// Presupuesto vertical de la guía (alto 148 mm, coordenadas de diseño; luego
-// se desplazan con `Y()` al centro de la hoja):
-//   cabecera 12 → 23 · orden + destinatario 29 → ~59 · destino ~64 → ~90 ·
-//   recibí conforme ~94 → ~132 · pie 135.5 → 144.
+// Presupuesto vertical de la guía (alto 210 mm, aprox.):
+//   cabecera 12 → 23 · orden + modalidad 29 → ~59 · destinatario ~68 → ~92 ·
+//   destino ~97 → ~122 · recibí conforme ~127 → ~185 · pie 197.5 → 206.
 //
 // Este formato dibuja todo por su cuenta y NO modifica pdfBase.js: ese módulo
 // lo comparten la factura, el comprobante, etc. Solo se reutilizan de pdfBase
@@ -38,28 +35,20 @@
 
 import { datosEmpresa, nuevoDoc, textoEsp, fechaLarga } from './pdf/pdfBase'
 
-/* Bloque de diseño: media hoja A4 (A5 apaisado). Todo el dibujo se hace con
-   estas coordenadas y al final se traslada al centro de la hoja. */
-const GUIA = { ancho: 210, alto: 148, margen: 12 }
+/* Página = la guía misma: A5 vertical, exactamente media hoja A4 por área
+   (210 × 297 mm → 148 × 210 mm). Ya no hay una "hoja mayor" que la contenga:
+   al ser vertical, coincide con la orientación por defecto de cualquier
+   impresora, así que no hace falta centrarla dentro de nada. */
+const GUIA = { ancho: 148, alto: 210, margen: 12 }
 
-/* Hoja en la que se imprime: A4 apaisada. Es la que viaja en el PDF, para que
-   el papel por defecto sea horizontal. */
-const HOJA = { ancho: 297, alto: 210 }
-
-/* Traslación al centro de la hoja: 43,5 mm a cada lado y 31 mm arriba/abajo.
-   210 × 148 = 31.080 mm² sobre los 62.370 mm² de la A4 apaisada → la guía
-   ocupa justo la mitad del área. */
-const OX = (HOJA.ancho - GUIA.ancho) / 2
-const OY = (HOJA.alto - GUIA.alto) / 2
-
-/* Marco útil de la guía, ya en coordenadas de la hoja: 210 - 12 · 2 = 186 mm. */
-const XI = OX + GUIA.margen
-const XD = OX + GUIA.ancho - GUIA.margen
+/* Marco útil: 148 - 12 · 2 = 124 mm de ancho. */
+const XI = GUIA.margen
+const XD = GUIA.ancho - GUIA.margen
 const ANCHO_UTIL = GUIA.ancho - GUIA.margen * 2
 
-/* Coordenadas de diseño (origen en la esquina del bloque) → hoja. */
-const X = (v) => OX + v
-const Y = (v) => OY + v
+/* Identidad (sin traslación): se deja por si en el futuro hace falta volver
+   a envolver la guía en una hoja mayor centrada, como en la versión apaisada. */
+const Y = (v) => v
 
 /* Paleta de impresión: solo tinta y grises. */
 const T = {
@@ -131,12 +120,10 @@ function destinoDe(orden, e) {
 }
 
 export default async function generarGuiaDespachoPDF(orden) {
-  // La hoja es A4 apaisada: `orientation: 'landscape'` es obligatorio porque
-  // jsPDF normaliza a vertical (intercambia ancho y alto) cualquier formato
-  // apaisado que se le pase como array.
+  // La página ya tiene el tamaño de la guía: vertical, sin pasar `orientation`
+  // (jsPDF asume 'portrait' por defecto).
   const doc = await nuevoDoc({
-    pagina: { ancho: HOJA.ancho, alto: HOJA.alto, margen: GUIA.margen },
-    orientation: 'landscape',
+    pagina: { ancho: GUIA.ancho, alto: GUIA.alto, margen: GUIA.margen },
   })
   const e = datosEmpresa()
 
@@ -155,7 +142,7 @@ export default async function generarGuiaDespachoPDF(orden) {
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(7)
     tinta(doc, T.gris)
-    doc.text(lineasMax(doc, contacto, 120, 1), xi, Y(18.5))
+    doc.text(lineasMax(doc, contacto, 80, 1), xi, Y(18.5))
   }
 
   etiqueta(doc, 'Guía de despacho', xd, Y(13), { align: 'right', color: T.tinta, size: 7.5 })
@@ -166,13 +153,13 @@ export default async function generarGuiaDespachoPDF(orden) {
 
   linea(doc, Y(23), { grosor: 1.1, color: T.tinta })
 
-  /* ===== Fila 1 · izquierda: número de orden gigante + modalidad ===== */
+  /* ===== Orden N.º: gigante, arriba del todo y a todo el ancho ===== */
   etiqueta(doc, 'Orden N.º', xi, Y(31), { color: T.tinta, size: 7 })
 
   doc.setFont('helvetica', 'bold')
   let tam = 56
   doc.setFontSize(tam)
-  while (doc.getTextWidth(ordenTxt) > 90 && tam > 24) {
+  while (doc.getTextWidth(ordenTxt) > 104 && tam > 24) {
     tam -= 3
     doc.setFontSize(tam)
   }
@@ -195,42 +182,37 @@ export default async function generarGuiaDespachoPDF(orden) {
   textoEsp(doc, modalidad, xi + wPil / 2, yPil + 4.8, { align: 'center', cs: 0.8 })
   const finIzq = yPil + 7
 
-  /* ===== Fila 1 · derecha: destinatario ===== */
-  const xr = X(114)
-  const wr = xd - xr
-  etiqueta(doc, 'Destinatario', xr, Y(31), { color: T.gris })
+  /* ===== Destinatario: debajo del número de orden, a todo el ancho ===== */
+  const yDest = finIzq + 9
+  linea(doc, yDest - 5, { grosor: 0.3, color: T.linea })
+  etiqueta(doc, 'Destinatario', xi, yDest, { color: T.gris })
 
-  let yr = Y(39)
+  let yr = yDest + 8
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(12.5)
   tinta(doc, T.tinta)
-  const nombre = lineasMax(doc, orden.users?.nombre || 'Cliente', wr, 2)
-  doc.text(nombre, xr, yr)
+  const nombre = lineasMax(doc, orden.users?.nombre || 'Cliente', ANCHO_UTIL, 2)
+  doc.text(nombre, xi, yr)
   yr += nombre.length * 5.4
 
   if (orden.users?.telefono) {
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(9)
     tinta(doc, T.tinta)
-    doc.text(lineasMax(doc, orden.users.telefono, wr, 1), xr, yr + 0.5)
+    doc.text(lineasMax(doc, orden.users.telefono, ANCHO_UTIL, 1), xi, yr + 0.5)
     yr += 5
   }
   if (orden.users?.email) {
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(8.5)
     tinta(doc, T.gris)
-    doc.text(lineasMax(doc, orden.users.email, wr, 1), xr, yr + 0.5)
+    doc.text(lineasMax(doc, orden.users.email, ANCHO_UTIL, 1), xi, yr + 0.5)
     yr += 5
   }
+  const finDestinatario = yr
 
-  // Divisor vertical fino entre orden y destinatario
-  const finFila1 = Math.max(finIzq, yr)
-  doc.setDrawColor(...T.linea)
-  doc.setLineWidth(0.3)
-  doc.line(xr - 6, Y(28), xr - 6, finFila1)
-
-  /* ===== Fila 2: destino, a todo el ancho y en grande ===== */
-  const yS = finFila1 + 5
+  /* ===== Destino: a todo el ancho y en grande ===== */
+  const yS = finDestinatario + 5
   linea(doc, yS, { grosor: 0.45, color: T.tinta })
 
   const destino = destinoDe(orden, e)
@@ -252,39 +234,50 @@ export default async function generarGuiaDespachoPDF(orden) {
     yD += 5.5
   }
 
-  /* ===== Fila 3: recibí conforme (campos en blanco para llenar a mano) ===== */
+  /* ===== Recibí conforme: campos en blanco para llenar a mano ===== */
   const y3 = yD + 6
   linea(doc, y3, { grosor: 0.45, color: T.tinta })
 
   etiqueta(doc, 'Recibí conforme', xi, y3 + 5.5, { color: T.tinta, size: 7 })
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(7)
+  doc.setFontSize(6.3)
   tinta(doc, T.gris)
-  doc.text('Verifique el estado del paquete antes de firmar.', xd, y3 + 5.5, { align: 'right' })
+  doc.text(
+    lineasMax(doc, 'Verifique el estado del paquete antes de firmar.', ANCHO_UTIL, 1),
+    xi,
+    y3 + 10.5
+  )
 
-  const yl = y3 + 5.5 + 11
-  const campos = [
-    { label: 'Nombre y apellido', w: 78 },
-    { label: 'Firma del receptor', w: 62 },
-    { label: 'Fecha y hora', w: 36 },
-  ]
-  let xc = xi
-  campos.forEach((c) => {
-    doc.setDrawColor(...T.tinta)
-    doc.setLineWidth(0.3)
-    doc.line(xc, yl, xc + c.w, yl)
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(6.5)
-    tinta(doc, T.gris)
-    doc.text(c.label, xc, yl + 3.6)
-    xc += c.w + 5
-  })
+  // Fila 1: nombre y apellido, a todo el ancho (antes compartía fila con
+  // firma/fecha; en vertical hay ancho de sobra para darle su propia línea).
+  let yl = y3 + 18
+  doc.setDrawColor(...T.tinta)
+  doc.setLineWidth(0.3)
+  doc.line(xi, yl, xd, yl)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(6.5)
+  tinta(doc, T.gris)
+  doc.text('Nombre y apellido', xi, yl + 3.6)
+
+  // Fila 2: firma (62%) + fecha y hora (resto), lado a lado.
+  yl += 14
+  const wFirma = ANCHO_UTIL * 0.62
+  const wFecha = ANCHO_UTIL - wFirma - 6
+  doc.setDrawColor(...T.tinta)
+  doc.setLineWidth(0.3)
+  doc.line(xi, yl, xi + wFirma, yl)
+  doc.line(xd - wFecha, yl, xd, yl)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(6.5)
+  tinta(doc, T.gris)
+  doc.text('Firma del receptor', xi, yl + 3.6)
+  doc.text('Fecha y hora', xd - wFecha, yl + 3.6)
 
   // Observaciones: etiqueta y hasta dos renglones para escribir. El segundo
   // solo se dibuja si no invade el pie (destinos muy largos ocupan más alto).
-  etiqueta(doc, 'Observaciones', xi, yl + 9.5, { color: T.gris, size: 6.5 })
-  linea(doc, yl + 15.5, { grosor: 0.3, color: T.tinta })
-  if (yl + 22 < Y(GUIA.alto) - 17) linea(doc, yl + 22, { grosor: 0.3, color: T.tinta })
+  etiqueta(doc, 'Observaciones', xi, yl + 12, { color: T.gris, size: 6.5 })
+  linea(doc, yl + 18, { grosor: 0.3, color: T.tinta })
+  if (yl + 25 < Y(GUIA.alto) - 17) linea(doc, yl + 25, { grosor: 0.3, color: T.tinta })
 
   /* ===== Pie ===== */
   linea(doc, Y(GUIA.alto - 12.5), { grosor: 0.4, color: T.tinta })
