@@ -1710,6 +1710,24 @@ padding-bottom: 301px
  width: 100%
 ;
 }
+/* Agencia del envío nacional elegida en el carrito (no en el formulario de
+   dirección): va justo debajo del selector de direcciones. */
+.carrito-agencia 
+{
+ margin-top: 12px
+;
+}
+.carrito-agencia__ayuda 
+{
+  margin: 6px 0 0
+;
+  font-size: 0.76rem
+;
+  color: #6B7280
+;
+  line-height: 1.4
+;
+}
 .direccion-submit-btn 
 {
   width: 100%
