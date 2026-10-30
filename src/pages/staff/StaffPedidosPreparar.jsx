@@ -43,6 +43,10 @@ function AccionesPreparar({ orden, onRecargar }) {
   const { confirmar, avisar } = useStaffUI()
   const [verificando, setVerificando] = useState({})
   const [procesando, setProcesando] = useState(false)
+  // Confirmación de ESTA tarjeta: cierra la caja de verificación y deja el
+  // aviso de pedido confirmado. Es estado local a propósito (no se deriva de
+  // la orden) para no depender de campos que la cola todavía no devuelve.
+  const [confirmado, setConfirmado] = useState(false)
 
   const esRetiro = orden.tipo_envio === 'retiro'
   const abierto = verificando[orden.id] !== undefined
@@ -67,6 +71,15 @@ function AccionesPreparar({ orden, onRecargar }) {
     setProcesando(true)
     try {
       await staffApi.post(`/staff/logistica/${orden.id}/verificar-paquete`)
+      // Cierra la caja de verificación y deja constancia en la tarjeta: el
+      // paquete queda verificado pero la orden sigue en la cola hasta el envío.
+      setVerificando((prev) => {
+        const copia = { ...prev }
+        delete copia[orden.id]
+        return copia
+      })
+      setConfirmado(true)
+      avisar(`Pedido #${orden.id} confirmado — paquete verificado`)
       await onRecargar()
     } catch (err) {
       avisar(err.response?.data?.error || 'No se pudo verificar el paquete', 'error')
@@ -110,8 +123,14 @@ function AccionesPreparar({ orden, onRecargar }) {
         </p>
       )}
 
+      {confirmado && !esRetiro && (
+        <p className="sp-confirmado">
+          Pedido confirmado — el paquete quedó verificado. Ya podés marcar el envío.
+        </p>
+      )}
+
       <div className="sp-acciones">
-        {!esRetiro && !abierto && (
+        {!esRetiro && !abierto && !confirmado && (
           <button className="sp-btn sp-btn--principal" onClick={abrirVerificacion} disabled={procesando}>
             Verificar paquete
           </button>
