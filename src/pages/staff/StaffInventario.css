@@ -389,6 +389,76 @@
 .si-input--readonly { background: #f8fafc; color: #64748b; }
 .si-select-estado { width: 100%; max-width: 280px; }
 
+/* ----------------------------------------------------------------- catálogo */
+/* Interruptor inmediato de visibilidad. El input real queda invisible pero
+   enfocable (no `display:none`, que lo sacaría del tab/lector de pantalla); el
+   riel es lo que se ve, y su estado encendido usa el color del departamento. */
+
+.si-switch {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  max-width: 100%;
+}
+.si-switch:hover { border-color: var(--ldep-color, #D97706); }
+.si-switch__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.si-switch__rail {
+  flex: none;
+  position: relative;
+  width: 44px;
+  height: 24px;
+  margin-top: 1px;
+  border-radius: 999px;
+  background: #cbd5e1;
+  transition: background-color 0.15s ease;
+}
+.si-switch__thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25);
+  transition: transform 0.15s ease;
+}
+.si-switch__input:checked + .si-switch__rail {
+  background: var(--ldep-color, #D97706);
+}
+.si-switch__input:checked + .si-switch__rail .si-switch__thumb {
+  transform: translateX(20px);
+}
+.si-switch__input:focus-visible + .si-switch__rail {
+  outline: 2px solid var(--ldep-color, #D97706);
+  outline-offset: 2px;
+}
+.si-switch__input:disabled + .si-switch__rail {
+  opacity: 0.45;
+}
+.si-switch:has(.si-switch__input:disabled) {
+  cursor: not-allowed;
+  background: #f8fafc;
+}
+.si-switch:has(.si-switch__input:disabled):hover { border-color: #e2e8f0; }
+.si-switch__textos { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.si-switch__titulo { font-size: 0.9rem; font-weight: 700; color: #1f2937; }
+.si-switch__ayuda { font-size: 0.8rem; color: #64748b; }
+
 .si-preview {
   width: 100%;
   max-width: 240px;

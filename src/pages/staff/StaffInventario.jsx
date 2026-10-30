@@ -331,6 +331,13 @@ function StaffInventario() {
   const [guardandoDatos, setGuardandoDatos] = useState(false)
   const [notaDatos, setNotaDatos] = useState('')
 
+  // Visibilidad en el catálogo: interruptor INMEDIATO (no forma parte del
+  // borrador de "Editar datos"), así que vive en su propio estado con su propia
+  // nota y su propio "guardando". Mezclarlo con `formDatos` permitiría que un
+  // borrador viejo pisara el cambio al guardar otra cosa.
+  const [guardandoVisible, setGuardandoVisible] = useState(false)
+  const [notaVisible, setNotaVisible] = useState('')
+
   // Cuáles de los dos campos de edición tienen algo tecleado SIN guardar. Es un
   // ref y no estado a propósito: el refetch del detalle (cada escritura bumpea
   // `detalleRecarga`) repone los campos con lo que dice el servidor, y con estado
@@ -382,6 +389,8 @@ function StaffInventario() {
     setFormDatos(null)
     setNotaDatos('')
     setGuardandoDatos(false)
+    setNotaVisible('')
+    setGuardandoVisible(false)
   }
 
   // --- GET /staff/inventario/opciones --------------------------------------
@@ -753,7 +762,6 @@ function StaffInventario() {
       linea: p.linea || '',
       forma: p.forma || '',
       activo: p.activo === true,
-      visible_catalogo: p.visible_catalogo === true,
     })
     setNotaDatos('')
     setDrawerError('')
@@ -797,6 +805,45 @@ function StaffInventario() {
       console.error('[inventario] error al guardar los datos:', err?.response?.status, err?.message)
     } finally {
       setGuardandoDatos(false)
+    }
+  }
+
+  // --- visibilidad en el catálogo (interruptor inmediato) -------------------
+
+  /**
+   * Manda el cambio en el acto. NO pasa por `formDatos` (el borrador de "Editar
+   * datos") a propósito: si el borrador tuviera su propia copia de
+   * `visible_catalogo`, guardar después otra cosa podría devolver el valor viejo
+   * y pisar este interruptor. Un solo control = una sola fuente de verdad.
+   *
+   * Usa el mismo PATCH con whitelist que "Editar datos": el backend solo acepta
+   * `visible_catalogo` y devuelve la fila completa actualizada.
+   */
+  async function cambiarVisibleCatalogo(nuevo) {
+    if (!puedeEditarDatos) return
+    const actual = producto?.visible_catalogo === true
+    if (nuevo === actual) return
+    setGuardandoVisible(true)
+    setDrawerError('')
+    setNotaVisible('')
+    try {
+      const { data } = await staffApi.patch(`/staff/inventario/${drawerId}`, {
+        visible_catalogo: nuevo,
+      })
+      setDetalle((prev) => (prev ? { ...prev, producto: { ...prev.producto, ...data } } : prev))
+      setNotaVisible(
+        nuevo
+          ? (producto?.activo === true
+            ? 'Visible en el catálogo.'
+            : 'Quedó como visible, pero el producto está inactivo: no aparece hasta activarlo.')
+          : 'Oculto del catálogo. Sigue registrado y podés volver a mostrarlo cuando quieras.',
+      )
+      trasEscribir()
+    } catch (err) {
+      setDrawerError(err.response?.data?.error || 'No se pudo cambiar la visibilidad')
+      console.error('[inventario] error al cambiar la visibilidad:', err?.response?.status, err?.message)
+    } finally {
+      setGuardandoVisible(false)
     }
   }
 
@@ -1094,6 +1141,50 @@ function StaffInventario() {
 
                   {producto && (
                     <>
+                      {/* 0. Catálogo: interruptor inmediato (NO es un borrador) */}
+                      <section className="si-fieldset">
+                        <h3 className="si-fieldset__titulo">Catálogo</h3>
+                        <label className="si-switch">
+                          <input
+                            type="checkbox"
+                            role="switch"
+                            className="si-switch__input"
+                            checked={producto.visible_catalogo === true}
+                            disabled={!puedeEditarDatos || guardandoVisible}
+                            onChange={(e) => cambiarVisibleCatalogo(e.target.checked)}
+                          />
+                          <span className="si-switch__rail" aria-hidden="true">
+                            <span className="si-switch__thumb" />
+                          </span>
+                          <span className="si-switch__textos">
+                            <span className="si-switch__titulo">
+                              {producto.visible_catalogo === true
+                                ? 'Visible en el catálogo'
+                                : 'Oculto del catálogo'}
+                            </span>
+                            <span className="si-switch__ayuda">
+                              {producto.visible_catalogo === true
+                                ? 'Los clientes lo ven en la tienda.'
+                                : 'No aparece en la tienda, pero el producto sigue registrado.'}
+                            </span>
+                          </span>
+                        </label>
+                        <p className="sp-hint">
+                          Se aplica al instante: no hay que guardar nada.
+                          {producto.activo !== true
+                            && ' Ojo: el producto está inactivo, así que no se verá aunque quede visible.'}
+                        </p>
+                        {!puedeEditarDatos && (
+                          <p className="si-sin-permiso">
+                            Quién lo oculta o lo muestra es la gerencia (administrador/director).
+                          </p>
+                        )}
+                        {guardandoVisible && <p className="si-nota">Guardando…</p>}
+                        {notaVisible && (
+                          <p className="si-nota si-nota--ok" role="status">{notaVisible}</p>
+                        )}
+                      </section>
+
                       {/* 1. Foto */}
                       <section className="si-fieldset">
                         <h3 className="si-fieldset__titulo">Foto</h3>
@@ -1388,14 +1479,6 @@ function StaffInventario() {
                                   onChange={(e) => cambiarDato('activo', e.target.checked)}
                                 />
                                 Activo
-                              </label>
-                              <label className="sp-check">
-                                <input
-                                  type="checkbox"
-                                  checked={formDatos.visible_catalogo}
-                                  onChange={(e) => cambiarDato('visible_catalogo', e.target.checked)}
-                                />
-                                Visible en el catálogo
                               </label>
                             </div>
 
