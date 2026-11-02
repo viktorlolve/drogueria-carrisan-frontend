@@ -10,7 +10,7 @@
 .so-back {
   display: inline-block;
   margin-bottom: 16px;
-  color: var(--ldep-color, #0052DC);
+  color: var(--ldep-color-strong, #0043B3);
   font-weight: 600;
   text-decoration: none;
   font-size: 14px;
@@ -160,7 +160,7 @@
 .so-item-precio {
   font-size: 14px;
   font-weight: 700;
-  color: var(--ldep-color, #0052DC);
+  color: var(--ldep-color-strong, #0043B3);
 }
 
 .so-cliente-activo {
@@ -179,7 +179,7 @@
 .so-cliente-activo button {
   background: none;
   border: none;
-  color: var(--ldep-color, #0052DC);
+  color: var(--ldep-color-strong, #0043B3);
   font-weight: 600;
   font-size: 13px;
   cursor: pointer;
@@ -211,7 +211,7 @@
 .so-tipo--activo {
   border-color: var(--ldep-color, #0052DC);
   background: rgba(27, 75, 143, 0.08);
-  color: var(--ldep-color, #0052DC);
+  color: var(--ldep-color-strong, #0043B3);
   font-weight: 600;
 }
 
@@ -405,7 +405,7 @@
 .so-exito button {
   background: white;
   border: 1.5px solid #e5e7eb;
-  color: var(--ldep-color, #0052DC);
+  color: var(--ldep-color-strong, #0043B3);
   border-radius: 8px;
   padding: 8px 14px;
   font-weight: 600;

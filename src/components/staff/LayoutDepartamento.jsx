@@ -15,7 +15,7 @@ import './LayoutDepartamento.css'
 // </LayoutDepartamento>
 //
 // Layout base para las páginas de trabajo dentro de un departamento.
-// A diferencia de LayoutStaff, el sidebar muestra SOLO los módulos
+// A diferencia de un sidebar genérico, el sidebar muestra SOLO los módulos
 // del departamento actual, con los colores propios de ese depto
 // (variables CSS --ldep-*). Incluye:
 //   - StaffNavbar (barra superior full-width: logo, selector de

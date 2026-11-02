@@ -132,7 +132,7 @@
 }
 
 .snt-silenciar--activo {
-  color: var(--ldep-color, #0052dc);
+  color: var(--ldep-color-strong, #0043B3);
   background: rgba(0, 82, 220, 0.07);
 }
 
@@ -241,7 +241,7 @@
 
 .snt-mas__btn:hover:not(:disabled) {
   border-color: var(--ldep-color, #0052dc);
-  color: var(--ldep-color, #0052dc);
+  color: var(--ldep-color-strong, #0043B3);
 }
 
 .snt-mas__btn:disabled {

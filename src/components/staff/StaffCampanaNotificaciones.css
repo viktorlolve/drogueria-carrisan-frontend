@@ -31,7 +31,7 @@
 .snc-btn:hover,
 .snc-btn--abierto {
   border-color: var(--ldep-color, #2563eb);
-  color: var(--ldep-color, #2563eb);
+  color: var(--ldep-color-strong, #0043B3);
   background: var(--ldep-color-soft, #eff6ff);
 }
 
@@ -86,7 +86,7 @@
 .snc-panel__n {
   font-size: 0.72rem;
   font-weight: 600;
-  color: var(--ldep-color, #2563eb);
+  color: var(--ldep-color-strong, #0043B3);
 }
 
 .snc-panel__lista {
@@ -187,7 +187,7 @@
   font-family: 'Inter', sans-serif;
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--ldep-color, #2563eb);
+  color: var(--ldep-color-strong, #0043B3);
   cursor: pointer;
 }
 
@@ -196,9 +196,17 @@
 }
 
 @media (max-width: 640px) {
+  /* El panel se ancla a la barra (.snb, sticky) y no a la pantalla. Con
+     `position: fixed` quedaba relativo a `.ldep-shift` (el layout usa
+     `will-change: transform`) y, con la página scrolleada, aparecía fuera de
+     pantalla. Para eso el contenedor de la campana deja de ser el bloque de
+     referencia: el panel mide el 100% de la barra hacia abajo. */
+  .snc {
+    position: static;
+  }
   .snc-panel {
-    position: fixed;
-    top: 64px;
+    position: absolute;
+    top: calc(100% + 4px);
     right: 8px;
     left: 8px;
     width: auto;

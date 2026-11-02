@@ -982,7 +982,7 @@
   border: 1px solid var(--ldep-color, #2563EB);
   border-radius: 6px;
   background: #fff;
-  color: var(--ldep-color, #2563EB);
+  color: var(--ldep-color-strong, #0043B3);
   font-weight: 600;
   font-size: 0.8rem;
   cursor: pointer;

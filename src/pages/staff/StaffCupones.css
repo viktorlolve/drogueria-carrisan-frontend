@@ -34,7 +34,7 @@
 .cup-kpi__valor {
   font-size: 1.6rem;
   font-weight: 800;
-  color: var(--ldep-color, #2563EB);
+  color: var(--ldep-color-strong, #0043B3);
 }
 
 .cup-kpi__label {
@@ -111,7 +111,7 @@
 .cup-seg--activo {
   border-color: var(--ldep-color, #2563EB);
   background: var(--ldep-color-soft, #EFF6FF);
-  color: var(--ldep-color, #2563EB);
+  color: var(--ldep-color-strong, #0043B3);
 }
 
 .cup-input,
@@ -186,7 +186,7 @@
 .cup-codigo {
   font-family: monospace;
   font-weight: 700;
-  color: var(--ldep-color, #2563EB);
+  color: var(--ldep-color-strong, #0043B3);
   letter-spacing: 0.5px;
 }
 

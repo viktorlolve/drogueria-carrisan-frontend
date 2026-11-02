@@ -16,7 +16,7 @@
   height: 64px;
   border-radius: 999px;
   background: #fff;
-  color: var(--ldep-color, #2563eb);
+  color: var(--ldep-color-strong, #0043B3);
   margin-bottom: 16px;
 }
 
