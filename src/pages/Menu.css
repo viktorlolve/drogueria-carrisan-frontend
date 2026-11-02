@@ -370,7 +370,7 @@
   gap: 10px;
 }
 
-.mnu-tile {
+a.mnu-tile {
   position: relative;
   overflow: hidden;
   display: flex;
@@ -423,7 +423,7 @@
   box-shadow: 0 12px 24px color-mix(in srgb, var(--mnu-teal) 30%, transparent);
 }
 
-.mnu-tile--claro {
+a.mnu-tile--claro {
   background: #fff;
   border-color: var(--mnu-borde);
   color: var(--mnu-texto);
