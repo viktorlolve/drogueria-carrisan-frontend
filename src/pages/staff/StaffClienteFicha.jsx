@@ -27,9 +27,36 @@ function formatFecha(f) {
 const DOC_LABELS = { rif: 'RIF', estado_cuenta: 'Estado de cuenta', referencia_comercial: 'Referencia comercial', otro: 'Otro documento' }
 
 // -----------------------------------------------------------------
+// Etiquetas de precio — 3 ranuras (registro / pago / comportamiento)
+// -----------------------------------------------------------------
+const RANURAS_ETIQUETA = [
+  { key: 'etiqueta_registro', categoria: 'registro', label: 'Registro', clase: 'tag-registro' },
+  { key: 'etiqueta_pago', categoria: 'pago', label: 'Pago', clase: 'tag-pago' },
+  { key: 'etiqueta_comportamiento', categoria: 'comportamiento', label: 'Comportamiento', clase: 'tag-comportamiento' },
+]
+
+function buscarEtiqueta(etiquetas, slug) {
+  if (!slug) return null
+  return (etiquetas || []).find((e) => e.etiqueta === slug) || null
+}
+
+function textoPorcentaje(pct) {
+  const n = Number(pct) || 0
+  if (n === 0) return '0%'
+  return n > 0 ? `−${n}%` : `+${-n}%`
+}
+
+function porcentajeTotal(cliente, etiquetas) {
+  return RANURAS_ETIQUETA.reduce((acc, r) => {
+    const tag = buscarEtiqueta(etiquetas, cliente?.[r.key])
+    return acc + (tag ? Number(tag.porcentaje) || 0 : 0)
+  }, 0)
+}
+
+// -----------------------------------------------------------------
 // Tab: Resumen
 // -----------------------------------------------------------------
-function TabResumen({ cliente, perfil, credito }) {
+function TabResumen({ cliente, perfil, credito, etiquetas }) {
   if (!cliente) return <StaffEstado tipo="cargando" filas={3} />
 
   return (
@@ -43,7 +70,21 @@ function TabResumen({ cliente, perfil, credito }) {
           <div className="sc-contacto-item"><label>Teléfono</label><span>{cliente.telefono || '—'}</span></div>
           <div className="sc-contacto-item"><label>RIF / Cédula</label><span>{cliente.rif_cedula || '—'}</span></div>
           <div className="sc-contacto-item"><label>Tipo</label><span>{cliente.tipo_usuario || '—'}</span></div>
-          <div className="sc-contacto-item"><label>Etiqueta</label><span>{cliente.etiqueta || '—'}</span></div>
+          <div className="sc-contacto-item">
+            <label>Etiquetas</label>
+            <div className="sc-tags-container" style={{ minHeight: 0 }}>
+              {RANURAS_ETIQUETA.map((r) => {
+                const tag = buscarEtiqueta(etiquetas, cliente[r.key])
+                return tag ? (
+                  <div key={r.key} className={`sc-tag-badge ${r.clase}`}>
+                    {tag.nombre_visible || tag.etiqueta} · {textoPorcentaje(tag.porcentaje)}
+                  </div>
+                ) : null
+              })}
+              {!RANURAS_ETIQUETA.some((r) => buscarEtiqueta(etiquetas, cliente[r.key])) && <div>—</div>}
+              <div className="sc-total-pct">Total: {textoPorcentaje(porcentajeTotal(cliente, etiquetas))}</div>
+            </div>
+          </div>
           <div className="sc-contacto-item"><label>Registro</label><span>{formatFecha(cliente.created_at)}</span></div>
           <div className="sc-contacto-item"><label>Estado</label><span>{cliente.activo ? 'Activo' : 'Inactivo'}</span></div>
         </div>
@@ -528,7 +569,11 @@ function StaffClienteFicha() {
   const [crearModal, setCrearModal] = useState(false)
   const [etiquetas, setEtiquetas] = useState([])
   const [editandoEtiqueta, setEditandoEtiqueta] = useState(false)
-  const [etiquetaDraft, setEtiquetaDraft] = useState('')
+  const [etiquetaDraft, setEtiquetaDraft] = useState({
+    etiqueta_registro: '',
+    etiqueta_pago: '',
+    etiqueta_comportamiento: '',
+  })
   const [guardandoEtiqueta, setGuardandoEtiqueta] = useState(false)
 
   useEffect(() => {
@@ -550,27 +595,36 @@ function StaffClienteFicha() {
   }, [id])
 
   function iniciarEdicionEtiqueta() {
-    setEtiquetaDraft(cliente?.etiqueta || '')
+    setEtiquetaDraft({
+      etiqueta_registro: cliente?.etiqueta_registro || '',
+      etiqueta_pago: cliente?.etiqueta_pago || '',
+      etiqueta_comportamiento: cliente?.etiqueta_comportamiento || '',
+    })
     setEditandoEtiqueta(true)
   }
 
-  async function guardarEtiqueta() {
+  async function guardarEtiquetas() {
     setGuardandoEtiqueta(true)
     try {
-      const { data } = await staffApi.patch(`/staff/clientes/${id}`, { etiqueta: etiquetaDraft })
-      setCliente((prev) => ({ ...prev, etiqueta: data.cliente?.etiqueta ?? null }))
+      const { data } = await staffApi.patch(`/staff/clientes/${id}`, {
+        etiqueta_registro: etiquetaDraft.etiqueta_registro || null,
+        etiqueta_pago: etiquetaDraft.etiqueta_pago || null,
+        etiqueta_comportamiento: etiquetaDraft.etiqueta_comportamiento || null,
+      })
+      const actualizado = data.cliente || {}
+      setCliente((prev) => ({
+        ...prev,
+        etiqueta_registro: actualizado.etiqueta_registro ?? null,
+        etiqueta_pago: actualizado.etiqueta_pago ?? null,
+        etiqueta_comportamiento: actualizado.etiqueta_comportamiento ?? null,
+      }))
       if (Array.isArray(data.etiquetas)) setEtiquetas(data.etiquetas)
       setEditandoEtiqueta(false)
     } catch (err) {
-      avisar(err.response?.data?.error || 'Error al guardar la etiqueta', 'error')
+      avisar(err.response?.data?.error || 'Error al guardar las etiquetas', 'error')
     } finally {
       setGuardandoEtiqueta(false)
     }
-  }
-
-  function porcentajeDeEtiqueta(etiqueta) {
-    const e = (etiquetas || []).find((x) => x.etiqueta === etiqueta)
-    return e ? Number(e.porcentaje) : null
   }
 
   const tabs = [
@@ -607,31 +661,42 @@ function StaffClienteFicha() {
             <h2 className="sc-ficha__nombre">{cliente?.nombre || 'Sin nombre'}</h2>
             <div className="sc-ficha__badges">
               <span className="sc-badge sc-badge--tipo">{cliente?.tipo_usuario}</span>
-              <span className="sc-badge sc-badge--tipo">
-                {cliente?.etiqueta || 'Sin etiqueta'}
-                {(() => {
-                  const p = porcentajeDeEtiqueta(cliente?.etiqueta)
-                  return p != null ? (p > 0 ? ` · −${p}%` : ` · +${-p}%`) : ''
-                })()}
-              </span>
+              {RANURAS_ETIQUETA.map((r) => {
+                const tag = buscarEtiqueta(etiquetas, cliente?.[r.key])
+                return tag ? (
+                  <span key={r.key} className={`sc-tag-badge ${r.clase}`}>
+                    {tag.nombre_visible || tag.etiqueta} · {textoPorcentaje(tag.porcentaje)}
+                  </span>
+                ) : null
+              })}
+              <span className="sc-total-pct">Total: {textoPorcentaje(porcentajeTotal(cliente, etiquetas))}</span>
               {editandoEtiqueta && (
                 <span className="sc-etiqueta-editor">
-                  <select value={etiquetaDraft} onChange={(e) => setEtiquetaDraft(e.target.value)}>
-                    <option value="">— Sin etiqueta —</option>
-                    {etiquetas.map((e) => (
-                      <option key={e.etiqueta} value={e.etiqueta}>
-                        {e.etiqueta} · {Number(e.porcentaje) > 0 ? `−${e.porcentaje}%` : `+${-Number(e.porcentaje)}%`}
-                      </option>
-                    ))}
-                  </select>
-                  <button className="sc-btn" onClick={guardarEtiqueta} disabled={guardandoEtiqueta}>
+                  {RANURAS_ETIQUETA.map((r) => (
+                    <select
+                      key={r.key}
+                      value={etiquetaDraft[r.key] || ''}
+                      onChange={(ev) => setEtiquetaDraft((prev) => ({ ...prev, [r.key]: ev.target.value }))}
+                      aria-label={`Etiqueta de ${r.label}`}
+                    >
+                      <option value="">— {r.label}: sin etiqueta —</option>
+                      {etiquetas
+                        .filter((e) => !e.categoria || e.categoria === r.categoria)
+                        .map((e) => (
+                          <option key={`${r.key}-${e.etiqueta}`} value={e.etiqueta}>
+                            {e.nombre_visible || e.etiqueta} · {textoPorcentaje(e.porcentaje)}
+                          </option>
+                        ))}
+                    </select>
+                  ))}
+                  <button className="sc-btn" onClick={guardarEtiquetas} disabled={guardandoEtiqueta}>
                     {guardandoEtiqueta ? 'Guardando...' : 'Guardar'}
                   </button>
                   <button className="sc-btn sc-btn--outline" onClick={() => setEditandoEtiqueta(false)}>Cancelar</button>
                 </span>
               )}
               {!editandoEtiqueta && (
-                <button className="sc-etiqueta-editar" onClick={iniciarEdicionEtiqueta}><Pencil size={12} /> Cambiar etiqueta</button>
+                <button className="sc-etiqueta-editar" onClick={iniciarEdicionEtiqueta}><Pencil size={12} /> Cambiar etiquetas</button>
               )}
               {!cliente?.activo && <span className="sc-badge sc-badge--bloqueado">Inactivo</span>}
               {credito?.credito_bloqueado && <span className="sc-badge sc-badge--bloqueado">Crédito bloqueado</span>}
@@ -656,7 +721,7 @@ function StaffClienteFicha() {
         <StaffTabs tabs={tabs} activo={tab} onChange={setTab} />
 
         <div style={{ paddingTop: 16 }}>
-          {tab === 'resumen' && <TabResumen cliente={cliente} perfil={perfil} credito={credito} />}
+          {tab === 'resumen' && <TabResumen cliente={cliente} perfil={perfil} credito={credito} etiquetas={etiquetas} />}
           {tab === 'pedidos' && <TabPedidos clienteId={id} />}
           {tab === 'presupuestos' && <TabPresupuestos clienteId={id} crearModal={crearModal} setCrearModal={setCrearModal} />}
           {tab === 'documentos' && <TabDocumentos clienteId={id} />}
