@@ -491,6 +491,8 @@ function Carrito() {
     direccionSeleccionada,
     setDireccionSeleccionada,
     agenciaSeleccionada,
+    setAgenciaSeleccionada,
+    agencias,
     guardarDireccion,
     costoEnvio
   } = useEnvio()
@@ -567,6 +569,12 @@ function Carrito() {
   const excedente = superaLineaCredito && saldoDisponible !== null ? totalConEnvio - saldoDisponible : 0
   const formaPago = creditoApto ? 'credito' : 'contado'
 
+  // La agencia puede venir del selector del carrito o de la "agencia preferida"
+  // guardada en la dirección nacional. Sin este respaldo, una dirección ya
+  // guardada (la que el contexto autoselecciona) bloqueaba la compra porque
+  // `agenciaSeleccionada` nunca se seteaba.
+  const agenciaEfectiva = agenciaSeleccionada || direccionSeleccionada?.agencia_preferida || ''
+
   // El panel de envío se mantiene abierto mientras el tipo seleccionado exija
   // una dirección y aún no se haya elegido (derivado, evita setState-en-effect).
   const envioAbierto = envioExpandido || (opcionActual?.requiereDireccion && !direccionSeleccionada)
@@ -601,6 +609,7 @@ function Carrito() {
 
   const handleSeleccionarDireccion = (dir) => {
     setDireccionSeleccionada(dir)
+    setAgenciaSeleccionada(dir?.agencia_preferida || '')
     setEnvioExpandido(false) // Colapsar después de seleccionar
   }
 
@@ -618,7 +627,7 @@ function Carrito() {
       return
     }
 
-    if (opcionActual?.requiereAgencia && !agenciaSeleccionada) {
+    if (opcionActual?.requiereAgencia && !agenciaEfectiva) {
       setError('Debes seleccionar una agencia de envío')
       setEnvioExpandido(true)
       return
@@ -662,7 +671,7 @@ function Carrito() {
       })),
       tipo_envio: tipoEnvio,
       direccion_envio_id: direccionSeleccionada?.id || null,
-      agencia_envio: agenciaSeleccionada || null,
+      agencia_envio: agenciaEfectiva || null,
       forma_pago: formaPago,
       sub_usuario_id: subUsuarioIdResuelto,
       codigo_cupon: cuponAplicado?.codigo || null,
@@ -765,6 +774,27 @@ function Carrito() {
                       onAgregar={guardarDireccion}
                       tipo={opcionActual.tipoDireccion}
                     />
+                  )}
+
+                  {opcionActual?.requiereAgencia && (
+                    <div className="direccion-input-group carrito-agencia">
+                      <label htmlFor="carrito-agencia">Agencia de envío *</label>
+                      <select
+                        id="carrito-agencia"
+                        className="direccion-select-agencia"
+                        value={agenciaEfectiva}
+                        onChange={(e) => setAgenciaSeleccionada(e.target.value)}
+                      >
+                        <option value="">Seleccionar agencia</option>
+                        {agencias.map((agencia) => (
+                          <option key={agencia} value={agencia}>{agencia}</option>
+                        ))}
+                        <option value="Otro">Otro</option>
+                      </select>
+                      <p className="carrito-agencia__ayuda">
+                        El envío se paga al recibir en destino. Elige la agencia donde retiras el pedido.
+                      </p>
+                    </div>
                   )}
                 </div>
               )}
