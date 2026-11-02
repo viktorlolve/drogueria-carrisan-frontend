@@ -17,7 +17,9 @@ function StaffClientes({ departamento = 'comercial', activo = 'clientes', titulo
 
   const [buscar, setBuscar] = useState('')
   const [tipo, setTipo] = useState('')
-  const [etiqueta, setEtiqueta] = useState('')
+  const [etiqueta_registro, setEtiquetaRegistro] = useState('')
+  const [etiqueta_pago, setEtiquetaPago] = useState('')
+  const [etiqueta_comportamiento, setEtiquetaComportamiento] = useState('')
   const [etiquetas, setEtiquetas] = useState([])
   const debounceRef = useRef(null)
   const peticion = useRef(0)
@@ -31,7 +33,9 @@ function StaffClientes({ departamento = 'comercial', activo = 'clientes', titulo
       const params = { pagina: pag, por_pagina: 20 }
       if (buscar.trim().length >= 2) params.buscar = buscar.trim()
       if (tipo) params.tipo = tipo
-      if (etiqueta) params.etiqueta = etiqueta
+      if (etiqueta_registro) params.etiqueta_registro = etiqueta_registro
+      if (etiqueta_pago) params.etiqueta_pago = etiqueta_pago
+      if (etiqueta_comportamiento) params.etiqueta_comportamiento = etiqueta_comportamiento
 
       const { data } = await staffApi.get('/staff/clientes', { params })
       if (id !== peticion.current) return
@@ -48,7 +52,7 @@ function StaffClientes({ departamento = 'comercial', activo = 'clientes', titulo
     } finally {
       if (id === peticion.current) setCargando(false)
     }
-  }, [buscar, tipo, etiqueta])
+  }, [buscar, tipo, etiqueta_registro, etiqueta_pago, etiqueta_comportamiento])
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
@@ -58,7 +62,7 @@ function StaffClientes({ departamento = 'comercial', activo = 'clientes', titulo
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
-  }, [buscar, tipo, etiqueta, cargar])
+  }, [buscar, tipo, etiqueta_registro, etiqueta_pago, etiqueta_comportamiento, cargar])
 
   return (
     <LayoutDepartamento departamento={departamento} activo={activo} titulo={titulo}>
@@ -76,13 +80,51 @@ function StaffClientes({ departamento = 'comercial', activo = 'clientes', titulo
           <option value="profesional">Profesional</option>
           <option value="honorifico">Honorífico</option>
         </select>
-        <select className="sc-select" value={etiqueta} onChange={(e) => setEtiqueta(e.target.value)}>
-          <option value="">Todas las etiquetas</option>
-          {etiquetas.map((e) => (
-            <option key={e.etiqueta} value={e.etiqueta}>
-              {e.etiqueta} · {Number(e.porcentaje) > 0 ? `−${e.porcentaje}%` : `+${-Number(e.porcentaje)}%`}
-            </option>
-          ))}
+        
+        {/* Three tag dropdowns */}
+        <select 
+          className="sc-select" 
+          value={etiqueta_registro} 
+          onChange={(e) => setEtiquetaRegistro(e.target.value)}
+        >
+          <option value="">Todos los registros</option>
+          {etiquetas
+            .filter(tag => tag.categoria === 'registro')
+            .map((e) => (
+              <option key={e.etiqueta} value={e.etiqueta}>
+                {e.nombre_visible} · {Number(e.porcentaje) > 0 ? `−${e.porcentaje}%` : `+${-Number(e.porcentaje)}%`}
+              </option>
+            ))}
+        </select>
+
+        <select 
+          className="sc-select" 
+          value={etiqueta_pago} 
+          onChange={(e) => setEtiquetaPago(e.target.value)}
+        >
+          <option value="">Todos los pagos</option>
+          {etiquetas
+            .filter(tag => tag.categoria === 'pago')
+            .map((e) => (
+              <option key={e.etiqueta} value={e.etiqueta}>
+                {e.nombre_visible} · {Number(e.porcentaje) > 0 ? `−${e.porcentaje}%` : `+${-Number(e.porcentaje)}%`}
+              </option>
+            ))}
+        </select>
+
+        <select 
+          className="sc-select" 
+          value={etiqueta_comportamiento} 
+          onChange={(e) => setEtiquetaComportamiento(e.target.value)}
+        >
+          <option value="">Todos los comportamientos</option>
+          {etiquetas
+            .filter(tag => tag.categoria === 'comportamiento')
+            .map((e) => (
+              <option key={e.etiqueta} value={e.etiqueta}>
+                {e.nombre_visible} · {Number(e.porcentaje) > 0 ? `−${e.porcentaje}%` : `+${-Number(e.porcentaje)}%`}
+              </option>
+            ))}
         </select>
       </div>
 
@@ -102,7 +144,8 @@ function StaffClientes({ departamento = 'comercial', activo = 'clientes', titulo
                   <th>RIF / Cédula</th>
                   <th>Teléfono</th>
                   <th>Tipo</th>
-                  <th>Etiqueta</th>
+                  <th>Etiquetas</th>
+                  <th>Total</th>
                   <th>Línea crédito</th>
                   <th>Deuda</th>
                   <th>Crédito</th>
@@ -119,17 +162,49 @@ function StaffClientes({ departamento = 'comercial', activo = 'clientes', titulo
                     <td>{c.rif_cedula || '—'}</td>
                     <td>{c.telefono || '—'}</td>
                     <td><span className="sc-badge sc-badge--tipo">{c.tipo_usuario || '—'}</span></td>
+                    {/* Three tags display */}
                     <td>
-                      {c.etiqueta ? (
-                        <span className="sc-badge sc-badge--tipo">
-                          {c.etiqueta}
-                          {(() => {
-                            const eObj = etiquetas.find((x) => x.etiqueta === c.etiqueta)
-                            const p = eObj ? Number(eObj.porcentaje) : null
-                            return p != null ? (p > 0 ? ` · −${p}%` : ` · +${-p}%`) : ''
-                          })()}
-                        </span>
-                      ) : '—'}
+                      <div className="sc-tags-container">
+                        {c.etiqueta_registro && (
+                          <span className="sc-tag-badge tag-registro">
+                            {c.etiqueta_registro}
+                            {(() => {
+                              const tag = etiquetas.find(t => t.etiqueta === c.etiqueta_registro)
+                              return tag ? (Number(tag.porcentaje) > 0 ? ` · −${tag.porcentaje}%` : ` · +${-Number(tag.porcentaje)}%`) : ''
+                            })()}
+                          </span>
+                        )}
+                        {c.etiqueta_pago && (
+                          <span className="sc-tag-badge tag-pago">
+                            {c.etiqueta_pago}
+                            {(() => {
+                              const tag = etiquetas.find(t => t.etiqueta === c.etiqueta_pago)
+                              return tag ? (Number(tag.porcentaje) > 0 ? ` · −${tag.porcentaje}%` : ` · +${-Number(tag.porcentaje)}%`) : ''
+                            })()}
+                          </span>
+                        )}
+                        {c.etiqueta_comportamiento && (
+                          <span className="sc-tag-badge tag-comportamiento">
+                            {c.etiqueta_comportamiento}
+                            {(() => {
+                              const tag = etiquetas.find(t => t.etiqueta === c.etiqueta_comportamiento)
+                              return tag ? (Number(tag.porcentaje) > 0 ? ` · −${tag.porcentaje}%` : ` · +${-Number(tag.porcentaje)}%`) : ''
+                            })()}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    {/* Total percentage display */}
+                    <td className="sc-total-pct">
+                      {(() => {
+                        const total = (
+                          (c.etiqueta_registro ? Number(etiquetas.find(t => t.etiqueta === c.etiqueta_registro)?.porcentaje || 0) : 0) +
+                          (c.etiqueta_pago ? Number(etiquetas.find(t => t.etiqueta === c.etiqueta_pago)?.porcentaje || 0) : 0) +
+                          (c.etiqueta_comportamiento ? Number(etiquetas.find(t => t.etiqueta === c.etiqueta_comportamiento)?.porcentaje || 0) : 0)
+                        )
+                        const displayTotal = total === 0 ? '0%' : (total > 0 ? `−${total}%` : `+${-total}%`)
+                        return `Total: ${displayTotal}`
+                      })()}
                     </td>
                     <td className="sc-money">{c.linea_credito > 0 ? formatearUSD(c.linea_credito) : '—'}</td>
                     <td className={`sc-money ${c.deuda_actual > 0 ? 'sc-money--warn' : ''}`}>
