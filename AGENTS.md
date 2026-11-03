@@ -392,11 +392,37 @@ Al agregar una sección, creá el **item en `NAV_ADMIN`** y su **`<Route>` en `A
 - Service worker en src/sw.js
 - Workbox para caching (precaching + strategies)
 - Manifest: Drogueria Carrisan, theme #0052DC
-- **PWA ÚNICA (decidido 2026-09-28, Plan A).** Hay un solo HTML (`index.html`), un solo manifest (`manifest.webmanifest`, `scope: "/"`, `start_url: "/"`), un solo service worker (`sw.js`, scope `/`) y **un solo ícono instalado** para todos, staff incluido. La "PWA staff" anterior (`staff.html` + `public/manifest-staff.json` + `staff-*.png`) fue eliminada: era imposible de instalar de forma fiable (mismo origen = un solo SW = una sola app instalable) y `staff.html` acababa con **dos** `<link rel="manifest">`, lo que hacía la instalabilidad impredecible. `/staff/*` se sirve por el catch-all rewrite de `vercel.json` → `index.html`, y `App.jsx` enruta las rutas staff normalmente.
+- **PWA ÚNICA (decidido 2026-09-28, Plan A).** Hay un solo HTML (`index.html`), un solo manifest (`manifest.webmanifest`, `scope: "/"`, `start_url: "/"`), un solo service worker (`sw.js`, scope `/`) y **un solo ícono instalado** para todos, staff incluido. La "PWA staff" anterior (`staff.html` + `public/manifest-staff.json` + `staff-*.png`) fue eliminada: era imposible de instalar de forma fiable (mismo origen = un solo SW = una sola app instalable) y `staff.html` acababa con **dos** `<link rel="manifest">`, lo que hacía la instalabilidad impredecible. `/staff/*` se sirve por el rewrite SPA de `vercel.json` → `index.html` (**catch-all con excepción de `/assets/`**, ver la sección siguiente), y `App.jsx` enruta las rutas staff normalmente.
   - El personal entra por el link "Acceso personal" del login de clientes (`src/pages/Login.jsx:311`) o por `/staff/login`, y **si tiene sesión staff pero no sesión de cliente, abrir la app instalada lo manda directo a `/staff/dashboard`** (`RootRedirect.jsx`). Con ambas sesiones gana la de cliente (comportamiento de siempre).
   - `PwaScopeSwitcher` (montado en `App.jsx:157`) SOLO ajusta `document.title`, `meta[name="theme-color"]` (azul `#0052DC` en tienda / azul marino `#1B4B8F` en staff) y el favicon de la pestaña. **Prohibido volver a tocar el manifest o el `apple-touch-icon` desde JS**: el navegador ya parseó el manifest al cargar (un `setAttribute` posterior no cambia la instalabilidad) y el `apple-touch-icon` es lo que iOS congela como ícono instalado — swapearlo daría ícono staff en iOS y de tienda en Android.
   - Regresión: `node scripts/verificar-pwa.mjs` (tras `npx vite build`) falla si reaparece un segundo manifest, `staff.html`, iconos `staff-*`, un segundo service worker, o el rewrite `/staff → staff.html` de `vercel.json`.
   - Push funciona con esta PWA única: la suscripción vive en el `PushManager` del navegador, no en el service worker, así que sobrevive a los deploys (`registerType: 'autoUpdate'` + `vercel.json` sin bloque `headers` → `sw.js` se revalida siempre).
+
+## Deploy en Vercel — el rewrite SPA excluye `/assets/` (IMPLEMENTADO — 2026-11-03)
+
+`vercel.json` **NO** puede rewritear todo a `index.html`: el rewrite de `/assets/*` combinado con la
+cabecera `Cache-Control: public, max-age=31536000, immutable` **envenena el cache del navegador**.
+
+- **Síntoma real**: `Unable to preload CSS for https://<dominio>/assets/StaffClientes-<hash>.css`
+  (y la página del staff quedaba en blanco) aunque el CSS **existía y se servía bien** (`200 text/css`)
+  y el build local producía exactamente el mismo hash que el desplegado.
+- **Mecanismo**: si un asset todavía no está propagado (o el deploy cambia a mitad), la petición a
+  `/assets/<hash>.css` **no encuentra archivo** → el catch-all la rewritea a `index.html` → responde
+  **`200 text/html`** con la cabecera de `/assets/(.*)` → `immutable` por **1 año**. El navegador guarda
+  HTML como si fuera el CSS de ese hash. A partir de ahí ese navegador está roto **para siempre** en ese
+  hash: ni un reload normal lo arregla (hay que "Vaciar caché y recargar" o borrar datos del sitio).
+- **Fix (raíz)**: `"source": "/((?!assets/).*)"` — con `rewrites`, el regex de Vercel **necesita ir
+  envuelto en un grupo de captura** (docs de `vercel.json`). Así un asset inexistente **404ea** en vez de
+  devolver HTML, y una ruta de la SPA (`/staff/clientes`, `/catalogo`, …) sigue cayendo en `index.html`.
+- **Verificación**: `node -e "new RegExp('^'+require('./vercel.json').rewrites[0].source+'$')"` →
+  `/assets/x.css` **no** matchea, `/staff/clientes` y `/` **sí**.
+- **Regla para el futuro**: nunca vuelvas a poner `"/(.*)"` como catch-all; y no agregues el bloque
+  `headers` de `immutable` sin la exclusión (el 404 de un asset queda cacheado igual, pero un 404 de un
+  hash no rompe nada; un **HTML** cacheado bajo un `.css` sí).
+- **Un navegador ya envenenado no se cura con un reload** (la entrada es `immutable`): DevTools →
+  Application → *Clear site data*, o "Empty cache and hard reload", o una pestaña de incógnito. Se
+  "auto-cura" solo cuando el deploy cambia el hash de ese chunk (el nombre del archivo nuevo no está en
+  el cache viejo).
 
 ## Autenticacion de personal interno (staff) — Frontend
 
