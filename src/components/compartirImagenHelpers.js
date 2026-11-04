@@ -73,6 +73,15 @@ export const PIE_PRECIO_GAP = 26 // separación precio -> original
 export const PIE_PRECIO_MARGEN = 6 // aire entre la fila y la pill (absorbe el redondeo de la fuente)
 export const PIE_PRECIO_KP_MIN = 0.7 // piso del autofit de la fila
 
+// C.1b Zona izquierda de la franja (todo menos el QR), para centrar el precio dentro
+// del espacio libre en vez de en los 1080px totales — el QR (864..1008) + su leyenda
+// (que arranca por ahí de 726..846) ya ocupan la derecha. X1=680 deja aire de sobra.
+export const PIE_ZONA_X0 = PAD
+export const PIE_ZONA_X1 = 680
+export const PIE_ZONA_W = PIE_ZONA_X1 - PIE_ZONA_X0
+export const PIE_ZONA_CX = PIE_ZONA_X0 + PIE_ZONA_W / 2
+export const PIE_PILL_GAP = 28 // separación entre el precio (o el tachado) y la pill "Ahorras"
+
 // D. Tira de contacto
 export const TIRA_Y = 1270
 export const TIRA_H = 80
@@ -139,8 +148,10 @@ export function formatearDescuento(descuento) {
 }
 
 // 54 px para textos cortos (-25%), 38 px para los largos (-$12.50)
+// Sube de 54/38 a 70/48: al quitar la palabra "OFF" de abajo, el número queda solo
+// y puede tomar más espacio del badge.
 export function tamanoTextoDescuento(texto) {
-  return String(texto || '').length > 5 ? 38 : 54
+  return String(texto || '').length > 5 ? 48 : 70
 }
 
 /* ---------------- checks y filas ---------------- */
@@ -223,6 +234,23 @@ export function escalaFilaPrecio(
   const suma = anchoPrecio + anchoOriginal
   if (!(suma > 0)) return 1
   const disponible = (ancho - anchoPill) / 2 - x - gap - margen
+  return Math.min(1, Math.max(min, disponible / suma))
+}
+
+// Igual que escalaFilaPrecio, pero para el diseño centrado en PIE_ZONA (precio + tachado
+// + pill como un solo grupo, en vez de precio a la izquierda y pill centrada en el lienzo
+// completo). La pill tampoco se encoge acá; ocupa su ancho fijo + PIE_PILL_GAP antes de
+// calcular cuánto le queda al precio + tachado para caber en PIE_ZONA_W.
+export function escalaFilaPrecioZona(
+  anchoPrecio,
+  anchoOriginal,
+  anchoPill,
+  { ancho = PIE_ZONA_W, gapOrig = PIE_PRECIO_GAP, gapPill = PIE_PILL_GAP, min = PIE_PRECIO_KP_MIN } = {}
+) {
+  const suma = anchoPrecio + anchoOriginal
+  if (!(suma > 0)) return 1
+  const fijo = (anchoOriginal ? gapOrig : 0) + (anchoPill ? gapPill + anchoPill : 0)
+  const disponible = ancho - fijo
   return Math.min(1, Math.max(min, disponible / suma))
 }
 

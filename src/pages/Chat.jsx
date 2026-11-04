@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Send, MessageCircle, Package, ArrowLeft } from 'lucide-react'
+import { Send, MessageCircle, Package, ArrowLeft, Clock } from 'lucide-react'
 import LayoutPaginaPrincipal from '../components/paginas-principales/Layoutpaginaprincipal'
 import { NAV_UNIFICADO } from '../components/paginas-principales/NavUnificado'
 import { useAuth } from '../context/AuthContext'
@@ -84,10 +84,40 @@ function ChatCentro() {
   const [cargandoMensajes, setCargandoMensajes] = useState(false)
   const [texto, setTexto] = useState('')
   const [enviando, setEnviando] = useState(false)
+  const [panelEmojisAbierto, setPanelEmojisAbierto] = useState(false)
   const [vistaMovil, setVistaMovil] = useState('lista') // 'lista' | 'chat'
   const scrollRef = useRef(null)
 
   const remitenteTipo = user?.es_admin ? 'admin' : 'cliente'
+
+  // ---------------------------------------------------------------
+  // Respuestas rápidas y selector de emojis
+  // ---------------------------------------------------------------
+  const RESPUESTAS_RAPIDAS = [
+    'Hola, ¿en qué puedo ayudarte?',
+    '¿Cuál es el precio de este producto?',
+    '¿Dónde está mi pedido?',
+    'Necesito una factura',
+  ]
+
+  const EMOJIS = [
+    '😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇',
+    '🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚',
+    '😋','😛','😜','😝','🤪','🤨','🧐','🤓','😎','🥸',
+    '🤩','🥳','😏','😒','😞','😔','😟','😕','🙁','😮',
+    '😳','😨','😰','😥','😢','😭','😱','😖','😣','😩',
+    '😫','😤','😠','😡','🤬','😷','🤒','🤕','🤢','🤮',
+    '🤧','🥵','🥶','🥴','😵','🤯','🤠','😴','🤤','😺',
+  ]
+
+  const insertarEmoji = (emoji) => {
+    setTexto((prev) => prev + emoji)
+    setPanelEmojisAbierto(false)
+  }
+
+  const usarRespuestaRapida = (respuesta) => {
+    setTexto(respuesta)
+  }
 
   const cargarConversaciones = useCallback(async () => {
     try {
@@ -241,6 +271,18 @@ function ChatCentro() {
                 </div>
               </header>
 
+              <div className="chat-panel__aviso">
+                <Clock size={16} />
+                <div className="chat-panel__aviso-cuerpo">
+                  <p className="chat-panel__aviso-titulo">Tiempo estimado de respuesta</p>
+                  <p className="chat-panel__aviso-texto">
+                    En horario laboral respondemos a la brevedad. Según tu conexión a internet, es
+                    muy posible que tengas que recargar la página para visualizar los nuevos
+                    mensajes.
+                  </p>
+                </div>
+              </div>
+
               <div className="chat-panel__mensajes" ref={scrollRef}>
                 {cargandoMensajes ? (
                   <div className="chat-panel__vacio">Cargando mensajes...</div>
@@ -255,15 +297,57 @@ function ChatCentro() {
                 )}
               </div>
 
+              {/* Barra de respuestas rápidas */}
+              <div className="chat-panel__respuestas-rapidas">
+                {RESPUESTAS_RAPIDAS.map((respuesta) => (
+                  <button
+                    key={respuesta}
+                    type="button"
+                    className="chat-panel__respuesta-rapida"
+                    onClick={() => usarRespuestaRapida(respuesta)}
+                    disabled={enviando}
+                  >
+                    {respuesta}
+                  </button>
+                ))}
+              </div>
+
               <form className="chat-panel__form" onSubmit={enviarMensaje}>
-                <input
-                  type="text"
-                  className="chat-panel__input"
-                  placeholder="Escribe un mensaje..."
-                  value={texto}
-                  onChange={(e) => setTexto(e.target.value)}
-                  disabled={enviando}
-                />
+                <div className="chat-panel__input-wrapper">
+                  <input
+                    type="text"
+                    className="chat-panel__input"
+                    placeholder="Escribe un mensaje..."
+                    value={texto}
+                    onChange={(e) => setTexto(e.target.value)}
+                    disabled={enviando}
+                  />
+                  <button
+                    type="button"
+                    className="chat-panel__emoji-btn"
+                    onClick={() => setPanelEmojisAbierto(!panelEmojisAbierto)}
+                    disabled={enviando}
+                    aria-label="Selector de emojis"
+                  >
+                    😊
+                  </button>
+                  {panelEmojisAbierto && (
+                    <div className="chat-panel__emoji-panel">
+                      {EMOJIS.map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          className="chat-panel__emoji"
+                          onClick={() => insertarEmoji(emoji)}
+                          disabled={enviando}
+                          aria-label={emoji}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <button type="submit" className="chat-panel__enviar" disabled={!texto.trim() || enviando}>
                   <Send size={18} />
                 </button>

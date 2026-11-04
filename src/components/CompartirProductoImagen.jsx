@@ -66,7 +66,7 @@ import {
   altoUltimaFila,
   altoBloqueFilas,
   escalaAutofit,
-  escalaFilaPrecio,
+  escalaFilaPrecioZona,
   altoFilasDisponible,
   formatearDescuento,
   tamanoTextoDescuento,
@@ -76,6 +76,8 @@ import {
   PIE_ORIG_FUENTE,
   PIE_PILL_FUENTE,
   PIE_PRECIO_GAP,
+  PIE_ZONA_CX,
+  PIE_PILL_GAP,
 } from './compartirImagenHelpers'
 import './CompartirProductoImagen.css'
 
@@ -112,6 +114,26 @@ function rr(ctx, x, y, w, h, r) {
 
 function conEspaciado(ctx, px) {
   if ('letterSpacing' in ctx) ctx.letterSpacing = `${px}px`
+}
+
+// Traza un "sticker" circular de borde festoneado (ondas suaves), para el badge de
+// descuento — reemplaza al círculo liso + anillo punteado del diseño anterior. `puntas`
+// controla cuántas ondas tiene el borde y `amplitud` qué tan marcadas son (fracción de r).
+function trazarBurbuja(ctx, cx, cy, r, puntas = 20, amplitud = 0.045) {
+  const puntos = []
+  for (let i = 0; i <= puntas; i++) {
+    const ang = (i / puntas) * Math.PI * 2
+    const rad = r * (1 + (i % 2 === 0 ? amplitud : -amplitud))
+    puntos.push([cx + Math.cos(ang) * rad, cy + Math.sin(ang) * rad])
+  }
+  ctx.beginPath()
+  ctx.moveTo(puntos[0][0], puntos[0][1])
+  for (let i = 1; i < puntos.length; i++) {
+    const [x0, y0] = puntos[i - 1]
+    const [x1, y1] = puntos[i]
+    ctx.quadraticCurveTo(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2)
+  }
+  ctx.closePath()
 }
 
 function envolverTexto(ctx, texto, maxAncho, maxLineas) {
@@ -473,38 +495,37 @@ async function renderizarTarjeta(canvas, { producto, detalles, imagenUrl, tasaVe
     dibujarCapsula(ctx, PRODUCTO_CX, prodCY, 380, 140, -0.35, 1, '#C7D2E4')
   }
 
-  /* ---- Insignia de descuento (sobre la zona del producto) ---- */
+  /* ---- Insignia de descuento (sticker festoneado, sobre la zona del producto) ---- */
   if (disponible && conDescuento) {
     const txt = formatearDescuento(producto.descuento_activo)
     const bx = BADGE_CX
     const by = badgeCY
+    const tam = tamanoTextoDescuento(txt)
+
+    // Relleno degradado (da volumen; antes era un ORO plano)
     ctx.save()
     ctx.shadowColor = 'rgba(180, 100, 0, 0.35)'
     ctx.shadowBlur = 30
     ctx.shadowOffsetY = 12
-    ctx.beginPath()
-    ctx.arc(bx, by, BADGE_R, 0, Math.PI * 2)
-    ctx.fillStyle = ORO
+    trazarBurbuja(ctx, bx, by, BADGE_R)
+    const gBadge = ctx.createLinearGradient(bx, by - BADGE_R, bx, by + BADGE_R)
+    gBadge.addColorStop(0, '#FFC24D')
+    gBadge.addColorStop(1, ORO)
+    ctx.fillStyle = gBadge
     ctx.fill()
     ctx.restore()
-    // Anillo interior punteado (se conserva del diseño anterior)
-    ctx.beginPath()
-    ctx.arc(bx, by, BADGE_ANILLO_R, 0, Math.PI * 2)
-    ctx.lineWidth = 3
-    ctx.strokeStyle = 'rgba(26,26,58,0.28)'
-    ctx.setLineDash([3, 9])
-    ctx.lineCap = 'round'
+
+    // Anillo interior sutil (reemplaza el punteado anterior)
+    trazarBurbuja(ctx, bx, by, BADGE_ANILLO_R)
+    ctx.lineWidth = 2
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)'
     ctx.stroke()
-    ctx.setLineDash([])
-    ctx.lineCap = 'butt'
+
+    // Solo el número, ya sin "OFF" debajo — centrado en el sticker
     ctx.fillStyle = INDIGO
     ctx.textAlign = 'center'
-    ctx.font = `800 ${tamanoTextoDescuento(txt)}px ${F_NUM}`
-    ctx.fillText(txt, bx, by + 12)
-    ctx.font = `800 22px ${F_NUM}`
-    conEspaciado(ctx, 4)
-    ctx.fillText('OFF', bx, by + 44)
-    conEspaciado(ctx, 0)
+    ctx.font = `800 ${tam}px ${F_NUM}`
+    ctx.fillText(txt, bx, by + Math.round(tam * 0.32))
     ctx.textAlign = 'left'
   }
 
@@ -612,25 +633,29 @@ async function renderizarTarjeta(canvas, { producto, detalles, imagenUrl, tasaVe
     ctx.font = `700 20px ${F_TEXTO}`
     conEspaciado(ctx, 3)
     ctx.fillStyle = 'rgba(255,255,255,0.72)'
-    ctx.fillText('PRECIO', PAD + 4, 1080)
+    ctx.textAlign = 'center'
+    ctx.fillText('PRECIO', PIE_ZONA_CX, 1080)
+    ctx.textAlign = 'left'
     conEspaciado(ctx, 0)
 
-    // Fila de precio. La pill "Ahorras" va centrada y NO se encoge, así que el precio
-    // (y el original tachado) se escalan juntos para no montarse sobre ella — ver
-    // escalaFilaPrecio en compartirImagenHelpers.js (defecto medido con precios altos).
+    // Fila de precio + tachado + pill "Ahorras", como UN SOLO grupo centrado en la zona
+    // libre de la franja (PIE_ZONA_CX) — antes el precio arrancaba pegado a PAD y la
+    // pill se centraba aparte en todo el lienzo. La pill sigue sin encogerse; ver
+    // escalaFilaPrecioZona en compartirImagenHelpers.js.
     const txtPrecio = fmtUsd(precio)
     const orig = conDescuento ? fmtUsd(producto.precio_original_usd) : null
     const ahorro = conDescuento ? Number(producto.precio_original_usd) - precio : 0
     const conPill = !!orig && ahorro > 0
+    const textoPill = conPill ? `Ahorras ${fmtUsd(ahorro)}` : ''
 
     // Ancho de la pill con su fuente fija (no participa del autofit)
     let anchoPill = 0
     if (conPill) {
       ctx.font = `800 ${PIE_PILL_FUENTE}px ${F_NUM}`
-      anchoPill = ctx.measureText(`Ahorras ${fmtUsd(ahorro)}`).width + 44
+      anchoPill = ctx.measureText(textoPill).width + 44
     }
 
-    // Anchos naturales de precio y original para calcular el factor
+    // Anchos naturales de precio y original para calcular el factor de autofit
     ctx.font = `800 ${PIE_PRECIO_FUENTE}px ${F_NUM}`
     let anchoPrecio = ctx.measureText(txtPrecio).width
     let anchoOrig = 0
@@ -638,51 +663,72 @@ async function renderizarTarjeta(canvas, { producto, detalles, imagenUrl, tasaVe
       ctx.font = `600 ${PIE_ORIG_FUENTE}px ${F_NUM}`
       anchoOrig = ctx.measureText(orig).width
     }
-    const kp = conPill ? escalaFilaPrecio(anchoPrecio, anchoOrig, anchoPill) : 1
+    const kp = orig || conPill ? escalaFilaPrecioZona(anchoPrecio, anchoOrig, anchoPill) : 1
+
+    // Anchos ya escalados, para armar el grupo y centrarlo
+    ctx.font = `800 ${Math.round(PIE_PRECIO_FUENTE * kp)}px ${F_NUM}`
+    anchoPrecio = ctx.measureText(txtPrecio).width
+    if (orig) {
+      ctx.font = `600 ${Math.round(PIE_ORIG_FUENTE * kp)}px ${F_NUM}`
+      anchoOrig = ctx.measureText(orig).width
+    }
+
+    const anchoGrupo =
+      anchoPrecio + (orig ? PIE_PRECIO_GAP + anchoOrig : 0) + (conPill ? PIE_PILL_GAP + anchoPill : 0)
+    let gx = PIE_ZONA_CX - anchoGrupo / 2
 
     ctx.font = `800 ${Math.round(PIE_PRECIO_FUENTE * kp)}px ${F_NUM}`
     ctx.fillStyle = '#FFFFFF'
-    ctx.fillText(txtPrecio, PAD, 1167)
-    anchoPrecio = ctx.measureText(txtPrecio).width
+    ctx.fillText(txtPrecio, gx, 1167)
+    gx += anchoPrecio
 
     if (orig) {
+      gx += PIE_PRECIO_GAP
       ctx.font = `600 ${Math.round(PIE_ORIG_FUENTE * kp)}px ${F_NUM}`
-      const ox = PAD + anchoPrecio + PIE_PRECIO_GAP
       ctx.fillStyle = 'rgba(255,255,255,0.55)'
-      ctx.fillText(orig, ox, 1160)
-      const ow = ctx.measureText(orig).width
+      ctx.fillText(orig, gx, 1160)
       ctx.beginPath()
-      ctx.moveTo(ox - 2, 1150)
-      ctx.lineTo(ox + ow + 2, 1150)
+      ctx.moveTo(gx - 2, 1150)
+      ctx.lineTo(gx + anchoOrig + 2, 1150)
       ctx.strokeStyle = 'rgba(255,255,255,0.75)'
       ctx.lineWidth = 3
       ctx.stroke()
+      gx += anchoOrig
     }
 
-    // Referencia en Bs (si hay tasa)
-    if (tasaVes) {
-      ctx.font = `700 20px ${F_TEXTO}`
-      conEspaciado(ctx, 3)
-      ctx.fillStyle = 'rgba(255,255,255,0.66)'
-      ctx.fillText('REF.', PAD + 4, 1218)
-      const anchoREF = ctx.measureText('REF.').width
-      conEspaciado(ctx, 0)
-      ctx.font = `700 24px ${F_NUM}`
-      ctx.fillStyle = 'rgba(255,255,255,0.9)'
-      ctx.fillText(fmtBs(precio * Number(tasaVes)), PAD + anchoREF + 12, 1218)
-    }
-
-    // Pill de ahorro (centrada en la franja; ancho ya calculado arriba)
     if (conPill) {
-      const t = `Ahorras ${fmtUsd(ahorro)}`
-      rr(ctx, (W - anchoPill) / 2, 1096, anchoPill, 46, 23)
+      gx += PIE_PILL_GAP
+      rr(ctx, gx, 1096, anchoPill, 46, 23)
       ctx.fillStyle = '#FFFFFF'
       ctx.fill()
       ctx.font = `800 ${PIE_PILL_FUENTE}px ${F_NUM}`
       ctx.fillStyle = AZUL
       ctx.textAlign = 'center'
-      ctx.fillText(t, W / 2, 1096 + 32)
+      ctx.fillText(textoPill, gx + anchoPill / 2, 1096 + 32)
       ctx.textAlign = 'left'
+    }
+
+    // Referencia en tasa BCV (antes "REF."), también centrada en la zona de precio
+    if (tasaVes) {
+      const etiquetaBcv = 'BCV'
+      const montoBcv = fmtBs(precio * Number(tasaVes))
+
+      ctx.font = `700 20px ${F_TEXTO}`
+      conEspaciado(ctx, 3)
+      const anchoEtiqueta = ctx.measureText(etiquetaBcv).width
+      conEspaciado(ctx, 0)
+      ctx.font = `700 24px ${F_NUM}`
+      const anchoMonto = ctx.measureText(montoBcv).width
+      const bx0 = PIE_ZONA_CX - (anchoEtiqueta + 12 + anchoMonto) / 2
+
+      ctx.font = `700 20px ${F_TEXTO}`
+      conEspaciado(ctx, 3)
+      ctx.fillStyle = 'rgba(255,255,255,0.66)'
+      ctx.fillText(etiquetaBcv, bx0, 1218)
+      conEspaciado(ctx, 0)
+      ctx.font = `700 24px ${F_NUM}`
+      ctx.fillStyle = 'rgba(255,255,255,0.9)'
+      ctx.fillText(montoBcv, bx0 + anchoEtiqueta + 12, 1218)
     }
 
     // QR al producto (si el generador falló, no se promete un código que no existe).

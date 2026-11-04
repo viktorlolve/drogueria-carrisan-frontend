@@ -21,6 +21,7 @@ import {
   altoBloqueFilas,
   escalaAutofit,
   escalaFilaPrecio,
+  escalaFilaPrecioZona,
   centrarZonaMedia,
   posicionLeyendaQR,
   armarTiraContacto,
@@ -30,6 +31,7 @@ import {
   ALTO_SEPARADOR,
   MEDIA_H,
   PIE_Y,
+  PIE_ZONA_W,
   QR_X,
   QR_Y,
   QR_TAM,
@@ -103,11 +105,11 @@ test('formatearDescuento: porcentaje y monto fijo (no miente el símbolo)', () =
   assert.equal(formatearDescuento(null), '')
 })
 
-test('tamanoTextoDescuento: 54 px hasta 5 caracteres, 38 px si es más largo', () => {
-  assert.equal(tamanoTextoDescuento('-25%'), 54)      // 4 caracteres
-  assert.equal(tamanoTextoDescuento('-100%'), 54)     // 5 -> borde
-  assert.equal(tamanoTextoDescuento('-$9.00'), 38)    // 6 -> no entra
-  assert.equal(tamanoTextoDescuento('-$12.50'), 38)   // 7
+test('tamanoTextoDescuento: 70 px hasta 5 caracteres, 48 px si es más largo', () => {
+  assert.equal(tamanoTextoDescuento('-25%'), 70)      // 4 caracteres
+  assert.equal(tamanoTextoDescuento('-100%'), 70)     // 5 -> borde
+  assert.equal(tamanoTextoDescuento('-$9.00'), 48)    // 6 -> no entra
+  assert.equal(tamanoTextoDescuento('-$12.50'), 48)   // 7
 })
 
 /* ---------------- checks y filas del panel ---------------- */
@@ -208,6 +210,37 @@ test('escalaFilaPrecio: respeta x, gap y margen personalizados', () => {
   // left = (1000 - 200) / 2 = 400; disponible = 400 - 50 - 10 - 6 = 334; suma = 400
   const k = escalaFilaPrecio(300, 100, 200, { ancho: 1000, x: 50, gap: 10 })
   assert.ok(Math.abs(k - 334 / 400) < 1e-9)
+})
+
+/* ---------------- autofit de la fila de precio (diseño centrado en PIE_ZONA) ---------------- */
+
+test('escalaFilaPrecioZona: 1 cuando precio + original + pill entran en PIE_ZONA_W', () => {
+  // fijo = 26 (gap orig) + 28 (gap pill) + 220 (pill) = 274; disponible = PIE_ZONA_W - 274
+  assert.equal(escalaFilaPrecioZona(150, 90, 220), 1)
+})
+
+test('escalaFilaPrecioZona: proporcional cuando el grupo no entra completo', () => {
+  const fijo = 26 + 28 + 150
+  const disponible = PIE_ZONA_W - fijo
+  const suma = 300 + 150
+  const k = escalaFilaPrecioZona(300, 150, 150)
+  assert.ok(Math.abs(k - disponible / suma) < 1e-9)
+  assert.ok(k < 1 && k > 0.7)
+})
+
+test('escalaFilaPrecioZona: nunca por debajo de 0.7', () => {
+  assert.equal(escalaFilaPrecioZona(3000, 1500, 300), 0.7)
+})
+
+test('escalaFilaPrecioZona: 1 sin anchos (producto sin descuento/pill)', () => {
+  assert.equal(escalaFilaPrecioZona(0, 0, 0), 1)
+})
+
+test('escalaFilaPrecioZona: sin pill, el fijo es solo el gap del original', () => {
+  // fijo = 26; disponible = PIE_ZONA_W - 26; suma = 150 + 90
+  const k = escalaFilaPrecioZona(150, 90, 0)
+  const esperado = Math.min(1, (PIE_ZONA_W - 26) / 240)
+  assert.ok(Math.abs(k - esperado) < 1e-9)
 })
 
 /* ---------------- zona media centrada ---------------- */
