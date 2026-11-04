@@ -273,7 +273,7 @@ function Notificaciones() {
                       key={notif.id}
                       notif={notif}
                       onClick={handleClick}
-                      clickable={!!notif.url || !!notif.orden_id || notif.tipo === 'chat_mensaje'}
+                      clickable={true}
                     />
                   ))}
                 </div>
