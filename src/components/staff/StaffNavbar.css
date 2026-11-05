@@ -1,425 +1,668 @@
 /* =================================================================
-   STAFF NAVBAR — barra superior del área staff (`.snb-*`)
-   Full-width, sticky, azul de marca (#0052dc, mismo valor que el
-   Navbar de la tienda). Se monta en LayoutDepartamento y en
-   StaffDashboard; la campana (.snc-*) vive solo aquí.
+   STAFF DASHBOARD — panel visual de entrada al módulo staff
+   Standalone (sin sidebar). Rediseño (2026-11-04): mismo patrón visual
+   que el menú móvil del cliente (src/pages/Menu.jsx) — hero + bento de
+   accesos destacados + acordeón — adaptado a escritorio (el staff
+   también trabaja desde PC) con un segundo breakpoint ancho.
+   Prefijo de clases: sd- (ya era el de este archivo).
    ================================================================= */
 
-.snb,
-.snb *::before,
-.snb *::after {
+.sd-wrap,
+.sd-wrap *,
+.sd-wrap *::before,
+.sd-wrap *::after {
   box-sizing: border-box;
 }
 
-.snb {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  height: 60px;
-  padding: 0 16px;
-  background: #0052dc;
-  color: #fff;
+.sd-wrap {
+  --sd-bg: #f4f6fb;
+  --sd-surface: #ffffff;
+  --sd-border: #e5e7eb;
+  --sd-text: var(--stf-indigo, #1A1A3A);
+  --sd-text-muted: #64748b;
+  --sd-azul: var(--stf-azul, #0052DC);
+  --sd-indigo: var(--stf-indigo, #1A1A3A);
+  --sd-teal: var(--stf-teal, #12A594);
+
+  min-height: 100vh;
+  max-width: 100vw;
+  overflow-x: hidden;
+  background:
+    radial-gradient(1200px 500px at 85% -10%, rgba(37, 99, 235, 0.07), transparent 60%),
+    radial-gradient(900px 400px at -10% 20%, rgba(13, 147, 115, 0.06), transparent 55%),
+    var(--sd-bg);
   font-family: 'Figtree', 'Inter', system-ui, -apple-system, sans-serif;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  color: var(--sd-text);
+}
+
+.sd-wrap :focus-visible {
+  outline: 2px solid var(--sd-azul);
+  outline-offset: 2px;
+}
+
+@keyframes sd-subir {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
 }
 
 /* -----------------------------------------------------------------
-   Botón menú (drawer) — solo móvil/tablet
+   Hero
    ----------------------------------------------------------------- */
-.snb-menu-btn {
+.sd-hero {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px 28px;
+  margin: 28px clamp(16px, 4vw, 40px) 8px;
+  padding: 44px clamp(20px, 5vw, 56px);
+  border-radius: 22px;
+  background: var(--sd-indigo);
+  color: #fff;
+  overflow: hidden;
+  box-shadow: 0 18px 40px -18px rgba(0, 82, 220, 0.55);
+}
+
+.sd-hero__fondo {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(420px 280px at 100% -10%, color-mix(in srgb, var(--sd-azul) 65%, transparent), transparent 70%),
+    radial-gradient(360px 260px at -5% 115%, color-mix(in srgb, var(--sd-teal) 50%, transparent), transparent 70%);
+}
+
+.sd-hero__content {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 260px;
+  /* flex-item: sin min-width:0 no baja de su min-content (ver AGENTS,
+     "Trampa CSS: flex-item y ancho mínimo"). */
+  min-width: 0;
+}
+
+.sd-hero__eyebrow {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.sd-hero__titulo {
+  margin: 0;
+  font-family: 'Manrope', sans-serif;
+  font-size: clamp(24px, 4vw, 34px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.sd-hero__titulo span {
+  color: #7fe9d6;
+}
+
+.sd-hero__sub {
+  margin: 8px 0 0;
+  font-size: 15px;
+  opacity: 0.85;
+}
+
+/* -----------------------------------------------------------------
+   Tarjeta de tasa BCV (solo lectura, lado derecho del hero)
+   ----------------------------------------------------------------- */
+.sd-tasa {
+  position: relative;
+  z-index: 1;
+  flex: 0 1 288px;
+  min-width: 0;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #fff;
+}
+
+.sd-tasa__cab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sd-tasa__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.sd-tasa__var {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.sd-tasa__var--sube {
+  background: rgba(127, 233, 214, 0.18);
+  color: #7fe9d6;
+}
+
+.sd-tasa__var--baja {
+  background: rgba(255, 138, 138, 0.18);
+  color: #ffb3b3;
+}
+
+.sd-tasa__var--igual {
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.sd-tasa__valor {
+  margin: 4px 0 0;
+  font-size: clamp(22px, 3vw, 28px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+.sd-tasa__unidad {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+  opacity: 0.75;
+}
+
+.sd-tasa__meta {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+}
+
+.sd-tasa__aviso {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 10px 0 0;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.18);
+  color: #fde68a;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .sd-tasa {
+    flex: 1 1 100%;
+  }
+}
+
+/* -----------------------------------------------------------------
+   Atajos por departamento (debajo del hero, solo con 2+ departamentos)
+   ----------------------------------------------------------------- */
+.sd-atajos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 4vw, 40px);
+}
+
+.sd-atajo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 12px 16px;
+  border: 1.5px solid var(--sd-border);
+  border-radius: 16px;
+  background: var(--sd-surface);
+  color: var(--sd-text);
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.sd-atajo:hover {
+  transform: translateY(-2px);
+  border-color: var(--sd-azul);
+  box-shadow: 0 10px 22px -14px rgba(15, 23, 42, 0.3);
+}
+
+.sd-atajo:active { transform: scale(0.98); }
+
+.sd-atajo__icono {
+  position: relative;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 38px;
   height: 38px;
-  flex-shrink: 0;
-  border: 0;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-  cursor: pointer;
-  transition: background 0.15s ease;
+  border-radius: 11px;
+  background: rgba(0, 82, 220, 0.08);
+  color: var(--sd-azul);
 }
 
-.snb-menu-btn:hover {
-  background: rgba(255, 255, 255, 0.22);
-}
-
-/* -----------------------------------------------------------------
-   Logo → dashboard staff. Sin URL configurada: placeholder con el
-   nombre de la empresa en texto (empresaInfo.logoStaffUrl vacío).
-   ----------------------------------------------------------------- */
-.snb-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  flex-shrink: 1;
-  color: #fff;
-  text-decoration: none;
-  border-radius: 10px;
-  padding: 4px;
-  margin-left: -4px;
-}
-
-.snb-logo__img {
-  height: 34px;
-  max-width: 160px;
-  object-fit: contain;
-}
-
-.snb-logo__ph {
-  width: 34px;
-  height: 34px;
-  flex-shrink: 0;
-  border-radius: 9px;
-  background: rgba(255, 255, 255, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.snb-logo__texto {
-  font-size: 15px;
+.sd-atajo__texto {
+  font-size: 0.86rem;
   font-weight: 700;
-  letter-spacing: 0.01em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-/* Título de la página: solo móvil (el h1 del contenido también lo
-   muestra; en el navbar evita perder la referencia al abrir el drawer). */
-.snb-titulo {
-  display: none;
-  margin: 0;
-  min-width: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* -----------------------------------------------------------------
-   Bloque derecho
-   ----------------------------------------------------------------- */
-.snb-derecha {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-left: auto;
-  min-width: 0;
-}
-
-/* ---------- Selector de departamento (≥1024px) ---------- */
-.snb-depto {
-  position: relative;
-}
-
-.snb-depto__btn {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  height: 36px;
-  padding: 0 12px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s ease;
-}
-
-.snb-depto__btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.snb-depto__btn svg:last-child,
-.snb-usuario__btn svg:last-child {
-  transition: transform 0.15s ease;
-}
-
-.snb-depto__chevron--abajo,
-.snb-usuario__chevron--abajo {
-  transform: rotate(180deg);
-}
-
-.snb-depto__panel {
+.sd-atajo__conteo {
   position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  z-index: 70;
-  min-width: 200px;
-  background: #fff;
-  border: 1px solid #e3e4e5;
-  border-radius: 12px;
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
-  overflow: hidden;
-  padding: 6px;
-}
-
-.snb-depto__link {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  width: 100%;
-  padding: 9px 10px;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: #1f2937;
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 600;
-  text-align: left;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.snb-depto__link:hover {
-  background: #f3f4f6;
-}
-
-.snb-depto__link--activo {
-  background: #eff6ff;
-  color: #0052dc;
-}
-
-/* ---------- Campana: variante sobre fondo azul ----------
-   Los estilos base de .snc-* están pensados para fondo claro; aquí se
-   re-muestran como botón translúcido. El panel blanco del desplegable
-   no se toca. */
-.snb .snc-btn {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.28);
-  color: #fff;
-}
-
-.snb .snc-btn:hover,
-.snb .snc-btn--abierto {
-  background: rgba(255, 255, 255, 0.22);
-  border-color: #fff;
-  color: #fff;
-}
-
-.snb .snc-badge {
-  box-shadow: 0 0 0 2px #0052dc;
-}
-
-/* ---------- Menú de usuario ---------- */
-.snb-usuario {
-  position: relative;
-}
-
-.snb-usuario__btn {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  height: 40px;
-  padding: 0 10px 0 6px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  top: -8px;
+  right: -10px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
+  background: #E5484D;
+  box-shadow: 0 0 0 2px var(--sd-surface);
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 18px;
+  text-align: center;
   color: #fff;
-  cursor: pointer;
-  transition: background 0.15s ease;
-  max-width: 210px;
 }
 
-.snb-usuario__btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+/* -----------------------------------------------------------------
+   Secciones / main
+   ----------------------------------------------------------------- */
+.sd-main {
+  padding: 24px clamp(16px, 4vw, 40px) 56px;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
-.snb-usuario__avatar {
-  width: 28px;
-  height: 28px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #0052DC, #12A594);
-  color: #fff;
+.sd-seccion { margin-top: 24px; }
+.sd-seccion:first-child { margin-top: 0; }
+
+.sd-seccion__titulo {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 12.5px;
-  font-weight: 700;
+  gap: 8px;
+  margin: 0 0 14px 2px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sd-text-muted);
 }
 
-.snb-usuario__textos {
+.sd-seccion__titulo::before {
+  content: "";
+  width: 5px;
+  height: 14px;
+  border-radius: 3px;
+  background: var(--sd-azul);
+}
+
+/* -----------------------------------------------------------------
+   Bento "Acciones rápidas"
+   ----------------------------------------------------------------- */
+.sd-bento {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+a.sd-tile {
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  line-height: 1.15;
-  min-width: 0;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 140px;
+  padding: 16px;
+  border-radius: 22px;
+  border: 1px solid transparent;
+  color: #fff;
+  text-decoration: none;
+  animation: sd-subir 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 55ms);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.snb-usuario__nombre {
-  max-width: 110px;
-  font-size: 12.5px;
-  font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-transform: capitalize;
+.sd-tile:hover { transform: translateY(-3px); }
+.sd-tile:active { transform: scale(0.97); }
+
+.sd-tile--ancho {
+  grid-column: 1 / -1;
+  min-height: 150px;
 }
 
-.snb-usuario__rol {
-  max-width: 110px;
-  font-size: 10.5px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.75);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-transform: capitalize;
-}
-
-.snb-menu {
+.sd-tile::before,
+.sd-tile::after {
+  content: "";
   position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  z-index: 70;
-  min-width: 230px;
-  background: #fff;
-  border: 1px solid #e3e4e5;
-  border-radius: 12px;
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
-  overflow: hidden;
-  padding: 6px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.1);
 }
 
-.snb-menu__header {
+.sd-tile::before { width: 150px; height: 150px; right: -44px; bottom: -64px; }
+.sd-tile::after  { width: 84px; height: 84px; right: 46px; bottom: -42px; background: rgba(255, 255, 255, 0.07); }
+
+.sd-tile--azul {
+  background: linear-gradient(135deg, var(--sd-azul) 0%, color-mix(in srgb, var(--sd-azul), #000 30%) 100%);
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--sd-azul) 32%, transparent);
+}
+
+.sd-tile--indigo {
+  background: linear-gradient(145deg, color-mix(in srgb, var(--sd-indigo), #fff 10%) 0%, var(--sd-indigo) 100%);
+  box-shadow: 0 12px 24px rgba(26, 26, 58, 0.22);
+}
+
+.sd-tile--teal {
+  background: linear-gradient(135deg, var(--sd-teal) 0%, color-mix(in srgb, var(--sd-teal), #000 28%) 100%);
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--sd-teal) 30%, transparent);
+}
+
+a.sd-tile--claro {
+  background: #fff;
+  border-color: var(--sd-border);
+  color: var(--sd-text);
+  box-shadow: 0 1px 2px rgba(26, 26, 58, 0.05);
+}
+
+.sd-tile--claro::before,
+.sd-tile--claro::after { background: rgba(0, 82, 220, 0.05); }
+
+.sd-tile--claro:hover { box-shadow: 0 10px 24px rgba(26, 26, 58, 0.1); }
+
+.sd-tile__icono {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.sd-tile--ancho .sd-tile__icono { width: 52px; height: 52px; border-radius: 16px; }
+
+.sd-tile--claro .sd-tile__icono {
+  background: rgba(0, 82, 220, 0.08);
+  color: var(--sd-azul);
+}
+
+.sd-tile__flecha {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  opacity: 0.7;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+.sd-tile:hover .sd-tile__flecha { opacity: 1; transform: translate(2px, -2px); }
+
+.sd-tile__texto {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 10px 12px;
-  border-bottom: 1px solid #f1f3f5;
-  margin-bottom: 4px;
 }
 
-.snb-menu__nombre {
-  font-size: 13.5px;
-  font-weight: 700;
-  color: #1f2937;
-  text-transform: capitalize;
+.sd-tile__titulo {
+  font-family: 'Manrope', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
 }
 
-.snb-menu__rol {
-  font-size: 11.5px;
-  font-weight: 600;
-  color: #6b7280;
-  text-transform: capitalize;
+.sd-tile--ancho .sd-tile__titulo { font-size: 1.3rem; }
+
+.sd-tile__desc {
+  font-size: 0.78rem;
+  line-height: 1.35;
+  opacity: 0.85;
 }
 
-.snb-menu__item {
+.sd-tile--claro .sd-tile__desc { opacity: 1; color: var(--sd-text-muted); }
+
+/* -----------------------------------------------------------------
+   Acordeón "Tu espacio" (un grupo por departamento)
+   ----------------------------------------------------------------- */
+.sd-grupo {
+  margin-bottom: 10px;
+  border: 1px solid var(--sd-border);
+  border-radius: 20px;
+  background: var(--sd-surface);
+  box-shadow: 0 1px 2px rgba(26, 26, 58, 0.04);
+  overflow: hidden;
+  animation: sd-subir 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+
+.sd-grupo__cabecera {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 12px;
   width: 100%;
-  padding: 10px 12px;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: #1f2937;
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 600;
+  min-height: 60px;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  font: inherit;
   text-align: left;
+  color: var(--sd-text);
   cursor: pointer;
   transition: background 0.15s ease;
 }
 
-.snb-menu__item:hover {
-  background: #f3f4f6;
+.sd-grupo__cabecera:hover { background: rgba(26, 26, 58, 0.025); }
+.sd-grupo__cabecera:focus-visible { outline-offset: -2px; }
+
+.sd-grupo__icono {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--sd-tinte, var(--sd-azul)) 14%, transparent);
+  color: var(--sd-tinte, var(--sd-azul));
 }
 
-.snb-menu__item:disabled {
-  opacity: 0.6;
-  cursor: default;
+.sd-grupo__titulo {
+  flex: 1;
+  min-width: 0;
+  font-family: 'Manrope', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
 }
 
-.snb-menu__item--peligro {
-  color: #dc2626;
+.sd-grupo__chevron {
+  flex-shrink: 0;
+  color: rgba(26, 26, 58, 0.4);
+  transition: transform 0.28s ease;
 }
 
-.snb-menu__item--peligro:hover {
-  background: #fef2f2;
+.sd-grupo--abierto .sd-grupo__chevron { transform: rotate(180deg); }
+
+.sd-grupo__cuerpo {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.28s ease;
 }
 
-.snb-menu__error {
-  margin: 6px 12px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #dc2626;
+.sd-grupo--abierto .sd-grupo__cuerpo { grid-template-rows: 1fr; }
+
+.sd-grupo__interior {
+  min-height: 0;
+  overflow: hidden;
 }
 
-/* Botón "Instalar app" dentro del menú de usuario. Autocontenido a
-   propósito: el componente trae la clase base .sd-instalar (estilos en
-   StaffDashboard.css) y aquí se gana con mayor especificidad para que se
-   vea igual aunque esa hoja no esté cargada. */
-.snb .snb-instalar-btn,
-.snb-instalar-btn {
-  width: 100%;
-  height: auto;
-  justify-content: flex-start;
-  gap: 9px;
-  padding: 10px 12px;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: #1f2937;
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 600;
+/* -----------------------------------------------------------------
+   Items dentro del acordeón
+   ----------------------------------------------------------------- */
+.sd-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 60px;
+  padding: 8px 16px 8px 18px;
+  border-top: 1px solid var(--sd-border);
+  color: var(--sd-text);
+  text-decoration: none;
+  transition: background 0.15s ease;
 }
 
-.snb .snb-instalar-btn:hover,
-.snb-instalar-btn:hover {
-  border: 0;
-  background: #f3f4f6;
-  color: #1f2937;
+.sd-item:hover { background: rgba(26, 26, 58, 0.03); }
+.sd-item:active { background: rgba(26, 26, 58, 0.06); }
+.sd-item:focus-visible { outline-offset: -2px; }
+
+.sd-item__icono {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: rgba(26, 26, 58, 0.05);
+  color: var(--sd-tinte, var(--sd-azul));
+}
+
+.sd-item__texto {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sd-item__titulo {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.sd-item__desc {
+  font-size: 0.76rem;
+  color: var(--sd-text-muted);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sd-item__flecha {
+  flex-shrink: 0;
+  color: rgba(26, 26, 58, 0.28);
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.sd-item:hover .sd-item__flecha { color: var(--sd-azul); transform: translateX(2px); }
+
+.sd-conteo {
+  flex-shrink: 0;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--sd-tinte, var(--sd-azul));
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 22px;
+  text-align: center;
+  color: #fff;
+}
+
+/* -----------------------------------------------------------------
+   Botón "Instalar app" — base del componente BotonInstalarStaff (se
+   monta en el menú de usuario de StaffNavbar, que lo sobreescribe con
+   `.snb .snb-instalar-btn`; esta regla es su estilo de respaldo).
+   ----------------------------------------------------------------- */
+.sd-instalar {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1.5px dashed var(--sd-border);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--sd-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sd-instalar:hover {
+  border-color: #0052DC;
+  border-style: solid;
+  color: #0052DC;
+  background: rgba(0, 82, 220, 0.04);
 }
 
 /* -----------------------------------------------------------------
    Responsive
    ----------------------------------------------------------------- */
-@media (min-width: 1024px) {
-  .snb-menu-btn {
-    display: none;
-  }
-}
-
-@media (max-width: 1023px) {
-  .snb-depto {
-    display: none;
-  }
-  .snb-titulo {
-    display: block;
-  }
-  .snb-usuario__textos {
-    display: none;
-  }
-  .snb-usuario__btn {
-    padding: 0;
-    width: 40px;
-    justify-content: center;
-    border-radius: 50%;
-  }
-}
-
 @media (max-width: 480px) {
-  .snb-logo__texto {
-    display: none;
+  .sd-hero {
+    padding: 32px 22px;
   }
+
+  .sd-bento {
+    grid-template-columns: 1fr;
+  }
+
+  .sd-tile--ancho {
+    grid-column: auto;
+  }
+}
+
+/* Escritorio ancho: el bento gana una 3ra columna (el tile "ancho" sigue
+   ocupando toda la fila) y el acordeón se limita a un ancho de lectura
+   cómodo en vez de estirarse a todo el monitor. */
+@media (min-width: 900px) {
+  .sd-bento {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .sd-seccion--espacio-ancho,
+  .sd-main .sd-grupo {
+    max-width: 760px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sd-tile,
+  .sd-grupo { animation: none; }
+
+  .sd-tile,
+  .sd-tile__flecha,
+  .sd-grupo__chevron,
+  .sd-grupo__cuerpo,
+  .sd-item__flecha,
+  .sd-atajo { transition: none; }
+
+  .sd-tile:hover,
+  .sd-tile:hover .sd-tile__flecha,
+  .sd-atajo:hover { transform: none; }
 }

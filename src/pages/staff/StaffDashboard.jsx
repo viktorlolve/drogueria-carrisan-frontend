@@ -1,6 +1,18 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AlertTriangle, ArrowDownRight, ArrowRight, ArrowUpRight, DollarSign, Minus } from 'lucide-react'
+import {
+  AlertTriangle,
+  ArrowDownRight,
+  ArrowUpRight,
+  ChevronDown,
+  ChevronRight,
+  DollarSign,
+  FileText,
+  Gift,
+  Megaphone,
+  Minus,
+  ShoppingCart,
+} from 'lucide-react'
 import { useStaffAuth } from '../../context/StaffAuthContext'
 import { useStaffBadges } from '../../context/StaffBadgesContext'
 import { DEPARTAMENTOS, MODULOS } from '../../components/staff/NavStaff'
@@ -15,14 +27,72 @@ import {
 } from '../../utils/tasaCambio'
 import './StaffDashboard.css'
 
-const ICONOS_MAPA = {}
-for (const depto of DEPARTAMENTOS) {
-  for (const grupo of MODULOS[depto.id] || []) {
-    for (const item of grupo.items) {
-      ICONOS_MAPA[item.id] = item.icono
-    }
-  }
-}
+// ---------------------------------------------------------------
+// Dashboard de staff (/staff/dashboard). Rediseño (2026-11-04) con el MISMO
+// patrón visual del menú móvil del cliente (src/pages/Menu.jsx): hero +
+// bento de accesos destacados + acordeón de navegación, en vez de las dos
+// variantes previas (jornada enfocada vs panorámica) con JSX separado.
+//
+// Un departamento sin módulos visibles para el rol simplemente no se
+// renderiza (igual que GrupoNav en Menu.jsx) — así un vendedor (1 solo
+// departamento) y un director (3) comparten el mismo layout sin ramas.
+//
+// Piezas:
+//  - Hero Índigo con saludo + Tasa BCV (se conserva tal cual)
+//  - Atajos: uno por departamento visible (solo si hay 2+), con el total
+//    de pendientes de TODOS sus módulos (no solo los del acordeón)
+//  - Bento "Acciones rápidas": crear algo de una vez (ver ACCIONES_RAPIDAS)
+//  - Acordeón "Tu espacio": un grupo por departamento, teñido con su color
+//    de marca real (NavStaff.js), con los módulos que NO son acción rápida
+// ---------------------------------------------------------------
+
+// Accesos directos del bento: crean algo de una vez, sin pasar por la lista
+// del módulo. Se sacan del acordeón de su departamento (ACCIONES_RAPIDAS_IDS)
+// para no duplicar el enlace. `?nuevo=1` abre el modal de creación de una vez
+// en Presupuestos y Promociones (ver StaffPresupuestos.jsx / StaffPromociones.jsx).
+const ACCIONES_RAPIDAS = [
+  {
+    id: 'ordenes',
+    to: '/staff/ordenes',
+    titulo: 'Crear orden a cliente',
+    texto: 'Arma un pedido a nombre de un cliente ya registrado',
+    icono: ShoppingCart,
+    variante: 'azul',
+    ancho: true,
+    roles: ['vendedor', 'administrador', 'director', 'admin'],
+  },
+  {
+    id: 'presupuestos',
+    to: '/staff/presupuestos?nuevo=1',
+    titulo: 'Crear presupuesto',
+    texto: 'Cotización rápida con precios congelados 24 h',
+    icono: FileText,
+    variante: 'teal',
+    roles: ['vendedor', 'administrador', 'director', 'admin'],
+  },
+  {
+    id: 'cupones',
+    to: '/staff/cupones',
+    titulo: 'Nuevo cupón',
+    texto: 'Código de descuento por porcentaje o monto fijo',
+    icono: Gift,
+    variante: 'indigo',
+    roles: ['administrador', 'director', 'admin'],
+  },
+  {
+    id: 'promociones',
+    to: '/staff/promociones?nuevo=1',
+    titulo: 'Nueva promoción',
+    texto: 'Plantilla de mensaje para enviar a clientes',
+    icono: Megaphone,
+    variante: 'claro',
+    roles: ['administrador', 'director', 'admin'],
+  },
+]
+
+const ACCIONES_RAPIDAS_IDS = new Set(ACCIONES_RAPIDAS.map((a) => a.id))
+
+const formatearConteo = (n) => (n >= 100 ? '99+' : String(n))
 
 // Hora de la última actualización (24 h) para acompañar la fecha corta.
 // No usa toLocaleString completo porque ahí el navegador decide el formato.
@@ -114,92 +184,151 @@ function TasaBcv() {
   )
 }
 
+// ---------------------------------------------------------------
+// Atajo por departamento (cabecera): icono + total de pendientes + nombre
+// ---------------------------------------------------------------
+function AtajoDepto({ depto, pendientes }) {
+  const Icono = depto.icono
+  return (
+    <Link to={`/staff/${depto.id}`} className="sd-atajo">
+      <span className="sd-atajo__icono">
+        <Icono size={20} aria-hidden="true" />
+        {pendientes > 0 && (
+          <span className="sd-atajo__conteo" aria-label={`${pendientes} pendientes`}>
+            {formatearConteo(pendientes)}
+          </span>
+        )}
+      </span>
+      <span className="sd-atajo__texto">{depto.nombre}</span>
+    </Link>
+  )
+}
+
+// ---------------------------------------------------------------
+// Bento de acciones rápidas
+// ---------------------------------------------------------------
+function TileBento({ accion, indice }) {
+  const Icono = accion.icono
+  return (
+    <Link
+      to={accion.to}
+      className={`sd-tile sd-tile--${accion.variante}${accion.ancho ? ' sd-tile--ancho' : ''}`}
+      style={{ '--i': indice }}
+    >
+      <span className="sd-tile__icono">
+        <Icono size={accion.ancho ? 26 : 22} aria-hidden="true" />
+      </span>
+      <ArrowUpRight className="sd-tile__flecha" size={18} aria-hidden="true" />
+      <span className="sd-tile__texto">
+        <strong className="sd-tile__titulo">{accion.titulo}</strong>
+        <span className="sd-tile__desc">{accion.texto}</span>
+      </span>
+    </Link>
+  )
+}
+
+// ---------------------------------------------------------------
+// Acordeón por departamento (NavStaff.MODULOS), teñido con su color real
+// ---------------------------------------------------------------
+function GrupoDepto({ depto, indice, abierto, onAlternar, conteos }) {
+  if (depto.modulos.length === 0) return null
+
+  const Icono = depto.icono
+  const pendientes = depto.modulos.reduce((s, m) => s + (m.contador ? conteos[m.contador] || 0 : 0), 0)
+  const idCuerpo = `sd-grupo-${depto.id}`
+
+  return (
+    <div
+      className={`sd-grupo${abierto ? ' sd-grupo--abierto' : ''}`}
+      style={{ '--sd-tinte': depto.color, '--sd-tinte-fondo': depto.colorLight, '--i': indice }}
+    >
+      <button
+        type="button"
+        className="sd-grupo__cabecera"
+        onClick={() => onAlternar(depto.id)}
+        aria-expanded={abierto}
+        aria-controls={idCuerpo}
+      >
+        <span className="sd-grupo__icono">
+          <Icono size={20} aria-hidden="true" />
+        </span>
+        <span className="sd-grupo__titulo">{depto.nombre}</span>
+        {pendientes > 0 && !abierto && (
+          <span className="sd-conteo" aria-label={`${pendientes} pendientes`}>
+            {formatearConteo(pendientes)}
+          </span>
+        )}
+        <ChevronDown className="sd-grupo__chevron" size={18} aria-hidden="true" />
+      </button>
+
+      <div id={idCuerpo} className="sd-grupo__cuerpo" inert={!abierto}>
+        <div className="sd-grupo__interior">
+          {depto.modulos.map((m) => {
+            const IconoModulo = m.icono
+            const n = m.contador ? conteos[m.contador] || 0 : 0
+            return (
+              <Link key={m.id} to={m.to} className="sd-item">
+                <span className="sd-item__icono">
+                  <IconoModulo size={18} aria-hidden="true" />
+                </span>
+                <span className="sd-item__texto">
+                  <strong className="sd-item__titulo">{m.texto}</strong>
+                  {m.desc && <span className="sd-item__desc">{m.desc}</span>}
+                </span>
+                {n > 0 && (
+                  <span className="sd-conteo" aria-label={`${n} pendientes`}>
+                    {formatearConteo(n)}
+                  </span>
+                )}
+                <ChevronRight className="sd-item__flecha" size={16} aria-hidden="true" />
+              </Link>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------
+// Página
+// ---------------------------------------------------------------
 function StaffDashboard() {
   const { staff } = useStaffAuth()
   const rol = staff?.rol
+  const { conteos } = useStaffBadges()
 
-  // Departamentos con módulos visibles para el rol (para filtrar tarjetas).
+  // Departamentos con sus módulos visibles para el rol, SIN los que ya viven
+  // como botón directo en "Acciones rápidas" (no se duplica el enlace).
   const departamentos = DEPARTAMENTOS
     .map((depto) => {
       const modulos = (MODULOS[depto.id] || [])
         .flatMap((grupo) => grupo.items)
-        .filter((item) => item.roles.includes(rol))
+        .filter((item) => item.roles.includes(rol) && !ACCIONES_RAPIDAS_IDS.has(item.id))
       return { ...depto, modulos }
     })
     .filter((depto) => depto.modulos.length > 0)
 
-  // Composición del dashboard según el acceso del rol:
-  //  - 1 departamento accesible  -> jornada enfocada (botones grandes del depto).
-  //  - más de 1                  -> panorámica (tarjetas de departamento, como hoy).
-  const esJornadaEnfocada = departamentos.length === 1
-  const deptoFoco = departamentos[0] || null
+  // Pendientes por departamento para el atajo de la cabecera: cuenta TODOS los
+  // módulos con contador que el rol ve, estén en el acordeón o en el bento.
+  function pendientesDepto(depto) {
+    const todos = (MODULOS[depto.id] || []).flatMap((g) => g.items).filter((it) => it.roles.includes(rol))
+    return todos.reduce((s, it) => s + (it.contador ? conteos[it.contador] || 0 : 0), 0)
+  }
 
-  const { conteos } = useStaffBadges()
-  // Chips y total solo con los módulos que el rol realmente ve (mismo filtro
-  // que ya usa `departamentos`): si algún rol cruza departamentos, no se le
-  // muestran colas inalcanzables ni se infla el "N pendientes".
-  const modulosLogistica = departamentos.find((d) => d.id === 'logistica')?.modulos || []
-  const totalLogistica = modulosLogistica
-    .reduce((s, item) => s + (item.contador ? conteos[item.contador] || 0 : 0), 0)
+  const accionesRapidas = ACCIONES_RAPIDAS.filter((a) => a.roles.includes(rol))
 
-  if (esJornadaEnfocada) {
-    return (
-      <div className="sd-wrap">
-        <StaffNavbar />
+  const [abiertos, setAbiertos] = useState(
+    () => new Set(departamentos.length === 1 ? [departamentos[0].id] : [])
+  )
 
-        <div className="sd-hero sd-hero--foco">
-          <div className="sd-hero__glow" aria-hidden="true" />
-          <div className="sd-hero__content">
-            <p className="sd-hero__eyebrow">Panel interno · {deptoFoco.nombre}</p>
-            <h1 className="sd-hero__titulo">
-              Hola, <span>{staff?.nombre?.split(' ')[0] || 'Staff'}</span>
-            </h1>
-            <p className="sd-hero__sub">Tu jornada de hoy está lista. ¿Por dónde empezamos?</p>
-          </div>
-          <TasaBcv />
-        </div>
-
-        <main className="sd-main">
-          <div className="sd-foco">
-            <div className="sd-foco__cab">
-              <p className="sd-eyebrow">¿Qué haces hoy?</p>
-              <h2 className="sd-foco__titulo">Acciones de {deptoFoco.nombre}</h2>
-              <p className="sd-foco__desc">Selecciona una tarea para trabajar en {deptoFoco.nombre.toLowerCase()}.</p>
-            </div>
-
-            <div className="sd-foco__grid">
-              {deptoFoco.modulos.map((modulo) => {
-                const Icono = ICONOS_MAPA[modulo.id]
-                return (
-                  <Link
-                    key={modulo.id}
-                    to={modulo.to}
-                    className="sd-foco__btn"
-                    style={{
-                      '--sd-card-color': deptoFoco.color,
-                      '--sd-card-color-soft': deptoFoco.colorLight,
-                    }}
-                  >
-                    <span className="sd-foco__btn-ico">
-                      {Icono && <Icono size={22} />}
-                    </span>
-                    <div className="sd-foco__btn-tx">
-                      <strong className="sd-foco__btn-tit">{modulo.texto}</strong>
-                      {modulo.desc && <span className="sd-foco__btn-desc">{modulo.desc}</span>}
-                    </div>
-                    <ArrowRight size={17} className="sd-foco__btn-arr" />
-                  </Link>
-                )
-              })}
-            </div>
-
-            <p className="sd-foco__nota">
-              ¿Necesitas otro módulo? Consulta tu rol o pide acceso a tu supervisor.
-            </p>
-          </div>
-        </main>
-      </div>
-    )
+  function alternarGrupo(id) {
+    setAbiertos((prev) => {
+      const siguiente = new Set(prev)
+      if (siguiente.has(id)) siguiente.delete(id)
+      else siguiente.add(id)
+      return siguiente
+    })
   }
 
   return (
@@ -207,73 +336,50 @@ function StaffDashboard() {
       <StaffNavbar />
 
       <div className="sd-hero">
-        <div className="sd-hero__glow" aria-hidden="true" />
+        <span className="sd-hero__fondo" aria-hidden="true" />
         <div className="sd-hero__content">
           <p className="sd-hero__eyebrow">Panel interno</p>
           <h1 className="sd-hero__titulo">
             Hola, <span>{staff?.nombre?.split(' ')[0] || 'Staff'}</span>
           </h1>
-          <p className="sd-hero__sub">Elige un departamento para comenzar tu jornada.</p>
+          <p className="sd-hero__sub">Tu jornada de hoy está lista. ¿Por dónde empezamos?</p>
         </div>
         <TasaBcv />
       </div>
 
+      {departamentos.length > 1 && (
+        <nav className="sd-atajos" aria-label="Departamentos">
+          {departamentos.map((depto) => (
+            <AtajoDepto key={depto.id} depto={depto} pendientes={pendientesDepto(depto)} />
+          ))}
+        </nav>
+      )}
+
       <main className="sd-main">
-        <div className="sd-grid">
-          {departamentos.map((depto) => {
-            const Icono = depto.icono
-            return (
-              // La tarjeta es un <div> (no un Link): dentro hay chips-enlaces,
-              // y un <a> anidado en otro <a> es HTML inválido. La cabecera con
-              // el título y la flecha es el enlace al hub del departamento.
-              <div
-                key={depto.id}
-                className="sd-card"
-                style={{
-                  '--sd-card-color': depto.color,
-                  '--sd-card-color-soft': depto.colorLight,
-                }}
-              >
-                <div className="sd-card__fondo" aria-hidden="true" />
-                <Link to={`/staff/${depto.id}`} className="sd-card__link">
-                  <div className="sd-card__cab">
-                    <span className="sd-card__icono"><Icono size={26} /></span>
-                    <ArrowRight size={18} className="sd-card__flecha" />
-                  </div>
-                  <h2 className="sd-card__nombre">{depto.nombre}</h2>
-                </Link>
-                <p className="sd-card__desc">{depto.descripcion}</p>
-                <div className="sd-card__menu">
-                  {depto.modulos.map((m) => {
-                    const IconoModulo = ICONOS_MAPA[m.id]
-                    if (!m.contador) {
-                      return (
-                        <span key={m.id} className="sd-card__chip">
-                          {IconoModulo && <IconoModulo size={13} />}
-                          {m.texto}
-                        </span>
-                      )
-                    }
-                    return (
-                      <Link key={m.id} to={m.to} className="sd-card__chip sd-card__chip--link">
-                        {IconoModulo && <IconoModulo size={13} />}
-                        {m.texto}
-                        {conteos[m.contador] > 0 && (
-                          <span className="sd-card__chip-badge">{conteos[m.contador]}</span>
-                        )}
-                      </Link>
-                    )
-                  })}
-                  {depto.id === 'logistica' && totalLogistica > 0 && (
-                    <span className="sd-card__chip sd-card__chip--pendientes">
-                      {totalLogistica} pendientes
-                    </span>
-                  )}
-                </div>
-              </div>
-            )
-          })}
-        </div>
+        {accionesRapidas.length > 0 && (
+          <section className="sd-seccion" aria-labelledby="sd-t-acciones">
+            <h2 id="sd-t-acciones" className="sd-seccion__titulo">Acciones rápidas</h2>
+            <div className="sd-bento">
+              {accionesRapidas.map((accion, i) => (
+                <TileBento key={accion.id} accion={accion} indice={i} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        <section className="sd-seccion" aria-labelledby="sd-t-espacio">
+          <h2 id="sd-t-espacio" className="sd-seccion__titulo">Tu espacio</h2>
+          {departamentos.map((depto, i) => (
+            <GrupoDepto
+              key={depto.id}
+              depto={depto}
+              indice={i}
+              abierto={abiertos.has(depto.id)}
+              onAlternar={alternarGrupo}
+              conteos={conteos}
+            />
+          ))}
+        </section>
       </main>
     </div>
   )

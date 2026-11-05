@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import { ModalCrearPresupuesto } from '../../components/staff/StaffComercialModals'
@@ -123,7 +124,24 @@ function StaffPresupuestos({ departamento = 'comercial', activo = 'presupuestos'
   const [resultado, setResultado] = useState(null) // { clave, presupuestos, totalPaginas } | { clave, error }
   const [intento, setIntento] = useState(0)
   const [modal, setModal] = useState(null)
-  const [crearModal, setCrearModal] = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams()
+  // Acceso directo desde el dashboard (tile "Crear presupuesto a cliente",
+  // /staff/presupuestos?nuevo=1): arranca con el modal ya abierto, sin pasar
+  // por la lista. Estado inicial perezoso (no un efecto) para no disparar un
+  // setState extra al montar.
+  const [crearModal, setCrearModal] = useState(() => searchParams.get('nuevo') === '1')
+
+  // Limpia el query param una vez leído, para no reabrir el modal en un refresh.
+  useEffect(() => {
+    if (searchParams.get('nuevo') === '1') {
+      setSearchParams((prev) => {
+        const siguiente = new URLSearchParams(prev)
+        siguiente.delete('nuevo')
+        return siguiente
+      }, { replace: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const claveActual = `${estado}|${pagina}`
 

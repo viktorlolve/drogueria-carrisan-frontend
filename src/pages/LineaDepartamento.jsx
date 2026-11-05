@@ -681,8 +681,8 @@ function LineaDepartamento({ linea }) {
         <section className="lin-cierre" aria-labelledby="lin-cierre-t">
           <span className="lin-cierre__brillo" aria-hidden="true" />
           <div className="lin-cierre__texto">
-            <h2 id="lin-cierre-t">¿No encuentras lo que necesitas?</h2>
-            <p>Arma un presupuesto con varios productos a la vez, o escríbenos y lo buscamos por ti.</p>
+            <h2 id="lin-cierre-t">Lleva mejor tus compras con presupuestos</h2>
+            <p>Arma un presupuesto con varios productos a la vez y asi creas tus ordenes de manera mas facil y rapida.</p>
           </div>
           <div className="lin-cierre__acciones">
             <Link className="lin-btn lin-btn--claro" to="/presupuesto">

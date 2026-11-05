@@ -338,6 +338,31 @@ function StaffInventario() {
   const [guardandoVisible, setGuardandoVisible] = useState(false)
   const [notaVisible, setNotaVisible] = useState('')
 
+  // --- modal "Nuevo producto" -----------------------------------------------
+  // Solo los 3 campos requeridos (nombre, precio, laboratorio) + los opcionales
+  // que el operador quiera rellenar ya (descripcion, molecula, linea, forma).
+  const [modalNuevoAbierto, setModalNuevoAbierto] = useState(false)
+  const [formNuevo, setFormNuevo] = useState({
+    nombre_comercial: '',
+    precio_usd: '',
+    laboratorio: '',
+    descripcion: '',
+    molecula: '',
+    linea: '',
+    forma: '',
+  })
+  const [guardandoNuevo, setGuardandoNuevo] = useState(false)
+  const [notaNuevo, setNotaNuevo] = useState('')
+  const [errorNuevo, setErrorNuevo] = useState('')
+
+  // `trasEscribirNuevo` recarga la lista para que el producto recién creado
+  // aparezca en el grid (y opcionalmente se abre su drawer).
+  function trasEscribirNuevo(idNuevo) {
+    setRecarga((n) => n + 1)
+    setDetalleRecarga((n) => n + 1)
+    if (idNuevo != null) setDrawerId(idNuevo)
+  }
+
   // Cuáles de los dos campos de edición tienen algo tecleado SIN guardar. Es un
   // ref y no estado a propósito: el refetch del detalle (cada escritura bumpea
   // `detalleRecarga`) repone los campos con lo que dice el servidor, y con estado
@@ -808,6 +833,64 @@ function StaffInventario() {
     }
   }
 
+  // --- escritura: crear producto --------------------------------------------
+
+  function cambiarNuevo(campo, valor) {
+    setFormNuevo((prev) => ({ ...prev, [campo]: valor }))
+    setNotaNuevo('')
+    setErrorNuevo('')
+  }
+
+  async function guardarProducto() {
+    // Validación previa (el backend valida de nuevo, pero así evitamos un
+    // request obvio y mostramos el mensaje en español cercano).
+    if (!formNuevo.nombre_comercial.trim()) {
+      setErrorNuevo('El nombre comercial es obligatorio')
+      return
+    }
+    const precio = Number(formNuevo.precio_usd)
+    if (!Number.isFinite(precio) || precio <= 0) {
+      setErrorNuevo('El precio es obligatorio y debe ser mayor a 0')
+      return
+    }
+    if (!formNuevo.laboratorio.trim()) {
+      setErrorNuevo('El laboratorio es obligatorio')
+      return
+    }
+
+    setGuardandoNuevo(true)
+    setErrorNuevo('')
+    setNotaNuevo('')
+    try {
+      const { data } = await staffApi.post('/staff/inventario', {
+        nombre_comercial: formNuevo.nombre_comercial.trim(),
+        precio_usd: precio,
+        laboratorio: formNuevo.laboratorio.trim(),
+        descripcion: formNuevo.descripcion.trim() || undefined,
+        molecula: formNuevo.molecula.trim() || undefined,
+        linea: formNuevo.linea.trim() || undefined,
+        forma: formNuevo.forma.trim() || undefined,
+      })
+      setNotaNuevo(`Producto "${data.nombre_comercial}" creado.`)
+      setFormNuevo({
+        nombre_comercial: '',
+        precio_usd: '',
+        laboratorio: '',
+        descripcion: '',
+        molecula: '',
+        linea: '',
+        forma: '',
+      })
+      setModalNuevoAbierto(false)
+      trasEscribirNuevo(data.id)
+    } catch (err) {
+      setErrorNuevo(err.response?.data?.error || 'No se pudo crear el producto')
+      console.error('[inventario] error al crear producto:', err?.response?.status, err?.message)
+    } finally {
+      setGuardandoNuevo(false)
+    }
+  }
+
   // --- visibilidad en el catálogo (interruptor inmediato) -------------------
 
   /**
@@ -902,15 +985,33 @@ function StaffInventario() {
     <LayoutDepartamento departamento="logistica" activo="inventario" titulo="Inventario">
       <div className="sp-page">
         {esMobile ? (
-          <button
-            type="button"
-            className="si-btn si-btn--filtros"
-            onClick={() => setFiltrosAbiertos(true)}
-          >
-            Filtros{filtrosActivos > 0 ? ` (${filtrosActivos})` : ''}
-          </button>
+          <div className="si-toolbar-mobile">
+            <button
+              type="button"
+              className="si-btn si-btn--principal"
+              onClick={() => setModalNuevoAbierto(true)}
+              disabled={guardandoNuevo}
+            >
+              {guardandoNuevo ? 'Creando...' : 'Nuevo producto'}
+            </button>
+            <button
+              type="button"
+              className="si-btn si-btn--filtros"
+              onClick={() => setFiltrosAbiertos(true)}
+            >
+              Filtros{filtrosActivos > 0 ? ` (${filtrosActivos})` : ''}
+            </button>
+          </div>
         ) : (
           <div className="sp-toolbar">
+            <button
+              type="button"
+              className="si-btn si-btn--principal"
+              onClick={() => setModalNuevoAbierto(true)}
+              disabled={guardandoNuevo}
+            >
+              {guardandoNuevo ? 'Creando...' : 'Nuevo producto'}
+            </button>
             <BarraFiltros
               filtros={{ ...filtros, buscar, molecula }}
               cambiarFiltro={cambiarFiltro}
@@ -1564,6 +1665,152 @@ function StaffInventario() {
                     </>
                   )}
                 </div>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
+        {/* Modal "Nuevo producto" */}
+        {modalNuevoAbierto && createPortal(
+          <div className="si-portal" style={VARS_DEPTO}>
+            <div className="si-drawer__overlay" onClick={() => setModalNuevoAbierto(false)} />
+            <div className="si-drawer__panel" role="dialog" aria-modal="true" aria-label="Nuevo producto">
+              <div className="si-drawer__header">
+                <h2 className="si-drawer__titulo">Nuevo producto</h2>
+                <p className="si-drawer__eyebrow">
+                  Solo nombre, precio y laboratorio son obligatorios. El resto se edita después en el
+                  drawer del producto.
+                </p>
+                <button
+                  type="button"
+                  className="si-drawer__cerrar"
+                  onClick={() => setModalNuevoAbierto(false)}
+                  aria-label="Cerrar"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="si-drawer__body">
+                {errorNuevo && (
+                  <p className="si-nota si-nota--error" role="alert">{errorNuevo}</p>
+                )}
+                {notaNuevo && (
+                  <p className="si-nota si-nota--ok" role="status">{notaNuevo}</p>
+                )}
+
+                <form onSubmit={(e) => { e.preventDefault(); guardarProducto() }}>
+                  <div className="si-grid-2">
+                    <div className="si-field">
+                      <label className="si-label">Nombre comercial <span style={{ color: 'var(--ldep-color-strong)' }}>*</span></label>
+                      <input
+                        type="text"
+                        className="sp-input"
+                        value={formNuevo.nombre_comercial}
+                        onChange={(e) => cambiarNuevo('nombre_comercial', e.target.value)}
+                        placeholder="Ej. Ibuprofeno 400 mg tabletas"
+                        autoFocus
+                      />
+                    </div>
+                    <div className="si-field">
+                      <label className="si-label">Precio USD <span style={{ color: 'var(--ldep-color-strong)' }}>*</span></label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        className="sp-input"
+                        value={formNuevo.precio_usd}
+                        onChange={(e) => cambiarNuevo('precio_usd', e.target.value)}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div className="si-field">
+                      <label className="si-label">Laboratorio <span style={{ color: 'var(--ldep-color-strong)' }}>*</span></label>
+                      <input
+                        type="text"
+                        className="sp-input"
+                        list="si-labs-nuevo"
+                        value={formNuevo.laboratorio}
+                        onChange={(e) => cambiarNuevo('laboratorio', e.target.value)}
+                        placeholder="Ej. Laboratorio S.A."
+                      />
+                      <datalist id="si-labs-nuevo">
+                        {labsDatos.map((v) => <option key={v} value={v} />)}
+                      </datalist>
+                    </div>
+                    <div className="si-field si-field--full">
+                      <label className="si-label">Descripción</label>
+                      <textarea
+                        className="si-textarea"
+                        value={formNuevo.descripcion}
+                        onChange={(e) => cambiarNuevo('descripcion', e.target.value)}
+                        placeholder="Descripción breve del producto"
+                      />
+                    </div>
+                  </div>
+                  <div className="si-grid-2">
+                    <div className="si-field">
+                      <label className="si-label">Molécula</label>
+                      <input
+                        type="text"
+                        className="sp-input"
+                        list="si-moleculas-nuevo"
+                        value={formNuevo.molecula}
+                        onChange={(e) => cambiarNuevo('molecula', e.target.value)}
+                        placeholder="Ej. Ibuprofeno"
+                      />
+                      <datalist id="si-moleculas-nuevo">
+                        {moleculasDatos.map((m) => <option key={m.nombre} value={m.nombre} />)}
+                      </datalist>
+                    </div>
+                    <div className="si-field">
+                      <label className="si-label">Línea</label>
+                      <input
+                        type="text"
+                        className="sp-input"
+                        list="si-lineas-nuevo"
+                        value={formNuevo.linea}
+                        onChange={(e) => cambiarNuevo('linea', e.target.value)}
+                        placeholder="Ej. Línea Farmacia"
+                      />
+                      <datalist id="si-lineas-nuevo">
+                        {lineasDatos.map((v) => <option key={v} value={v} />)}
+                      </datalist>
+                    </div>
+                    <div className="si-field">
+                      <label className="si-label">Forma</label>
+                      <input
+                        type="text"
+                        className="sp-input"
+                        list="si-formas-nuevo"
+                        value={formNuevo.forma}
+                        onChange={(e) => cambiarNuevo('forma', e.target.value)}
+                        placeholder="Ej. TABLETAS"
+                      />
+                      <datalist id="si-formas-nuevo">
+                        {formasDatos.map((v) => <option key={v} value={v} />)}
+                      </datalist>
+                    </div>
+                  </div>
+                  <div className="si-fila-botones">
+                    <button
+                      type="button"
+                      className="si-btn si-btn--sutil"
+                      onClick={() => setModalNuevoAbierto(false)}
+                      disabled={guardandoNuevo}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      className="si-btn si-btn--principal"
+                      disabled={guardandoNuevo}
+                    >
+                      {guardandoNuevo ? 'Creando...' : 'Crear producto'}
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>,

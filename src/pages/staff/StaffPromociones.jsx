@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Plus, Trash2, Edit3, Percent, Tag, Clock } from 'lucide-react'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
@@ -21,7 +22,13 @@ function StaffPromociones({ departamento = 'comercial', activo = 'promociones', 
   const [plantillas, setPlantillas] = useState([])
   const [historial, setHistorial] = useState([])
   const [cargando, setCargando] = useState(true)
-  const [modalCrear, setModalCrear] = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams()
+  // Acceso directo desde el dashboard (tile "Nueva promoción",
+  // /staff/promociones?nuevo=1): arranca con el modal ya abierto, sin pasar por
+  // la lista. Estado inicial perezoso (no un efecto) para no disparar varios
+  // setState extra al montar — mismos valores por defecto que abrirCrear().
+  const vieneDeAccesoDirecto = searchParams.get('nuevo') === '1'
+  const [modalCrear, setModalCrear] = useState(vieneDeAccesoDirecto)
   const [editando, setEditando] = useState(null)
   const [guardando, setGuardando] = useState(false)
   const [tab, setTab] = useState('plantillas')
@@ -31,6 +38,18 @@ function StaffPromociones({ departamento = 'comercial', activo = 'promociones', 
 
   useEffect(() => {
     cargarDatos()
+  }, [])
+
+  // Limpia el query param una vez leído, para no reabrir el modal en un refresh.
+  useEffect(() => {
+    if (vieneDeAccesoDirecto) {
+      setSearchParams((prev) => {
+        const siguiente = new URLSearchParams(prev)
+        siguiente.delete('nuevo')
+        return siguiente
+      }, { replace: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function cargarDatos() {
