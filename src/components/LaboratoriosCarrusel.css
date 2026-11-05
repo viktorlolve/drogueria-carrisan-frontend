@@ -14,11 +14,26 @@
   border-color: #DFE9F6;
 }
 
+/* El logo entra con un fade corto cuando el navegador lo decodifica. Las
+   tarjetas se pintan igual (aspect-ratio 1/1 en el tile), así que no hay
+   salto de layout: solo evita el "pop" del logo sobre el fondo blanco. */
 .lab-car__logo {
   width: 100%;
   height: 100%;
   object-fit: contain;
   mix-blend-mode: multiply;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.lab-car__logo--listo {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lab-car__logo {
+    transition: none;
+  }
 }
 
 @media (min-width: 768px) {

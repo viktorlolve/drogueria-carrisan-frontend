@@ -17,6 +17,14 @@
 
 const BASE_IMG = 'https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/object/public/crsnimages'
 
+// Transformación de imágenes de Supabase Storage. Sirve el logo ya
+// redimensionado (mismo bucket, mismo archivo) en vez del original: varios
+// logos pesan y miden de más para una tarjeta de 100-150 px (drotafarma.jpg
+// es 2048x2048 / 95 KB, distrilab.jpg 1080x388 / 35 KB) y en móvil el
+// navegador los decodifica tarde y con trabajo. El consumidor debe tener un
+// fallback al original si esta URL no responde (ver LaboratoriosCarrusel).
+const BASE_RENDER_IMG = 'https://fqeshthtycmzgyibiurq.supabase.co/storage/v1/render/image/public/crsnimages'
+
 export const LOGOS_LABORATORIOS = {
   // ── Tanda 1 (top 10) ────────────────────────────────────────────────
   // token:            registro BD que coincide         archivo logo     etiqueta
@@ -66,6 +74,16 @@ export function logoParaLaboratorio(laboratorio) {
   const norm = normalizarLab(laboratorio)
   const clave = Object.keys(LOGOS_LABORATORIOS).find((k) => norm.includes(k))
   return clave ? LOGOS_LABORATORIOS[clave] : null
+}
+
+// Versión liviana del logo para miniaturas (tarjetas del carrusel del Home).
+// `ancho` cubre los 3 tamaños de tarjeta con DPR 2/3 (100 px móvil, 130 px
+// tablet, 150 px desktop). Si la URL no es del bucket, se devuelve igual.
+export function logoMiniatura(url, ancho = 320) {
+  if (!url) return url
+  const prefijo = `${BASE_IMG}/`
+  if (!url.startsWith(prefijo)) return url
+  return `${BASE_RENDER_IMG}/${url.slice(prefijo.length)}?width=${ancho}&quality=80&resize=contain`
 }
 
 // Nombre corto para mostrar bajo la tarjeta del carrusel.

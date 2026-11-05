@@ -31,6 +31,31 @@ function ordenarConversaciones(lista) {
   return [...lista].sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0))
 }
 
+// Agrupa conversaciones por cliente para mostrar en acordeón.
+// Devuelve array de { clienteId, nombre, email, conversaciones: [...] }
+function agruparPorCliente(lista) {
+  const porCliente = new Map()
+  for (const conv of lista) {
+    const u = conv.users || {}
+    const clave = u.id || (u.email || 'sin-cliente')
+    if (!porCliente.has(clave)) {
+      porCliente.set(clave, {
+        clienteId: clave,
+        nombre: u.nombre || 'Cliente sin nombre',
+        email: u.email || '',
+        conversaciones: [],
+      })
+    }
+    porCliente.get(clave).conversaciones.push(conv)
+  }
+  // Ordenar clientes por la conversación más reciente de cada uno
+  return Array.from(porCliente.values()).sort((a, b) => {
+    const ua = ordenarConversaciones(a.conversaciones)[0]?.updated_at || 0
+    const ub = ordenarConversaciones(b.conversaciones)[0]?.updated_at || 0
+    return new Date(ub) - new Date(ua)
+  })
+}
+
 function StaffChat() {
   const [conversaciones, setConversaciones] = useState([])
   const [cargando, setCargando] = useState(true)
@@ -41,10 +66,51 @@ function StaffChat() {
   const [cargandoMensajes, setCargandoMensajes] = useState(false)
   const [texto, setTexto] = useState('')
   const [enviando, setEnviando] = useState(false)
+  const [panelEmojisAbierto, setPanelEmojisAbierto] = useState(false)
   const [errorMensajes, setErrorMensajes] = useState('')
   const { avisar } = useStaffUI()
   const scrollRef = useRef(null)
   const activaIdRef = useRef(null)
+  const [gruposAbiertos, setGruposAbiertos] = useState({}) // { [clienteId]: true }
+
+  function alternarGrupo(clienteId) {
+    setGruposAbiertos((prev) => {
+      const siguiente = { ...prev }
+      siguiente[clienteId] = !siguiente[clienteId]
+      return siguiente
+    })
+  }
+
+  // ---------------------------------------------------------------
+  // Respuestas rápidas y selector de emojis
+  // ---------------------------------------------------------------
+  const RESPUESTAS_RAPIDAS = [
+    '👋 ¡Buen día!',
+    '⏳ Su orden está siendo atendida en estos instantes',
+    '💳 Su orden está en espera de pago',
+    '✏️ Hay modificaciones en su orden',
+    '📦 Su orden está lista para ser retirada',
+    '🚚 Su orden llegará en 30 min',
+  ]
+
+  const EMOJIS = [
+    '😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇',
+    '🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚',
+    '😋','😛','😜','😝','🤪','🤨','🧐','🤓','😎','🥸',
+    '🤩','🥳','😏','😒','😞','😔','😟','😕','🙁','😮',
+    '😳','😨','😰','😥','😢','😭','😱','😖','😣','😩',
+    '😫','😤','😠','😡','🤬','😷','🤒','🤕','🤢','🤮',
+    '🤧','🥵','🥶','🥴','😵','🤯','🤠','😴','🤤','😺',
+  ]
+
+  const insertarEmoji = (emoji) => {
+    setTexto((prev) => prev + emoji)
+    setPanelEmojisAbierto(false)
+  }
+
+  const usarRespuestaRapida = (respuesta) => {
+    setTexto(respuesta)
+  }
 
   useEffect(() => {
     activaIdRef.current = conversacionActiva?.id ?? null
@@ -222,30 +288,52 @@ function StaffChat() {
               ) : conversacionesFiltradas.length === 0 ? (
                 <p className="scc-vacio">No se encontraron conversaciones</p>
               ) : (
-                conversacionesFiltradas.map((conv) => (
-                  <button
-                    type="button"
-                    key={conv.id}
-                    className={`scc-item ${conversacionActiva?.id === conv.id ? 'scc-item--activo' : ''}`}
-                    onClick={() => abrirConversacion(conv)}
-                  >
-                    <div className="scc-item__cabecera">
-                      <span className="scc-item__cliente">{conv.users?.nombre || 'Cliente'}</span>
-                      <span className="scc-item__fecha">
-                        {formatFecha(conv.ultimo_mensaje?.created_at)}
-                      </span>
-                    </div>
-                    <span className="scc-item__titulo">{tituloConversacion(conv)}</span>
-                    <div className="scc-item__pie">
-                      <span className="scc-item__preview">
-                        {conv.ultimo_mensaje?.contenido || 'Sin mensajes'}
-                      </span>
-                      {conv.no_leidos > 0 && (
-                        <span className="scc-item__badge">{conv.no_leidos}</span>
+                <>
+                  {agruparPorCliente(conversacionesFiltradas).map((grupo) => (
+                    <div key={grupo.clienteId} className="scc-grupo">
+                      <button
+                        type="button"
+                        className={`scc-grupo__header ${
+                          gruposAbiertos[grupo.clienteId] ? 'scc-grupo__header--abierto' : ''
+                        }`}
+                        onClick={() => alternarGrupo(grupo.clienteId)}
+                      >
+                        <span className="scc-grupo__cliente">{grupo.nombre}</span>
+                        <span className="scc-grupo__contador">{grupo.conversaciones.length}</span>
+                        <span className="scc-grupo__chevron">
+                          {gruposAbiertos[grupo.clienteId] ? '▲' : '▼'}
+                        </span>
+                      </button>
+                      {gruposAbiertos[grupo.clienteId] && (
+                        <div className="scc-grupo__cuerpo">
+                          {grupo.conversaciones.map((conv) => (
+                            <button
+                              type="button"
+                              key={conv.id}
+                              className={`scc-item ${conversacionActiva?.id === conv.id ? 'scc-item--activo' : ''}`}
+                              onClick={() => abrirConversacion(conv)}
+                            >
+                              <div className="scc-item__cabecera">
+                                <span className="scc-item__fecha">
+                                  {formatFecha(conv.ultimo_mensaje?.created_at)}
+                                </span>
+                              </div>
+                              <span className="scc-item__titulo">{tituloConversacion(conv)}</span>
+                              <div className="scc-item__pie">
+                                <span className="scc-item__preview">
+                                  {conv.ultimo_mensaje?.contenido || 'Sin mensajes'}
+                                </span>
+                                {conv.no_leidos > 0 && (
+                                  <span className="scc-item__badge">{conv.no_leidos}</span>
+                                )}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
                       )}
                     </div>
-                  </button>
-                ))
+                  ))}
+                </>
               )}
             </div>
           </aside>
@@ -295,15 +383,57 @@ function StaffChat() {
                   )}
                 </div>
 
+                {/* Barra de respuestas rápidas */}
+                <div className="scc-panel__respuestas-rapidas">
+                  {RESPUESTAS_RAPIDAS.map((respuesta) => (
+                    <button
+                      key={respuesta}
+                      type="button"
+                      className="scc-panel__respuesta-rapida"
+                      onClick={() => usarRespuestaRapida(respuesta)}
+                      disabled={enviando}
+                    >
+                      {respuesta}
+                    </button>
+                  ))}
+                </div>
+
                 <form className="scc-panel__form" onSubmit={enviarMensaje}>
-                  <input
-                    type="text"
-                    placeholder="Escribe una respuesta..."
-                    value={texto}
-                    onChange={(e) => setTexto(e.target.value)}
-                    disabled={enviando}
-                    className="scc-panel__input"
-                  />
+                  <div className="scc-panel__input-wrapper">
+                    <input
+                      type="text"
+                      placeholder="Escribe una respuesta..."
+                      value={texto}
+                      onChange={(e) => setTexto(e.target.value)}
+                      disabled={enviando}
+                      className="scc-panel__input"
+                    />
+                    <button
+                      type="button"
+                      className="scc-panel__emoji-btn"
+                      onClick={() => setPanelEmojisAbierto(!panelEmojisAbierto)}
+                      disabled={enviando}
+                      aria-label="Selector de emojis"
+                    >
+                      😊
+                    </button>
+                    {panelEmojisAbierto && (
+                      <div className="scc-panel__emoji-panel">
+                        {EMOJIS.map((emoji) => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            className="scc-panel__emoji"
+                            onClick={() => insertarEmoji(emoji)}
+                            disabled={enviando}
+                            aria-label={emoji}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <button type="submit" disabled={!texto.trim() || enviando} className="scc-panel__enviar">
                     Enviar
                   </button>
