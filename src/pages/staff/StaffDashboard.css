@@ -1,6 +1,10 @@
 /* =================================================================
    STAFF DASHBOARD — panel visual de entrada al módulo staff
-   Standalone (sin sidebar): solo tarjetas de departamentos.
+   Standalone (sin sidebar). Rediseño (2026-11-04): mismo patrón visual
+   que el menú móvil del cliente (src/pages/Menu.jsx) — hero + bento de
+   accesos destacados + acordeón — adaptado a escritorio (el staff
+   también trabaja desde PC) con un segundo breakpoint ancho.
+   Prefijo de clases: sd- (ya era el de este archivo).
    ================================================================= */
 
 .sd-wrap,
@@ -14,8 +18,11 @@
   --sd-bg: #f4f6fb;
   --sd-surface: #ffffff;
   --sd-border: #e5e7eb;
-  --sd-text: #0f172a;
+  --sd-text: var(--stf-indigo, #1A1A3A);
   --sd-text-muted: #64748b;
+  --sd-azul: var(--stf-azul, #0052DC);
+  --sd-indigo: var(--stf-indigo, #1A1A3A);
+  --sd-teal: var(--stf-teal, #12A594);
 
   min-height: 100vh;
   max-width: 100vw;
@@ -26,6 +33,16 @@
     var(--sd-bg);
   font-family: 'Figtree', 'Inter', system-ui, -apple-system, sans-serif;
   color: var(--sd-text);
+}
+
+.sd-wrap :focus-visible {
+  outline: 2px solid var(--sd-azul);
+  outline-offset: 2px;
+}
+
+@keyframes sd-subir {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
 }
 
 /* -----------------------------------------------------------------
@@ -40,21 +57,19 @@
   margin: 28px clamp(16px, 4vw, 40px) 8px;
   padding: 44px clamp(20px, 5vw, 56px);
   border-radius: 22px;
-  background: linear-gradient(120deg, #1A1A3A 0%, #0052DC 100%);
+  background: var(--sd-indigo);
   color: #fff;
   overflow: hidden;
   box-shadow: 0 18px 40px -18px rgba(0, 82, 220, 0.55);
 }
 
-.sd-hero__glow {
+.sd-hero__fondo {
   position: absolute;
-  top: -60%;
-  right: -10%;
-  width: 420px;
-  height: 420px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(18, 165, 148, 0.45), transparent 70%);
+  inset: 0;
   pointer-events: none;
+  background:
+    radial-gradient(420px 280px at 100% -10%, color-mix(in srgb, var(--sd-azul) 65%, transparent), transparent 70%),
+    radial-gradient(360px 260px at -5% 115%, color-mix(in srgb, var(--sd-teal) 50%, transparent), transparent 70%);
 }
 
 .sd-hero__content {
@@ -77,6 +92,7 @@
 
 .sd-hero__titulo {
   margin: 0;
+  font-family: 'Manrope', sans-serif;
   font-size: clamp(24px, 4vw, 34px);
   font-weight: 800;
   letter-spacing: -0.02em;
@@ -199,190 +215,389 @@
 }
 
 /* -----------------------------------------------------------------
-   Grid de departamentos
+   Atajos por departamento (debajo del hero, solo con 2+ departamentos)
    ----------------------------------------------------------------- */
-.sd-main {
-  padding: 0 clamp(16px, 4vw, 40px) 48px;
+.sd-atajos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
   max-width: 1400px;
   margin: 0 auto;
+  padding: 0 clamp(16px, 4vw, 40px);
 }
 
-.sd-grid {
-  display: grid;
-  gap: 18px;
-  margin-top: 20px;
-}
-
-@media (min-width: 640px) {
-  .sd-grid {
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  }
-}
-
-.sd-card {
-  position: relative;
+.sd-atajo {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  background: var(--sd-surface);
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 12px 16px;
   border: 1.5px solid var(--sd-border);
-  border-radius: 18px;
-  padding: 24px 24px 20px;
-  text-decoration: none;
+  border-radius: 16px;
+  background: var(--sd-surface);
   color: var(--sd-text);
-  overflow: hidden;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
-.sd-card__fondo {
+.sd-atajo:hover {
+  transform: translateY(-2px);
+  border-color: var(--sd-azul);
+  box-shadow: 0 10px 22px -14px rgba(15, 23, 42, 0.3);
+}
+
+.sd-atajo:active { transform: scale(0.98); }
+
+.sd-atajo__icono {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: rgba(0, 82, 220, 0.08);
+  color: var(--sd-azul);
+}
+
+.sd-atajo__texto {
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.sd-atajo__conteo {
   position: absolute;
-  top: -40px;
-  right: -40px;
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--sd-card-color-soft), transparent 72%);
-  opacity: 0.9;
-  pointer-events: none;
-  transition: transform 0.25s ease;
-}
-
-.sd-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--sd-card-color);
-  box-shadow: 0 16px 32px -14px rgba(15, 23, 42, 0.18);
-}
-
-.sd-card:hover .sd-card__fondo {
-  transform: scale(1.25);
-}
-
-.sd-card__cab {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 6px;
-}
-
-/* Cabecera+título de la tarjeta es el enlace al hub (los chips-enlaces son
-   hermanos suyos: no puede haber <a> dentro de <a>). */
-.sd-card__link {
-  display: block;
-  text-decoration: none;
-  color: inherit;
-}
-
-.sd-card__icono {
-  width: 50px;
-  height: 50px;
-  border-radius: 14px;
-  background: var(--sd-card-color-soft);
-  color: var(--sd-card-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.sd-card__flecha {
-  color: var(--sd-card-color);
-  opacity: 0;
-  transform: translateX(-6px);
-  transition: opacity 0.18s ease, transform 0.18s ease;
-}
-
-.sd-card:hover .sd-card__flecha {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.sd-card__nombre {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--sd-card-color);
-}
-
-.sd-card__desc {
-  margin: 0;
-  font-size: 13px;
-  color: var(--sd-text-muted);
-  line-height: 1.45;
-}
-
-.sd-card__menu {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 12px;
-}
-
-.sd-card__chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--sd-text);
-  background: var(--sd-card-color-soft);
-  padding: 5px 9px;
-  border-radius: 999px;
-  text-decoration: none;
-}
-
-.sd-card__chip--link {
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.sd-card__chip--link:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 14px -10px rgba(15, 23, 42, 0.5);
-}
-
-.sd-card__chip-badge {
-  margin-left: 2px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  top: -8px;
+  right: -10px;
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
   border-radius: 999px;
-  background: var(--sd-card-color, #2563EB);
+  background: #E5484D;
+  box-shadow: 0 0 0 2px var(--sd-surface);
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 18px;
+  text-align: center;
   color: #fff;
-  font-size: 10px;
-  font-weight: 700;
-}
-
-.sd-card__chip--pendientes {
-  background: rgba(217, 119, 6, 0.15);
-  color: #92400e;
-  font-weight: 700;
 }
 
 /* -----------------------------------------------------------------
-   Móvil
+   Secciones / main
    ----------------------------------------------------------------- */
-@media (max-width: 480px) {
-  .sd-hero {
-    padding: 32px 22px;
-  }
+.sd-main {
+  padding: 24px clamp(16px, 4vw, 40px) 56px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.sd-seccion { margin-top: 24px; }
+.sd-seccion:first-child { margin-top: 0; }
+
+.sd-seccion__titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px 2px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sd-text-muted);
+}
+
+.sd-seccion__titulo::before {
+  content: "";
+  width: 5px;
+  height: 14px;
+  border-radius: 3px;
+  background: var(--sd-azul);
 }
 
 /* -----------------------------------------------------------------
-   Jornada enfocada (Variante 3c) — un solo departamento
+   Bento "Acciones rápidas"
    ----------------------------------------------------------------- */
-.sd-hero--foco {
-  padding: 30px clamp(20px, 5vw, 40px);
+.sd-bento {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
 }
 
-.sd-hero--foco .sd-hero__eyebrow {
-  color: #a9f3e6;
+a.sd-tile {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 140px;
+  padding: 16px;
+  border-radius: 22px;
+  border: 1px solid transparent;
+  color: #fff;
+  text-decoration: none;
+  animation: sd-subir 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 55ms);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-/* El botón "Instalar app" (.sd-instalar) lo pinta BotonInstalarStaff;
-   aquí vive su estilo base porque el componente se creó para el
-   dashboard. StaffNavbar lo re-muestra dentro de su menú de usuario y
-   lo sobreescribe con `.snb .snb-instalar-btn`. */
+.sd-tile:hover { transform: translateY(-3px); }
+.sd-tile:active { transform: scale(0.97); }
+
+.sd-tile--ancho {
+  grid-column: 1 / -1;
+  min-height: 150px;
+}
+
+.sd-tile::before,
+.sd-tile::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sd-tile::before { width: 150px; height: 150px; right: -44px; bottom: -64px; }
+.sd-tile::after  { width: 84px; height: 84px; right: 46px; bottom: -42px; background: rgba(255, 255, 255, 0.07); }
+
+.sd-tile--azul {
+  background: linear-gradient(135deg, var(--sd-azul) 0%, color-mix(in srgb, var(--sd-azul), #000 30%) 100%);
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--sd-azul) 32%, transparent);
+}
+
+.sd-tile--indigo {
+  background: linear-gradient(145deg, color-mix(in srgb, var(--sd-indigo), #fff 10%) 0%, var(--sd-indigo) 100%);
+  box-shadow: 0 12px 24px rgba(26, 26, 58, 0.22);
+}
+
+.sd-tile--teal {
+  background: linear-gradient(135deg, var(--sd-teal) 0%, color-mix(in srgb, var(--sd-teal), #000 28%) 100%);
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--sd-teal) 30%, transparent);
+}
+
+a.sd-tile--claro {
+  background: #fff;
+  border-color: var(--sd-border);
+  color: var(--sd-text);
+  box-shadow: 0 1px 2px rgba(26, 26, 58, 0.05);
+}
+
+.sd-tile--claro::before,
+.sd-tile--claro::after { background: rgba(0, 82, 220, 0.05); }
+
+.sd-tile--claro:hover { box-shadow: 0 10px 24px rgba(26, 26, 58, 0.1); }
+
+.sd-tile__icono {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.sd-tile--ancho .sd-tile__icono { width: 52px; height: 52px; border-radius: 16px; }
+
+.sd-tile--claro .sd-tile__icono {
+  background: rgba(0, 82, 220, 0.08);
+  color: var(--sd-azul);
+}
+
+.sd-tile__flecha {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  opacity: 0.7;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+.sd-tile:hover .sd-tile__flecha { opacity: 1; transform: translate(2px, -2px); }
+
+.sd-tile__texto {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sd-tile__titulo {
+  font-family: 'Manrope', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.sd-tile--ancho .sd-tile__titulo { font-size: 1.3rem; }
+
+.sd-tile__desc {
+  font-size: 0.78rem;
+  line-height: 1.35;
+  opacity: 0.85;
+}
+
+.sd-tile--claro .sd-tile__desc { opacity: 1; color: var(--sd-text-muted); }
+
+/* -----------------------------------------------------------------
+   Acordeón "Tu espacio" (un grupo por departamento)
+   ----------------------------------------------------------------- */
+.sd-grupo {
+  margin-bottom: 10px;
+  border: 1px solid var(--sd-border);
+  border-radius: 20px;
+  background: var(--sd-surface);
+  box-shadow: 0 1px 2px rgba(26, 26, 58, 0.04);
+  overflow: hidden;
+  animation: sd-subir 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+
+.sd-grupo__cabecera {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 60px;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  font: inherit;
+  text-align: left;
+  color: var(--sd-text);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.sd-grupo__cabecera:hover { background: rgba(26, 26, 58, 0.025); }
+.sd-grupo__cabecera:focus-visible { outline-offset: -2px; }
+
+.sd-grupo__icono {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--sd-tinte, var(--sd-azul)) 14%, transparent);
+  color: var(--sd-tinte, var(--sd-azul));
+}
+
+.sd-grupo__titulo {
+  flex: 1;
+  min-width: 0;
+  font-family: 'Manrope', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.sd-grupo__chevron {
+  flex-shrink: 0;
+  color: rgba(26, 26, 58, 0.4);
+  transition: transform 0.28s ease;
+}
+
+.sd-grupo--abierto .sd-grupo__chevron { transform: rotate(180deg); }
+
+.sd-grupo__cuerpo {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.28s ease;
+}
+
+.sd-grupo--abierto .sd-grupo__cuerpo { grid-template-rows: 1fr; }
+
+.sd-grupo__interior {
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* -----------------------------------------------------------------
+   Items dentro del acordeón
+   ----------------------------------------------------------------- */
+.sd-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 60px;
+  padding: 8px 16px 8px 18px;
+  border-top: 1px solid var(--sd-border);
+  color: var(--sd-text);
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.sd-item:hover { background: rgba(26, 26, 58, 0.03); }
+.sd-item:active { background: rgba(26, 26, 58, 0.06); }
+.sd-item:focus-visible { outline-offset: -2px; }
+
+.sd-item__icono {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: rgba(26, 26, 58, 0.05);
+  color: var(--sd-tinte, var(--sd-azul));
+}
+
+.sd-item__texto {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sd-item__titulo {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.sd-item__desc {
+  font-size: 0.76rem;
+  color: var(--sd-text-muted);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sd-item__flecha {
+  flex-shrink: 0;
+  color: rgba(26, 26, 58, 0.28);
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.sd-item:hover .sd-item__flecha { color: var(--sd-azul); transform: translateX(2px); }
+
+.sd-conteo {
+  flex-shrink: 0;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--sd-tinte, var(--sd-azul));
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 22px;
+  text-align: center;
+  color: #fff;
+}
+
+/* -----------------------------------------------------------------
+   Botón "Instalar app" — base del componente BotonInstalarStaff (se
+   monta en el menú de usuario de StaffNavbar, que lo sobreescribe con
+   `.snb .snb-instalar-btn`; esta regla es su estilo de respaldo).
+   ----------------------------------------------------------------- */
 .sd-instalar {
   position: relative;
   display: inline-flex;
@@ -406,132 +621,48 @@
 }
 
 /* -----------------------------------------------------------------
-   Jornada enfocada — panel de trabajo (3c)
+   Responsive
    ----------------------------------------------------------------- */
-.sd-foco {
-  --sd-foco-color: var(--sd-card-color, #0052DC);
-  --sd-foco-color-soft: var(--sd-card-color-soft, rgba(0, 82, 220, 0.1));
-}
+@media (max-width: 480px) {
+  .sd-hero {
+    padding: 32px 22px;
+  }
 
-.sd-foco__cab {
-  max-width: 720px;
-}
+  .sd-bento {
+    grid-template-columns: 1fr;
+  }
 
-.sd-eyebrow {
-  margin: 0 0 8px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--sd-foco-color);
-}
-
-.sd-foco__titulo {
-  margin: 0;
-  font-size: clamp(22px, 3.4vw, 30px);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: var(--sd-text);
-}
-
-.sd-foco__desc {
-  margin: 8px 0 0;
-  font-size: 14px;
-  color: var(--sd-text-muted);
-}
-
-.sd-foco__grid {
-  display: grid;
-  gap: 14px;
-  margin-top: 24px;
-}
-
-@media (min-width: 640px) {
-  .sd-foco__grid {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  .sd-tile--ancho {
+    grid-column: auto;
   }
 }
 
-.sd-foco__btn {
-  --sd-card-color: var(--sd-foco-color);
-  --sd-card-color-soft: var(--sd-foco-color-soft);
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: var(--sd-surface);
-  border: 1.5px solid var(--sd-border);
-  border-radius: 16px;
-  padding: 16px 18px;
-  text-decoration: none;
-  color: var(--sd-text);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+/* Escritorio ancho: el bento gana una 3ra columna (el tile "ancho" sigue
+   ocupando toda la fila) y el acordeón se limita a un ancho de lectura
+   cómodo en vez de estirarse a todo el monitor. */
+@media (min-width: 900px) {
+  .sd-bento {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .sd-seccion--espacio-ancho,
+  .sd-main .sd-grupo {
+    max-width: 760px;
+  }
 }
 
-.sd-foco__btn:hover {
-  transform: translateY(-3px);
-  border-color: var(--sd-card-color);
-  box-shadow: 0 14px 28px -14px rgba(15, 23, 42, 0.16);
-}
+@media (prefers-reduced-motion: reduce) {
+  .sd-tile,
+  .sd-grupo { animation: none; }
 
-.sd-foco__btn-ico {
-  flex: none;
-  width: 46px;
-  height: 46px;
-  border-radius: 13px;
-  background: var(--sd-card-color-soft);
-  color: var(--sd-card-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+  .sd-tile,
+  .sd-tile__flecha,
+  .sd-grupo__chevron,
+  .sd-grupo__cuerpo,
+  .sd-item__flecha,
+  .sd-atajo { transition: none; }
 
-.sd-foco__btn-tx {
-  flex: 1;
-  min-width: 0;
-}
-
-.sd-foco__btn-tit {
-  display: block;
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--sd-text);
-}
-
-.sd-foco__btn-desc {
-  display: block;
-  margin-top: 2px;
-  font-size: 12.5px;
-  color: var(--sd-text-muted);
-}
-
-.sd-foco__btn-arr {
-  flex: none;
-  color: var(--sd-card-color);
-  opacity: 0;
-  transform: translateX(-5px);
-  transition: opacity 0.18s ease, transform 0.18s ease;
-}
-
-.sd-foco__btn:hover .sd-foco__btn-arr {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.sd-foco__volver {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  margin-top: 22px;
-  border: 0;
-  background: transparent;
-  color: var(--sd-text-muted);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: none;
-  transition: color 0.15s ease;
-}
-
-.sd-foco__volver:hover {
-  color: var(--sd-foco-color);
+  .sd-tile:hover,
+  .sd-tile:hover .sd-tile__flecha,
+  .sd-atajo:hover { transform: none; }
 }
