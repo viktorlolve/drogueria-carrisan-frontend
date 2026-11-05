@@ -11,6 +11,46 @@ import './Catalogo.css'
 
 const PAGE_SIZE = 24
 
+// Semilla del orden "aleatorio". Se genera una vez por sesión y se guarda en
+// sessionStorage para que el orden sea estable mientras el usuario navega y
+// hace scroll (infinite scroll) — sin esto cada página pediría un orden distinto
+// y el listado repetiría o saltearía productos.
+const SEED_KEY = 'catalogo_seed'
+
+const ORDENES = [
+  { value: 'aleatorio', label: 'Aleatorio' },
+  { value: 'relevancia', label: 'Mejor coincidencia' },
+  { value: 'nombre_asc', label: 'Nombre (A-Z)' },
+  { value: 'nombre_desc', label: 'Nombre (Z-A)' },
+  { value: 'precio_asc', label: 'Precio: menor a mayor' },
+  { value: 'precio_desc', label: 'Precio: mayor a menor' },
+]
+
+function generarSeed() {
+  return Math.random().toString(36).slice(2, 10)
+}
+
+function leerSeed() {
+  try {
+    const guardada = window.sessionStorage.getItem(SEED_KEY)
+    if (guardada) return guardada
+    const nueva = generarSeed()
+    window.sessionStorage.setItem(SEED_KEY, nueva)
+    return nueva
+  } catch {
+    // sessionStorage no disponible (modo privado estricto, etc.)
+    return generarSeed()
+  }
+}
+
+function guardarSeed(seed) {
+  try {
+    window.sessionStorage.setItem(SEED_KEY, seed)
+  } catch {
+    // Sin sessionStorage el orden cambia solo al recargar; no es crítico.
+  }
+}
+
 function Catalogo() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -29,17 +69,19 @@ function Catalogo() {
   const [cargandoMas, setCargandoMas] = useState(false)
   const [error, setError] = useState('')
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false)
+  // Sin filtros ni búsqueda el orden por defecto es aleatorio (por sesión, ver
+  // SEED_KEY), para no mostrar siempre los mismos productos alfabéticamente.
   // Con búsqueda (?search=) el orden por defecto es "Mejor coincidencia"
-  // (RPC buscar_productos ordena por tier); navegando sin búsqueda se mantiene
-  // el histórico nombre_asc. El componente no se remonta entre cambios de
-  // query del mismo path, así que al cambiar searchTerm se reajusta aquí
-  // (patrón "set state on prop change" — ver AGENTS frontend, sección Lint).
-  const [sort, setSort] = useState(searchTerm ? 'relevancia' : 'nombre_asc')
+  // (RPC buscar_productos ordena por tier). El componente no se remonta entre
+  // cambios de query del mismo path, así que al cambiar searchTerm se reajusta
+  // aquí (patrón "set state on prop change" — ver AGENTS frontend, sección Lint).
+  const [sort, setSort] = useState(searchTerm ? 'relevancia' : 'aleatorio')
   const [searchTermAnterior, setSearchTermAnterior] = useState(searchTerm)
   if (searchTerm !== searchTermAnterior) {
     setSearchTermAnterior(searchTerm)
-    setSort(searchTerm ? 'relevancia' : 'nombre_asc')
+    setSort(searchTerm ? 'relevancia' : 'aleatorio')
   }
+  const [seedCatalogo, setSeedCatalogo] = useState(leerSeed)
   const [categoriaActiva, setCategoriaActiva] = useState(categoriaParam || 'todos')
   const [laboratoriosActivos, setLaboratoriosActivos] = useState(
     laboratorioParam ? [laboratorioParam] : []
@@ -109,6 +151,27 @@ useEffect(() => {
   setLineaActiva(lineaParam)
 }, [lineaParam])
 
+// Sincroniza la categoría activa cuando la URL cambia (ej. clic en un departamento
+// del Navbar: /catalogo?categoria=analgesicos). Sin esto, estando ya en /catalogo
+// el clic no hace nada porque el componente no se remonta.
+useEffect(() => {
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  setCategoriaActiva(categoriaParam || 'todos')
+}, [categoriaParam])
+
+// Sincroniza los laboratorios activos cuando la URL cambia.
+useEffect(() => {
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  setLaboratoriosActivos(laboratorioParam ? [laboratorioParam] : [])
+}, [laboratorioParam])
+
+// Sincroniza el principio activo cuando la URL cambia (ej. /catalogo?molecula=paracetamol).
+useEffect(() => {
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  setMoleculaInput(moleculaParam)
+  setMoleculaActiva(moleculaParam)
+}, [moleculaParam])
+
   // ── Metadata de filtros (laboratorios/formas/categorías) — un solo fetch ligero ──
   useEffect(() => {
     api
@@ -121,11 +184,35 @@ useEffect(() => {
       .catch((err) => console.error('Error al cargar metadata de filtros:', err))
   }, [])
 
+  // Hay filtros del sidebar activos (la búsqueda se evalúa aparte).
+  const hayFiltrosActivos =
+    lineaActiva !== '' ||
+    categoriaActiva !== 'todos' ||
+    laboratoriosActivos.length > 0 ||
+    formasActivas.length > 0 ||
+    soloDisponibles ||
+    precioMin !== '' ||
+    precioMax !== '' ||
+    moleculaActiva !== ''
+
+  // El barajado solo aplica al catálogo limpio. Con filtros o búsqueda se
+  // conserva el orden clásico; el estado `sort` mantiene la elección del
+  // usuario para cuando vuelva a limpiar los filtros.
+  const sinFiltrosNiBusqueda = !searchTerm && !hayFiltrosActivos
+  const sortConsulta = sinFiltrosNiBusqueda
+    ? sort
+    : sort === 'aleatorio' ? 'nombre_asc' : sort
+
+  // "Aleatorio" solo se ofrece cuando el catálogo está limpio.
+  const opcionesOrden = ORDENES.filter(
+    (o) => o.value !== 'aleatorio' || sinFiltrosNiBusqueda
+  )
+
   // Construye los parámetros de consulta a partir del estado actual de filtros.
   const construirQuery = useCallback((
     { search = searchTerm, page = 1, limit = PAGE_SIZE } = {}
   ) => {
-    const params = { sort, page, limit }
+    const params = { sort: sortConsulta, page, limit }
     if (search) params.search = search
     if (lineaActiva) params.linea = lineaActiva
     if (categoriaActiva !== 'todos') params.categoria = categoriaActiva
@@ -135,8 +222,9 @@ useEffect(() => {
     if (precioMin !== '') params.precio_min = precioMin
     if (precioMax !== '') params.precio_max = precioMax
     if (moleculaActiva) params.molecula = moleculaActiva
+    if (sortConsulta === 'aleatorio') params.seed = seedCatalogo
     return params
-  }, [searchTerm, sort, categoriaActiva, lineaActiva, laboratoriosActivos, formasActivas, soloDisponibles, precioMin, precioMax, moleculaActiva])
+  }, [searchTerm, sortConsulta, seedCatalogo, categoriaActiva, lineaActiva, laboratoriosActivos, formasActivas, soloDisponibles, precioMin, precioMax, moleculaActiva])
 
   // Carga una página determinada. Si `reset` es true, reemplaza la lista
   // (primera página); si es false, agrega al final (infinite scroll).
@@ -169,7 +257,7 @@ useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     cargarPagina({ page: 1, reset: true })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, sort, categoriaActiva, lineaActiva, laboratoriosActivos, formasActivas, soloDisponibles, precioMin, precioMax, moleculaActiva])
+  }, [searchTerm, sortConsulta, seedCatalogo, categoriaActiva, lineaActiva, laboratoriosActivos, formasActivas, soloDisponibles, precioMin, precioMax, moleculaActiva])
 
   // Tasa de cambio ves — global, se carga una sola vez.
   useEffect(() => {
@@ -234,6 +322,15 @@ useEffect(() => {
     mainRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
+  // Regenera la semilla del orden aleatorio (botón "Mezclar").
+  function mezclarCatalogo() {
+    const nueva = generarSeed()
+    guardarSeed(nueva)
+    setSeedCatalogo(nueva)
+    setFiltrosAbiertos(false)
+    mainRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   if (error) return <p className="catalogo-estado catalogo-error">{error}</p>
 
   const filtrosActivos = []
@@ -250,16 +347,6 @@ useEffect(() => {
     filtrosActivos.push({ id: 'precio', tipo: 'Precio', etiqueta: etiquetaPrecio, remover: () => { setPrecioMin(''); setPrecioMax('') } })
   }
   if (moleculaActiva) filtrosActivos.push({ id: 'molecula', tipo: 'Principio activo', etiqueta: moleculaActiva, remover: () => { setMoleculaInput(''); setMoleculaActiva('') } })
-
-  const hayFiltrosActivos =
-    lineaActiva !== '' ||
-    categoriaActiva !== 'todos' ||
-    laboratoriosActivos.length > 0 ||
-    formasActivas.length > 0 ||
-    soloDisponibles ||
-    precioMin !== '' ||
-    precioMax !== '' ||
-    moleculaActiva !== ''
 
   const totalFiltrosActivos =
     (lineaActiva !== '' ? 1 : 0) +
@@ -319,16 +406,31 @@ useEffect(() => {
           <div className="catalogo-ordenar-desktop">
             <span className="catalogo-ordenar-label">Ordenar por</span>
             <select
-              value={sort}
+              value={sortConsulta}
               onChange={(e) => setSort(e.target.value)}
               className="catalogo-sort-select"
             >
-              <option value="relevancia">Mejor coincidencia</option>
-              <option value="nombre_asc">Nombre (A-Z)</option>
-              <option value="nombre_desc">Nombre (Z-A)</option>
-              <option value="precio_asc">Precio: menor a mayor</option>
-              <option value="precio_desc">Precio: mayor a menor</option>
+              {opcionesOrden.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
             </select>
+            {sortConsulta === 'aleatorio' && (
+              <button
+                type="button"
+                className="catalogo-mezclar-btn"
+                onClick={mezclarCatalogo}
+                title="Barajar los productos de nuevo"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <polyline points="16 3 21 3 21 8"></polyline>
+                  <line x1="4" y1="20" x2="21" y2="3"></line>
+                  <polyline points="21 16 21 21 16 21"></polyline>
+                  <line x1="15" y1="15" x2="21" y2="21"></line>
+                  <line x1="4" y1="4" x2="9" y2="9"></line>
+                </svg>
+                Mezclar
+              </button>
+            )}
           </div>
         )}
       </header>
@@ -574,14 +676,8 @@ useEffect(() => {
               <section className="cfm-seccion">
                 <h3 className="cfm-seccion__titulo">Ordenar por</h3>
                 <div className="cfm-sort">
-                  {[
-                    { value: 'relevancia', label: 'Mejor coincidencia' },
-                    { value: 'nombre_asc', label: 'Nombre (A-Z)' },
-                    { value: 'nombre_desc', label: 'Nombre (Z-A)' },
-                    { value: 'precio_asc', label: 'Precio: menor a mayor' },
-                    { value: 'precio_desc', label: 'Precio: mayor a menor' },
-                  ].map((opt) => {
-                    const activa = sort === opt.value
+                  {opcionesOrden.map((opt) => {
+                    const activa = sortConsulta === opt.value
                     return (
                       <button
                         key={opt.value}
@@ -596,6 +692,22 @@ useEffect(() => {
                       </button>
                     )
                   })}
+                  {sortConsulta === 'aleatorio' && (
+                    <button
+                      type="button"
+                      className="cfm-mezclar"
+                      onClick={mezclarCatalogo}
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                        <polyline points="16 3 21 3 21 8"></polyline>
+                        <line x1="4" y1="20" x2="21" y2="3"></line>
+                        <polyline points="21 16 21 21 16 21"></polyline>
+                        <line x1="15" y1="15" x2="21" y2="21"></line>
+                        <line x1="4" y1="4" x2="9" y2="9"></line>
+                      </svg>
+                      Mezclar de nuevo
+                    </button>
+                  )}
                 </div>
               </section>
 

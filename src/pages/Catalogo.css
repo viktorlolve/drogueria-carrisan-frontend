@@ -97,6 +97,29 @@
   background-position: right 10px center;
 }
 
+/* Botón "Mezclar" (solo visible con el orden aleatorio activo) */
+.catalogo-mezclar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid #1a1a1a;
+  border-radius: 999px;
+  background: #fff;
+  color: #1a1a1a;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.catalogo-mezclar-btn:hover {
+  background: #1a1a1a;
+  color: #fff;
+}
+
 /* ----------
    2. Carrusel de categorías eliminado: ahora vive en el componente
       compartido CategoriasCarrusel (ExploraCarrusel.css + CategoriasCarrusel.css)
@@ -798,6 +821,31 @@
     height: 10px;
     border-radius: 50%;
     background: #1B4B8F;
+  }
+
+  /* Botón "Mezclar de nuevo" del sheet móvil */
+  .cfm-mezclar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px 14px;
+    border: 1.5px dashed #C7CBD6;
+    border-radius: 10px;
+    background: #F7F8FA;
+    color: #232B45;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+
+  .cfm-mezclar:hover {
+    background: #EEF1F6;
+    border-color: #1B4B8F;
+    color: #1B4B8F;
   }
 
   /* Chips seleccionables grandes (Laboratorio / Forma) */
