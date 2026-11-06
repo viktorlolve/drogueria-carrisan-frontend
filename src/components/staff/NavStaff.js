@@ -13,7 +13,7 @@ import {
   Landmark, TrendingUp, Truck, Receipt, Banknote, CalendarX2,
   Inbox, FileText, Megaphone, MapPin, BadgeDollarSign, Users,
   Shield, BarChart3, MessageSquare, Gift, AlertTriangle,
-  CheckCircle2, Images, Scooter
+  CheckCircle2, Images, Scooter, Building2, ClipboardList
 } from 'lucide-react'
 
 const ROLES_TODOS = ['vendedor', 'despachador', 'almacenista', 'contabilidad', 'administrador', 'director', 'admin']
@@ -302,6 +302,22 @@ export const MODULOS = {
           texto: 'Inventario y fotos',
           desc: 'Completa las fotos que faltan del catálogo y revisa los precios',
           roles: ['almacenista', 'despachador', 'administrador', 'director', 'admin'],
+        },
+        {
+          id: 'precios-proveedores',
+          to: '/staff/precios-proveedores',
+          icono: Building2,
+          texto: 'Proveedores',
+          desc: 'Sube el Excel de cada proveedor y actualiza costos y precios de la tienda',
+          roles: ['almacenista', 'administrador', 'director', 'admin'],
+        },
+        {
+          id: 'pendientes-inventario',
+          to: '/staff/pendientes-inventario',
+          icono: ClipboardList,
+          texto: 'Pendientes de enlace',
+          desc: 'Renglones del proveedor sin producto del catálogo, sin proveedor o con precio viejo',
+          roles: ['almacenista', 'administrador', 'director', 'admin'],
         },
       ],
     },
