@@ -85,16 +85,16 @@ export default function StaffPendientesInventario() {
             <tbody>
               {tab === 'sin_enlazar' && filas.map((f, i) => (
                 <tr key={i}>
-                  <td>{f.descripcion}</td>
-                  <td>{f.laboratorio}</td>
+                  <td>{String(f.descripcion ?? '-')}</td>
+                  <td>{String(f.laboratorio ?? '-')}</td>
                   <td>{f.costo_usd != null ? `$${Number(f.costo_usd).toFixed(2)}` : '-'}</td>
-                  <td>{f.subidas_proveedor?.proveedor || '-'}</td>
+                  <td>{String(f.subidas_proveedor?.proveedor ?? '-')}</td>
                 </tr>
               ))}
               {tab === 'sin_proveedor' && filas.map(f => (
                 <tr key={f.id}>
-                  <td>{f.nombre_comercial}</td>
-                  <td>{f.laboratorio}</td>
+                  <td>{String(f.nombre_comercial ?? '-')}</td>
+                  <td>{String(f.laboratorio ?? '-')}</td>
                   <td>{f.precio_usd != null ? `$${Number(f.precio_usd).toFixed(2)}` : 'Sin precio'}</td>
                   <td>
                     {costoEdit.id === f.id ? (
@@ -111,10 +111,10 @@ export default function StaffPendientesInventario() {
               ))}
               {tab === 'precios_viejos' && filas.map((f, i) => (
                 <tr key={i}>
-                  <td>{f.producto?.nombre_comercial || f.producto_id}</td>
-                  <td>{f.proveedor}</td>
+                  <td>{String(f.producto?.nombre_comercial ?? f.producto_id ?? '-')}</td>
+                  <td>{String(f.proveedor ?? '-')}</td>
                   <td>{f.costo_usd != null ? `$${Number(f.costo_usd).toFixed(2)}` : '-'}</td>
-                  <td>{f.dias}</td>
+                  <td>{f.dias != null ? String(f.dias) : '-'}</td>
                   <td>
                     <Tooltip label="Crear producto deshabilitado" placement="top">
                       <button className="spi-btn spi-btn--xs" disabled>Crear producto</button>
