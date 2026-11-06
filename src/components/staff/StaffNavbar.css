@@ -666,3 +666,247 @@ a.sd-tile--claro {
   .sd-tile:hover .sd-tile__flecha,
   .sd-atajo:hover { transform: none; }
 }
+
+/* =================================================================
+   STAFF NAVBAR — barra superior del área staff (full-width, sticky,
+   azul de marca). Prefijo de clases: snb-.
+   ================================================================= */
+
+.snb {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  background: #0052DC;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  font-family: 'Figtree', 'Inter', system-ui, -apple-system, sans-serif;
+}
+.snb a { color: inherit; text-decoration: none; }
+
+.snb-menu-btn {
+  display: none;
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #fff;
+  border-radius: 8px;
+  padding: 6px 9px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.snb-menu-btn:hover { background: rgba(255, 255, 255, 0.12); }
+
+/* Logo: a la izquierda, tamaño controlado (evita que se vea "gigante"). */
+.snb-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 1.15rem;
+  min-width: 0;
+}
+.snb-logo__img {
+  height: 34px;
+  width: auto;
+  display: block;
+  flex-shrink: 0;
+}
+.snb-logo__ph {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+.snb-logo__texto { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+
+.snb-titulo {
+  margin: 0;
+  font-size: 0.92rem;
+  opacity: 0.95;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+/* Lado derecho: selector de depto + campana + menú de usuario. */
+.snb-derecha {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.snb-depto { position: relative; display: flex; align-items: center; gap: 8px; }
+.snb-depto__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  border-radius: 9px;
+  padding: 6px 11px;
+  font-size: 0.86rem;
+  cursor: pointer;
+  min-width: 0;
+}
+.snb-depto__btn:hover { background: rgba(255, 255, 255, 0.22); }
+.snb-depto__panel {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 7px;
+  background: #fff;
+  color: #1f2937;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+  min-width: 200px;
+  padding: 8px 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+}
+.snb-depto__link {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 7px 14px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #1f2937;
+  border-radius: 6px;
+}
+.snb-depto__link:hover { background: #f3f4f6; }
+.snb-depto__link--activo { background: #eef6ff; color: #0052DC; font-weight: 700; }
+
+.snb-usuario { position: relative; display: flex; align-items: center; gap: 9px; }
+.snb-usuario__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: 0.86rem;
+  cursor: pointer;
+}
+.snb-usuario__btn:hover { background: rgba(255, 255, 255, 0.22); }
+.snb-usuario__avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.88rem;
+  flex-shrink: 0;
+}
+.snb-usuario__textos { display: flex; flex-direction: column; min-width: 0; }
+.snb-usuario__nombre {
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.snb-usuario__rol {
+  font-size: 0.76rem;
+  opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* Menú desplegable de usuario. */
+.snb-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 9px;
+  background: #fff;
+  color: #1f2937;
+  border: 1px solid #e5e7eb;
+  border-radius: 11px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.18);
+  min-width: 230px;
+  padding: 10px 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+}
+.snb-menu__header {
+  padding: 10px 14px;
+  border-bottom: 1px solid #eef2f6;
+  margin-bottom: 8px;
+}
+.snb-menu__nombre { font-weight: 800; display: block; font-size: 0.95rem; }
+.snb-menu__rol { font-size: 0.78rem; opacity: 0.8; display: block; }
+.snb-menu__item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 8px 14px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.92rem;
+  color: #1f2937;
+  border-radius: 0;
+}
+.snb-menu__item:hover { background: #f3f4f6; }
+.snb-menu__item--peligro { color: #b91c1c; }
+.snb-menu__item--peligro:hover { background: #fef2f2; color: #b91c1c; }
+.snb-menu__error {
+  margin: 0;
+  padding: 8px 14px;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  font-size: 0.8rem;
+}
+
+/* Botón instalar dentro del menú de usuario. */
+.snb-instalar-btn { width: auto; padding: 7px 11px; font-size: 0.84rem; }
+
+/* En móvil (<768px) se apila: logo/título arriba y acciones a la derecha. */
+@media (max-width: 768px) {
+  .snb {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px 16px;
+  }
+  .snb-menu-btn { display: inline-flex; }
+  .snb-logo { justify-content: space-between; width: 100%; }
+  .snb-titulo { margin-top: 8px; }
+  .snb-derecha { width: 100%; justify-content: space-between; }
+  .snb-depto__panel,
+  .snb-menu { position: static; margin-top: 0; width: 100%; box-shadow: none; border: none; border-bottom: 1px solid #e5e7eb; border-radius: 0; }
+  .snb-usuario__textos { display: none; }
+}
