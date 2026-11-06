@@ -24,6 +24,14 @@
   --sd-indigo: var(--stf-indigo, #1A1A3A);
   --sd-teal: var(--stf-teal, #12A594);
 
+  /* Ancho de contenido ÚNICO para hero/atajos/main — antes cada sección tenía
+     su propio max-width (o ninguno, el hero se estiraba borde a borde en
+     pantallas anchas) y quedaban desalineadas entre sí; de ahí el "se ve muy
+     mal" en desktop. Con calc() se resta el gutter de los lados sin perder el
+     respiro que ya tenía en mobile. */
+  --sd-gutter: clamp(16px, 4vw, 40px);
+  --sd-maxw: 1080px;
+
   min-height: 100vh;
   max-width: 100vw;
   overflow-x: hidden;
@@ -54,7 +62,9 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 20px 28px;
-  margin: 28px clamp(16px, 4vw, 40px) 8px;
+  width: calc(100% - var(--sd-gutter) * 2);
+  max-width: var(--sd-maxw);
+  margin: 28px auto 8px;
   padding: 44px clamp(20px, 5vw, 56px);
   border-radius: 22px;
   background: var(--sd-indigo);
@@ -219,11 +229,14 @@
    ----------------------------------------------------------------- */
 .sd-atajos {
   display: grid;
+  /* Mobile: se estiran para llenar el ancho (como antes). En desktop (ver
+     media query más abajo) dejan de estirarse — con pocos items (2-3) y un
+     contenedor ancho, estirados quedaban como píldoras gigantes casi vacías. */
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 10px;
-  max-width: 1400px;
+  width: calc(100% - var(--sd-gutter) * 2);
+  max-width: var(--sd-maxw);
   margin: 0 auto;
-  padding: 0 clamp(16px, 4vw, 40px);
 }
 
 .sd-atajo {
@@ -287,9 +300,10 @@
    Secciones / main
    ----------------------------------------------------------------- */
 .sd-main {
-  padding: 24px clamp(16px, 4vw, 40px) 56px;
-  max-width: 1400px;
+  width: calc(100% - var(--sd-gutter) * 2);
+  max-width: var(--sd-maxw);
   margin: 0 auto;
+  padding: 24px 0 56px;
 }
 
 .sd-seccion { margin-top: 24px; }
@@ -447,8 +461,14 @@ a.sd-tile--claro {
 /* -----------------------------------------------------------------
    Acordeón "Tu espacio" (un grupo por departamento)
    ----------------------------------------------------------------- */
+.sd-grupos {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .sd-grupo {
-  margin-bottom: 10px;
+  min-width: 0;
   border: 1px solid var(--sd-border);
   border-radius: 20px;
   background: var(--sd-surface);
@@ -489,12 +509,26 @@ a.sd-tile--claro {
   color: var(--sd-tinte, var(--sd-azul));
 }
 
-.sd-grupo__titulo {
+.sd-grupo__texto {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sd-grupo__titulo {
   font-family: 'Manrope', sans-serif;
   font-size: 1rem;
   font-weight: 800;
+}
+
+.sd-grupo__desc {
+  font-size: 0.78rem;
+  color: var(--sd-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sd-grupo__chevron {
@@ -637,17 +671,24 @@ a.sd-tile--claro {
   }
 }
 
-/* Escritorio ancho: el bento gana una 3ra columna (el tile "ancho" sigue
-   ocupando toda la fila) y el acordeón se limita a un ancho de lectura
-   cómodo en vez de estirarse a todo el monitor. */
+/* Escritorio: el bento gana una 3ra columna (el tile "ancho" sigue ocupando
+   toda la fila), los atajos dejan de estirarse (ver .sd-atajos) y los
+   departamentos de "Tu espacio" pasan de apilados a una grilla lado a lado
+   — con --sd-maxw ya acotado a 1080px, no hace falta ningún max-width extra
+   acá, solo cambiar de columna única a varias. */
 @media (min-width: 900px) {
   .sd-bento {
     grid-template-columns: repeat(3, 1fr);
   }
 
-  .sd-seccion--espacio-ancho,
-  .sd-main .sd-grupo {
-    max-width: 760px;
+  .sd-atajos {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 220px));
+    justify-content: center;
+  }
+
+  .sd-grupos {
+    align-items: start;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   }
 }
 
