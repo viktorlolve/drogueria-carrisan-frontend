@@ -252,7 +252,10 @@ function GrupoDepto({ depto, indice, abierto, onAlternar, conteos }) {
         <span className="sd-grupo__icono">
           <Icono size={20} aria-hidden="true" />
         </span>
-        <span className="sd-grupo__titulo">{depto.nombre}</span>
+        <span className="sd-grupo__texto">
+          <span className="sd-grupo__titulo">{depto.nombre}</span>
+          <span className="sd-grupo__desc">{depto.descripcion}</span>
+        </span>
         {pendientes > 0 && !abierto && (
           <span className="sd-conteo" aria-label={`${pendientes} pendientes`}>
             {formatearConteo(pendientes)}
@@ -318,9 +321,10 @@ function StaffDashboard() {
 
   const accionesRapidas = ACCIONES_RAPIDAS.filter((a) => a.roles.includes(rol))
 
-  const [abiertos, setAbiertos] = useState(
-    () => new Set(departamentos.length === 1 ? [departamentos[0].id] : [])
-  )
+  // Abiertos por defecto: en desktop los grupos quedan uno al lado del otro
+  // (ver .sd-grupos en el CSS), así que arrancar todos cerrados se ve vacío.
+  // El toggle sigue disponible para quien prefiera colapsar lo que no usa.
+  const [abiertos, setAbiertos] = useState(() => new Set(departamentos.map((d) => d.id)))
 
   function alternarGrupo(id) {
     setAbiertos((prev) => {
@@ -369,16 +373,18 @@ function StaffDashboard() {
 
         <section className="sd-seccion" aria-labelledby="sd-t-espacio">
           <h2 id="sd-t-espacio" className="sd-seccion__titulo">Tu espacio</h2>
-          {departamentos.map((depto, i) => (
-            <GrupoDepto
-              key={depto.id}
-              depto={depto}
-              indice={i}
-              abierto={abiertos.has(depto.id)}
-              onAlternar={alternarGrupo}
-              conteos={conteos}
-            />
-          ))}
+          <div className="sd-grupos">
+            {departamentos.map((depto, i) => (
+              <GrupoDepto
+                key={depto.id}
+                depto={depto}
+                indice={i}
+                abierto={abiertos.has(depto.id)}
+                onAlternar={alternarGrupo}
+                conteos={conteos}
+              />
+            ))}
+          </div>
         </section>
       </main>
     </div>
