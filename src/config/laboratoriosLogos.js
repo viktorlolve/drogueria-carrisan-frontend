@@ -36,7 +36,11 @@ export const LOGOS_LABORATORIOS = {
   biotech:          { logo: `${BASE_IMG}/logos/biotech.png`,          nombre: 'BIOTECH' },
   oftalmi:          { logo: `${BASE_IMG}/logos/oftalmi.jpg`,          nombre: 'L.O. OFTALMI' },
   spefar:           { logo: `${BASE_IMG}/logos/spefar.png`,           nombre: 'SPEFAR' },
-  'farma s.a.':     { logo: `${BASE_IMG}/logos/farma.png`,            nombre: 'FARMA' },
+  // El token va con "laboratorio(s)" delante a propósito: con solo "farma s.a."
+  // también matcheaban "GLOBAL FARMA S.A." y "LABORATORIOS LEON FARMA S.A."
+  // (les ponía el logo de Laboratorios Farma). Se aceptan singular y plural.
+  'laboratorios farma s.a.': { logo: `${BASE_IMG}/logos/farma.png`,   nombre: 'FARMA' },
+  'laboratorio farma s.a.':  { logo: `${BASE_IMG}/logos/farma.png`,   nombre: 'FARMA' },
   vargas:           { logo: `${BASE_IMG}/logos/vargas.png`,           nombre: 'VARGAS' },
   // ── Tanda 2 (puestos 11-20) ─────────────────────────────────────────
   sante:            { logo: `${BASE_IMG}/logos/la%20sante.jpg`,          nombre: 'LA SANTE' },

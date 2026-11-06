@@ -146,13 +146,18 @@ function ItemConfianza({ item, textoDespacho }) {
   return <div className="lin-trust__item">{cuerpo}</div>
 }
 
-function LogoLab({ nombre }) {
+// El logo se busca con el nombre COMPLETO del registro de la BD
+// ("LABORATORIOS FARMA S.A."), no con la etiqueta corta ("FARMA"): las claves
+// de LOGOS_LABORATORIOS son fragmentos del nombre real, así que la etiqueta
+// corta no matcheaba y Farma / Drotafarma caían en la inicial.
+function LogoLab({ laboratorio, etiqueta }) {
   const [fallo, setFallo] = useState(false)
-  const match = logoParaLaboratorio(nombre)
+  const match = logoParaLaboratorio(laboratorio)
   if (!match || fallo) {
+    const inicial = String(etiqueta || laboratorio || '').trim().charAt(0).toUpperCase()
     return (
       <span className="lin-lab__inicial" aria-hidden="true">
-        {nombre.trim().charAt(0).toUpperCase()}
+        {inicial}
       </span>
     )
   }
@@ -162,6 +167,7 @@ function LogoLab({ nombre }) {
       src={match.logo}
       alt=""
       loading="lazy"
+      decoding="async"
       onError={() => setFallo(true)}
     />
   )
@@ -289,7 +295,7 @@ function LineaDepartamento({ linea }) {
       if (x.labKey) {
         const act = mapaLabs.get(x.labKey)
         if (act) act.total += 1
-        else mapaLabs.set(x.labKey, { key: x.labKey, nombre: x.labKey, total: 1 })
+        else mapaLabs.set(x.labKey, { key: x.labKey, nombre: x.labKey, laboratorio: x.p.laboratorio, total: 1 })
       }
     }
     const porTotal = (a, b) => b.total - a.total || COLLATOR.compare(a.nombre, b.nombre)
@@ -524,7 +530,7 @@ function LineaDepartamento({ linea }) {
                       aria-pressed={lab === l.key}
                     >
                       <span className="lin-lab__marco">
-                        <LogoLab nombre={l.nombre} />
+                        <LogoLab laboratorio={l.laboratorio} etiqueta={l.nombre} />
                       </span>
                       <span className="lin-lab__nombre">{l.nombre}</span>
                       <span className="lin-lab__total">{fmt(l.total)} productos</span>
