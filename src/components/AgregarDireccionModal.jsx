@@ -7,7 +7,7 @@ import { toaster } from './ui/toaster'
 import MapaPicker from './MapaPicker'
 
 const TARIFAS_DELIVERY = {
-  Valencia: 3, Naguanagua: 4, 'San Diego': 5, Guacara: 5, 'Los Guayos': 5,
+  'Valencia Norte': 1.99, 'Valencia Centro': 2.99, 'Valencia Sur': 2.99, Naguanagua: 2.99, 'San Diego': 4.99, Guacara: 7.99, 'Los Guayos': 4.99, 'Flor Amarillo': 5.99, Tocuyito: 7.99,
 }
 const AGENCIAS = ['MRW', 'Domesa', 'Tealca', 'Zoom']
 
