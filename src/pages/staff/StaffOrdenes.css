@@ -74,7 +74,9 @@
   border: none;
   background: transparent;
   padding: 12px 0;
-  font-size: 15px;
+  /* 16px, no 15: por debajo de 16px iOS hace zoom automático al enfocar el
+     campo (la pantalla "salta"), molesto para buscar cliente o producto. */
+  font-size: 16px;
   color: var(--stf-indigo, #1A1A3A);
   outline: none;
   font-family: inherit;
@@ -412,4 +414,24 @@
   font-size: 14px;
   font-family: inherit;
   cursor: pointer;
+}
+
+@media (max-width: 480px) {
+  /* .so-fila tenía 4 elementos de ancho fijo (stepper + subtotal + quitar,
+     ~190px) compitiendo con el nombre del producto en una sola fila — en un
+     celular angosto el nombre quedaba truncado a 2-3 letras. Pasa a 2 líneas:
+     nombre arriba a todo el ancho, stepper/subtotal/quitar abajo. */
+  .so-fila {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .so-fila-info {
+    flex-basis: 100%;
+  }
+
+  /* Botones +/- de 28px: tocables pero chicos para el dedo. */
+  .so-stepper button {
+    width: 34px;
+    height: 34px;
+  }
 }
