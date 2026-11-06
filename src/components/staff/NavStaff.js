@@ -47,7 +47,7 @@ export const DEPARTAMENTOS = [
     color: '#D97706',
     colorStrong: '#B45309',
     colorLight: '#FFF4E0',
-    icono: Truck,
+    icono: PackageCheck,
   },
 ]
 
