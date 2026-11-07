@@ -782,11 +782,20 @@ function StaffInventario() {
     setFormDatos({
       nombre_comercial: p.nombre_comercial || '',
       descripcion: p.descripcion || '',
+      sku: p.sku || '',
+      marca_id: p.marca_id ? String(p.marca_id) : '',
+      pais_id: p.pais_id ? String(p.pais_id) : '',
+      presentacion: p.presentacion || '',
+      unidades_por_presentacion:
+        p.unidades_por_presentacion === null || p.unidades_por_presentacion === undefined
+          ? ''
+          : String(p.unidades_por_presentacion),
       laboratorio: p.laboratorio || '',
       molecula: p.molecula || '',
       linea: p.linea || '',
       forma: p.forma || '',
       activo: p.activo === true,
+      disponible: p.disponible === true,
     })
     setNotaDatos('')
     setDrawerError('')
@@ -815,7 +824,19 @@ function StaffInventario() {
     setDrawerError('')
     setNotaDatos('')
     try {
-      const { data } = await staffApi.patch(`/staff/inventario/${drawerId}`, formDatos)
+      // Los <select> de marca/país y el input de unidades trabajan con strings:
+      // vacío = null (limpiar la relación / sin dato). El backend vuelve a
+      // sanear y es la única barrera real.
+      const payload = {
+        ...formDatos,
+        marca_id: formDatos.marca_id === '' ? null : Number(formDatos.marca_id),
+        pais_id: formDatos.pais_id === '' ? null : Number(formDatos.pais_id),
+        unidades_por_presentacion:
+          formDatos.unidades_por_presentacion === ''
+            ? null
+            : Number(formDatos.unidades_por_presentacion),
+      }
+      const { data } = await staffApi.patch(`/staff/inventario/${drawerId}`, payload)
       // El server normaliza (trim + limpieza del laboratorio): se muestra lo que
       // quedó guardado, no lo que se tecleó.
       setDetalle((prev) =>
@@ -943,6 +964,9 @@ function StaffInventario() {
   const lineasDatos = opciones?.lineas || []
   const formasDatos = opciones?.formas || []
   const moleculasDatos = opciones?.moleculas || []
+  const marcasDatos = opciones?.marcas || []
+  const paisesDatos = opciones?.paises || []
+  const paisActual = paisesDatos.find((p) => p.id === producto?.pais_id) || null
   const costoMasBarato = (detalle?.costos || []).find((c) => c.es_el_mas_barato) || null
   const refs = (detalle?.moleculas || [])
     .map((m) => m.moleculas_referencias)
@@ -1522,6 +1546,76 @@ function StaffInventario() {
 
                             <div className="si-grid-2">
                               <label className="si-label">
+                                <span>SKU</span>
+                                <input
+                                  type="text"
+                                  className="sp-input"
+                                  value={formDatos.sku}
+                                  maxLength={120}
+                                  placeholder="Ej. ME41487/2"
+                                  onChange={(e) => cambiarDato('sku', e.target.value)}
+                                />
+                              </label>
+                              <label className="si-label">
+                                <span>Marca</span>
+                                <select
+                                  className="sp-select"
+                                  value={formDatos.marca_id}
+                                  onChange={(e) => cambiarDato('marca_id', e.target.value)}
+                                >
+                                  <option value="">— Sin marca —</option>
+                                  {marcasDatos.map((m) => (
+                                    <option key={m.id} value={m.id}>{m.nombre}</option>
+                                  ))}
+                                </select>
+                              </label>
+                              <label className="si-label">
+                                <span>País</span>
+                                <select
+                                  className="sp-select"
+                                  value={formDatos.pais_id}
+                                  onChange={(e) => cambiarDato('pais_id', e.target.value)}
+                                >
+                                  <option value="">— Sin país —</option>
+                                  {paisesDatos.map((p) => (
+                                    <option key={p.id} value={p.id}>{p.nombre}</option>
+                                  ))}
+                                </select>
+                              </label>
+                              <label className="si-label">
+                                <span>Presentación</span>
+                                <input
+                                  type="text"
+                                  className="sp-input"
+                                  value={formDatos.presentacion}
+                                  placeholder="Ej. X 10 TABLETAS"
+                                  onChange={(e) => cambiarDato('presentacion', e.target.value)}
+                                />
+                              </label>
+                            </div>
+
+                            <label className="si-label">
+                              <span>Unidades por presentación</span>
+                              <input
+                                type="number"
+                                min="0"
+                                step="1"
+                                className="sp-input"
+                                value={formDatos.unidades_por_presentacion}
+                                placeholder="Ej. 10"
+                                onChange={(e) =>
+                                  cambiarDato('unidades_por_presentacion', e.target.value)
+                                }
+                              />
+                            </label>
+                            <p className="sp-hint">
+                              SKU, presentación y unidades son los datos que se muestran en la
+                              ficha del producto en la tienda. El SKU es único: si ya existe, el
+                              guardado se rechaza.
+                            </p>
+
+                            <div className="si-grid-2">
+                              <label className="si-label">
                                 <span>Laboratorio</span>
                                 <input
                                   type="text"
@@ -1581,7 +1675,20 @@ function StaffInventario() {
                                 />
                                 Activo
                               </label>
+                              <label className="sp-check">
+                                <input
+                                  type="checkbox"
+                                  checked={formDatos.disponible}
+                                  onChange={(e) => cambiarDato('disponible', e.target.checked)}
+                                />
+                                Disponible para la venta
+                              </label>
                             </div>
+                            <p className="sp-hint">
+                              Disponible = se puede comprar (además necesita precio). Al fijar un
+                              precio mayor a 0 se activa solo; desmarcalo para pausar la venta sin
+                              borrar el precio.
+                            </p>
 
                             <div className="si-fila-botones">
                               <button
@@ -1633,6 +1740,13 @@ function StaffInventario() {
                         <div className="si-datos">
                           {!editandoDatos && (
                             <>
+                              <Dato etiqueta="Marca" valor={producto.marcas?.nombre} />
+                              <Dato etiqueta="País" valor={paisActual?.nombre} />
+                              <Dato etiqueta="Presentación" valor={producto.presentacion} />
+                              <Dato
+                                etiqueta="Unidades por presentación"
+                                valor={producto.unidades_por_presentacion}
+                              />
                               <Dato etiqueta="Laboratorio" valor={producto.laboratorio} />
                               <Dato etiqueta="Línea" valor={producto.linea} />
                               <Dato etiqueta="Forma" valor={producto.forma} />
