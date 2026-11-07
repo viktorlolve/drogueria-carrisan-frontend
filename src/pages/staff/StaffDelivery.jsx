@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Phone, MessageCircle, Clock } from 'lucide-react'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
+import TarifasDeliveryModal from '../../components/staff/TarifasDeliveryModal'
 import { BotonVerOrden, ItemsOrden, ModalVerOrden } from '../../components/staff/ColaOrdenes'
 import StaffEstado from '../../components/staff/StaffEstado'
 import StaffModal from '../../components/staff/StaffModal'
@@ -67,7 +68,10 @@ function StaffDelivery() {
   return (
     <LayoutDepartamento departamento="logistica" activo="delivery" titulo="Delivery">
       <div className="se-page">
-        <p className="se-intro">Pedidos en ruta en moto — entrega hoy y confirma.</p>
+        <div className="se-encabezado">
+          <p className="se-intro">Pedidos en ruta en moto — entrega hoy y confirma.</p>
+          <TarifasDeliveryModal />
+        </div>
 
         {cargando && <StaffEstado tipo="cargando" />}
         {error && <StaffEstado tipo="error" mensaje={error} onReintentar={recargar} />}

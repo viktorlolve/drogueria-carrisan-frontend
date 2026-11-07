@@ -1,0 +1,421 @@
+/* =================================================================
+   StaffDescuentos.css — módulo Descuentos (Comercial)
+   Prefijo de clases: sdesc- (para no chocar con .sd- del dashboard
+   ni con .sp-* de precios).
+   ================================================================= */
+
+.sdesc-page {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 1100px;
+  margin: 0 auto;
+  font-family: 'Figtree', 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.sdesc-encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.sdesc-intro {
+  margin: 0;
+  max-width: 62ch;
+  color: var(--stf-apagado, #5B6178);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* --- KPIs ------------------------------------------------------- */
+.sdesc-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.sdesc-kpi {
+  background: var(--stf-superficie, #fff);
+  border: 1px solid var(--stf-borde, #E6E8F0);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sdesc-kpi__valor {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--ldep-color-strong, #0043B3);
+  line-height: 1.1;
+}
+
+.sdesc-kpi__label {
+  font-size: 12px;
+  color: var(--stf-apagado, #5B6178);
+}
+
+.sdesc-kpi--vigente .sdesc-kpi__valor { color: var(--stf-exito, #0E8577); }
+.sdesc-kpi--programado .sdesc-kpi__valor { color: var(--stf-azul, #0052DC); }
+.sdesc-kpi--expirado .sdesc-kpi__valor { color: var(--stf-error, #B3261E); }
+
+/* --- Filtros ---------------------------------------------------- */
+.sdesc-filtros {
+  display: grid;
+  gap: 8px;
+}
+
+.sdesc-filtros input,
+.sdesc-filtros select {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--stf-borde, #E6E8F0);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--stf-indigo, #1A1A3A);
+  font-size: 16px; /* 16px evita el zoom automático de iOS */
+  font-family: inherit;
+}
+
+.sdesc-filtros input:focus,
+.sdesc-filtros select:focus {
+  outline: 2px solid var(--stf-azul, #0052DC);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+/* --- Grid de tarjetas ------------------------------------------- */
+.sdesc-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.sdesc-card {
+  background: var(--stf-superficie, #fff);
+  border: 1px solid var(--stf-borde, #E6E8F0);
+  border-left: 4px solid var(--stf-borde, #E6E8F0);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 1px 2px rgba(26, 26, 58, 0.04);
+}
+
+.sdesc-card--vigente { border-left-color: var(--stf-exito, #0E8577); }
+.sdesc-card--programado { border-left-color: var(--stf-azul, #0052DC); }
+.sdesc-card--expirado { border-left-color: var(--stf-error, #B3261E); }
+.sdesc-card--inactivo { border-left-color: #B9C2DB; opacity: 0.85; }
+
+.sdesc-card__cab {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sdesc-card__alcance {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--stf-apagado, #5B6178);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.sdesc-card__aplica {
+  margin: 2px 0 0;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--stf-indigo, #1A1A3A);
+  overflow-wrap: anywhere;
+}
+
+.sdesc-card__valor {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--ldep-color-strong, #0043B3);
+  line-height: 1.1;
+}
+
+.sdesc-card__valor span {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--stf-apagado, #5B6178);
+}
+
+.sdesc-card__fechas {
+  margin: 0;
+  font-size: 12px;
+  color: var(--stf-apagado, #5B6178);
+}
+
+.sdesc-card__acciones {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.sdesc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.sdesc-chip--vigente { background: var(--stf-teal-suave, #E6F6F3); color: var(--stf-exito, #0E8577); }
+.sdesc-chip--programado { background: var(--stf-azul-suave, #EAF1FF); color: var(--stf-azul-fuerte, #0043B3); }
+.sdesc-chip--expirado { background: var(--stf-error-suave, #FDECEC); color: var(--stf-error, #B3261E); }
+.sdesc-chip--inactivo { background: #F1F3F8; color: var(--stf-apagado, #5B6178); }
+
+.sdesc-pie {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 12px;
+  color: var(--stf-apagado, #5B6178);
+}
+
+/* --- Botones ---------------------------------------------------- */
+.sdesc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--stf-borde, #E6E8F0);
+  background: #fff;
+  color: var(--stf-indigo, #1A1A3A);
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.sdesc-btn:hover:not(:disabled) { border-color: #B9C2DB; background: #FAFBFD; }
+.sdesc-btn:focus-visible { outline: 2px solid var(--stf-azul, #0052DC); outline-offset: 2px; }
+.sdesc-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.sdesc-btn--principal {
+  background: var(--ldep-color-strong, #0043B3);
+  border-color: var(--ldep-color-strong, #0043B3);
+  color: #fff;
+}
+
+.sdesc-btn--principal:hover:not(:disabled) {
+  background: var(--ldep-color-strong, #0043B3);
+  filter: brightness(0.94);
+  border-color: transparent;
+}
+
+.sdesc-btn--danger {
+  background: var(--stf-error-suave, #FDECEC);
+  border-color: #F3C6C3;
+  color: var(--stf-error, #B3261E);
+}
+
+.sdesc-btn--danger:hover:not(:disabled) { background: #FBDCDA; border-color: #EBA9A5; }
+
+.sdesc-btn--ghost {
+  border-color: transparent;
+  background: transparent;
+  min-height: 32px;
+  padding: 4px 8px;
+  font-size: 12px;
+  color: var(--ldep-color-strong, #0043B3);
+  text-decoration: underline;
+}
+
+/* --- Formulario (dentro de StaffModal) -------------------------- */
+.sdesc-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sdesc-form__error {
+  background: var(--stf-error-suave, #FDECEC);
+  border: 1px solid #F3C6C3;
+  color: var(--stf-error, #B3261E);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.sdesc-form__campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sdesc-form__campo label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.sdesc-form__campo input,
+.sdesc-form__campo select {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--stf-borde, #E6E8F0);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--stf-indigo, #1A1A3A);
+  font-size: 16px;
+  font-family: inherit;
+}
+
+.sdesc-form__campo input:focus,
+.sdesc-form__campo select:focus {
+  outline: 2px solid var(--stf-azul, #0052DC);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+.sdesc-form__fila {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.sdesc-form__ayuda {
+  font-size: 11.5px;
+  color: var(--stf-apagado, #5B6178);
+  line-height: 1.4;
+}
+
+.sdesc-form__elegido {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1.5px solid #C9DAFB;
+  background: var(--stf-azul-suave, #EAF1FF);
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--stf-azul-fuerte, #0043B3);
+  overflow-wrap: anywhere;
+}
+
+.sdesc-form__resultados {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--stf-borde, #E6E8F0);
+  border-radius: 10px;
+  overflow: hidden;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.sdesc-form__resultados li + li { border-top: 1px solid var(--stf-borde, #E6E8F0); }
+
+.sdesc-form__resultados button {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 10px 12px;
+  border: none;
+  background: #fff;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.sdesc-form__resultados button:hover { background: #F6F8FD; }
+.sdesc-form__resultados strong { font-size: 13.5px; color: var(--stf-indigo, #1A1A3A); }
+.sdesc-form__resultados small { font-size: 11.5px; color: var(--stf-apagado, #5B6178); }
+
+.sdesc-form__input-prefijo {
+  display: flex;
+  align-items: stretch;
+  border: 1.5px solid var(--stf-borde, #E6E8F0);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.sdesc-form__input-prefijo span {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  background: #F3F5FA;
+  color: var(--stf-apagado, #5B6178);
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.sdesc-form__input-prefijo input {
+  border: none;
+  border-radius: 0;
+  flex: 1;
+}
+
+.sdesc-form__input-prefijo input:focus { outline: none; }
+.sdesc-form__input-prefijo:focus-within { outline: 2px solid var(--stf-azul, #0052DC); outline-offset: 1px; }
+
+.sdesc-form__check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1.5px solid var(--stf-borde, #E6E8F0);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.sdesc-form__check input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--stf-azul, #0052DC);
+}
+
+.sdesc-form__check span { display: flex; flex-direction: column; gap: 2px; }
+.sdesc-form__check strong { font-size: 13px; }
+.sdesc-form__check small { font-size: 11.5px; color: var(--stf-apagado, #5B6178); }
+
+.sdesc-form__acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+}
+
+/* --- Breakpoints ------------------------------------------------ */
+@media (min-width: 560px) {
+  .sdesc-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .sdesc-filtros { grid-template-columns: 1fr 190px 190px; }
+  .sdesc-form__fila { grid-template-columns: 1fr 1fr; }
+}
+
+@media (min-width: 760px) {
+  .sdesc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1080px) {
+  .sdesc-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}

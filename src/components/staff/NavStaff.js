@@ -12,8 +12,8 @@ import {
   LayoutDashboard, PackageCheck, PackageOpen, ShoppingCart,
   Landmark, TrendingUp, Truck, Receipt, Banknote, CalendarX2,
   Inbox, FileText, Megaphone, MapPin, BadgeDollarSign, Users,
-  Shield, BarChart3, MessageSquare, Gift, AlertTriangle,
-  CheckCircle2, Images, Scooter, Building2, ClipboardList
+  Shield, BarChart3, MessageSquare, Gift, Tag, AlertTriangle,
+  CheckCircle2, Images, Scooter, Building2, ClipboardList, Link
 } from 'lucide-react'
 
 const ROLES_TODOS = ['vendedor', 'despachador', 'almacenista', 'contabilidad', 'administrador', 'director', 'admin']
@@ -184,6 +184,14 @@ export const MODULOS = {
           roles: ['administrador', 'director', 'admin'],
         },
         {
+          id: 'descuentos',
+          to: '/staff/descuentos',
+          icono: Tag,
+          texto: 'Descuentos',
+          desc: 'Campañas por producto, marca, laboratorio, molécula, línea o forma',
+          roles: ['administrador', 'director', 'admin'],
+        },
+        {
           id: 'vitrina',
           to: '/staff/vitrina',
           icono: LayoutDashboard,
@@ -317,6 +325,14 @@ export const MODULOS = {
           icono: ClipboardList,
           texto: 'Pendientes de enlace',
           desc: 'Renglones del proveedor sin producto del catálogo, sin proveedor o con precio viejo',
+          roles: ['almacenista', 'administrador', 'director', 'admin'],
+        },
+        {
+          id: 'enlazar-productos',
+          to: '/staff/enlazar-productos',
+          icono: Link,
+          texto: 'Enlazar productos',
+          desc: 'Vincula renglones sin enlazar de un proveedor con un producto del catálogo y asigna el costo',
           roles: ['almacenista', 'administrador', 'director', 'admin'],
         },
       ],

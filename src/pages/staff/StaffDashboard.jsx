@@ -11,6 +11,7 @@ import {
   Gift,
   Megaphone,
   Minus,
+  Percent,
   ShoppingCart,
 } from 'lucide-react'
 import { useStaffAuth } from '../../context/StaffAuthContext'
@@ -18,7 +19,7 @@ import { useStaffBadges } from '../../context/StaffBadgesContext'
 import { DEPARTAMENTOS, MODULOS } from '../../components/staff/NavStaff'
 import StaffNavbar from '../../components/staff/StaffNavbar'
 import staffApi from '../../api/staffAxios'
-import { formatearFechaCorta, formatearTasa } from '../../utils/formato'
+import { formatearFechaCorta, formatearTasa, formatearUSD } from '../../utils/formato'
 import {
   esTasaVieja,
   guardarUltimaTasaLocal,
@@ -86,6 +87,15 @@ const ACCIONES_RAPIDAS = [
     texto: 'Plantilla de mensaje para enviar a clientes',
     icono: Megaphone,
     variante: 'claro',
+    roles: ['administrador', 'director', 'admin'],
+  },
+  {
+    id: 'descuentos',
+    to: '/staff/descuentos?nuevo=1',
+    titulo: 'Nuevo descuento',
+    texto: 'Campaña por producto, marca, laboratorio, línea o forma',
+    icono: Percent,
+    variante: 'teal',
     roles: ['administrador', 'director', 'admin'],
   },
 ]
@@ -181,6 +191,88 @@ function TasaBcv() {
         </p>
       )}
     </div>
+  )
+}
+
+// ---------------------------------------------------------------
+// KPIs de negocio.
+//
+// Los operativos salen de `GET /staff/badges` (ya cargados en el contexto),
+// sin endpoint nuevo. Los financieros se derivan del MISMO resumen que usa
+// Reportes Financieros (`GET /staff/reportes/resumen`, mes en curso) — no se
+// agregó ningún endpoint. Solo se piden si el rol puede verlos; si no, el
+// bloque muestra únicamente las colas.
+// ---------------------------------------------------------------
+const ROLES_KPIS_FINANCIEROS = ['contabilidad', 'administrador', 'director', 'admin']
+
+function PulsoNegocio({ rol, conteos }) {
+  const esFinanzas = ROLES_KPIS_FINANCIEROS.includes(rol)
+  const [resumen, setResumen] = useState(null)
+  const [estado, setEstado] = useState(esFinanzas ? 'cargando' : 'inactivo')
+
+  useEffect(() => {
+    if (!esFinanzas) return
+    let activo = true
+    staffApi
+      .get('/staff/reportes/resumen')
+      .then(({ data }) => {
+        if (!activo) return
+        setResumen(data)
+        setEstado('lista')
+      })
+      .catch(() => { if (activo) setEstado('error') })
+    return () => { activo = false }
+  }, [esFinanzas])
+
+  const porAtender =
+    (conteos.nuevas || 0) + (conteos.preparar || 0) + (conteos.preparar_esperando_pago || 0)
+  const enRuta = (conteos.delivery || 0) + (conteos.envios || 0)
+
+  const tarjetas = [
+    { id: 'atender', label: 'Por atender', valor: porAtender, detalle: 'pedidos en cola', tono: 'aviso' },
+    { id: 'ruta', label: 'En ruta', valor: enRuta, detalle: 'delivery + agencias', tono: 'azul' },
+  ]
+
+  if (esFinanzas) {
+    const pendiente = estado === 'cargando' ? '…' : '—'
+    tarjetas.push(
+      {
+        id: 'ventas',
+        label: 'Ventas del mes',
+        valor: resumen ? formatearUSD(resumen.ventas?.total_usd) : pendiente,
+        detalle: resumen ? `${resumen.ventas?.cantidad_ordenes || 0} órdenes` : 'mes en curso',
+        tono: 'teal',
+      },
+      {
+        id: 'cobros',
+        label: 'Cobros del mes',
+        valor: resumen ? formatearUSD(resumen.cobros?.total_usd) : pendiente,
+        detalle: resumen ? `${resumen.cobros?.cantidad_pagos || 0} pagos` : 'pagos registrados',
+        tono: 'teal',
+      },
+      {
+        id: 'vencido',
+        label: 'Cartera vencida',
+        valor: resumen ? formatearUSD(resumen.credito_vencido?.total_usd) : pendiente,
+        detalle: resumen ? `${resumen.credito_vencido?.cantidad_ordenes || 0} órdenes` : 'al día de hoy',
+        tono: 'error',
+      },
+    )
+  }
+
+  return (
+    <section className="sd-seccion" aria-labelledby="sd-t-pulso">
+      <h2 id="sd-t-pulso" className="sd-seccion__titulo">Pulso del negocio</h2>
+      <div className="sd-kpis">
+        {tarjetas.map((k) => (
+          <div key={k.id} className={`sd-kpi sd-kpi--${k.tono}`}>
+            <span className="sd-kpi__label">{k.label}</span>
+            <span className="sd-kpi__valor">{k.valor}</span>
+            <span className="sd-kpi__detalle">{k.detalle}</span>
+          </div>
+        ))}
+      </div>
+    </section>
   )
 }
 
@@ -360,6 +452,8 @@ function StaffDashboard() {
       )}
 
       <main className="sd-main">
+        <PulsoNegocio rol={rol} conteos={conteos} />
+
         {accionesRapidas.length > 0 && (
           <section className="sd-seccion" aria-labelledby="sd-t-acciones">
             <h2 id="sd-t-acciones" className="sd-seccion__titulo">Acciones rápidas</h2>

@@ -1,0 +1,173 @@
+/* StaffEnlazarProductos — módulo Logística > Catálogo > Enlazar productos */
+
+.sep-page {
+  padding: 16px;
+}
+
+.sep-toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.sep-select {
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 14px;
+  min-width: 170px;
+}
+
+.sep-input {
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  min-width: 220px;
+}
+
+.sep-input--sm {
+  min-width: 160px;
+  padding: 6px 8px;
+}
+
+.sep-btn {
+  padding: 8px 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.sep-btn--primary {
+  background: #0052DC;
+  color: #fff;
+  border-color: #0052DC;
+}
+
+.sep-btn--xs {
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+.sep-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sep-error {
+  color: #b30000;
+  font-size: 13px;
+  margin-left: 8px;
+}
+
+.sep-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+.sep-table th,
+.sep-table td {
+  border: 1px solid #ddd;
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 14px;
+}
+
+.sep-table th {
+  background: #f5f5f5;
+  font-weight: 600;
+}
+
+.sep-desc {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sep-accion {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sep-buscar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.sep-opciones {
+  position: absolute;
+  z-index: 10;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  width: 260px;
+  margin-top: 4px;
+}
+
+.sep-opcion {
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  font-size: 13px;
+  text-align: left;
+}
+
+.sep-opcion:last-child {
+  border-bottom: none;
+}
+
+.sep-opcion:hover {
+  background: #f0f7ff;
+}
+
+.sep-opcion--sel {
+  background: #e7f0ff;
+  font-weight: 600;
+}
+
+.sep-elegido {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sep-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.sep-badge--ok {
+  background: #e7f7ee;
+  color: #0e8577;
+}
+
+.sep-badge--cargando {
+  background: #fff6e6;
+  color: #b45309;
+}
+
+.sep-vacio {
+  padding: 24px;
+  color: #666;
+  font-size: 14px;
+  text-align: center;
+}

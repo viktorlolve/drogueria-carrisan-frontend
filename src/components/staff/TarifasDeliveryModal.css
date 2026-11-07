@@ -1,0 +1,111 @@
+/* =================================================================
+   TarifasDeliveryModal.css — tarifas de delivery (Logística)
+   Prefijo: sdt- (tarifas). Los botones reutilizan .sp-btn de
+   ColaOrdenes.css.
+   ================================================================= */
+
+.sdt-nota {
+  margin: 0 0 12px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--stf-apagado, #5B6178);
+}
+
+.sdt-lista {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.sdt-fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--stf-borde, #E6E8F0);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.sdt-fila--inactiva { opacity: 0.6; }
+
+.sdt-ciudad {
+  flex: 1 1 120px;
+  min-width: 0;
+  font-weight: 800;
+  font-size: 13.5px;
+  color: var(--stf-indigo, #1A1A3A);
+  overflow-wrap: anywhere;
+}
+
+.sdt-costo {
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--stf-indigo, #1A1A3A);
+  font-variant-numeric: tabular-nums;
+}
+
+.sdt-acciones,
+.sdt-edicion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.sdt-costo-input {
+  width: 96px;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1.5px solid var(--stf-borde, #E6E8F0);
+  border-radius: 10px;
+  font-size: 16px;
+  font-family: inherit;
+}
+
+.sdt-costo-input:focus {
+  outline: 2px solid var(--stf-azul, #0052DC);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+.sdt-form {
+  display: grid;
+  gap: 8px;
+}
+
+.sdt-form__titulo {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--stf-apagado, #5B6178);
+}
+
+.sdt-form__fila {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.sdt-form__fila input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--stf-borde, #E6E8F0);
+  border-radius: 10px;
+  font-size: 16px; /* 16px evita el zoom de iOS */
+  font-family: inherit;
+}
+
+.sdt-form__fila input:focus {
+  outline: 2px solid var(--stf-azul, #0052DC);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+@media (min-width: 560px) {
+  .sdt-form__fila { grid-template-columns: 1fr 170px; }
+}

@@ -31,6 +31,7 @@ const StaffPromociones = lazy(() => import('./StaffPromociones'))
 const StaffPrecios = lazy(() => import('./StaffPrecios'))
 const StaffPreciosProveedores = lazy(() => import('./StaffPreciosProveedores'))
 const StaffPendientesInventario = lazy(() => import('./StaffPendientesInventario'))
+const StaffEnlazarProductos = lazy(() => import('./StaffEnlazarProductos'))
 const StaffDirecciones = lazy(() => import('./StaffDirecciones'))
 const StaffCredito = lazy(() => import('./StaffCredito'))
 const StaffTesoreria = lazy(() => import('./StaffTesoreria'))
@@ -38,6 +39,7 @@ const StaffReportesFinancieros = lazy(() => import('./StaffReportesFinancieros')
 const StaffClientes = lazy(() => import('./StaffClientes'))
 const StaffChat = lazy(() => import('./StaffChat'))
 const StaffCupones = lazy(() => import('./StaffCupones'))
+const StaffDescuentos = lazy(() => import('./StaffDescuentos'))
 const StaffVitrina = lazy(() => import('./StaffVitrina'))
 const StaffNotificaciones = lazy(() => import('./StaffNotificaciones'))
 const StaffInventario = lazy(() => import('./StaffInventario'))
@@ -60,6 +62,7 @@ export const STAFF_PAGINAS = {
   precios: StaffPrecios,
   'precios-proveedores': StaffPreciosProveedores,
   'pendientes-inventario': StaffPendientesInventario,
+  'enlazar-productos': StaffEnlazarProductos,
   direcciones: StaffDirecciones,
   credito: StaffCredito,
   tesoreria: StaffTesoreria,
@@ -67,6 +70,7 @@ export const STAFF_PAGINAS = {
   clientes: StaffClientes,
   chat: StaffChat,
   cupones: StaffCupones,
+  descuentos: StaffDescuentos,
   vitrina: StaffVitrina,
   notificaciones: StaffNotificaciones,
   inventario: StaffInventario,

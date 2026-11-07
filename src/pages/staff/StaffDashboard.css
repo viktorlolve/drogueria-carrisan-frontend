@@ -707,3 +707,61 @@ a.sd-tile--claro {
   .sd-tile:hover .sd-tile__flecha,
   .sd-atajo:hover { transform: none; }
 }
+
+/* -----------------------------------------------------------------
+   Pulso del negocio — tira de KPIs (arriba de "Acciones rápidas").
+   Los operativos salen de /staff/badges; los financieros del resumen
+   que ya consume Reportes Financieros (mismo endpoint, sin uno nuevo).
+   ----------------------------------------------------------------- */
+.sd-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.sd-kpi {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: var(--sd-surface);
+  border: 1px solid var(--sd-border);
+  box-shadow: 0 1px 2px rgba(26, 26, 58, 0.04);
+  overflow: hidden;
+}
+
+.sd-kpi::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--sd-azul);
+}
+
+.sd-kpi--aviso::before { background: #D97706; }
+.sd-kpi--azul::before { background: var(--sd-azul); }
+.sd-kpi--teal::before { background: var(--sd-teal); }
+.sd-kpi--error::before { background: #B3261E; }
+
+.sd-kpi__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sd-text-muted);
+}
+
+.sd-kpi__valor {
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--sd-indigo);
+  font-variant-numeric: tabular-nums;
+}
+
+.sd-kpi__detalle {
+  font-size: 0.72rem;
+  color: var(--sd-text-muted);
+}

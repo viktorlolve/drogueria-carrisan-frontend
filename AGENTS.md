@@ -1,4 +1,4 @@
-﻿# AGENTS.md — Frontend (drogueria-carrisan-frontend)
+# AGENTS.md — Frontend (drogueria-carrisan-frontend)
 
 ## Comandos
 
@@ -492,6 +492,7 @@ Desde 2026-09-04 el módulo staff se organiza en **3 departamentos**: `finanzas`
 | `/staff/promociones` | LayoutDepartamento | `comercial` | `promociones` (StaffPromociones) |
 | `/staff/precios` | LayoutDepartamento | `comercial` | `precios` (StaffPrecios) |
 | `/staff/cupones` | LayoutDepartamento | `comercial` | `cupones` (StaffCupones) |
+| `/staff/descuentos` | LayoutDepartamento | `comercial` | `descuentos` (StaffDescuentos) |
 | `/staff/pedidos/nuevas` | LayoutDepartamento | `logistica` | `nuevas` (StaffPedidosNuevas — órdenes por revisar) |
 | `/staff/pedidos/preparar` | LayoutDepartamento | `logistica` | `preparar` (StaffPedidosPreparar — aprobar/preparar) |
 | `/staff/delivery` | LayoutDepartamento | `logistica` | `delivery` (StaffDelivery — cola moto) |
@@ -536,12 +537,13 @@ Desde 2026-09-04 el módulo staff se organiza en **3 departamentos**: `finanzas`
 | /staff/promociones | roles: vendedor/administrador/director/admin | Comercial | funcional | Versión limitada de `PromocionesAdmin` (endpoints `/staff/promociones/*` — nomenclatura unificada): crear/editar/eliminar plantillas + historial. **SIN envío masivo** (queda solo en `/admin`) |
 | /staff/precios | roles: vendedor/administrador/director/admin | Comercial | funcional | **Precios** (`StaffPrecios.jsx`): grid con filtros + edición inline + lote + **importar precios de proveedor** (multipart). Ver sección "Importación multi-proveedor" del AGENTS raíz |
 | /staff/cupones | roles: admin/administrador/director | Comercial | funcional | **Cupones giftcard** (`StaffCupones.jsx`): genera códigos por % o monto. Migración `034_cupones_descuento.sql` |
+| /staff/descuentos | roles: admin/administrador/director | Comercial | funcional | **Descuentos** (`StaffDescuentos.jsx` + `.css`): campañas por producto/marca/laboratorio/molécula/línea/forma, % o monto, con fechas y activo. Consume `/staff/descuentos` (reutiliza los handlers del admin) y `GET /staff/descuentos/opciones` (marcas + listas del catálogo). Tile "Nuevo descuento" en el dashboard → `?nuevo=1` abre el form |
 | /staff/pedidos/nuevas | roles: almacenista/administrador/director/admin | Logística | funcional | **Órdenes Nuevas** (`StaffPedidosNuevas.jsx`): cola por revisar — revisar, anular lo agotado y aprobar. Sustituye a StaffPedidos/StaffAlmacen legacy. Migración `029_logistica.sql` |
 | /staff/pedidos/preparar | roles: almacenista/administrador/director/admin | Logística | funcional | **Preparar Órdenes** (`StaffPedidosPreparar.jsx`): aprobar/preparar el paquete (crédito o pago verificado) + verificar paquete |
 | /staff/pedidos/retiros | roles: almacenista/administrador/director/admin | Logística | funcional | **Retiros** (`StaffPedidosRetiros.jsx`): órdenes `listo_para_retiro` + marcar `retirado` |
 | /staff/pedidos/incidencias | roles: almacenista/administrador/director/admin | Logística | funcional | **Incidencias** (`StaffPedidosIncidencias.jsx`): órdenes con `incidencia_motivo` + resolver/reintentar |
 | /staff/pedidos/completadas | roles: almacenista/administrador/director/admin | Logística | funcional | **Completadas** (`StaffPedidosCompletadas.jsx`): historial de entregadas/retiradas + verificar paquete pendiente |
-| /staff/delivery | roles: despachador/administrador/director/admin | Logística | funcional | **Delivery** (`StaffDelivery.jsx`, icono Scooter): cola de órdenes `enviado` con `tipo_envio='delivery'` (legacy sin tipo cae aquí) + marcar entregado/guía/incidencia. Sin agencias |
+| /staff/delivery | roles: despachador/administrador/director/admin | Logística | funcional | **Delivery** (`StaffDelivery.jsx`, icono Scooter): cola de órdenes `enviado` con `tipo_envio='delivery'` (legacy sin tipo cae aquí) + marcar entregado/guía/incidencia. Sin agencias. Header con **`TarifasDeliveryModal`** (CRUD de tarifas por ciudad vía `/staff/delivery-tarifas`) |
 | /staff/envios | roles: despachador/administrador/director/admin | Logística | funcional | **Envíos por agencia** (`StaffEnvios.jsx`): cola `enviado` + `tipo_envio='envio_nacional'` (`?tipo=envio_nacional` en `GET /staff/despacho`) + marcar entregado + CRUD de agencias. Sustituye a StaffDespacho. Ambas colas de Despacho usan `useColaStaff` |
 | /staff/direcciones | roles: despachador/administrador/director/admin | Logística | funcional | Direcciones de envío de clientes + dirección de un cliente (`GET /staff/direcciones/cliente/:id`) para planificar despachos |
 | /staff/inventario | roles: ver (almacenista/despachador/administrador/director/admin); precio y datos (administrador/director/admin) | Logística | funcional | **Inventario y fotos** (`StaffInventario.jsx` + `StaffInventario.css`, clases `.si-*`): completa las fotos faltantes del catálogo, revisa precios y **edita los datos del producto** (nombre, laboratorio, línea, forma, molécula, descripción, activo, visible_catalogo). Endpoints `/staff/inventario/*` (`PATCH /:id` = datos con whitelist; ver AGENTS backend) |
