@@ -51,6 +51,15 @@ function toDatetimeLocal(fecha) {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`
 }
 
+// Suma días a la fecha de inicio conservando la hora local (se usa setDate,
+// no milisegundos, para que un cambio de horario de verano no mueva la hora).
+function sumarDias(fechaLocal, dias) {
+  const base = fechaLocal ? new Date(fechaLocal) : new Date()
+  if (Number.isNaN(base.getTime())) return ''
+  base.setDate(base.getDate() + dias)
+  return toDatetimeLocal(base)
+}
+
 function formatearFecha(fecha) {
   if (!fecha) return '—'
   return new Date(fecha).toLocaleDateString('es-VE', {
@@ -349,6 +358,28 @@ function FormDescuento({ descuento, opciones, onGuardado, onCerrar }) {
               value={fechaFin}
               onChange={(e) => setFechaFin(e.target.value)}
             />
+            <div className="sdesc-form__rapidos">
+              {[30, 60].map((dias) => (
+                <button
+                  key={dias}
+                  type="button"
+                  className="sdesc-btn sdesc-btn--chip"
+                  onClick={() => setFechaFin(sumarDias(fechaInicio, dias))}
+                >
+                  +{dias} días
+                </button>
+              ))}
+              {fechaFin && (
+                <button
+                  type="button"
+                  className="sdesc-btn sdesc-btn--chip sdesc-btn--ghost"
+                  onClick={() => setFechaFin('')}
+                >
+                  Quitar fin
+                </button>
+              )}
+            </div>
+            <small className="sdesc-form__ayuda">Los atajos se calculan desde la fecha de inicio.</small>
           </div>
         </div>
 

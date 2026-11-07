@@ -302,6 +302,31 @@
   line-height: 1.4;
 }
 
+/* Atajos de fecha de fin (+30d / +60d / quitar) */
+.sdesc-form__rapidos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.sdesc-btn--chip {
+  min-height: 32px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.sdesc-btn--chip.sdesc-btn--ghost {
+  color: var(--stf-apagado, #5B6178);
+  text-decoration: none;
+}
+
+.sdesc-btn--chip.sdesc-btn--ghost:hover:not(:disabled) {
+  background: #F1F3F8;
+  border-color: transparent;
+}
+
 .sdesc-form__elegido {
   display: flex;
   align-items: center;
