@@ -11,9 +11,18 @@
    OrdenDetalleModal.css → clases odm-*).
    ============================================================ */
 
-/* --- Tokens propios (mismos valores que Admin.css, scope local) --- */
+/* --- Tokens propios (mismos valores que Admin.css, scope local) ---
+   `.stfm-portal` es OBLIGATORIO en esta lista: los modales del staff se
+   montan en document.body (portal de StaffModal), así que NO son
+   descendientes de .kb-board-wrap/.promo-admin y, sin esta clase, las reglas
+   `.stfm-portal .odm-*` de más abajo no resuelven los tokens de color
+   (--ink, --slate-500, --blue, --indigo…) y quedan sin color, sin línea
+   divisoria y con el avatar transparente.
+   OJO: no se puede depender de Admin.css — se carga en el chunk lazy de
+   /admin, así que en una carga limpia de /staff/* esos tokens no existen. */
 .kb-board-wrap,
-.promo-admin {
+.promo-admin,
+.stfm-portal {
   --blue: #0052dc;
   --blue-600: #0043b3;
   --blue-700: #003689;
