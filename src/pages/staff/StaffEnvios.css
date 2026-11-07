@@ -8,6 +8,7 @@
 
 .se-card { background: var(--stf-superficie, #fff); border: 1px solid var(--stf-borde, #E6E8F0); border-radius: 14px; padding: 16px; box-shadow: 0 1px 2px rgba(26, 26, 58, 0.04); }
 .se-card-head { display: flex; justify-content: space-between; align-items: center; }
+.se-card-head__id { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .se-card-orden { font-weight: 800; margin: 0; }
 .se-tag { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
 .se-tag--delivery { background: var(--stf-azul-suave, #EAF1FF); color: var(--stf-azul-fuerte, #0043B3); }
@@ -40,3 +41,11 @@
 /* Contenido del modal de incidencia (el contenedor lo pone StaffModal) */
 .se-modal-meta { color: var(--stf-apagado, #5B6178); font-size: 13px; margin: 0 0 12px; }
 .se-modal-content select { width: 100%; min-height: 44px; padding: 8px 10px; border: 1.5px solid var(--stf-borde, #E6E8F0); border-radius: 10px; margin-bottom: 14px; font-size: 16px; font-family: inherit; background: #fff; }
+
+/* Escritorio: la página deja de estar fijada a 520px (pensada para una sola
+   columna en mobile) y la lista pasa a 2 columnas — mismo quiebre que el
+   resto del staff. */
+@media (min-width: 900px) {
+  .se-page { max-width: 1080px; }
+  .se-list { grid-template-columns: repeat(2, 1fr); }
+}

@@ -9,12 +9,47 @@
 .sp-meta { color: var(--stf-apagado, #5B6178); font-size: 13px; margin: 6px 0 12px; }
 .sp-incidencia { background: var(--stf-error-suave, #FDECEC); border: 1px solid #F3C6C3; color: #8F1D17; padding: 10px 12px; border-radius: 10px; margin-top: 8px; font-size: 13px; }
 
-.sp-card { border: 1px solid var(--stf-borde, #E6E8F0); border-radius: 14px; padding: 16px; margin-bottom: 6px; background: var(--stf-superficie, #fff); box-shadow: 0 1px 2px rgba(26, 26, 58, 0.04); }
-.sp-card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* Lista de tarjetas: 1 columna en mobile, 2 en desktop (ver media query al
+   final) — antes se apilaban a todo el ancho del panel (hasta 1600px),
+   desperdiciando mucho espacio horizontal. */
+.sp-lista { display: flex; flex-direction: column; gap: 14px; }
+
+.sp-card { border: 1px solid var(--stf-borde, #E6E8F0); border-radius: 14px; padding: 16px; background: var(--stf-superficie, #fff); box-shadow: 0 1px 2px rgba(26, 26, 58, 0.04); }
+
+/* Cabecera: "Orden #123" + botón Ver a la izquierda, total grande a la
+   derecha — antes el total iba mezclado en el título, a igual tamaño que
+   el número de orden, compitiendo por atención. */
+.sp-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.sp-card-head__id { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .sp-card-titulo { font-weight: 800; margin: 0; color: var(--stf-indigo, #1A1A3A); }
-.sp-card-cliente { margin: 6px 0 0; font-size: 14px; color: var(--stf-indigo, #1A1A3A); }
-.sp-card-meta { margin: 4px 0 0; font-size: 13px; color: var(--stf-apagado, #5B6178); }
-.sp-card-items { margin: 10px 0 0; padding-left: 18px; font-size: 13px; }
+.sp-card-total { flex-shrink: 0; font-size: 1.15rem; font-weight: 800; color: var(--stf-indigo, #1A1A3A); font-variant-numeric: tabular-nums; }
+
+.sp-ver-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1.5px solid var(--stf-borde, #E6E8F0);
+  background: #fff;
+  color: var(--stf-apagado, #5B6178);
+  cursor: pointer;
+}
+.sp-ver-btn:hover { border-color: var(--stf-azul, #0052DC); color: var(--stf-azul, #0052DC); background: var(--stf-azul-suave, #EAF1FF); }
+.sp-ver-btn:focus-visible { outline: 2px solid var(--stf-azul, #0052DC); outline-offset: 2px; }
+
+/* Chips de la fila de metadatos (forma de pago / estado / fecha) — antes
+   iban como texto plano separado por "·" en un único párrafo. */
+.sp-card-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 10px 0 0; }
+.sp-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 700; }
+.sp-chip--neutro { background: #F1F3F8; color: var(--stf-apagado, #5B6178); }
+
+.sp-card-cliente { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: 10px 0 0; font-size: 14px; color: var(--stf-indigo, #1A1A3A); }
+.sp-card-cliente span { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--stf-apagado, #5B6178); font-weight: 400; }
+.sp-card-meta { display: flex; align-items: center; gap: 6px; margin: 6px 0 0; font-size: 13px; color: var(--stf-apagado, #5B6178); }
+.sp-card-items { margin: 12px 0 0; padding-left: 18px; font-size: 13px; }
 .sp-card-items li { margin: 3px 0; }
 .sp-item--anulado { color: #9CA3AF; text-decoration: line-through; }
 
@@ -68,8 +103,9 @@
 .sp-agencia-form input { width: 100%; padding: 10px; border: 1.5px solid var(--stf-borde, #E6E8F0); border-radius: 10px; margin-bottom: 8px; font-size: 16px; font-family: inherit; }
 .sp-agencia-form input:focus { outline: 2px solid var(--stf-azul, #0052DC); outline-offset: 1px; border-color: transparent; }
 
-/* Card wrapper: agrupa la card y sus acciones en un bloque con separacion. */
-.sp-card-wrap { margin-bottom: 14px; }
+/* Card wrapper: agrupa la card y sus acciones en un bloque. La separación
+   entre tarjetas la da el gap de .sp-lista (flex en mobile, grid en
+   desktop), no un margin acá — así no se suma un espacio doble. */
 .sp-card-wrap .sp-card { margin-bottom: 0; }
 
 .sp-titulo-cola { font-size: 16px; font-weight: 800; margin: 0 0 4px; }
@@ -129,3 +165,113 @@
   font-weight: 700;
 }
 .sp-acciones > .sp-confirmado { flex: 1 0 100%; }
+
+/* Escritorio: 2 columnas de tarjetas en vez de 1 sola apilada a todo el
+   ancho del panel (hasta 1600px) — mismo quiebre que el resto del staff. */
+@media (min-width: 900px) {
+  .sp-lista {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    align-items: start;
+  }
+}
+
+/* =================================================================
+   ModalVerOrden (clases odm-*, scope .stfm-portal — el modal se monta
+   con createPortal en document.body, así que usa los tokens --stf-* de
+   styles/staff-tokens.css, que SÍ están en :root y por eso llegan hasta
+   ahí. (Nota aparte, no de este cambio: el odm-* que ya existe en
+   StaffComercial.css para Presupuestos/Ficha usa var(--ink)/--slate-500/
+   --font-display/etc, que están scopeados a .kb-board-wrap/.promo-admin
+   — como el modal se porta a document.body, esos vars nunca llegan y esa
+   versión queda con bordes rectos, sin sombra y con la tipografía por
+   defecto. No lo toco acá porque no es parte de este pedido, pero vale
+   la pena revisarlo en algún momento.) */
+.stfm-portal .odm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-right: 36px;
+  margin-bottom: 4px;
+}
+.stfm-portal .odm-fecha {
+  font-size: 0.85rem;
+  color: var(--stf-apagado, #5B6178);
+  margin: 0;
+  text-transform: capitalize;
+}
+.stfm-portal .odm-badge {
+  flex-shrink: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.stfm-portal .odm-divider {
+  height: 1px;
+  background: var(--stf-borde, #E6E8F0);
+  margin: 16px 0;
+}
+
+.stfm-portal .odm-cliente {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0 0;
+}
+.stfm-portal .odm-cliente-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--stf-azul, #0052DC), var(--stf-indigo, #1A1A3A));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.stfm-portal .odm-cliente-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.stfm-portal .odm-cliente-info strong { color: var(--stf-indigo, #1A1A3A); font-size: 0.9rem; }
+.stfm-portal .odm-cliente-info span { display: flex; align-items: center; gap: 4px; color: var(--stf-apagado, #5B6178); font-size: 0.8rem; }
+
+.stfm-portal .odm-envio-card {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border-left: 3px solid var(--stf-azul, #0052DC);
+  background: #F6F7FB;
+}
+.stfm-portal .odm-envio-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.stfm-portal .odm-envio-direccion { display: flex; align-items: flex-start; gap: 6px; margin-top: 6px; }
+.stfm-portal .odm-envio-label { display: inline-flex; align-items: center; gap: 5px; font-size: 0.78rem; font-weight: 700; color: var(--stf-apagado, #5B6178); }
+.stfm-portal .odm-envio-valor { font-size: 0.85rem; color: var(--stf-indigo, #1A1A3A); }
+
+.stfm-portal .odm-section-title { margin: 0 0 6px; font-size: 0.78rem; font-weight: 700; color: var(--stf-apagado, #5B6178); text-transform: uppercase; letter-spacing: 0.04em; }
+
+.stfm-portal .odm-totales { margin-top: 4px; }
+.stfm-portal .odm-total-final { display: flex; justify-content: space-between; align-items: baseline; font-weight: 800; font-size: 1.1rem; color: var(--stf-indigo, #1A1A3A); }
+.stfm-portal .odm-total-valor { font-variant-numeric: tabular-nums; }
+
+.stfm-portal .odm-descargar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 46px;
+  margin-top: 18px;
+  border-radius: 12px;
+  border: 1.5px solid var(--stf-borde, #E6E8F0);
+  background: #fff;
+  color: var(--stf-indigo, #1A1A3A);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+.stfm-portal .odm-descargar-btn:hover:not(:disabled) { border-color: #B9C2DB; background: #FAFBFD; }
+.stfm-portal .odm-descargar-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.stfm-portal .odm-descargar-btn:focus-visible { outline: 2px solid var(--stf-azul, #0052DC); outline-offset: 2px; }

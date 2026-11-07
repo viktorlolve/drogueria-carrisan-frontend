@@ -3,7 +3,7 @@ import { Phone, MessageCircle, Clock } from 'lucide-react'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import AgenciasEnvioModal from '../../components/staff/AgenciasEnvioModal'
-import { ItemsOrden } from '../../components/staff/ColaOrdenes'
+import { BotonVerOrden, ItemsOrden, ModalVerOrden } from '../../components/staff/ColaOrdenes'
 import StaffEstado from '../../components/staff/StaffEstado'
 import StaffModal from '../../components/staff/StaffModal'
 import { formatearUSD } from '../../utils/formato'
@@ -34,6 +34,7 @@ function StaffEnvios() {
   const [procesando, setProcesando] = useState(null)
   const [incidenciaDe, setIncidenciaDe] = useState(null)
   const [motivo, setMotivo] = useState(MOTIVOS[0])
+  const [ordenVista, setOrdenVista] = useState(null)
 
   async function marcarEntregado(id) {
     setProcesando(id)
@@ -80,7 +81,10 @@ function StaffEnvios() {
             return (
               <div key={orden.id} className="se-card">
                 <div className="se-card-head">
-                  <p className="se-card-orden">Orden #{orden.id}</p>
+                  <div className="se-card-head__id">
+                    <p className="se-card-orden">Orden #{orden.id}</p>
+                    <BotonVerOrden onClick={() => setOrdenVista(orden)} />
+                  </div>
                   <span className="se-tag se-tag--nacional">Envío nacional</span>
                 </div>
 
@@ -142,6 +146,8 @@ function StaffEnvios() {
           </div>
         </StaffModal>
       )}
+
+      <ModalVerOrden orden={ordenVista} onClose={() => setOrdenVista(null)} />
     </LayoutDepartamento>
   )
 }
