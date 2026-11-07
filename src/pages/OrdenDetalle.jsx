@@ -217,7 +217,9 @@ function OrdenDetalle() {
           <div className="od-totales">
             <div className="od-totales__fila">
               <span>Subtotal</span>
-              <span>${formatUSD(orden.subtotal_usd || (Number(orden.total_usd || 0) + Number(orden.descuento_cupon || 0)))}</span>
+              {/* total_usd INCLUYE el envío (lo suma el backend al crear la
+                  orden): el subtotal de productos lo descuenta. */}
+              <span>${formatUSD(orden.subtotal_usd || (Number(orden.total_usd || 0) + Number(orden.descuento_cupon || 0) - Number(orden.costo_envio_usd || 0)))}</span>
             </div>
             {orden.descuento_cupon > 0 && (
               <div className="od-totales__fila od-totales__fila--descuento">
@@ -225,10 +227,10 @@ function OrdenDetalle() {
                 <span>-${formatUSD(orden.descuento_cupon)}</span>
               </div>
             )}
-            {orden.costo_envio > 0 && (
+            {orden.costo_envio_usd > 0 && (
               <div className="od-totales__fila">
                 <span>Envío</span>
-                <span>${formatUSD(orden.costo_envio)}</span>
+                <span>${formatUSD(orden.costo_envio_usd)}</span>
               </div>
             )}
             <div className="od-total-final">

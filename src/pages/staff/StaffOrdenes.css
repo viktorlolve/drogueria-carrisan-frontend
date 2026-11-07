@@ -358,6 +358,18 @@
   padding-top: 12px;
 }
 
+/* Envío (delivery): se cobra en el backend, acá solo se muestra el desglose */
+.so-footer-envio {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.so-footer-envio span {
+  font-size: 13px;
+  color: #6b7280;
+}
+
 .so-footer-total span:first-child {
   font-size: 14px;
   color: #6b7280;

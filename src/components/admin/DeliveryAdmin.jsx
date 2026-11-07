@@ -2,6 +2,16 @@ import { useState, useEffect, useCallback } from 'react'
 import api from '../../api/axios'
 import './DeliveryAdmin.css'
 
+// Acepta "8", "8.00" y "8,00". Devuelve null si no es un número válido, para
+// que un campo vacío no se guarde como costo 0 (o 8.00) en silencio.
+function parseCosto(valor) {
+  const texto = String(valor ?? '').trim().replace(',', '.')
+  if (texto === '') return null
+  const numero = Number(texto)
+  if (!Number.isFinite(numero) || numero < 0) return null
+  return numero
+}
+
 function DeliveryAdmin() {
   const [tarifas, setTarifas] = useState([])
   const [pendientes, setPendientes] = useState([])
@@ -18,32 +28,15 @@ function DeliveryAdmin() {
   const [editandoId, setEditandoId] = useState(null)
   const [editandoCosto, setEditandoCosto] = useState('')
 
-  const cargarDatos = useCallback(async () => {
-    try {
-      const [resTarifas, resPendientes] = await Promise.all([
-        api.get('/delivery-tarifas'),
-        api.get('/orders/delivery-pendientes'),
-      ])
-      setTarifas(Array.isArray(resTarifas.data) ? resTarifas.data : [])
-      setPendientes(resPendientes.data.pendientes || [])
-      setEnviadosRecientes(resPendientes.data.enviadosRecientes || [])
-      setError('')
-    } catch (err) {
-      console.error(err)
-      setError('Error cargando datos de delivery')
-    } finally {
-      setCargando(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    let activo = true
-    Promise.all([
+  // Única vía de fetch (carga inicial, auto-refresh y acciones). Se deja como
+  // cadena de .then()/catch() a propósito: así `react-hooks/set-state-in-effect`
+  // no la marca al llamarla desde el useEffect (mismo patrón que MonitoreoAdmin).
+  const cargarDatos = useCallback(() => {
+    return Promise.all([
       api.get('/delivery-tarifas'),
       api.get('/orders/delivery-pendientes'),
     ])
       .then(([resTarifas, resPendientes]) => {
-        if (!activo) return
         setTarifas(Array.isArray(resTarifas.data) ? resTarifas.data : [])
         setPendientes(resPendientes.data.pendientes || [])
         setEnviadosRecientes(resPendientes.data.enviadosRecientes || [])
@@ -51,15 +44,19 @@ function DeliveryAdmin() {
       })
       .catch((err) => {
         console.error(err)
-        if (activo) setError('Error cargando datos de delivery')
+        setError('Error cargando datos de delivery')
       })
       .finally(() => {
-        if (activo) setCargando(false)
+        setCargando(false)
       })
-    return () => {
-      activo = false
-    }
   }, [])
+
+  // Carga inicial. Una sola vía de fetch: `cargarDatos` es la misma que usan
+  // el auto-refresh y las acciones (antes estaba duplicada acá y se podían
+  // desincronizar).
+  useEffect(() => {
+    cargarDatos()
+  }, [cargarDatos])
 
   // Auto-refresh cada 30s
   useEffect(() => {
@@ -71,11 +68,16 @@ function DeliveryAdmin() {
   async function handleCrearTarifa(e) {
     e.preventDefault()
     if (!nuevaCiudad.trim()) return
+    const costo = parseCosto(nuevoCosto)
+    if (costo === null) {
+      setError('El costo debe ser un número mayor o igual a 0')
+      return
+    }
     try {
       setGuardando(true)
       await api.post('/delivery-tarifas', {
         ciudad: nuevaCiudad.trim(),
-        costo: parseFloat(nuevoCosto) || 8.00,
+        costo,
       })
       setNuevaCiudad('')
       setNuevoCosto('8.00')
@@ -90,10 +92,14 @@ function DeliveryAdmin() {
 
   // Actualizar costo inline
   async function handleGuardarCosto(tarifa) {
+    // Un campo vacío o inválido NO debe guardarse como 0 en silencio.
+    const costo = parseCosto(editandoCosto)
+    if (costo === null) {
+      setError('El costo debe ser un número mayor o igual a 0')
+      return
+    }
     try {
-      await api.put(`/delivery-tarifas/${tarifa.id}`, {
-        costo: parseFloat(editandoCosto) || 0,
-      })
+      await api.put(`/delivery-tarifas/${tarifa.id}`, { costo })
       setEditandoId(null)
       await cargarDatos()
     } catch {
@@ -135,13 +141,21 @@ function DeliveryAdmin() {
     }
   }
 
+  // Edición inline del costo
+  function empezarEdicion(tarifa) {
+    setEditandoId(tarifa.id)
+    setEditandoCosto(String(tarifa.costo))
+  }
+
   function formatUSD(valor) {
     return Number(valor || 0).toFixed(2)
   }
 
   function formatFecha(fecha) {
     if (!fecha) return ''
-    return new Date(fecha).toLocaleString('es-VE', {
+    const fechaObj = new Date(fecha)
+    if (Number.isNaN(fechaObj.getTime())) return ''
+    return fechaObj.toLocaleString('es-VE', {
       day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
     })
   }
@@ -229,17 +243,48 @@ function DeliveryAdmin() {
                           min="0"
                           value={editandoCosto}
                           onChange={(e) => setEditandoCosto(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault()
+                              handleGuardarCosto(tarifa)
+                            }
+                            if (e.key === 'Escape') setEditandoId(null)
+                          }}
                           className="tarifa-input-costo-inline"
+                          aria-label={`Costo de envío a ${tarifa.ciudad}`}
                           autoFocus
                         />
-                        <button className="btn-guardar" onClick={() => handleGuardarCosto(tarifa)}>✓</button>
-                        <button className="btn-cancelar" onClick={() => setEditandoId(null)}>✕</button>
+                        <button
+                          type="button"
+                          className="btn-guardar"
+                          onClick={() => handleGuardarCosto(tarifa)}
+                          aria-label="Guardar costo"
+                        >
+                          ✓
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-cancelar"
+                          onClick={() => setEditandoId(null)}
+                          aria-label="Cancelar edición"
+                        >
+                          ✕
+                        </button>
                       </div>
                     ) : (
-                      <span className="tarifa-costo" onClick={() => {
-                        setEditandoId(tarifa.id)
-                        setEditandoCosto(String(tarifa.costo))
-                      }}>
+                      <span
+                        className="tarifa-costo"
+                        role="button"
+                        tabIndex={0}
+                        title="Clic para editar el costo"
+                        onClick={() => empezarEdicion(tarifa)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault()
+                            empezarEdicion(tarifa)
+                          }
+                        }}
+                      >
                         ${formatUSD(tarifa.costo)}
                       </span>
                     )}
@@ -284,7 +329,7 @@ function DeliveryAdmin() {
             {pendientes.map((orden) => (
               <div key={orden.id} className="orden-card pendiente">
                 <div className="orden-card-header">
-                  <span className="orden-id">#{orden.id?.slice(0, 8)}</span>
+                  <span className="orden-id">#{orden.id}</span>
                   <span className="orden-fecha">{formatFecha(orden.created_at)}</span>
                 </div>
                 <div className="orden-card-body">
@@ -324,7 +369,7 @@ function DeliveryAdmin() {
             {enviadosRecientes.map((orden) => (
               <div key={orden.id} className="orden-card enviado">
                 <div className="orden-card-header">
-                  <span className="orden-id">#{orden.id?.slice(0, 8)}</span>
+                  <span className="orden-id">#{orden.id}</span>
                   <span className="orden-fecha">{formatFecha(orden.created_at)}</span>
                   <span className="orden-badge enviado">Enviado</span>
                 </div>

@@ -16,7 +16,7 @@
 // Qué lee de la orden (todo opcional salvo `id`): created_at, estado,
 // tipo_envio, forma_pago, estado_pago, fecha_vencimiento, ordenes_items
 // (cantidad, precio_unitario, anulado, productos.nombre_comercial),
-// subtotal_usd, descuento_cupon, cupon_codigo, costo_envio, total_usd,
+// subtotal_usd, descuento_cupon, cupon_codigo, costo_envio_usd, total_usd,
 // direcciones_envio {direccion, ciudad, estado}, agencias_envio {nombre},
 // agencia_envio (texto legacy), users {nombre, rif_cedula, telefono, email},
 // sub_usuarios {nombre}. Si un dato no viene, esa línea simplemente no se
@@ -297,7 +297,7 @@ export default async function generarOrdenPDF({ orden, cliente = null }) {
 
   const sumaItems = items.reduce((s, it) => s + it.subtotal, 0)
   const descuento = Number(orden.descuento_cupon || 0)
-  const envio = Number(orden.costo_envio || 0)
+  const envio = Number(orden.costo_envio_usd || 0)
   const total = orden.total_usd !== null && orden.total_usd !== undefined ? Number(orden.total_usd) : sumaItems - descuento + envio
   const subtotal = Number(orden.subtotal_usd || 0) || (orden.total_usd != null ? total + descuento - envio : sumaItems)
 

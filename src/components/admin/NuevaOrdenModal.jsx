@@ -16,6 +16,7 @@ import {
 import { X, Search, Trash2, Plus, Minus, Truck, UserRound } from 'lucide-react'
 import api from '../../api/axios'
 import { toaster } from '../ui/toaster'
+import { costoEnvioParaCiudad } from '../../utils/costoEnvio'
 
 const AZUL = '#0052DC'
 const INDIGO = '#1A1A3A'
@@ -50,7 +51,11 @@ function NuevaOrdenModal({ usuarioId, nombreUsuario, isOpen, onClose, onCreada }
   const [mostrarResultados, setMostrarResultados] = useState(false)
 
   const [filas, setFilas] = useState([])
-  const [costoEnvio, setCostoEnvio] = useState('')
+  const [tipoEnvio, setTipoEnvio] = useState('retiro')
+  const [direcciones, setDirecciones] = useState([])
+  const [direccionId, setDireccionId] = useState('')
+  const [agencia, setAgencia] = useState('')
+  const [tarifas, setTarifas] = useState([])
   const [formaPago, setFormaPago] = useState('contado')
   const [guardando, setGuardando] = useState(false)
 
@@ -62,7 +67,10 @@ function NuevaOrdenModal({ usuarioId, nombreUsuario, isOpen, onClose, onCreada }
     setPrevOpen(isOpen)
     if (isOpen) {
       setFilas([])
-      setCostoEnvio('')
+      setTipoEnvio('retiro')
+      setDirecciones([])
+      setDireccionId('')
+      setAgencia('')
       setFormaPago('contado')
       setQueryProducto('')
       setResultadosProductos([])
@@ -91,6 +99,39 @@ function NuevaOrdenModal({ usuarioId, nombreUsuario, isOpen, onClose, onCreada }
       activo = false
     }
   }, [isOpen, usuarioId])
+
+  // Tarifas de delivery: el envío lo cobra el backend (construirOrden) con la
+  // ciudad de la dirección; acá solo se muestra para que el total coincida.
+  useEffect(() => {
+    api.get('/delivery-tarifas/activas')
+      .then(({ data }) => setTarifas(Array.isArray(data) ? data : []))
+      .catch(() => setTarifas([]))
+  }, [])
+
+  // Direcciones del cliente elegido, solo si el envío es delivery.
+  // /direcciones/usuario/:id es admin-only (devuelve las de OTRO usuario).
+  useEffect(() => {
+    if (!isOpen || !cliente || tipoEnvio !== 'delivery') return
+    let activo = true
+    api.get(`/direcciones/usuario/${cliente.id}`, { params: { tipo: 'delivery' } })
+      .then(({ data }) => {
+        if (!activo) return
+        const lista = (Array.isArray(data) ? data : [])
+          .slice()
+          .sort((a, b) => Number(b.es_preferida) - Number(a.es_preferida))
+        setDirecciones(lista)
+        setDireccionId(lista[0]?.id || '')
+      })
+      .catch((err) => {
+        if (!activo) return
+        console.error(err)
+        setDirecciones([])
+        setDireccionId('')
+      })
+    return () => {
+      activo = false
+    }
+  }, [isOpen, cliente, tipoEnvio])
 
   // Búsqueda de productos con debounce — dispara la API mientras se escribe
   useEffect(() => {
@@ -170,7 +211,11 @@ function NuevaOrdenModal({ usuarioId, nombreUsuario, isOpen, onClose, onCreada }
   })
 
   const subtotal = filas.reduce((sum, f) => sum + Number(f.precio_usd) * f.cantidad, 0)
-  const envio = Number(costoEnvio) || 0
+  const direccionSeleccionada = direcciones.find((d) => String(d.id) === String(direccionId)) || null
+  // Sin dirección (o en retiro / envío nacional) no hay envío que cobrar.
+  const envio = tipoEnvio === 'delivery' && direccionSeleccionada
+    ? costoEnvioParaCiudad(tarifas, direccionSeleccionada.ciudad)
+    : 0
   const total = subtotal + envio
 
   async function guardar() {
@@ -178,12 +223,23 @@ function NuevaOrdenModal({ usuarioId, nombreUsuario, isOpen, onClose, onCreada }
       toaster.create({ title: 'Agrega al menos un producto', type: 'warning' })
       return
     }
+    if (tipoEnvio === 'delivery' && !direccionId) {
+      toaster.create({ title: 'Selecciona una dirección de delivery', type: 'warning' })
+      return
+    }
     try {
       setGuardando(true)
-      await api.post('/orders', {
+      // POST /admin/ordenes (NO /orders): /orders SIEMPRE crea la orden para el
+      // usuario del token, así que la orden quedaba a nombre del admin y no del
+      // cliente elegido. Este endpoint usa la sesión de /admin y reutiliza
+      // construirOrden (mismas validaciones y mismo cálculo de envío).
+      await api.post('/admin/ordenes', {
         usuario_id: cliente.id,
         items: filas.map((f) => ({ producto_id: f.producto_id, cantidad: f.cantidad })),
         forma_pago: formaPago,
+        tipo_envio: tipoEnvio,
+        direccion_envio_id: tipoEnvio === 'delivery' ? direccionId : null,
+        agencia_envio: tipoEnvio === 'envio_nacional' ? (agencia.trim() || null) : null,
       })
       toaster.create({ title: 'Orden creada', type: 'success' })
       onCreada?.()
@@ -377,13 +433,57 @@ function NuevaOrdenModal({ usuarioId, nombreUsuario, isOpen, onClose, onCreada }
                     <Stack gap={3}>
                       <Flex align="center" gap={3}>
                         <Truck size={16} color="#6B7280" />
-                        <Text fontSize="sm" color="gray.600" minW="110px">Costo de envío</Text>
-                        <Input
-                          type="number" step="0.01" min="0" placeholder="0.00"
-                          value={costoEnvio} onChange={(e) => setCostoEnvio(e.target.value)}
-                          size="sm" maxW="120px" bg="white"
-                        />
+                        <Text fontSize="sm" color="gray.600" minW="110px">Tipo de envío</Text>
+                        <Box
+                          as="select" value={tipoEnvio} onChange={(e) => setTipoEnvio(e.target.value)}
+                          border="1px solid" borderColor="gray.200" borderRadius="md" px={2} py={1.5} fontSize="sm" bg="white"
+                        >
+                          <option value="retiro">Retiro en depósito</option>
+                          <option value="delivery">Delivery</option>
+                          <option value="envio_nacional">Envío nacional</option>
+                        </Box>
                       </Flex>
+
+                      {tipoEnvio === 'delivery' && (
+                        <Flex align="center" gap={3}>
+                          <Text fontSize="sm" color="gray.600" minW="110px">Dirección</Text>
+                          {direcciones.length === 0 ? (
+                            <Text fontSize="xs" color="orange.600">
+                              Este cliente no tiene direcciones de delivery activas.
+                            </Text>
+                          ) : (
+                            <Box
+                              as="select" value={direccionId} onChange={(e) => setDireccionId(e.target.value)}
+                              border="1px solid" borderColor="gray.200" borderRadius="md" px={2} py={1.5}
+                              fontSize="sm" bg="white" flex="1" maxW="400px"
+                            >
+                              {direcciones.map((d) => (
+                                <option key={d.id} value={d.id}>
+                                  {d.ciudad} · {d.direccion}
+                                </option>
+                              ))}
+                            </Box>
+                          )}
+                        </Flex>
+                      )}
+
+                      {tipoEnvio === 'delivery' && direccionSeleccionada && (
+                        <Text fontSize="xs" color="gray.500" pl="126px">
+                          Envío según tarifa de {direccionSeleccionada.ciudad}: ${money(envio)}
+                        </Text>
+                      )}
+
+                      {tipoEnvio === 'envio_nacional' && (
+                        <Flex align="center" gap={3}>
+                          <Text fontSize="sm" color="gray.600" minW="110px">Agencia</Text>
+                          <Input
+                            placeholder="MRW, Zoom, Tealca... (opcional)"
+                            value={agencia} onChange={(e) => setAgencia(e.target.value)}
+                            size="sm" maxW="260px" bg="white"
+                          />
+                          <Badge colorPalette="blue" fontSize="xs">Pago en destino</Badge>
+                        </Flex>
+                      )}
 
                       <Flex align="center" gap={3}>
                         <Text fontSize="sm" color="gray.600" minW="110px">Forma de pago</Text>

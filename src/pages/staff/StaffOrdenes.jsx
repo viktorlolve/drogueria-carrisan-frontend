@@ -6,6 +6,7 @@ import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import './StaffOrdenes.css'
 import { useStaffUI } from '../../hooks/useStaffUI'
 import { formatearUSD } from '../../utils/formato'
+import { costoEnvioParaCiudad } from '../../utils/costoEnvio'
 
 function formatUSD(valor) {
   return Number(valor).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -27,6 +28,7 @@ function StaffOrdenes() {
   const [direcciones, setDirecciones] = useState([])
   const [direccionId, setDireccionId] = useState('')
   const [agenciaEnvio, setAgenciaEnvio] = useState('')
+  const [tarifasDelivery, setTarifasDelivery] = useState([])
 
   const [queryProducto, setQueryProducto] = useState('')
   const [resultadosProductos, setResultadosProductos] = useState([])
@@ -108,6 +110,15 @@ function StaffOrdenes() {
     }
   }, [cliente, tipoEnvio, avisar])
 
+  // Tarifas de delivery. El envío lo cobra el BACKEND al crear la orden; esto
+  // es solo para que el total que ve el vendedor sea el mismo que queda en la
+  // orden (misma regla: utils/costoEnvio.js).
+  useEffect(() => {
+    staffApi.get('/delivery-tarifas/activas')
+      .then(({ data }) => setTarifasDelivery(Array.isArray(data) ? data : []))
+      .catch(() => setTarifasDelivery([]))
+  }, [])
+
   // Búsqueda de productos
   useEffect(() => {
     if (debounceProducto.current) clearTimeout(debounceProducto.current)
@@ -185,6 +196,12 @@ function StaffOrdenes() {
 
   const total = filas.reduce((acc, f) => acc + Number(f.precio_usd) * f.cantidad, 0)
 
+  const direccionSeleccionada = direcciones.find((d) => String(d.id) === String(direccionId)) || null
+  const costoEnvio = tipoEnvio === 'delivery'
+    ? costoEnvioParaCiudad(tarifasDelivery, direccionSeleccionada?.ciudad)
+    : 0
+  const totalConEnvio = Math.round((total + costoEnvio) * 100) / 100
+
   async function crearOrden() {
     setMensaje(null)
     setOrdenCreada(null)
@@ -207,7 +224,9 @@ function StaffOrdenes() {
         forma_pago: formaPago,
         tipo_envio: tipoEnvio,
       }
-      if (tipoEnvio === 'delivery' && direccionId) payload.direccion_envio_id = Number(direccionId)
+      // `direcciones_envio.id` es UUID: NO convertirlo a Number (Number(uuid)
+      // da NaN → JSON null → la orden quedaba sin dirección de entrega).
+      if (tipoEnvio === 'delivery' && direccionId) payload.direccion_envio_id = direccionId
       if (tipoEnvio === 'envio_nacional' && agenciaEnvio) payload.agencia_envio = agenciaEnvio
 
       const { data } = await staffApi.post('/staff/ordenes', payload)
@@ -385,9 +404,16 @@ function StaffOrdenes() {
               </select>
             </div>
 
+            {costoEnvio > 0 && (
+              <div className="so-footer-envio">
+                <span>Envío (delivery)</span>
+                <span>{formatearUSD(costoEnvio)}</span>
+              </div>
+            )}
+
             <div className="so-footer-total">
               <span>Total</span>
-              <span>{formatearUSD(total)}</span>
+              <span>{formatearUSD(totalConEnvio)}</span>
             </div>
 
             <button
@@ -396,7 +422,7 @@ function StaffOrdenes() {
               onClick={crearOrden}
               disabled={filas.length === 0 || creando}
             >
-              {creando ? 'Creando orden...' : `Crear orden · ${formatearUSD(total)}`}
+              {creando ? 'Creando orden...' : `Crear orden · ${formatearUSD(totalConEnvio)}`}
             </button>
           </div>
         </>

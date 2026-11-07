@@ -2,6 +2,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from './AuthContext';
 import api from '../api/axios';
+import { COSTO_ENVIO_POR_DEFECTO, costoEnvioParaCiudad } from '../utils/costoEnvio';
 
 const EnvioContext = createContext(null);
 
@@ -21,15 +22,13 @@ export function EnvioProvider({ children }) {
       .catch(() => setTarifas([]));
   }, []);
 
-  // Calcular costo del delivery según la ciudad de la dirección seleccionada
+  // Calcular costo del delivery según la ciudad de la dirección seleccionada.
+  // La regla vive en utils/costoEnvio.js: es la MISMA que aplica el backend al
+  // crear la orden (si diverge, el total del carrito y el de la orden difieren).
   const getCostoDelivery = useCallback((ciudad) => {
-    if (!user) return 8.00;
+    if (!user) return COSTO_ENVIO_POR_DEFECTO;
     if (user.delivery_gratis) return 0;
-    if (ciudad) {
-      const tarifa = tarifas.find(t => t.ciudad === ciudad);
-      if (tarifa) return tarifa.costo;
-    }
-    return tarifas.length > 0 ? tarifas[0].costo : 8.00;
+    return costoEnvioParaCiudad(tarifas, ciudad);
   }, [user, tarifas]);
 
   // Costo basado en la dirección seleccionada actualmente
