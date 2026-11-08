@@ -668,9 +668,23 @@ a.sd-tile--claro {
 }
 
 /* =================================================================
-   STAFF NAVBAR — barra superior del área staff (full-width, sticky,
-   azul de marca). Prefijo de clases: snb-.
+   STAFF NAVBAR — barra superior del área staff (sticky, clara).
+   Prefijo de clases: snb-.
+
+   Rediseño 2026-11-07: SIN logo y SIN título de página. Es UNA sola
+   fila de 60px:
+     [menú] [departamento] .................. [campana] [usuario]
+   El título de la página vive UNA sola vez, en el header del contenido
+   (LayoutDepartamento), que es quien lo necesita.
+
+   La barra se monta también en StaffDashboard, que NO define las
+   variables --ldep-*; por eso todas llevan fallback (azul corporativo).
    ================================================================= */
+
+@keyframes snb-aparecer {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
+}
 
 .snb {
   position: sticky;
@@ -680,233 +694,404 @@ a.sd-tile--claro {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  flex-wrap: wrap;
-  padding: 10px 16px;
-  background: #0052DC;
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  flex-wrap: nowrap;
+  height: var(--ldep-navbar-h, 60px);
+  padding: 0 clamp(12px, 2.2vw, 22px);
+  background: rgba(255, 255, 255, 0.86);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid var(--ldep-border, #e6eaf1);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  color: var(--ldep-text, #16233a);
   font-family: 'Figtree', 'Inter', system-ui, -apple-system, sans-serif;
 }
-.snb a { color: inherit; text-decoration: none; }
 
-.snb-menu-btn {
-  display: none;
-  background: none;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  color: #fff;
-  border-radius: 8px;
-  padding: 6px 9px;
-  cursor: pointer;
-  font-size: 1.1rem;
-  line-height: 1;
-  flex-shrink: 0;
+/* Filo de color del departamento: ancla visual sin gritar. */
+.snb::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--ldep-color, #2563EB), transparent 55%);
+  opacity: 0.55;
+  pointer-events: none;
 }
-.snb-menu-btn:hover { background: rgba(255, 255, 255, 0.12); }
 
-/* Logo: a la izquierda, tamaño controlado (evita que se vea "gigante"). */
-.snb-logo {
+.snb :focus-visible {
+  outline: 2px solid var(--ldep-color, #2563EB);
+  outline-offset: 2px;
+}
+
+/* Lados de la barra: izquierda flexible (puede truncar), derecha fija. */
+.snb-izq {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-weight: 800;
-  font-size: 1.15rem;
   min-width: 0;
 }
-.snb-logo__img {
-  height: 34px;
-  width: auto;
-  display: block;
-  flex-shrink: 0;
-}
-.snb-logo__ph {
-  width: 24px;
-  height: 24px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  flex-shrink: 0;
-}
-.snb-logo__texto { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 
-.snb-titulo {
-  margin: 0;
-  font-size: 0.92rem;
-  opacity: 0.95;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-  flex-shrink: 1;
-}
-
-/* Lado derecho: selector de depto + campana + menú de usuario. */
 .snb-derecha {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
-.snb-depto { position: relative; display: flex; align-items: center; gap: 8px; }
+/* Botón del drawer: solo existe con LayoutDepartamento y solo en
+   <=1023px, que es donde el sidebar desaparece. */
+.snb-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  flex-shrink: 0;
+  border: 1px solid var(--ldep-border, #e6eaf1);
+  border-radius: 11px;
+  background: #fff;
+  color: #475569;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.snb-menu-btn:hover {
+  border-color: color-mix(in srgb, var(--ldep-color, #2563EB) 40%, #fff);
+  background: var(--ldep-color-soft, #eef4fd);
+  color: var(--ldep-color-strong, #1d4ed8);
+}
+
+/* ---------- Contexto: departamento activo ---------- */
+.snb-depto {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.snb-depto__fijo,
 .snb-depto__btn {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: #fff;
-  border-radius: 9px;
-  padding: 6px 11px;
-  font-size: 0.86rem;
-  cursor: pointer;
+  gap: 8px;
   min-width: 0;
+  max-width: 100%;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
 }
-.snb-depto__btn:hover { background: rgba(255, 255, 255, 0.22); }
+
+.snb-depto__fijo {
+  background: var(--ldep-color-soft, #eef4fd);
+  color: var(--ldep-color-strong, #1d4ed8);
+}
+
+.snb-depto__btn {
+  border: 1px solid color-mix(in srgb, var(--ldep-color, #2563EB) 25%, #fff);
+  background: var(--ldep-color-soft, #eef4fd);
+  color: var(--ldep-color-strong, #1d4ed8);
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.snb-depto__btn:hover {
+  border-color: color-mix(in srgb, var(--ldep-color, #2563EB) 55%, #fff);
+  box-shadow: 0 4px 12px -6px color-mix(in srgb, var(--ldep-color, #2563EB) 60%, transparent);
+}
+
+.snb-depto__fijo svg,
+.snb-depto__btn svg { flex-shrink: 0; }
+
+.snb-depto__texto {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Chevrons: giran cuando el desplegable está abierto. */
+.snb-depto__btn > svg:last-child,
+.snb-usuario__btn > svg:last-child { transition: transform 0.18s ease; }
+
+.snb-depto__chevron--abajo,
+.snb-usuario__chevron--abajo { transform: rotate(180deg); }
+
+/* Panel del selector de departamento. */
 .snb-depto__panel {
   position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 7px;
-  background: #fff;
-  color: #1f2937;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
-  min-width: 200px;
-  padding: 8px 0;
+  top: calc(100% + 10px);
+  left: 0;
   z-index: 60;
+  min-width: 224px;
+  max-width: calc(100vw - 24px);
   display: flex;
   flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  background: #fff;
+  border: 1px solid var(--ldep-border, #e6eaf1);
+  border-radius: 14px;
+  box-shadow: 0 20px 44px -20px rgba(15, 23, 42, 0.4), 0 2px 8px rgba(15, 23, 42, 0.05);
+  animation: snb-aparecer 0.14s ease-out;
 }
+
 .snb-depto__link {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
   width: 100%;
-  padding: 7px 14px;
-  border: none;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 9px;
   background: none;
+  color: #3d4b61;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
   text-align: left;
   cursor: pointer;
-  font-size: 0.9rem;
-  color: #1f2937;
-  border-radius: 6px;
+  transition: background 0.12s ease, color 0.12s ease;
 }
-.snb-depto__link:hover { background: #f3f4f6; }
-.snb-depto__link--activo { background: #eef6ff; color: #0052DC; font-weight: 700; }
+.snb-depto__link svg { flex-shrink: 0; }
+.snb-depto__link:hover {
+  background: #f3f6fa;
+  color: var(--ldep-color-strong, #1d4ed8);
+}
+.snb-depto__link--activo {
+  background: var(--ldep-color-soft, #eef4fd);
+  color: var(--ldep-color-strong, #1d4ed8);
+}
 
-.snb-usuario { position: relative; display: flex; align-items: center; gap: 9px; }
+/* ---------- Usuario ---------- */
+.snb-usuario {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .snb-usuario__btn {
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: #fff;
-  border-radius: 10px;
-  padding: 6px 12px;
-  font-size: 0.86rem;
+  max-width: 240px;
+  padding: 5px 10px 5px 5px;
+  border: 1px solid var(--ldep-border, #e6eaf1);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ldep-text, #16233a);
+  font-family: inherit;
   cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
-.snb-usuario__btn:hover { background: rgba(255, 255, 255, 0.22); }
+.snb-usuario__btn:hover {
+  border-color: color-mix(in srgb, var(--ldep-color, #2563EB) 35%, #fff);
+  background: #f8fafc;
+}
+.snb-usuario__btn > svg {
+  flex-shrink: 0;
+  color: #94a3b8;
+}
+
 .snb-usuario__avatar {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 800;
-  font-size: 0.88rem;
   flex-shrink: 0;
-}
-.snb-usuario__textos { display: flex; flex-direction: column; min-width: 0; }
-.snb-usuario__nombre {
+  background: linear-gradient(135deg, var(--ldep-color, #2563EB), var(--ldep-color-strong, #1d4ed8));
+  color: #fff;
+  font-size: 12.5px;
   font-weight: 800;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
 }
-.snb-usuario__rol {
-  font-size: 0.76rem;
-  opacity: 0.9;
+
+.snb-usuario__textos {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  line-height: 1.15;
+}
+
+.snb-usuario__nombre {
+  max-width: 150px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ldep-text, #16233a);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  min-width: 0;
+}
+
+.snb-usuario__rol {
+  max-width: 150px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #7c8899;
+  text-transform: capitalize;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Menú desplegable de usuario. */
 .snb-menu {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 10px);
   right: 0;
-  margin-top: 9px;
-  background: #fff;
-  color: #1f2937;
-  border: 1px solid #e5e7eb;
-  border-radius: 11px;
-  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.18);
-  min-width: 230px;
-  padding: 10px 0;
   z-index: 60;
+  min-width: 240px;
+  max-width: calc(100vw - 24px);
   display: flex;
   flex-direction: column;
+  padding: 6px;
+  background: #fff;
+  border: 1px solid var(--ldep-border, #e6eaf1);
+  border-radius: 14px;
+  box-shadow: 0 20px 44px -20px rgba(15, 23, 42, 0.4), 0 2px 8px rgba(15, 23, 42, 0.05);
+  animation: snb-aparecer 0.14s ease-out;
 }
+
 .snb-menu__header {
-  padding: 10px 14px;
+  padding: 10px 10px 11px;
+  margin-bottom: 4px;
   border-bottom: 1px solid #eef2f6;
-  margin-bottom: 8px;
 }
-.snb-menu__nombre { font-weight: 800; display: block; font-size: 0.95rem; }
-.snb-menu__rol { font-size: 0.78rem; opacity: 0.8; display: block; }
+
+.snb-menu__nombre {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--ldep-text, #16233a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.snb-menu__rol {
+  display: block;
+  margin-top: 1px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #7c8899;
+  text-transform: capitalize;
+}
+
 .snb-menu__item {
-  width: 100%;
   display: flex;
   align-items: center;
-  gap: 11px;
-  padding: 8px 14px;
-  border: none;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 9px;
   background: none;
+  color: #3d4b61;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
   text-align: left;
   cursor: pointer;
-  font-size: 0.92rem;
-  color: #1f2937;
-  border-radius: 0;
+  transition: background 0.12s ease, color 0.12s ease;
 }
-.snb-menu__item:hover { background: #f3f4f6; }
-.snb-menu__item--peligro { color: #b91c1c; }
-.snb-menu__item--peligro:hover { background: #fef2f2; color: #b91c1c; }
-.snb-menu__error {
-  margin: 0;
-  padding: 8px 14px;
+.snb-menu__item svg { flex-shrink: 0; }
+.snb-menu__item:hover {
+  background: #f3f6fa;
+  color: var(--ldep-text, #16233a);
+}
+.snb-menu__item:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.snb-menu__item--peligro { color: #dc2626; }
+.snb-menu__item--peligro:hover {
   background: #fef2f2;
   color: #b91c1c;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  font-size: 0.8rem;
 }
 
-/* Botón instalar dentro del menú de usuario. */
-.snb-instalar-btn { width: auto; padding: 7px 11px; font-size: 0.84rem; }
+.snb-menu__error {
+  margin: 4px 6px;
+  padding: 8px 10px;
+  border: 1px solid #fecaca;
+  border-radius: 9px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 11.5px;
+  line-height: 1.35;
+}
 
-/* En móvil (<768px) se apila: logo/título arriba y acciones a la derecha. */
-@media (max-width: 768px) {
-  .snb {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 12px 16px;
-  }
+/* Botón "Instalar app" dentro del menú de usuario: fila completa,
+   igual que el resto de las acciones del menú (el texto lo aporta el
+   componente como prop `texto`). */
+.snb .snb-instalar-btn {
+  width: 100%;
+  height: auto;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: #3d4b61;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+}
+.snb .snb-instalar-btn:hover {
+  border: 0;
+  background: #f3f6fa;
+  color: var(--ldep-color-strong, #1d4ed8);
+}
+
+/* ---------- Campana dentro de la barra clara ----------
+   Hereda el estilo base de StaffCampanaNotificaciones.css; aquí solo
+   se ajusta al alto de la barra y a su paleta. */
+.snb .snc-btn {
+  width: 38px;
+  height: 38px;
+  border-color: var(--ldep-border, #e6eaf1);
+  border-radius: 11px;
+  background: #fff;
+  color: #475569;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1023px) {
   .snb-menu-btn { display: inline-flex; }
-  .snb-logo { justify-content: space-between; width: 100%; }
-  .snb-titulo { margin-top: 8px; }
-  .snb-derecha { width: 100%; justify-content: space-between; }
-  .snb-depto__panel,
-  .snb-menu { position: static; margin-top: 0; width: 100%; box-shadow: none; border: none; border-bottom: 1px solid #e5e7eb; border-radius: 0; }
+}
+
+@media (max-width: 640px) {
+  .snb {
+    gap: 8px;
+    padding: 0 12px;
+  }
   .snb-usuario__textos { display: none; }
+  .snb-usuario__btn {
+    padding: 5px 8px 5px 5px;
+    gap: 6px;
+  }
+  .snb-depto__fijo,
+  .snb-depto__btn {
+    padding: 7px 11px;
+    font-size: 12.5px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .snb-depto__panel,
+  .snb-menu { animation: none; }
+
+  .snb-menu-btn,
+  .snb-depto__btn,
+  .snb-depto__link,
+  .snb-usuario__btn,
+  .snb-menu__item,
+  .snb-depto__btn > svg:last-child,
+  .snb-usuario__btn > svg:last-child,
+  .snb .snb-instalar-btn { transition: none; }
 }

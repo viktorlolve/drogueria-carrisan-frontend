@@ -11,12 +11,17 @@ import ModalInstalarStaff from './ModalInstalarStaff'
 // - Android/Chrome: usa beforeinstallprompt para instalar nativamente
 // - iPhone/Safari / desktop sin prompt: abre el modal informativo
 // - Se oculta al aceptar la instalación (evento appinstalled)
+//
+// Props:
+//   - className: clase extra para que el consumidor lo reestilice
+//   - texto: etiqueta visible (el menú de usuario del StaffNavbar lo
+//     pinta como una fila más del menú; sin `texto` queda icon-only)
 // ---------------------------------------------------------------
 function estaInstalado() {
   return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true
 }
 
-function BotonInstalarStaff({ className = '' }) {
+function BotonInstalarStaff({ className = '', texto = '' }) {
   const [deferredPrompt, setDeferredPrompt] = useState(null)
   const [instalado, setInstalado] = useState(estaInstalado)
   const [modalAbierto, setModalAbierto] = useState(false)
@@ -68,6 +73,7 @@ function BotonInstalarStaff({ className = '' }) {
         title="Instalar app"
       >
         <Download size={17} />
+        {texto && <span className="sd-instalar__texto">{texto}</span>}
       </button>
 
       {modalAbierto && (

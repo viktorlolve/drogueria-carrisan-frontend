@@ -2,6 +2,11 @@
    LAYOUT DEPARTAMENTO — sidebar departamental de staff (/staff/*)
    Muestra SOLO los módulos del departamento activo, con su color
    propio. El color se inyecta con --ldep-color en el contenedor.
+
+   Rediseño 2026-11-07: barra superior sin logo ni título de página,
+   sidebar más limpio (item activo con barra de color en vez de bloque
+   sólido) y títulos de grupo discretos. El título de la página vive
+   UNA sola vez, en el header del contenido.
    ================================================================= */
 
 .ldep-root,
@@ -13,20 +18,23 @@
 
 :root {
   --ldep-drawer-w: min(300px, 84vw);
+  --ldep-navbar-h: 60px;
 }
 
 .ldep-root {
   --ldep-color: #2563EB;
   --ldep-color-strong: #1d4ed8;
   --ldep-color-soft: #eef4fd;
-  --ldep-bg: #f1f5f9;
+  --ldep-bg: #f4f6fa;
   --ldep-surface: #ffffff;
-  --ldep-border: #e5e7eb;
-  --ldep-text: #1e293b;
+  --ldep-border: #e6eaf1;
+  --ldep-text: #16233a;
   --ldep-text-muted: #64748b;
 
   position: relative;
-  background: var(--ldep-bg);
+  background:
+    radial-gradient(900px 420px at 100% -10%, color-mix(in srgb, var(--ldep-color) 7%, transparent), transparent 60%),
+    var(--ldep-bg);
   min-height: 100vh;
   max-width: 100vw;
   overflow-x: clip;
@@ -39,7 +47,7 @@
   position: relative;
   width: 100%;
   min-height: 100vh;
-  background: var(--ldep-bg);
+  background: transparent;
   transform-origin: left center;
   transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), border-radius 0.28s ease;
   will-change: transform;
@@ -59,13 +67,13 @@
   width: 100%;
   max-width: 1600px;
   margin: 0 auto;
-  padding: 32px 24px 96px;
+  padding: 26px clamp(16px, 2.4vw, 28px) 96px;
 }
 
 .ldep-body {
   display: flex;
   align-items: flex-start;
-  gap: 32px;
+  gap: 26px;
   width: 100%;
   min-width: 0;
 }
@@ -74,80 +82,77 @@
    Sidebar — desktop/tablet
    ----------------------------------------------------------------- */
 .ldep-sidebar {
-  width: 280px;
+  width: 274px;
   flex-shrink: 0;
   position: relative;
 }
 
 .ldep-sidebar__sticky {
   position: sticky;
-  top: 90px;
+  top: calc(var(--ldep-navbar-h) + 22px);
+  max-height: calc(100vh - var(--ldep-navbar-h) - 44px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--ldep-surface);
   border: 1px solid var(--ldep-border);
-  border-radius: 16px;
-  padding: 20px 14px 22px;
-  box-shadow: 0 2px 14px rgba(15, 23, 42, 0.06);
-  overflow: hidden;
+  border-radius: 18px;
+  padding: 12px 10px 14px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 18px 36px -30px rgba(15, 23, 42, 0.55);
+  scrollbar-width: thin;
 }
 
-.ldep-sidebar__sticky::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--ldep-color), var(--ldep-color-strong));
-}
-
+/* Cabecera del depto: icono con el color del área + nombre. */
 .ldep-sidebar__brand {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 4px 8px 16px;
-  margin-bottom: 10px;
+  gap: 10px;
+  padding: 4px 6px 12px;
+  margin-bottom: 6px;
   border-bottom: 1px solid var(--ldep-border);
 }
 
 .ldep-sidebar__brand-icono {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: var(--ldep-color-soft);
-  color: var(--ldep-color);
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--ldep-color), var(--ldep-color-strong));
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 8px 16px -10px var(--ldep-color);
 }
 
 .ldep-sidebar__brand-nombre {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 800;
-  color: var(--ldep-color);
+  letter-spacing: -0.01em;
+  color: var(--ldep-text);
   margin: 0;
-  line-height: 1.2;
+  line-height: 1.25;
 }
 
 .ldep-sidebar__brand-sub {
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 600;
   color: var(--ldep-text-muted);
-  margin: 2px 0 0;
+  margin: 1px 0 0;
   text-transform: capitalize;
 }
 
 .ldep-sidebar__volver {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
+  gap: 7px;
+  font-size: 12.5px;
   font-weight: 600;
-  color: var(--ldep-text);
+  color: var(--ldep-text-muted);
   text-decoration: none;
-  padding: 8px 10px;
+  padding: 7px 10px;
   border-radius: 9px;
-  margin-bottom: 10px;
-  transition: background 0.12s ease;
+  margin-bottom: 4px;
+  transition: background 0.12s ease, color 0.12s ease;
 }
 
 .ldep-sidebar__volver:hover {
@@ -161,59 +166,77 @@
 .ldep-nav {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 2px;
 }
 
 .ldep-nav__grupo {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
+}
+
+.ldep-nav__grupo + .ldep-nav__grupo {
+  margin-top: 8px;
 }
 
 .ldep-nav__grupo-titulo {
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: var(--ldep-text-muted);
-  padding: 0 10px 6px;
+  color: #94a3b8;
+  padding: 8px 10px 5px;
 }
 
 .ldep-nav__link {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 10px;
+  gap: 9px;
+  padding: 8px 10px;
   border-radius: 9px;
-  color: var(--ldep-text);
+  color: #3d4b61;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  transition: background 0.12s ease, color 0.12s ease;
+  line-height: 1.3;
+  transition: background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.ldep-nav__link svg {
+  flex-shrink: 0;
+  opacity: 0.8;
 }
 
 .ldep-nav__link:hover {
+  background: #f3f6fa;
+  color: var(--ldep-color-strong);
+}
+
+.ldep-nav__link:hover svg {
+  opacity: 1;
+}
+
+/* Activo: fondo suave del depto + barra de color a la izquierda.
+   (Antes era un bloque sólido que pesaba demasiado en el sidebar.) */
+.ldep-nav__link--activo {
+  background: var(--ldep-color-soft);
+  color: var(--ldep-color-strong);
+  font-weight: 700;
+  box-shadow: inset 3px 0 0 var(--ldep-color);
+}
+
+.ldep-nav__link--activo:hover {
   background: var(--ldep-color-soft);
   color: var(--ldep-color-strong);
 }
 
-.ldep-nav__link--activo {
-  background: var(--ldep-color);
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-}
-
-.ldep-nav__link--activo:hover {
-  background: var(--ldep-color-strong);
-  color: #fff;
-}
-
-.ldep-nav__chevron {
-  margin-left: auto;
+.ldep-nav__link--activo svg {
+  opacity: 1;
 }
 
 .ldep-nav__vacio {
-  font-size: 13px;
+  font-size: 12.5px;
   color: var(--ldep-text-muted);
   padding: 0 10px;
 }
@@ -221,23 +244,24 @@
 .ldep-nav__bridge {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   width: 100%;
-  padding: 10px 11px;
-  border: 1.5px solid var(--ldep-color);
+  padding: 8px 10px;
+  border: 1px dashed color-mix(in srgb, var(--ldep-color) 45%, transparent);
   background: transparent;
-  color: var(--ldep-color);
+  color: var(--ldep-color-strong);
   border-radius: 9px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   font-family: inherit;
+  line-height: 1.3;
   cursor: pointer;
-  transition: background 0.12s ease, color 0.12s ease;
+  transition: background 0.12s ease, border-color 0.12s ease;
 }
 
 .ldep-nav__bridge:hover {
-  background: var(--ldep-color);
-  color: #fff;
+  background: var(--ldep-color-soft);
+  border-color: var(--ldep-color);
 }
 
 .ldep-nav__bridge:disabled {
@@ -255,16 +279,32 @@
 
 .ldep-main__header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: 22px;
+  gap: 16px;
+  min-height: 32px;
+  margin-bottom: 18px;
 }
 
 .ldep-main__titulo {
-  font-size: 24px;
-  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
   color: var(--ldep-text);
   margin: 0;
+}
+
+.ldep-main__titulo::before {
+  content: '';
+  width: 4px;
+  height: 20px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--ldep-color), var(--ldep-color-strong));
+  flex-shrink: 0;
 }
 
 /* -----------------------------------------------------------------
@@ -283,6 +323,7 @@
   transform: translateX(-100%);
   transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   border-right: 1px solid var(--ldep-border);
+  box-shadow: 16px 0 40px -32px rgba(15, 23, 42, 0.6);
 }
 
 .ldep-drawer-panel--abierto {
@@ -293,8 +334,9 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 16px;
+  padding: 14px 14px 12px;
   border-bottom: 1px solid var(--ldep-border);
+  background: linear-gradient(180deg, var(--ldep-color-soft), #fff);
 }
 
 .ldep-drawer-panel__quien {
@@ -306,16 +348,16 @@
 }
 
 .ldep-drawer-panel__avatar {
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  background: var(--ldep-color);
+  background: linear-gradient(135deg, var(--ldep-color), var(--ldep-color-strong));
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 18px;
+  font-weight: 800;
+  font-size: 17px;
   flex-shrink: 0;
 }
 
@@ -325,52 +367,63 @@
   color: var(--ldep-text);
   margin: 0;
   text-transform: capitalize;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .ldep-drawer-panel__rol {
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--ldep-text-muted);
   text-transform: capitalize;
-  margin: 2px 0 0;
+  margin: 1px 0 0;
 }
 
 .ldep-drawer-panel__cerrar {
   background: transparent;
   border: 0;
+  border-radius: 8px;
   cursor: pointer;
   color: var(--ldep-text-muted);
-  padding: 4px;
+  padding: 5px;
+  display: inline-flex;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.ldep-drawer-panel__cerrar:hover {
+  background: rgba(15, 23, 42, 0.06);
+  color: var(--ldep-text);
 }
 
 .ldep-drawer-panel__scroll {
   flex: 1;
   overflow-y: auto;
-  padding: 14px;
+  overscroll-behavior: contain;
+  padding: 12px 10px 14px;
 }
 
 .ldep-drawer-panel__dashboard {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 11px 12px;
-  border-radius: 10px;
+  gap: 9px;
+  padding: 9px 10px;
+  border-radius: 9px;
   color: var(--ldep-text);
   text-decoration: none;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
-  margin-bottom: 12px;
-  border: 1.5px solid var(--ldep-border);
+  margin-bottom: 6px;
+  background: #f3f6fa;
   transition: background 0.12s ease, color 0.12s ease;
 }
 
 .ldep-drawer-panel__dashboard:hover {
   background: var(--ldep-color-soft);
   color: var(--ldep-color-strong);
-  border-color: var(--ldep-color);
 }
 
 .ldep-drawer-panel__pie {
-  padding: 14px;
+  padding: 12px;
   border-top: 1px solid var(--ldep-border);
 }
 
@@ -378,15 +431,22 @@
   width: 100%;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 10px 12px;
-  border: 1.5px solid var(--ldep-border);
+  padding: 9px 12px;
+  border: 1px solid var(--ldep-border);
   background: #fff;
   color: #DC2626;
   border-radius: 9px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.ldep-drawer-panel__logout:hover {
+  background: #fef2f2;
+  border-color: #fecaca;
 }
 
 /* -----------------------------------------------------------------
@@ -397,10 +457,19 @@
     display: none;
   }
   .ldep-container {
-    padding: 20px 16px 80px;
+    padding: 18px 16px 80px;
   }
   .ldep-body {
     display: block;
+  }
+}
+
+@media (max-width: 480px) {
+  .ldep-container {
+    padding: 14px 14px 80px;
+  }
+  .ldep-main__titulo {
+    font-size: 19px;
   }
 }
 
@@ -411,35 +480,42 @@
    ----------------------------------------------------------------- */
 .ldep-nav__badge {
   margin-left: auto;
-  min-width: 20px;
-  height: 20px;
+  min-width: 19px;
+  height: 19px;
   padding: 0 6px;
   border-radius: 999px;
   background: var(--ldep-color, #0052DC);
   color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 20px;
+  font-size: 10.5px;
+  font-weight: 800;
+  line-height: 19px;
   text-align: center;
+  flex-shrink: 0;
 }
 
 .ldep-nav__badge--alerta {
   background: #DC2626;
 }
 
-/* El link activo ya pinta el fondo con el color del departamento: sin este
-   variante el badge se volvería invisible justo en la cola que estás viendo. */
+/* El item activo ya usa el fondo suave del depto (no sólido), así que el
+   badge puede conservar el color pleno y sigue leyéndose. */
 .ldep-nav__link--activo .ldep-nav__badge {
-  background: rgba(255, 255, 255, 0.28);
+  background: var(--ldep-color, #0052DC);
 }
 
 .ldep-nav__link--activo .ldep-nav__badge--alerta {
-  background: #FCA5A5;
-  color: #7F1D1D;
+  background: #DC2626;
 }
 
-/* Cuando hay badge, él es el que empuja a la derecha: el chevron va pegado.
-   Sin badge el chevron conserva su `margin-left: auto` de siempre. */
-.ldep-nav__badge + .ldep-nav__chevron {
-  margin-left: 4px;
+@media (prefers-reduced-motion: reduce) {
+  .ldep-shift,
+  .ldep-drawer-panel,
+  .ldep-nav__link,
+  .ldep-sidebar__volver,
+  .ldep-drawer-panel__dashboard,
+  .ldep-drawer-panel__logout,
+  .ldep-drawer-panel__cerrar,
+  .ldep-nav__bridge {
+    transition: none;
+  }
 }

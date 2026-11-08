@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { Menu, ChevronDown, LogOut, ShieldCheck } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Menu, ChevronDown, LogOut, ShieldCheck, LayoutGrid } from 'lucide-react'
 import { useStaffAuth } from '../../context/StaffAuthContext'
 import { DEPARTAMENTOS, MODULOS, ROLES_BRIDGE_ADMIN } from './NavStaff'
-import empresaInfo from '../../config/empresa'
 import staffApi from '../../api/staffAxios'
 import { safeSetItem } from '../../utils/safeStorage'
 import StaffCampanaNotificaciones from './StaffCampanaNotificaciones'
@@ -11,31 +10,29 @@ import BotonInstalarStaff from './BotonInstalarStaff'
 import './StaffNavbar.css'
 
 // ---------------------------------------------------------------
-// Navbar superior del área staff — full-width, sticky, azul de marca
-// (mismo lenguaje visual que el Navbar de la tienda, pero SIN buscador
-// ni carrito: esa sesión es la del cliente, no la del personal).
+// Navbar superior del área staff — barra compacta, sticky y clara.
+//
+// SIN logo ni título de página (decisión del dueño 2026-11-07): el
+// título de la página vive UNA sola vez, en el header del contenido
+// (LayoutDepartamento). Antes se repetía aquí y, en móvil, el nombre
+// de la empresa + el título obligaban a una barra de 3 filas.
 //
 // Se monta en LayoutDepartamento (todas las páginas de trabajo) y en
 // StaffDashboard (standalone). La campana de notificaciones se monta
-// UNA sola vez aquí: antes vivía en el topbar móvil y en el header de
-// cada página (dos polls del mismo contador).
+// UNA sola vez aquí.
 //
 // Piezas:
 //   - Botón menú (solo si hay drawer: LayoutDepartamento, <1024px)
-//   - Logo → /staff/dashboard. `empresaInfo.logoStaffUrl` vacío =
-//     placeholder con el nombre de la empresa en texto (pendiente del
-//     dueño de pegar la URL).
-//   - Selector de departamento (≥1024px, solo si el rol ve 2+ deptos)
+//   - Contexto: departamento activo (selector si el rol ve 2+ deptos)
 //   - Campana (StaffCampanaNotificaciones)
 //   - Menú de usuario: nombre/rol + bridge (solo roles bridge) +
 //     instalar app + cerrar sesión
 //
 // Props:
 //   - departamento: id del depto activo (marca el selector)
-//   - titulo: título de la página (visible en móvil)
 //   - onAbrirMenu: abre el drawer del layout (LayoutDepartamento)
 // ---------------------------------------------------------------
-function StaffNavbar({ departamento = '', titulo = '', onAbrirMenu = null }) {
+function StaffNavbar({ departamento = '', onAbrirMenu = null }) {
   const { staff, logoutStaff } = useStaffAuth()
   const navigate = useNavigate()
 
@@ -52,8 +49,8 @@ function StaffNavbar({ departamento = '', titulo = '', onAbrirMenu = null }) {
   const iniciales = (staff?.nombre || staff?.email || '?').trim().charAt(0).toUpperCase()
 
   // Departamentos con al menos un módulo visible para el rol. Con 2+ se
-  // muestra el selector; con 0 o 1 no aporta (el logo ya lleva al
-  // dashboard y desde ahí se entra al hub).
+  // muestra el selector; con 0 o 1 no aporta (se entra al hub desde el
+  // dashboard o desde este mismo módulo/sidebar).
   const deptosVisibles = DEPARTAMENTOS.filter((d) =>
     (MODULOS[d.id] || []).some((grupo) => grupo.items.some((item) => item.roles.includes(rol)))
   )
@@ -120,31 +117,18 @@ function StaffNavbar({ departamento = '', titulo = '', onAbrirMenu = null }) {
     logoutStaff()
   }
 
+  const IconoDeptoActivo = deptoActual?.icono || LayoutGrid
+
   return (
     <header className="snb">
-      {onAbrirMenu && (
-        <button type="button" className="snb-menu-btn" onClick={onAbrirMenu} aria-label="Abrir menú de departamento">
-          <Menu size={22} />
-        </button>
-      )}
-
-      <Link to="/staff/dashboard" className="snb-logo" aria-label="Ir al panel de staff">
-        {empresaInfo.logoStaffUrl ? (
-          <img src={empresaInfo.logoStaffUrl} alt="Droguería Carrisan" className="snb-logo__img" />
-        ) : (
-          <>
-            <span className="snb-logo__ph" aria-hidden="true">
-              <ShieldCheck size={18} />
-            </span>
-            <span className="snb-logo__texto">Droguería Carrisan</span>
-          </>
+      <div className="snb-izq">
+        {onAbrirMenu && (
+          <button type="button" className="snb-menu-btn" onClick={onAbrirMenu} aria-label="Abrir menú de departamento">
+            <Menu size={20} />
+          </button>
         )}
-      </Link>
 
-      {titulo && <p className="snb-titulo">{titulo}</p>}
-
-      <div className="snb-derecha">
-        {conSelectorDepto && (
+        {conSelectorDepto ? (
           <div className="snb-depto" ref={deptoRef}>
             <button
               type="button"
@@ -153,9 +137,9 @@ function StaffNavbar({ departamento = '', titulo = '', onAbrirMenu = null }) {
               aria-expanded={deptoAbierto}
               aria-label="Cambiar de departamento"
             >
-              {deptoActual?.icono && <deptoActual.icono size={16} />}
-              <span>{deptoActual?.nombre || 'Departamentos'}</span>
-              <ChevronDown size={15} className={deptoAbierto ? 'snb-depto__chevron--abajo' : ''} />
+              <IconoDeptoActivo size={15} />
+              <span className="snb-depto__texto">{deptoActual?.nombre || 'Departamentos'}</span>
+              <ChevronDown size={14} className={deptoAbierto ? 'snb-depto__chevron--abajo' : ''} />
             </button>
             {deptoAbierto && (
               <div className="snb-depto__panel">
@@ -173,8 +157,17 @@ function StaffNavbar({ departamento = '', titulo = '', onAbrirMenu = null }) {
               </div>
             )}
           </div>
+        ) : (
+          deptoActual && (
+            <span className="snb-depto__fijo">
+              <IconoDeptoActivo size={15} />
+              <span className="snb-depto__texto">{deptoActual.nombre}</span>
+            </span>
+          )
         )}
+      </div>
 
+      <div className="snb-derecha">
         <StaffCampanaNotificaciones />
 
         <div className="snb-usuario" ref={menuRef}>
@@ -212,7 +205,7 @@ function StaffNavbar({ departamento = '', titulo = '', onAbrirMenu = null }) {
                 </button>
               )}
 
-              <BotonInstalarStaff className="snb-instalar-btn" />
+              <BotonInstalarStaff className="snb-instalar-btn" texto="Instalar app" />
 
               {errorBridge && <p className="snb-menu__error">{errorBridge}</p>}
 

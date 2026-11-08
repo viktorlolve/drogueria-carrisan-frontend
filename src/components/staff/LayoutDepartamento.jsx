@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { X, ChevronRight, LogOut, LayoutDashboard, ShieldCheck } from 'lucide-react'
+import { X, LogOut, LayoutDashboard, ShieldCheck } from 'lucide-react'
 import { useStaffAuth } from '../../context/StaffAuthContext'
 import { useStaffBadges } from '../../context/StaffBadgesContext'
 import staffApi from '../../api/staffAxios'
@@ -18,8 +18,8 @@ import './LayoutDepartamento.css'
 // A diferencia de un sidebar genérico, el sidebar muestra SOLO los módulos
 // del departamento actual, con los colores propios de ese depto
 // (variables CSS --ldep-*). Incluye:
-//   - StaffNavbar (barra superior full-width: logo, selector de
-//     depto, campana de notificaciones y menú de usuario)
+//   - StaffNavbar (barra superior full-width: menú móvil, selector de
+//     departamento, campana de notificaciones y menú de usuario)
 //   - Header del departamento (icono + nombre + color)
 //   - Link "Volver al dashboard"
 //   - Enlace al panel administrativo (solo roles bridge)
@@ -43,7 +43,6 @@ function ItemNav({ item, activo, onNavigate }) {
           {conteo}
         </span>
       )}
-      {esActivo && <ChevronRight size={16} className="ldep-nav__chevron" />}
     </NavLink>
   )
 }
@@ -134,7 +133,6 @@ function LayoutDepartamento({ departamento, activo, titulo, children }) {
 
         <StaffNavbar
           departamento={departamento}
-          titulo={titulo}
           onAbrirMenu={() => setDrawerAbierto(true)}
         />
 
@@ -159,9 +157,11 @@ function LayoutDepartamento({ departamento, activo, titulo, children }) {
             </aside>
 
             <main className="ldep-main">
-              <div className="ldep-main__header">
-                <h1 className="ldep-main__titulo">{titulo}</h1>
-              </div>
+              {titulo && (
+                <div className="ldep-main__header">
+                  <h1 className="ldep-main__titulo">{titulo}</h1>
+                </div>
+              )}
               {children}
             </main>
           </div>

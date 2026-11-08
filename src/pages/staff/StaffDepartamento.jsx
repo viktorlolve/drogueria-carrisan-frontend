@@ -32,11 +32,11 @@ function StaffDepartamento({ departamento }) {
   const Icono = depto.icono
 
   return (
-    <LayoutDepartamento departamento={departamento} activo="" titulo={depto.nombre}>
+    <LayoutDepartamento departamento={departamento} activo="">
       <section className="sdpto-hero">
         <span className="sdpto-hero__icono">{Icono && <Icono size={34} />}</span>
         <div className="sdpto-hero__texto">
-          <h2 className="sdpto-hero__nombre">{depto.nombre}</h2>
+          <h1 className="sdpto-hero__nombre">{depto.nombre}</h1>
           <p className="sdpto-hero__desc">{depto.descripcion}</p>
         </div>
       </section>
