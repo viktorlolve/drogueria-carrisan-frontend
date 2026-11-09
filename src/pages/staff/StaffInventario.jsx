@@ -69,6 +69,22 @@ const ORDENES_SORT = {
   precio: ['precio_asc', 'precio_desc'],
 }
 
+// Laboratorios de acceso rápido. El botón muestra el nombre corto (lo que el
+// operador reconoce de vista) y al hacer clic se filtra por el nombre completo
+// que guarda la BD (el select de laboratorio acepta el mismo valor).
+const LABS_FRECUENTES = [
+  { corto: 'LETI', largo: 'LABORATORIOS LETI S.A.V' },
+  { corto: 'CALOX', largo: 'CALOX INTERNACIONAL C.A.' },
+  { corto: 'LA SANTE', largo: 'LABORATORIO LA SANTE C.A.' },
+  { corto: 'MEGALABS', largo: 'MEGALABS S.A.' },
+  { corto: 'DROTAFARMA', largo: 'CASA DE REPRESENTACIONES TAGUAPIREFARMA C.A.' },
+  { corto: 'SIEGFRIED', largo: 'LABORATORIOS SIEGFRIED S.A.' },
+  { corto: 'VALMORCA', largo: 'LABORATORIOS VALMOR C.A.' },
+  { corto: 'OFTALMI', largo: 'LABORATORIOS L.O. OFTALMI C.A.' },
+  { corto: 'SPEFAR', largo: 'LABORATORIOS SPEFAR VENEZOLANOS S.A.' },
+  { corto: 'BIOGLASS', largo: 'BIOGLASS PHARMACEUTICAL CASA DE REPRESENTACION C.A.' },
+]
+
 // Los 5 presets de cola. Cada uno pone UN filtro; el contador sale de
 // `GET /opciones.conteos` y el botón activo se marca con `.si-queue__btn--on`.
 // Se pueden activar dos a la vez (el servidor los ANDea: sin foto Y sin precio).
@@ -197,6 +213,26 @@ function BarraFiltros({ filtros, cambiarFiltro, opciones, onLimpiar }) {
           <option key={l} value={l}>{l}</option>
         ))}
       </select>
+
+      {/* Botones rápidos de laboratorio (acceso directo al filtro más usado). */}
+      <div className="si-labs-fast">
+        <span className="si-labs-fast__titulo">Laboratorios rápidos</span>
+        {LABS_FRECUENTES.map((lab) => {
+          const activo = filtros.laboratorio === lab.largo
+          return (
+            <button
+              key={lab.corto}
+              type="button"
+              className={`si-labs-fast__btn ${activo ? 'si-labs-fast__btn--on' : ''}`}
+              onClick={() => cambiarFiltro('laboratorio', lab.largo)}
+              title={lab.largo}
+              aria-pressed={activo}
+            >
+              {lab.corto}
+            </button>
+          )
+        })}
+      </div>
       <select
         value={filtros.linea}
         onChange={(e) => cambiarFiltro('linea', e.target.value)}

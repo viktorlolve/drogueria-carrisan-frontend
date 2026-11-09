@@ -49,6 +49,44 @@
 
 .si-input-molecula { min-width: 180px; }
 
+/* ------------------------------------------------ laboratorios de acceso rápido */
+.si-labs-fast {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+  flex-basis: 100%;
+}
+.si-labs-fast__titulo {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  font-weight: 700;
+  margin-right: 2px;
+}
+.si-labs-fast__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.si-labs-fast__btn:hover { border-color: var(--ldep-color, #D97706); color: var(--ldep-color, #D97706); }
+.si-labs-fast__btn--on {
+  background: var(--ldep-color-strong, #B45309);
+  border-color: var(--ldep-color-strong, #B45309);
+  color: #fff;
+}
+
 /* ------------------------------------------------------- colas de trabajo */
 
 .si-queue {
