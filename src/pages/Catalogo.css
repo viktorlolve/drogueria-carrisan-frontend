@@ -1134,6 +1134,35 @@
     border-color: #1B4B8F;
   }
 
+  /* Iconos dentro de los chips inline (Laboratorio / Forma) */
+  .cfm-chip-inline__icono {
+    flex: 0 0 auto;
+    margin-right: 4px;
+    color: inherit;
+  }
+
+  .cfm-chip-inline--activo .cfm-chip-inline__icono {
+    color: #FFFFFF;
+  }
+
+  /* Icono en el encabezado de sección del modal */
+  .cfm-seccion__icono {
+    flex: 0 0 auto;
+    margin-right: 6px;
+    color: inherit;
+  }
+
+  /* Icono dentro de los chips del modal (Laboratorio / Forma) */
+  .cfm-chip__icono {
+    flex: 0 0 auto;
+    margin-right: 4px;
+    color: inherit;
+  }
+
+  .cfm-chip--activo .cfm-chip__icono {
+    color: #FFFFFF;
+  }
+
   @keyframes catalogo-modal-slideup {
     from {
       transform: translateY(100%);

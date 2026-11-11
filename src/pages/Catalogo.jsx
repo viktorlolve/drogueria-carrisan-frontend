@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
+import { FlaskConical, Package } from 'lucide-react'
 import api from '../api/axios'
 import ProductCard from '../components/ProductCard'
 import ProductCardSkeleton from '../components/Productcardskeleton'
@@ -620,6 +621,7 @@ useEffect(() => {
                         className={`cfm-chip-inline ${laboratoriosActivos.includes(lab.nombre) ? 'cfm-chip-inline--activo' : ''}`}
                         onClick={() => toggleEnArray(lab.nombre, laboratoriosActivos, setLaboratoriosActivos)}
                       >
+                        <FlaskConical className="cfm-chip-inline__icono" size={14} strokeWidth={1.5} />
                         {lab.nombre}
                       </button>
                     ))}
@@ -627,7 +629,10 @@ useEffect(() => {
                       <button
                         type="button"
                         className="cfm-chip-inline cfm-chip-inline--mas"
-                        onClick={() => setFiltrosAbiertos(true)}
+                        onClick={() => {
+                          setFiltrosAbiertos(true)
+                          setSeccionesAbiertas((prev) => ({ ...prev, laboratorio: true, forma: true }))
+                        }}
                       >
                         +{laboratoriosTop.length - 8} más
                       </button>
@@ -648,6 +653,7 @@ useEffect(() => {
                         className={`cfm-chip-inline ${formasActivas.includes(forma) ? 'cfm-chip-inline--activo' : ''}`}
                         onClick={() => toggleEnArray(forma, formasActivas, setFormasActivas)}
                       >
+                        <Package className="cfm-chip-inline__icono" size={14} strokeWidth={1.5} />
                         {forma}
                       </button>
                     ))}
@@ -731,6 +737,102 @@ useEffect(() => {
             </div>
 
             <div className="cfm-sheet__body">
+              {/* Laboratorio — accesible directo desde arriba */}
+              <section className="cfm-seccion">
+                <button
+                  type="button"
+                  className="cfm-seccion__head"
+                  onClick={() => toggleSeccion('laboratorio')}
+                  aria-expanded={seccionesAbiertas.laboratorio}
+                >
+                  <span className="cfm-seccion__label">
+                    <FlaskConical size={16} strokeWidth={1.5} className="cfm-seccion__icono" />
+                    Laboratorio
+                    {laboratoriosActivos.length > 0 && (
+                      <span className="cfm-seccion__contador">{laboratoriosActivos.length}</span>
+                    )}
+                  </span>
+                  <svg
+                    className={`cfm-seccion__chevron${seccionesAbiertas.laboratorio ? ' cfm-seccion__chevron--abierto' : ''}`}
+                    width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                  >
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+                {seccionesAbiertas.laboratorio && (
+                  <div className="cfm-seccion__contenido">
+                    {laboratoriosTop.length === 0 && (
+                      <p className="cfm-seccion__vacio">Sin datos aún</p>
+                    )}
+                    <div className="cfm-chips">
+                      {laboratoriosTop.slice(0, labsVisibles).map((lab) => (
+                        <button
+                          key={lab.nombre}
+                          type="button"
+                          className={`cfm-chip ${laboratoriosActivos.includes(lab.nombre) ? 'cfm-chip--activo' : ''}`}
+                          onClick={() => toggleEnArray(lab.nombre, laboratoriosActivos, setLaboratoriosActivos)}
+                        >
+                          <FlaskConical size={14} strokeWidth={1.5} className="cfm-chip__icono" />
+                          {lab.nombre} <span className="cfm-chip__count">{lab.total}</span>
+                        </button>
+                      ))}
+                    </div>
+                    {labsVisibles < laboratoriosTop.length && (
+                      <button
+                        className="cfm-ver-mas"
+                        onClick={() => setLabsVisibles((v) => v + 20)}
+                      >
+                        Cargar más ({laboratoriosTop.length - labsVisibles} restantes)
+                      </button>
+                    )}
+                  </div>
+                )}
+              </section>
+
+              {/* Forma — accesible directo desde arriba */}
+              <section className="cfm-seccion">
+                <button
+                  type="button"
+                  className="cfm-seccion__head"
+                  onClick={() => toggleSeccion('forma')}
+                  aria-expanded={seccionesAbiertas.forma}
+                >
+                  <span className="cfm-seccion__label">
+                    <Package size={16} strokeWidth={1.5} className="cfm-seccion__icono" />
+                    Forma
+                    {formasActivas.length > 0 && (
+                      <span className="cfm-seccion__contador">{formasActivas.length}</span>
+                    )}
+                  </span>
+                  <svg
+                    className={`cfm-seccion__chevron${seccionesAbiertas.forma ? ' cfm-seccion__chevron--abierto' : ''}`}
+                    width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                  >
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+                {seccionesAbiertas.forma && (
+                  <div className="cfm-seccion__contenido">
+                    {formasDisponibles.length === 0 && (
+                      <p className="cfm-seccion__vacio">Sin datos aún</p>
+                    )}
+                    <div className="cfm-chips">
+                      {formasDisponibles.map((forma) => (
+                        <button
+                          key={forma}
+                          type="button"
+                          className={`cfm-chip ${formasActivas.includes(forma) ? 'cfm-chip--activo' : ''}`}
+                          onClick={() => toggleEnArray(forma, formasActivas, setFormasActivas)}
+                        >
+                          <Package size={14} strokeWidth={1.5} className="cfm-chip__icono" />
+                          {forma}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </section>
+
               {/* Ordenar por — filas tipo radio */}
               <section className="cfm-seccion">
                 <h3 className="cfm-seccion__titulo">Ordenar por</h3>
