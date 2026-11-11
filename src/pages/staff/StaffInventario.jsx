@@ -103,6 +103,7 @@ const FILTROS_INICIALES = {
   foto_estado: '',
   sin_precio: false,
   sin_proveedor: false,
+  visible_catalogo: '', // '' = todos | 'true' = solo visibles | 'false' = solo no visibles
 }
 
 const formato = (n) =>
@@ -283,6 +284,15 @@ function BarraFiltros({ filtros, cambiarFiltro, opciones, onLimpiar }) {
         />
         Solo sin proveedor
       </label>
+      <select
+        value={filtros.visible_catalogo}
+        onChange={(e) => cambiarFiltro('visible_catalogo', e.target.value)}
+        className="sp-select"
+      >
+        <option value="">Visibilidad en el catálogo</option>
+        <option value="true">Solo visibles en el catálogo</option>
+        <option value="false">Solo NO visibles en el catálogo</option>
+      </select>
       <button type="button" className="si-btn si-btn--sutil" onClick={onLimpiar}>Limpiar</button>
 
       <div className="si-queue" role="group" aria-label="Colas de trabajo">
@@ -491,6 +501,8 @@ function StaffInventario() {
     if (filtros.foto_estado) params.foto_estado = filtros.foto_estado
     if (filtros.sin_precio) params.sin_precio = 'true'
     if (filtros.sin_proveedor) params.sin_proveedor = 'true'
+    if (filtros.visible_catalogo === 'true') params.visible_catalogo = 'true'
+    if (filtros.visible_catalogo === 'false') params.visible_catalogo = 'false'
 
     staffApi
       .get('/staff/inventario', { params })
@@ -1022,7 +1034,8 @@ function StaffInventario() {
     (filtros.forma ? 1 : 0) +
     (filtros.foto_estado ? 1 : 0) +
     (filtros.sin_precio ? 1 : 0) +
-    (filtros.sin_proveedor ? 1 : 0)
+    (filtros.sin_proveedor ? 1 : 0) +
+    (filtros.visible_catalogo ? 1 : 0)
 
   // Fuera de rango, por SÍNTOMA y no comparando páginas: `setTotalPaginas` y el
   // `setPagina` del recorte viven en el mismo `.then`, así que React 18 los
