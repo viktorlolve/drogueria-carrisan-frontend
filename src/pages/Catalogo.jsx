@@ -360,7 +360,8 @@ useEffect(() => {
 
   return (
     <div className="catalogo-layout">
-      {/* Carrusel compacto de categorías — chips que filtran la grilla en vivo */}
+      {/* Carrusel compacto de categorías — chips que filtran la grilla en vivo.
+           Siempre visible, también en móvil, para que sea el primer filtro. */}
       <CategoriasCarruselCatalogo
         categorias={categoriasDisponibles}
         activoId={categoriaActiva}
@@ -382,7 +383,8 @@ useEffect(() => {
           </p>
         </div>
 
-        {/* Botón Filtros — solo mobile */}
+        {/* Botón "Más filtros" — solo mobile. Abre el bottom sheet con los filtros
+             que no caben inline (orden, principio activo, disponibilidad, precio). */}
         {!esDesktop && (
           <button
             type="button"
@@ -397,7 +399,7 @@ useEffect(() => {
               <line x1="4" y1="18" x2="20" y2="18"></line>
               <circle cx="11" cy="18" r="2" fill="currentColor" stroke="none"></circle>
             </svg>
-            Filtros
+            Más filtros
           </button>
         )}
 
@@ -601,6 +603,60 @@ useEffect(() => {
               </button>
             </div>
           )}
+
+          {/* Filtros inline en móvil — carruseles de chips que se aplican al tocar.
+               Categoría va en el carrusel superior; aquí van Laboratorio y Forma. */}
+          {!esDesktop && (
+            <div className="cfm-filtros-inline">
+              {/* Laboratorio */}
+              {laboratoriosTop.length > 0 && (
+                <section className="cfm-filtro-inline">
+                  <span className="cfm-filtro-inline__titulo">Laboratorio</span>
+                  <div className="cfm-carrousel">
+                    {laboratoriosTop.slice(0, 8).map((lab) => (
+                      <button
+                        key={lab.nombre}
+                        type="button"
+                        className={`cfm-chip-inline ${laboratoriosActivos.includes(lab.nombre) ? 'cfm-chip-inline--activo' : ''}`}
+                        onClick={() => toggleEnArray(lab.nombre, laboratoriosActivos, setLaboratoriosActivos)}
+                      >
+                        {lab.nombre}
+                      </button>
+                    ))}
+                    {laboratoriosTop.length > 8 && (
+                      <button
+                        type="button"
+                        className="cfm-chip-inline cfm-chip-inline--mas"
+                        onClick={() => setFiltrosAbiertos(true)}
+                      >
+                        +{laboratoriosTop.length - 8} más
+                      </button>
+                    )}
+                  </div>
+                </section>
+              )}
+
+              {/* Forma */}
+              {formasDisponibles.length > 0 && (
+                <section className="cfm-filtro-inline">
+                  <span className="cfm-filtro-inline__titulo">Forma</span>
+                  <div className="cfm-carrousel">
+                    {formasDisponibles.map((forma) => (
+                      <button
+                        key={forma}
+                        type="button"
+                        className={`cfm-chip-inline ${formasActivas.includes(forma) ? 'cfm-chip-inline--activo' : ''}`}
+                        onClick={() => toggleEnArray(forma, formasActivas, setFormasActivas)}
+                      >
+                        {forma}
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              )}
+            </div>
+          )}
+
           {cargando ? (
             <div className="product-grid">
               {Array.from({ length: 8 }).map((_, i) => (
@@ -644,7 +700,10 @@ useEffect(() => {
         </div>
       )}
 
-      {/* Modal filtros — solo mobile (bottom sheet propio, distinto al sidebar desktop) */}
+      {/* Modal filtros — solo mobile (bottom sheet propio).
+           Ahora solo contiene los filtros que no van inline:
+           Ordenar por, Principio activo, Disponibilidad, Precio.
+           Laboratorio y Forma ya se eligen desde los carruseles de arriba. */}
       {!esDesktop && filtrosAbiertos && (
         <>
           <div className="catalogo-overlay" onClick={() => setFiltrosAbiertos(false)} />
@@ -739,98 +798,6 @@ useEffect(() => {
                       onChange={(e) => setMoleculaInput(e.target.value)}
                       className="cfm-input"
                     />
-                  </div>
-                )}
-              </section>
-
-              {/* Laboratorio */}
-              <section className="cfm-seccion">
-                <button
-                  type="button"
-                  className="cfm-seccion__head"
-                  onClick={() => toggleSeccion('laboratorio')}
-                  aria-expanded={seccionesAbiertas.laboratorio}
-                >
-                  <span className="cfm-seccion__label">
-                    Laboratorio
-                    {laboratoriosActivos.length > 0 && (
-                      <span className="cfm-seccion__contador">{laboratoriosActivos.length}</span>
-                    )}
-                  </span>
-                  <svg
-                    className={`cfm-seccion__chevron${seccionesAbiertas.laboratorio ? ' cfm-seccion__chevron--abierto' : ''}`}
-                    width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                  >
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                </button>
-                {seccionesAbiertas.laboratorio && (
-                  <div className="cfm-seccion__contenido">
-                    {laboratoriosTop.length === 0 && (
-                      <p className="cfm-seccion__vacio">Sin datos aún</p>
-                    )}
-                    <div className="cfm-chips">
-                      {laboratoriosTop.slice(0, labsVisibles).map((lab) => (
-                        <button
-                          key={lab.nombre}
-                          type="button"
-                          className={`cfm-chip ${laboratoriosActivos.includes(lab.nombre) ? 'cfm-chip--activo' : ''}`}
-                          onClick={() => toggleEnArray(lab.nombre, laboratoriosActivos, setLaboratoriosActivos)}
-                        >
-                          {lab.nombre} <span className="cfm-chip__count">{lab.total}</span>
-                        </button>
-                      ))}
-                    </div>
-                    {labsVisibles < laboratoriosTop.length && (
-                      <button
-                        className="cfm-ver-mas"
-                        onClick={() => setLabsVisibles((v) => v + 20)}
-                      >
-                        Cargar más ({laboratoriosTop.length - labsVisibles} restantes)
-                      </button>
-                    )}
-                  </div>
-                )}
-              </section>
-
-              {/* Forma */}
-              <section className="cfm-seccion">
-                <button
-                  type="button"
-                  className="cfm-seccion__head"
-                  onClick={() => toggleSeccion('forma')}
-                  aria-expanded={seccionesAbiertas.forma}
-                >
-                  <span className="cfm-seccion__label">
-                    Forma
-                    {formasActivas.length > 0 && (
-                      <span className="cfm-seccion__contador">{formasActivas.length}</span>
-                    )}
-                  </span>
-                  <svg
-                    className={`cfm-seccion__chevron${seccionesAbiertas.forma ? ' cfm-seccion__chevron--abierto' : ''}`}
-                    width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                  >
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                </button>
-                {seccionesAbiertas.forma && (
-                  <div className="cfm-seccion__contenido">
-                    {formasDisponibles.length === 0 && (
-                      <p className="cfm-seccion__vacio">Sin datos aún</p>
-                    )}
-                    <div className="cfm-chips">
-                      {formasDisponibles.map((forma) => (
-                        <button
-                          key={forma}
-                          type="button"
-                          className={`cfm-chip ${formasActivas.includes(forma) ? 'cfm-chip--activo' : ''}`}
-                          onClick={() => toggleEnArray(forma, formasActivas, setFormasActivas)}
-                        >
-                          {forma}
-                        </button>
-                      ))}
-                    </div>
                   </div>
                 )}
               </section>
