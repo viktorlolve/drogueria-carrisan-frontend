@@ -987,10 +987,40 @@ color: #1a1a34;
 }
 @media (max-width: 639px) 
 {
-  .pres-modal-overlay 
+  /* Hoja inferior en móvil: el overlay (por defecto) alinea al fondo y el
+     panel conserva las esquinas redondeadas arriba. Se reserva el safe-area
+     del iPhone para que el pie no quede bajo el indicador de inicio. */
+  .pres-modal 
 {
-    align-items: center
-  ;
+    max-height: 92vh
+;
+    padding-bottom: env(safe-area-inset-bottom)
+;
+    animation: pres-modal-sheet-in 0.24s cubic-bezier(0.32, 0.72, 0, 1)
+;
+  }
+}
+/* La hoja "sube" desde el borde inferior al abrir (no aparece de golpe en el
+   medio de la pantalla). */
+@keyframes pres-modal-sheet-in 
+{
+  from 
+{
+    transform: translateY(100%)
+;
+  }
+  to 
+{
+    transform: translateY(0)
+;
+  }
+}
+@media (prefers-reduced-motion: reduce) 
+{
+  .pres-modal 
+{
+    animation: none
+;
   }
 }
 @media (max-width: 480px) 

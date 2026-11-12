@@ -237,41 +237,57 @@
 .presc-lista {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--pres-border);
-  border-radius: 14px;
-  overflow: hidden;
+  gap: 10px;
   max-height: 620px;
   overflow-y: auto;
+  padding: 2px 4px 2px 0;
 }
 
 .presc-item {
   display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--pres-border);
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--pres-border);
+  border-radius: 14px;
   background: var(--pres-surface);
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
 
-.presc-item:last-child {
-  border-bottom: none;
+.presc-item:hover {
+  border-color: #cfd8ea;
+  background: #fafbff;
 }
 
-.presc-item img,
-.presc-item .placeholder-icono {
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
-  object-fit: cover;
+/* La foto del catálogo se muestra COMPLETA (`contain`) dentro de un marco
+   claro: con `cover` se recortaban los envases altos y las cajas se veían
+   cortadas por los bordes. */
+.presc-item__media {
+  width: 68px;
+  height: 68px;
   flex-shrink: 0;
+  padding: 5px;
+  border: 1px solid var(--pres-border);
+  border-radius: 12px;
   background: var(--pres-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.presc-item__media img,
+.presc-item__media .placeholder-icono {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  object-fit: contain;
 }
 
 /* El placeholder es un <div> (no <img>): necesita su tamaño explícito o el
    icono se expande y rompe la fila. Mismo patrón que
    `.pres-buscador__item .placeholder-icono` en ProductoImagen.css. */
-.presc-item .placeholder-icono {
-  padding: 8px;
+.presc-item__media .placeholder-icono {
+  padding: 6px;
 }
 
 .presc-item__info {
@@ -279,52 +295,55 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .presc-item__nombre {
   margin: 0;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.87rem;
+  line-height: 1.3;
 }
 
 .presc-item__meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
   margin: 0;
-  font-size: 0.84rem;
+  font-size: 0.76rem;
+  line-height: 1.35;
   color: var(--pres-text-muted);
+  /* El laboratorio puede ser larguísimo: un renglón con elipsis. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.presc-item__punto {
-  opacity: 0.5;
-}
-
+/* Precio y botón van al pie del bloque de texto (no a la derecha de la
+   fila): la card queda imagen a la izquierda + columna de información. */
 .presc-item__acciones {
   display: flex;
   align-items: center;
-  gap: 14px;
-  flex-shrink: 0;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 7px;
 }
 
 .presc-item__precio {
   font-weight: 800;
-  font-size: 0.98rem;
+  font-size: 0.95rem;
 }
 
 .presc-item__agregar {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   border: none;
   border-radius: 999px;
   background: rgba(0, 82, 220, 0.1);
   color: var(--pres-brand);
   font-weight: 700;
-  padding: 9px 16px;
+  font-size: 0.82rem;
+  padding: 7px 13px;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .presc-item__agregar:hover {
@@ -522,13 +541,9 @@
 }
 
 @media (max-width: 640px) {
-  .presc-item {
-    flex-wrap: wrap;
-  }
-
-  .presc-item__acciones {
-    width: 100%;
-    justify-content: space-between;
+  .presc-item__media {
+    width: 60px;
+    height: 60px;
   }
 
   .presc-filtro {

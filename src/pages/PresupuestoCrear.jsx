@@ -267,32 +267,30 @@ function PresupuestoCrear() {
                   <div className="presc-lista">
                     {sugerenciasVisibles.map((p) => (
                       <div key={p.id} className="presc-item">
-                        <ProductoImagen src={p.foto_url} alt={p.nombre_comercial} />
+                        <div className="presc-item__media">
+                          <ProductoImagen src={p.foto_url} alt={p.nombre_comercial} />
+                        </div>
                         <div className="presc-item__info">
                           <p className="presc-item__nombre">{p.nombre_comercial}</p>
-                          <p className="presc-item__meta">
-                            {p.laboratorio && <span>{p.laboratorio}</span>}
-                            {p.laboratorio && p.forma && <span className="presc-item__punto">·</span>}
-                            {p.forma && <span>{p.forma}</span>}
-                          </p>
-                        </div>
-                        <div className="presc-item__acciones">
-                          {p.precio_usd != null ? (
-                            <>
-                              <span className="presc-item__precio">${formatUSD(p.precio_usd)}</span>
-                              <button
-                                type="button"
-                                className="presc-item__agregar"
-                                onClick={() => agregarAlBorrador(p)}
-                                aria-label={`Agregar ${p.nombre_comercial}`}
-                              >
-                                <Plus size={16} />
-                                Agregar
-                              </button>
-                            </>
-                          ) : (
-                            <span className="presc-item__sin-precio">Sin precio</span>
-                          )}
+                          {p.laboratorio && <p className="presc-item__meta">{p.laboratorio}</p>}
+                          <div className="presc-item__acciones">
+                            {p.precio_usd != null ? (
+                              <>
+                                <span className="presc-item__precio">${formatUSD(p.precio_usd)}</span>
+                                <button
+                                  type="button"
+                                  className="presc-item__agregar"
+                                  onClick={() => agregarAlBorrador(p)}
+                                  aria-label={`Agregar ${p.nombre_comercial}`}
+                                >
+                                  <Plus size={15} />
+                                  Agregar
+                                </button>
+                              </>
+                            ) : (
+                              <span className="presc-item__sin-precio">Sin precio</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
