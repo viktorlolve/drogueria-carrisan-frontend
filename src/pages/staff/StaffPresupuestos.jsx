@@ -196,8 +196,8 @@ function ModalPresupuestoDetalle({ presupuesto, onClose, onRecotizar, onGenerarP
                     {item.nombre_comercial} × {item.cantidad}
                   </span>
                   <span style={{ textAlign: 'center', color: '#475569' }}>{item.cantidad}</span>
-                  <span style={{ textAlign: 'right', color: '#475569' }}$${formatUSD(item.precio_unitario)}</span>
-                  <span style={{ textAlign: 'right', fontWeight: 700, color: '#0f172a' }}$${formatUSD(item.subtotal)}</span>
+                  <span style={{ textAlign: 'right', color: '#475569' }}>{`$${formatUSD(item.precio_unitario)}`}</span>
+                  <span style={{ textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>{`$${formatUSD(item.subtotal)}`}</span>
                 </div>
               ))}
               {sinPrecio.map((item, i) => (
