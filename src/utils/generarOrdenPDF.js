@@ -159,34 +159,41 @@ function cabeceraContinuacion(doc, numero) {
   return 25
 }
 
-/* ---------- Bloque "Comprador" (vive en el bloque de título, sin numerito
-   de sección: aquí el único bloque numerado es "01 Productos") ---------- */
-function bloqueComprador(doc, x, y, w, lineas) {
-  etiqueta(doc, 'Comprador', x, y, { color: T.suave })
-  linea(doc, y + 2.2, { grosor: 0.4, color: T.tinta, x1: x, x2: x + w })
-
-  let yy = y + 7.5
-  let hayDatos = false
-  lineas.forEach(({ txt, estilo = 'normal', max = 2 }) => {
-    if (!txt) return
-    hayDatos = true
-    if (estilo === 'principal') {
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); tinta(doc, T.tinta)
-    } else if (estilo === 'suave') {
-      doc.setFont('helvetica', 'normal'); doc.setFontSize(7.3); tinta(doc, T.gris)
-    } else {
-      doc.setFont('helvetica', 'normal'); doc.setFontSize(8); tinta(doc, T.gris)
-    }
-    const ls = lineasMax(doc, txt, w, max)
-    doc.text(ls, x, yy)
-    yy += ls.length * (estilo === 'principal' ? 4.6 : 3.9) + 0.6
-  })
-  if (!hayDatos) {
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); tinta(doc, T.suave)
-    doc.text('—', x, yy)
-    yy += 5
+/* ---------- Panel de datos (columna derecha del bloque de título) ----------
+   Un único bloque visual, de arriba hacia abajo: nombre del comprador (el
+   dato más importante, destacado), su contacto en una sola línea secundaria,
+   una regla fina, y luego filas etiqueta/valor (Realizada, Modalidad) con el
+   mismo lenguaje visual que la caja de totales (etiqueta a la izquierda,
+   valor en negrita a la derecha, ambos sobre la misma línea de base). */
+function bloqueInfoDerecha(doc, xr, y, w, { nombre, contacto, filas }) {
+  let yy = y
+  if (nombre) {
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10); tinta(doc, T.tinta)
+    const ls = lineasMax(doc, nombre, w, 2)
+    doc.text(ls, xr, yy + 4.2, { align: 'right' })
+    yy += 4.2 + (ls.length - 1) * 4.6
+  } else {
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); tinta(doc, T.suave)
+    doc.text('Comprador no registrado', xr, yy + 4.2, { align: 'right' })
+    yy += 4.2
   }
-  return yy
+  if (contacto) {
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7.2); tinta(doc, T.gris)
+    doc.text(lineasMax(doc, contacto, w, 1), xr, yy + 4.4, { align: 'right' })
+    yy += 4.4
+  }
+  yy += 2.6
+  linea(doc, yy, { grosor: 0.3, color: T.linea, x1: xr - w, x2: xr })
+  yy += 5.4
+
+  filas.forEach(({ label, valor }, i) => {
+    if (!valor) return
+    etiqueta(doc, label, xr - w, yy, { color: T.suave, size: 6.3 })
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8.6); tinta(doc, T.tinta)
+    doc.text(lineasMax(doc, valor, w * 0.6, 1), xr, yy, { align: 'right' })
+    if (i < filas.length - 1) yy += 6.3
+  })
+  return yy + 3
 }
 
 /* ---------- Tabla de productos ----------
@@ -371,18 +378,40 @@ export default async function generarOrdenPDF({ orden, cliente = null }) {
     doc.text(rifTel, xr, yEmpresa, { align: 'right' })
   }
 
-  /* ===== Bloque de título: número de orden · comprador · fecha/modalidad ===== */
+  /* ===== Bloque de título: fila de cabecera (tipo de doc. + sello de estado)
+     seguida de dos columnas: número de orden a la izquierda, panel de datos
+     del comprador/fecha/modalidad a la derecha, separadas por una regla
+     vertical fina. Todo el bloque cierra con una regla fina horizontal antes
+     del resumen. ===== */
   etiqueta(doc, 'Orden de pedido  ·  Documento no fiscal', PAG.margen, 40, { color: T.tinta, size: 7.5 })
 
+  if (estadoTxt) {
+    const colEstado = cancelada ? T.tinta : T.azul
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(7)
+    const wEstado = Math.min(doc.getTextWidth(estadoTxt) + 0.8 * (estadoTxt.length - 1) + 8, 72)
+    doc.setDrawColor(...colEstado)
+    doc.setLineWidth(0.45)
+    doc.roundedRect(xr - wEstado, 35.4, wEstado, 6.4, 3.2, 3.2, 'S')
+    tinta(doc, colEstado)
+    textoEsp(doc, estadoTxt, xr - wEstado / 2, 39.8, { align: 'center', cs: 0.7 })
+  }
+  linea(doc, 44, { grosor: 0.3, color: T.linea })
+
+  const xDivisoria = PAG.margen + 74
+  const yContenido = 51
+
+  // Número de orden (columna izquierda)
   doc.setFont('helvetica', 'bold')
-  let tam = 40
+  let tam = 38
   doc.setFontSize(tam)
-  while (doc.getTextWidth(numero) > 64 && tam > 20) {
+  const anchoNumero = xDivisoria - PAG.margen - 6
+  while (doc.getTextWidth(numero) > anchoNumero && tam > 20) {
     tam -= 2
     doc.setFontSize(tam)
   }
   // Altura de los dígitos ≈ 0.72 del cuerpo (1 pt = 0.3528 mm)
-  const yBase = 46 + tam * 0.3528 * 0.72
+  const yBase = yContenido + tam * 0.3528 * 0.72
   tinta(doc, T.tinta)
   doc.text(numero, PAG.margen - 1, yBase)
 
@@ -392,49 +421,26 @@ export default async function generarOrdenPDF({ orden, cliente = null }) {
   doc.text('N.º de orden', PAG.margen, yBase + 6)
   const yNumeroFin = yBase + 8
 
-  // Comprador: orden.users manda sobre `cliente`
-  const u = { ...(cliente || {}), ...(orden.users || {}) }
-  const realizadoPor = orden.sub_usuarios?.nombre
-  const lComprador = [
-    { txt: u.nombre, estilo: 'principal', max: 2 },
-    { txt: u.rif_cedula && `RIF / C.I. ${u.rif_cedula}` },
-    { txt: u.telefono },
-    { txt: u.email, max: 2 },
-    { txt: realizadoPor && realizadoPor !== u.nombre ? `Realizado por: ${realizadoPor}` : null, estilo: 'suave' },
-  ]
-  const xComprador = PAG.margen + 64
-  const wComprador = 50
-  const yCompradorFin = bloqueComprador(doc, xComprador, 40, wComprador, lComprador)
+  // Panel de datos (columna derecha): comprador + realizada + modalidad
+  const u = { ...(cliente || {}), ...(orden.users || {}) } // orden.users manda sobre `cliente`
+  const contacto = [u.rif_cedula && `RIF/C.I. ${u.rif_cedula}`, u.telefono].filter(Boolean).join('   ·   ')
+  const wInfo = xr - (xDivisoria + 8)
+  const yInfoFin = bloqueInfoDerecha(doc, xr, yContenido, wInfo, {
+    nombre: u.nombre,
+    contacto,
+    filas: [
+      { label: 'Realizada', valor: fechaLarga(orden.created_at) },
+      { label: 'Modalidad', valor: lineasMax(doc, modalidad, wInfo * 0.6, 1)[0] },
+    ],
+  })
 
-  // Fecha, modalidad y sello de estado (columna derecha)
-  etiqueta(doc, 'Realizada', xr, 40, { align: 'right', color: T.suave })
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(9.5)
-  tinta(doc, T.tinta)
-  doc.text(fechaLarga(orden.created_at), xr, 45.5, { align: 'right' })
-
-  etiqueta(doc, 'Modalidad', xr, 51, { align: 'right', color: T.suave })
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(9.5)
-  tinta(doc, T.tinta)
-  doc.text(lineasMax(doc, modalidad, 62, 1), xr, 56.5, { align: 'right' })
-
-  let yFechaFin = 59
-  if (estadoTxt) {
-    const colEstado = cancelada ? T.tinta : T.azul
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(7)
-    const wEstado = Math.min(doc.getTextWidth(estadoTxt) + 0.8 * (estadoTxt.length - 1) + 8, 72)
-    doc.setDrawColor(...colEstado)
-    doc.setLineWidth(0.45)
-    doc.roundedRect(xr - wEstado, 60, wEstado, 6.4, 3.2, 3.2, 'S')
-    tinta(doc, colEstado)
-    textoEsp(doc, estadoTxt, xr - wEstado / 2, 64.4, { align: 'center', cs: 0.7 })
-    yFechaFin = 68
-  }
+  const yRegla = Math.max(yNumeroFin, yInfoFin) + 3
+  // Regla vertical entre el número y el panel de datos
+  doc.setDrawColor(...T.linea)
+  doc.setLineWidth(0.3)
+  doc.line(xDivisoria, 44.6, xDivisoria, yRegla - 3)
 
   /* ===== Regla gruesa + resumen ===== */
-  const yRegla = Math.max(yNumeroFin, yCompradorFin, yFechaFin) + 4
   linea(doc, yRegla, { grosor: 1.1, color: T.tinta })
 
   const formaPagoTxt = orden.forma_pago === 'credito' ? 'Crédito' : orden.forma_pago === 'contado' ? 'Contado' : null
