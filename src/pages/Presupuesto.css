@@ -702,6 +702,8 @@ color: #1a1a34;
 ;
   overflow-y: auto
 ;
+  overscroll-behavior: contain
+;
   padding: 8px 18px
 ;
 }

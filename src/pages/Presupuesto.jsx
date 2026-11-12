@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Plus, X, ShoppingCart, FileDown, RefreshCw, ArrowUp, ArrowDown, Calendar,
@@ -84,11 +85,18 @@ function PresupuestoModal({ presupuestoId, onClose, onRecotizado }) {
 
   // Bloquea el scroll del fondo mientras el modal está abierto (overlay que
   // cubre pantalla: sin esto en móvil el dedo sigue desplazando la página de
-  // atrás y el modal parece que "carga desde abajo").
+  // atrás y el modal parece que "carga desde abajo"). Se bloquean html Y body
+  // porque según el navegador el que scrollea puede ser cualquiera de los dos.
   useEffect(() => {
-    const previo = document.body.style.overflow
+    const html = document.documentElement
+    const previoHtml = html.style.overflow
+    const previoBody = document.body.style.overflow
+    html.style.overflow = 'hidden'
     document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = previo }
+    return () => {
+      html.style.overflow = previoHtml
+      document.body.style.overflow = previoBody
+    }
   }, [])
 
   const cargar = useCallback(async () => {
@@ -160,13 +168,19 @@ function PresupuestoModal({ presupuestoId, onClose, onRecotizado }) {
     await generarPresupuestoPDF({ detalle })
   }
 
+  // El modal se monta en <body> con un portal: `LayoutPaginaPrincipal` aplica
+  // `will-change: transform` a `.ppal-shift`, lo que lo convierte en el
+  // "containing block" de cualquier `position: fixed` interno. Sin el portal el
+  // overlay se posiciona respecto a `.ppal-shift` y, al scrollear, "sube" en el
+  // viewport en vez de quedarse fijo.
   if (cargando || !detalle) {
-    return (
+    return createPortal(
       <div className="pres-modal-overlay" onClick={onClose}>
         <div className="pres-modal" onClick={(e) => e.stopPropagation()}>
           <div className="pres-modal__loading">Cargando presupuesto...</div>
         </div>
-      </div>
+      </div>,
+      document.body
     )
   }
 
@@ -175,7 +189,7 @@ function PresupuestoModal({ presupuestoId, onClose, onRecotizado }) {
   const totalActual = detalle.items.filter((i) => i.disponible).reduce((acc, i) => acc + i.subtotal, 0)
   const creadoEn = fechaTitulo(detalle.fecha_creacion)
 
-  return (
+  return createPortal(
     <div className="pres-modal-overlay" onClick={onClose}>
       <div className="pres-modal" onClick={(e) => e.stopPropagation()}>
         <div className="pres-modal__header">
@@ -269,7 +283,8 @@ function PresupuestoModal({ presupuestoId, onClose, onRecotizado }) {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
