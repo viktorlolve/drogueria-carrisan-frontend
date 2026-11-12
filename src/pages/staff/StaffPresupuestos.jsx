@@ -140,7 +140,7 @@ function ModalPresupuestoDetalle({ presupuesto, onClose, onRecotizar, onGenerarP
                 <span style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                   Presupuesto N.º
                 </span>
-                <span style={{ fontSize: 1.75rem, fontWeight: 800, color: '#0f172a' }}>
+                <span style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0f172a' }}>
                   {presupuesto.numero || presupuesto.id}
                 </span>
               </div>
@@ -221,7 +221,7 @@ function ModalPresupuestoDetalle({ presupuesto, onClose, onRecotizar, onGenerarP
               <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 600 }}>
                 Total del presupuesto
               </span>
-              <span style={{ fontSize: 1.5rem, fontWeight: 800, color: '#0052DC' }}>
+              <span style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0052DC' }}>
                 {formatearUSD(total)}
               </span>
             </div>
