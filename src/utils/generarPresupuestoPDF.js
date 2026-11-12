@@ -28,14 +28,19 @@
 // propio membrete. Solo se reutilizan de pdfBase las utilidades neutras
 // (página, formateadores, datos de empresa, texto con espaciado).
 //
-// Uso:  await generarPresupuestoPDF({ detalle })
+// Uso:  await generarPresupuestoPDF({ detalle, cliente })
+//
+// `cliente` (opcional, { nombre, rif_cedula }) es el dueño del presupuesto —
+// `detalle` no trae datos de usuario (el backend solo lo valida por
+// usuario_id). Pásale el usuario logueado desde el componente que llama a
+// esta función; si no llega, ese espacio simplemente no se dibuja.
 //
 // Sin QR: los presupuestos no son verificables (el allowlist del backend es
 // factura|pago) y un QR que apunta a un 404 sería peor que ninguno.
 
 import { LOGO_BLANCO } from '../config/logos'
 import {
-  PAG, usd, fechaCorta, fechaLarga, nuevoDoc, datosEmpresa, textoEsp,
+  PAG, usd, usdCode, fechaCorta, fechaLarga, nuevoDoc, datosEmpresa, textoEsp,
 } from './pdf/pdfBase'
 
 /* ---------- Paleta de impresión: negro, grises y UN acento ---------- */
@@ -220,7 +225,7 @@ function tabla(doc, y, { columnas, filas, fuente = 9, apagada = false, numero, v
 }
 
 /* ---------- Principal ---------- */
-export default async function generarPresupuestoPDF({ detalle }) {
+export default async function generarPresupuestoPDF({ detalle, cliente = null }) {
   const doc = await nuevoDoc()
   const logo = await cargarLogoNegro()
   const e = datosEmpresa()
@@ -266,8 +271,10 @@ export default async function generarPresupuestoPDF({ detalle }) {
 
   /* ===== Bloque de título: fila de cabecera (tipo de doc. + sello de
      vigencia) y debajo dos columnas separadas por una regla vertical fina —
-     número de presupuesto a la izquierda, Emitido/Válido hasta a la
-     derecha. Mismo lenguaje que el bloque de título de la Orden. ===== */
+     número de presupuesto a la izquierda, comprador (nombre y RIF) arriba a
+     la derecha y "Válido hasta" centrado en el espacio libre que queda
+     debajo, antes de la regla gruesa. Mismo lenguaje que el bloque de
+     título de la Orden. ===== */
   etiqueta(doc, 'Presupuesto  ·  Documento no fiscal', PAG.margen, 40, { color: T.tinta, size: 7.5 })
 
   const estadoTxt = vencido ? 'VENCIDO' : 'VIGENTE'
@@ -305,15 +312,32 @@ export default async function generarPresupuestoPDF({ detalle }) {
   doc.text('N.º de presupuesto', PAG.margen, yBase + 6)
   const yNumeroFin = yBase + 8
 
-  // Panel de vigencia (columna derecha): Emitido + Válido hasta
+  // Panel de comprador (columna derecha, arriba): nombre y RIF del dueño
+  // del presupuesto. Si no llega `cliente`, ese espacio queda vacío (no se
+  // inventa un nombre), y "Válido hasta" simplemente se centra más arriba.
   const wInfo = xr - (xDivisoria + 8)
-  etiqueta(doc, 'Emitido', xr - wInfo, yContenido, { color: T.suave, size: 6.3 })
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(8.6)
-  tinta(doc, T.tinta)
-  doc.text(lineasMax(doc, fechaLarga(detalle.fecha_creacion), wInfo * 0.62, 1), xr, yContenido, { align: 'right' })
+  let yCompradorFin = yContenido
+  if (cliente?.nombre) {
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(9.5)
+    tinta(doc, T.tinta)
+    const lsNombre = lineasMax(doc, cliente.nombre, wInfo, 2)
+    doc.text(lsNombre, xr, yContenido, { align: 'right' })
+    yCompradorFin = yContenido + (lsNombre.length - 1) * 4.6
+    if (cliente.rif_cedula) {
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(7.3)
+      tinta(doc, T.gris)
+      doc.text(`RIF/C.I. ${cliente.rif_cedula}`, xr, yCompradorFin + 4.4, { align: 'right' })
+      yCompradorFin += 4.4
+    }
+  }
 
-  const yValido = yContenido + 9.5
+  // "Válido hasta" se baja al centro del espacio libre que queda entre el
+  // comprador y el número de presupuesto (que es, casi siempre, lo que
+  // termina marcando dónde va la regla gruesa), en vez de ir pegado justo
+  // debajo del comprador.
+  const yValido = yCompradorFin + (yNumeroFin - yCompradorFin) / 2
   etiqueta(doc, 'Válido hasta', xr - wInfo, yValido, { color: T.suave, size: 6.3 })
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(11)
@@ -345,6 +369,7 @@ export default async function generarPresupuestoPDF({ detalle }) {
   y = seccion(doc, y, '01', 'Productos disponibles')
   const rDisp = tabla(doc, y + 3, {
     numero,
+    fuente: 8.3,
     vacio: 'Ningún producto de este presupuesto está disponible por ahora.',
     columnas: [
       { label: 'N.º', ancho: 10, mono: true },
@@ -396,7 +421,7 @@ export default async function generarPresupuestoPDF({ detalle }) {
   doc.rect(xCaja, y, wCaja, hCaja, 'S')
 
   etiqueta(doc, 'Total del presupuesto', xCaja + 5, y + 5.6, { color: T.tinta, size: 6.2 })
-  const textoTotal = usd(total)
+  const textoTotal = usdCode(total)
   doc.setFont('helvetica', 'bold')
   let tt = 15
   doc.setFontSize(tt)
