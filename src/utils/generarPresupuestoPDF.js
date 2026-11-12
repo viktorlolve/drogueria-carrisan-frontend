@@ -4,16 +4,28 @@
 // ítems sin precio no se cobran: van en una tabla aparte y quedan fuera del
 // total, igual que en pantalla.
 //
-// DISEÑO "BAJO CONSUMO DE TINTA" (editorial tipográfico)
+// DISEÑO "BAJO CONSUMO DE TINTA" (editorial tipográfico), el mismo lenguaje
+// de la Orden:
 //   · Fondo 100 % blanco: cero rellenos, cero degradados, cero zebra.
-//   · El impacto sale de la tipografía (número gigante) y de líneas finas.
 //   · Tinta casi negra; el único color es el azul de marca #0052DC, y solo en
-//     la vigencia y el total.
+//     el sello de vigencia, "Válido hasta" y el total.
 //   · Logo rasterizado en negro (monocromo).
+//   · Bloque de título unificado: etiqueta + sello de vigencia en la misma
+//     fila, y debajo dos columnas separadas por una regla vertical fina —
+//     número de presupuesto a la izquierda, panel Emitido/Válido hasta a la
+//     derecha. Mismo lenguaje que el bloque de título de la Orden.
+//   · Totales en una caja angosta que arranca justo debajo de la columna
+//     "P. unitario", no a todo el ancho.
+//
+// NOTA DE DISEÑO (v2): ya no incluye la sección "Datos para realizar tu
+// pago" (un presupuesto no se cobra, no tiene sentido pedir que lo paguen) ni
+// la nota "Suma de X líneas con precio...": en su lugar, junto a la caja de
+// totales va un disclaimer de vigencia (24 h desde la creación + invitación a
+// recotizar en la plataforma).
 //
 // Este formato dibuja todo por su cuenta y NO modifica pdfBase.js: ese módulo
 // lo comparten la factura, el comprobante, la guía, etc., que conservan su
-// membrete de color. Solo se reutilizan de pdfBase las utilidades neutras
+// propio membrete. Solo se reutilizan de pdfBase las utilidades neutras
 // (página, formateadores, datos de empresa, texto con espaciado).
 //
 // Uso:  await generarPresupuestoPDF({ detalle })
@@ -21,7 +33,6 @@
 // Sin QR: los presupuestos no son verificables (el allowlist del backend es
 // factura|pago) y un QR que apunta a un 404 sería peor que ninguno.
 
-import empresaInfo from '../config/empresa'
 import { LOGO_BLANCO } from '../config/logos'
 import {
   PAG, usd, fechaCorta, fechaLarga, nuevoDoc, datosEmpresa, textoEsp,
@@ -33,18 +44,17 @@ const T = {
   gris: [100, 100, 100],
   suave: [150, 150, 150],
   linea: [200, 200, 200],
-  aro: [222, 222, 222],
   azul: [0, 82, 220],
 }
 
 const Y_MAX = 297 - 24 // bajo este punto se salta de página (A4)
+const Y_TOTALES = 278 // los totales pueden llegar más abajo: el pie empieza en 281
 
 /* ---------- Logo en negro ----------
    `LOGO_BLANCO` es el wordmark blanco con fondo transparente. Con
    `source-in` todos sus píxeles opacos pasan a negro y luego se compone sobre
-   blanco (JPEG: jsPDF lo copia tal cual, el PNG lo embebería como RGBA crudo).
-   Si algo falla (CORS, red, entorno sin canvas) devuelve null y el membrete
-   usa el nombre de la empresa en texto: nunca rompe el PDF. */
+   blanco (JPEG). Si algo falla (CORS, red, entorno sin canvas) devuelve null
+   y el membrete usa el nombre de la empresa en texto: nunca rompe el PDF. */
 let logoNegro
 async function cargarLogoNegro() {
   if (logoNegro !== undefined) return logoNegro
@@ -116,7 +126,16 @@ function etiqueta(doc, txt, x, y, { align = 'left', color = T.gris, size = 6.5 }
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(size)
   tinta(doc, color)
-  textoEsp(doc, txt.toUpperCase(), x, y, { align, cs: 0.7 })
+  textoEsp(doc, String(txt).toUpperCase(), x, y, { align, cs: 0.7 })
+}
+
+/* Parte al ancho dado y recorta a `max` líneas con "…" */
+function lineasMax(doc, texto, ancho, max) {
+  const ls = doc.splitTextToSize(String(texto ?? ''), ancho)
+  if (ls.length <= max) return ls
+  const corte = ls.slice(0, max)
+  corte[max - 1] = `${corte[max - 1].replace(/[\s,;:·-]+$/, '')}…`
+  return corte
 }
 
 /* Título de sección editorial: "01  PRODUCTOS DISPONIBLES" */
@@ -139,7 +158,9 @@ function cabeceraContinuacion(doc, numero) {
   return 25
 }
 
-/* ---------- Tabla editorial: solo líneas finas ---------- */
+/* ---------- Tabla editorial: solo líneas finas ----------
+   Devuelve { y, cols } — `cols` trae la x/ancho ya escalados de cada columna,
+   para poder alinear la caja de totales bajo "P. unitario". */
 function tabla(doc, y, { columnas, filas, fuente = 9, apagada = false, numero, vacio }) {
   const total = columnas.reduce((s, c) => s + c.ancho, 0)
   const escala = PAG.contenido / total
@@ -162,7 +183,7 @@ function tabla(doc, y, { columnas, filas, fuente = 9, apagada = false, numero, v
     doc.setFontSize(9)
     tinta(doc, T.gris)
     doc.text(vacio || 'Sin registros.', PAG.margen, y + 4, { maxWidth: PAG.contenido })
-    return y + 12
+    return { y: y + 12, cols }
   }
 
   let yy = cabecera(y)
@@ -195,7 +216,7 @@ function tabla(doc, y, { columnas, filas, fuente = 9, apagada = false, numero, v
     yy += alto
     linea(doc, yy, { grosor: 0.15, color: T.linea })
   })
-  return yy + 8
+  return { y: yy + 8, cols }
 }
 
 /* ---------- Principal ---------- */
@@ -204,25 +225,14 @@ export default async function generarPresupuestoPDF({ detalle }) {
   const logo = await cargarLogoNegro()
   const e = datosEmpresa()
   const numero = String(detalle.numero ?? '')
+  const vencido = new Date(detalle.fecha_expiracion).getTime() < Date.now()
 
-  /* ===== Portada: aros decorativos (solo contorno, trazos finos) ===== */
-  doc.setDrawColor(...T.aro)
-  doc.setLineWidth(0.25)
-  ;[18, 30, 42].forEach((r) => doc.circle(PAG.ancho, 0, r, 'S'))
-  // cruz de contorno (guiño a la marca), sin relleno
-  doc.setDrawColor(...T.linea)
-  doc.setLineWidth(0.3)
-  const cx = PAG.ancho - 24
-  const cy = 24
-  doc.line(cx - 3.5, cy, cx + 3.5, cy)
-  doc.line(cx, cy - 3.5, cx, cy + 3.5)
-
-  /* ===== Marca ===== */
+  /* ===== Membrete: logo a la izquierda, datos de empresa a la derecha ===== */
   const nombreEnTexto = () => {
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(14)
     tinta(doc, T.tinta)
-    doc.text(e.nombre.toUpperCase(), PAG.margen, 20, { charSpace: 0.4 })
+    doc.text(String(e.nombre).toUpperCase(), PAG.margen, 20, { charSpace: 0.4 })
   }
   if (logo) {
     const h = 11
@@ -235,67 +245,89 @@ export default async function generarPresupuestoPDF({ detalle }) {
   } else {
     nombreEnTexto()
   }
-  const contacto = [e.rif && `RIF ${e.rif}`, e.telefono, e.email].filter(Boolean).join('   ·   ')
-  if (contacto) {
+
+  const xr = PAG.ancho - PAG.margen
+  let yEmpresa = 14
+  if (e.direccion) {
     doc.setFont('helvetica', 'normal')
+    doc.setFontSize(7)
+    tinta(doc, T.gris)
+    const lsDir = lineasMax(doc, e.direccion, 95, 2)
+    doc.text(lsDir, xr, yEmpresa, { align: 'right' })
+    yEmpresa += lsDir.length * 3.4 + 1.6
+  }
+  const rifTel = [e.rif && `RIF ${e.rif}`, e.telefono].filter(Boolean).join('   ·   ')
+  if (rifTel) {
+    doc.setFont('helvetica', 'bold')
     doc.setFontSize(7.5)
     tinta(doc, T.gris)
-    doc.text(contacto, PAG.margen, 30)
+    doc.text(rifTel, xr, yEmpresa, { align: 'right' })
   }
 
-  /* ===== Título editorial: etiqueta + número gigante ===== */
-  etiqueta(doc, 'Presupuesto  ·  Documento no fiscal', PAG.margen, 46, { color: T.tinta, size: 7.5 })
+  /* ===== Bloque de título: fila de cabecera (tipo de doc. + sello de
+     vigencia) y debajo dos columnas separadas por una regla vertical fina —
+     número de presupuesto a la izquierda, Emitido/Válido hasta a la
+     derecha. Mismo lenguaje que el bloque de título de la Orden. ===== */
+  etiqueta(doc, 'Presupuesto  ·  Documento no fiscal', PAG.margen, 40, { color: T.tinta, size: 7.5 })
 
+  const estadoTxt = vencido ? 'VENCIDO' : 'VIGENTE'
+  const colEstado = vencido ? T.tinta : T.azul
   doc.setFont('helvetica', 'bold')
-  let tam = 84
+  doc.setFontSize(7)
+  const wEstado = Math.min(doc.getTextWidth(estadoTxt) + 0.8 * (estadoTxt.length - 1) + 8, 72)
+  doc.setDrawColor(...colEstado)
+  doc.setLineWidth(0.45)
+  doc.roundedRect(xr - wEstado, 35.4, wEstado, 6.4, 3.2, 3.2, 'S')
+  tinta(doc, colEstado)
+  textoEsp(doc, estadoTxt, xr - wEstado / 2, 39.8, { align: 'center', cs: 0.7 })
+  linea(doc, 44, { grosor: 0.3, color: T.linea })
+
+  const xDivisoria = PAG.margen + 74
+  const yContenido = 51
+
+  // Número de presupuesto (columna izquierda)
+  doc.setFont('helvetica', 'bold')
+  let tam = 38
   doc.setFontSize(tam)
-  while (doc.getTextWidth(numero) > 108 && tam > 28) {
-    tam -= 3
+  const anchoNumero = xDivisoria - PAG.margen - 6
+  while (doc.getTextWidth(numero) > anchoNumero && tam > 20) {
+    tam -= 2
     doc.setFontSize(tam)
   }
-  // Altura de las mayúsculas/dígitos ≈ 0.72 del cuerpo (1 pt = 0.3528 mm)
-  const yBase = 52 + tam * 0.3528 * 0.72
+  // Altura de los dígitos ≈ 0.72 del cuerpo (1 pt = 0.3528 mm)
+  const yBase = yContenido + tam * 0.3528 * 0.72
   tinta(doc, T.tinta)
   doc.text(numero, PAG.margen - 1, yBase)
 
-  // "N.º" pequeño bajo el número
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(8.5)
+  doc.setFontSize(8)
   tinta(doc, T.gris)
-  doc.text('N.º de presupuesto', PAG.margen, yBase + 7)
+  doc.text('N.º de presupuesto', PAG.margen, yBase + 6)
+  const yNumeroFin = yBase + 8
 
-  /* ===== Bloque de fechas (derecha) ===== */
-  const vencido = new Date(detalle.fecha_expiracion).getTime() < Date.now()
-  const xr = PAG.ancho - PAG.margen
-
-  etiqueta(doc, 'Emitido', xr, 54, { align: 'right', color: T.suave })
+  // Panel de vigencia (columna derecha): Emitido + Válido hasta
+  const wInfo = xr - (xDivisoria + 8)
+  etiqueta(doc, 'Emitido', xr - wInfo, yContenido, { color: T.suave, size: 6.3 })
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(10.5)
+  doc.setFontSize(8.6)
   tinta(doc, T.tinta)
-  doc.text(fechaLarga(detalle.fecha_creacion), xr, 60, { align: 'right' })
+  doc.text(lineasMax(doc, fechaLarga(detalle.fecha_creacion), wInfo * 0.62, 1), xr, yContenido, { align: 'right' })
 
-  etiqueta(doc, 'Válido hasta', xr, 70, { align: 'right', color: T.suave })
+  const yValido = yContenido + 9.5
+  etiqueta(doc, 'Válido hasta', xr - wInfo, yValido, { color: T.suave, size: 6.3 })
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(13)
+  doc.setFontSize(11)
   tinta(doc, vencido ? T.tinta : T.azul)
-  doc.text(fechaLarga(detalle.fecha_expiracion), xr, 77, { align: 'right' })
+  doc.text(lineasMax(doc, fechaLarga(detalle.fecha_expiracion), wInfo * 0.62, 1), xr, yValido + 0.4, { align: 'right' })
+  const yInfoFin = yValido + 4
 
-  // Sello de vigencia: solo contorno
-  const estado = vencido ? 'VENCIDO' : 'VIGENTE'
-  const colEstado = vencido ? T.tinta : T.azul
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(7.5)
-  const wEstado = doc.getTextWidth(estado) + 0.8 * (estado.length - 1) + 9
-  doc.setDrawColor(...colEstado)
-  doc.setLineWidth(0.5)
-  doc.roundedRect(xr - wEstado, 82, wEstado, 7, 3.5, 3.5, 'S')
-  tinta(doc, colEstado)
-  textoEsp(doc, estado, xr - wEstado / 2, 86.8, { align: 'center', cs: 0.8 })
-
-  /* ===== Regla gruesa + resumen ===== */
-  const yRegla = Math.max(yBase + 12, 92)
+  const yRegla = Math.max(yNumeroFin, yInfoFin) + 3
+  doc.setDrawColor(...T.linea)
+  doc.setLineWidth(0.3)
+  doc.line(xDivisoria, 44.6, xDivisoria, yRegla - 3)
   linea(doc, yRegla, { grosor: 1.1, color: T.tinta })
 
+  /* ===== Resumen ===== */
   const items = detalle.items || []
   const disponibles = items.filter((i) => i.disponible).map(leerItem)
   const noDisponibles = items.filter((i) => !i.disponible).map(leerItem)
@@ -306,12 +338,12 @@ export default async function generarPresupuestoPDF({ detalle }) {
   const resumen = `${disponibles.length} producto${disponibles.length === 1 ? '' : 's'} con precio` +
     (noDisponibles.length ? `   ·   ${noDisponibles.length} sin precio por ahora` : '') +
     `   ·   Emitido el ${fechaCorta(detalle.fecha_creacion)}`
-  doc.text(resumen, PAG.margen, yRegla + 6)
+  doc.text(lineasMax(doc, resumen, PAG.contenido, 1), PAG.margen, yRegla + 6)
 
   /* ===== 01 · Productos disponibles ===== */
-  let y = yRegla + 16
+  let y = yRegla + 14
   y = seccion(doc, y, '01', 'Productos disponibles')
-  y = tabla(doc, y + 3, {
+  const rDisp = tabla(doc, y + 3, {
     numero,
     vacio: 'Ningún producto de este presupuesto está disponible por ahora.',
     columnas: [
@@ -325,9 +357,10 @@ export default async function generarPresupuestoPDF({ detalle }) {
       String(i + 1).padStart(2, '0'), it.nombre, String(it.cantidad), usd(it.precio), usd(it.subtotal),
     ]),
   })
+  y = rDisp.y
+  const xTotales = rDisp.cols[3].x // borde izquierdo de "P. unitario"
 
   /* ===== 02 · Sin precio ===== */
-  let n = 2
   if (noDisponibles.length > 0) {
     if (y + 30 > Y_MAX) { doc.addPage(); y = cabeceraContinuacion(doc, numero) }
     y = seccion(doc, y, '02', 'Sin precio disponible · fuera del total')
@@ -344,71 +377,52 @@ export default async function generarPresupuestoPDF({ detalle }) {
       filas: noDisponibles.map((it, i) => [
         String(i + 1).padStart(2, '0'), it.nombre, String(it.cantidad), 'Por definir',
       ]),
-    })
-    n = 3
+    }).y
   }
 
-  /* ===== Total: caja de borde grueso, número azul ===== */
+  /* ===== Total: caja angosta que arranca bajo "P. unitario" ===== */
   const total = disponibles.reduce((s, it) => s + it.subtotal, 0)
-  const wCaja = 98
-  const hCaja = 27
-  if (y + hCaja + 6 > Y_MAX) { doc.addPage(); y = cabeceraContinuacion(doc, numero) }
-  const xCaja = PAG.ancho - PAG.margen - wCaja - 2
+  const xCaja = xTotales
+  const wCaja = PAG.ancho - PAG.margen - xCaja
+  const hCaja = 16
+  if (y + hCaja + 6 > Y_TOTALES) { doc.addPage(); y = cabeceraContinuacion(doc, numero) }
 
   // Contorno fino desplazado (efecto de sombra sin relleno) y caja principal
   doc.setDrawColor(...T.suave)
-  doc.setLineWidth(0.25)
-  doc.rect(xCaja + 2, y + 2, wCaja, hCaja, 'S')
+  doc.setLineWidth(0.2)
+  doc.rect(xCaja + 1.5, y + 1.5, wCaja, hCaja, 'S')
   doc.setDrawColor(...T.tinta)
-  doc.setLineWidth(1)
+  doc.setLineWidth(0.9)
   doc.rect(xCaja, y, wCaja, hCaja, 'S')
 
-  etiqueta(doc, 'Total del presupuesto', xCaja + 6, y + 8, { color: T.tinta, size: 6.8 })
+  etiqueta(doc, 'Total del presupuesto', xCaja + 5, y + 5.6, { color: T.tinta, size: 6.2 })
   const textoTotal = usd(total)
   doc.setFont('helvetica', 'bold')
-  let tt = 25
+  let tt = 15
   doc.setFontSize(tt)
-  while (doc.getTextWidth(textoTotal) > wCaja - 12 && tt > 12) {
-    tt -= 1
+  while (doc.getTextWidth(textoTotal) > wCaja - 10 && tt > 9) {
+    tt -= 0.5
     doc.setFontSize(tt)
   }
   tinta(doc, T.azul)
-  doc.text(textoTotal, xCaja + wCaja - 6, y + 21, { align: 'right' })
+  doc.text(textoTotal, xCaja + wCaja - 5, y + 12.5, { align: 'right' })
 
-  // Nota a la izquierda de la caja
+  /* ===== Disclaimer de vigencia, a la izquierda de la caja =====
+     Reemplaza la vieja nota "Suma de X líneas con precio...". */
+  const anchoNota = xCaja - PAG.margen - 10
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(7.2)
+  tinta(doc, T.tinta)
+  textoEsp(doc, 'VIGENCIA DEL PRESUPUESTO', PAG.margen, y + 4, { cs: 0.6 })
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(7.5)
+  doc.setFontSize(7.3)
   tinta(doc, T.gris)
-  const nota = doc.splitTextToSize(
-    `Suma de ${disponibles.length} línea${disponibles.length === 1 ? '' : 's'} con precio. Los productos sin precio no se incluyen.`,
-    xCaja - PAG.margen - 8
+  const disclaimer = doc.splitTextToSize(
+    'Este presupuesto tiene una vigencia de 24 horas a partir de su creación. Pasado ese tiempo, puedes solicitar una recotización desde la plataforma web.',
+    Math.max(anchoNota, 50)
   )
-  doc.text(nota, PAG.margen, y + 8)
+  doc.text(disclaimer, PAG.margen, y + 8.4)
   y += hCaja + 10
-
-  /* ===== Datos para pagar (solo los configurados; nunca se inventan) ===== */
-  const lista = Array.isArray(empresaInfo.datosPago)
-    ? empresaInfo.datosPago.filter((d) => d?.metodo && d?.detalle).slice(0, 6)
-    : []
-  if (lista.length) {
-    const filas = Math.ceil(lista.length / 2)
-    if (y + 7 + filas * 10 > Y_MAX + 5) { doc.addPage(); y = cabeceraContinuacion(doc, numero) }
-    y = seccion(doc, y, String(n).padStart(2, '0'), 'Datos para realizar tu pago')
-    linea(doc, y + 1, { grosor: 0.45, color: T.tinta })
-    y += 2
-    const colW = PAG.contenido / 2
-    lista.forEach((d, i) => {
-      const fila = Math.floor(i / 2)
-      const x = PAG.margen + (i % 2) * colW
-      const yy = y + fila * 10
-      etiqueta(doc, d.metodo, x, yy + 4.6, { color: T.suave, size: 6.3 })
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(9.5)
-      tinta(doc, T.tinta)
-      doc.text(String(d.detalle), x, yy + 9, { maxWidth: colW - 6 })
-    })
-    for (let f = 1; f <= filas; f++) linea(doc, y + f * 10 + 1.5, { grosor: 0.15 })
-  }
 
   /* ===== Pie en todas las páginas ===== */
   const paginas = doc.internal.getNumberOfPages()
@@ -419,7 +433,7 @@ export default async function generarPresupuestoPDF({ detalle }) {
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(7.5)
     tinta(doc, T.tinta)
-    doc.text(e.nombre, PAG.margen, PAG.alto - 11)
+    doc.text(String(e.nombre), PAG.margen, PAG.alto - 11)
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(7)
     tinta(doc, T.gris)
