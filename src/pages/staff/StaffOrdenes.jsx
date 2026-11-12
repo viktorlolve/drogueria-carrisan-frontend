@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Search, Plus, Minus, X } from 'lucide-react'
+import { Search, Plus, Minus, X, Printer, Download } from 'lucide-react'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import './StaffOrdenes.css'
@@ -39,6 +39,8 @@ function StaffOrdenes() {
   const [creando, setCreando] = useState(false)
   const [mensaje, setMensaje] = useState(null) // { tipo: 'exito'|'error', texto }
   const [ordenCreada, setOrdenCreada] = useState(null)
+  const [generandoGuia, setGenerandoGuia] = useState(false)
+  const [descargandoOrden, setDescargandoOrden] = useState(false)
 
   const debounceCliente = useRef(null)
   const seqCliente = useRef(0)
@@ -240,6 +242,39 @@ function StaffOrdenes() {
     }
   }
 
+  // Guía de despacho: la usa el motorizado / la agencia. Se genera con los
+  // datos del envío que trae la orden recién creada (el endpoint la devuelve
+  // con cliente, dirección y agencia ya embebidos).
+  async function imprimirGuiaDespacho() {
+    if (!ordenCreada) return
+    setGenerandoGuia(true)
+    try {
+      const { exportarGuiaDespacho } = await import('../../utils/exportUtils')
+      await exportarGuiaDespacho(ordenCreada)
+    } catch (err) {
+      console.error('Error al generar la guía de despacho', err)
+      avisar('No se pudo generar la guía de despacho', 'error')
+    } finally {
+      setGenerandoGuia(false)
+    }
+  }
+
+  // PDF de la orden (el mismo generador que el cliente ve en /orders/:id y el
+  // staff en la cola de pedidos), cargado bajo demanda.
+  async function descargarOrdenPDF() {
+    if (!ordenCreada) return
+    setDescargandoOrden(true)
+    try {
+      const { default: generarOrdenPDF } = await import('../../utils/generarOrdenPDF')
+      await generarOrdenPDF({ orden: ordenCreada, cliente: null })
+    } catch (err) {
+      console.error('Error al generar el PDF de la orden', err)
+      avisar('No se pudo generar el PDF de la orden', 'error')
+    } finally {
+      setDescargandoOrden(false)
+    }
+  }
+
   function nuevaOrden() {
     setOrdenCreada(null)
     setMensaje(null)
@@ -431,7 +466,29 @@ function StaffOrdenes() {
       {ordenCreada && (
         <div className="so-exito">
           <p>Orden <strong>#{ordenCreada.id}</strong> creada para {cliente?.nombre}.</p>
-          <button type="button" onClick={nuevaOrden}>Crear otra orden</button>
+          <div className="so-exito-acciones">
+            <button
+              type="button"
+              className="so-exito-btn so-exito-btn--primario"
+              onClick={imprimirGuiaDespacho}
+              disabled={generandoGuia}
+            >
+              <Printer size={16} aria-hidden="true" />
+              {generandoGuia ? 'Generando guía...' : 'Imprimir guía de despacho'}
+            </button>
+            <button
+              type="button"
+              className="so-exito-btn"
+              onClick={descargarOrdenPDF}
+              disabled={descargandoOrden}
+            >
+              <Download size={16} aria-hidden="true" />
+              {descargandoOrden ? 'Generando PDF...' : 'Descargar orden (PDF)'}
+            </button>
+            <button type="button" className="so-exito-btn" onClick={nuevaOrden}>
+              Crear otra orden
+            </button>
+          </div>
         </div>
       )}
     </div>

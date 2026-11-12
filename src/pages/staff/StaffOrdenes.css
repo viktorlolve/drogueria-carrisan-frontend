@@ -416,7 +416,16 @@
   align-items: flex-start;
 }
 
-.so-exito button {
+.so-exito-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.so-exito-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: white;
   border: 1.5px solid #e5e7eb;
   color: var(--ldep-color-strong, #0043B3);
@@ -426,6 +435,26 @@
   font-size: 14px;
   font-family: inherit;
   cursor: pointer;
+}
+
+.so-exito-btn:hover:not(:disabled) {
+  background: #f8fafc;
+}
+
+.so-exito-btn--primario {
+  background: var(--ldep-color-strong, #0043B3);
+  border-color: var(--ldep-color-strong, #0043B3);
+  color: white;
+}
+
+.so-exito-btn--primario:hover:not(:disabled) {
+  background: var(--ldep-color, #0052DC);
+  border-color: var(--ldep-color, #0052DC);
+}
+
+.so-exito-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 @media (max-width: 480px) {

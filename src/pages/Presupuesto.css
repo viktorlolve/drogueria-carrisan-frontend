@@ -983,6 +983,14 @@ color: #1a1a34;
 ;
 }
 }
+@media (max-width: 639px) 
+{
+  .pres-modal-overlay 
+{
+    align-items: center
+  ;
+  }
+}
 @media (max-width: 480px) 
 {
   .pres-historial__lista 

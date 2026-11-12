@@ -99,6 +99,7 @@ function PresupuestoCrear() {
 
   function agregarAlBorrador(producto) {
     if (producto.precio_usd == null) return
+    const yaExistia = borrador.some((i) => i.producto.id === producto.id)
     setBorrador((prev) => {
       const existente = prev.find((i) => i.producto.id === producto.id)
       if (existente) {
@@ -106,6 +107,11 @@ function PresupuestoCrear() {
       }
       return [...prev, { producto, cantidad: 1 }]
     })
+    setQuery('')
+    setResultado({ termino: '', items: [] })
+    if (!yaExistia) {
+      toaster.create({ title: 'Producto agregado', description: producto.nombre_comercial, type: 'success' })
+    }
   }
 
   function alTeclar(e) {

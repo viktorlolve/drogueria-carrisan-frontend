@@ -82,6 +82,15 @@ function PresupuestoModal({ presupuestoId, onClose, onRecotizado }) {
   const [recotizando, setRecotizando] = useState(false)
   const { addItem } = useCart()
 
+  // Bloquea el scroll del fondo mientras el modal está abierto (overlay que
+  // cubre pantalla: sin esto en móvil el dedo sigue desplazando la página de
+  // atrás y el modal parece que "carga desde abajo").
+  useEffect(() => {
+    const previo = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = previo }
+  }, [])
+
   const cargar = useCallback(async () => {
     try {
       const { data } = await api.get(`/presupuestos/${presupuestoId}`)

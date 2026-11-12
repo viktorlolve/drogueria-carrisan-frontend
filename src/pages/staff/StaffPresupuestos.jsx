@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import { ModalCrearPresupuesto } from '../../components/staff/StaffComercialModals'
+import generarPresupuestoPDF from '../../utils/generarPresupuestoPDF'
 import './StaffComercial.css'
 import './StaffClientes.css'
 import './StaffPresupuestos.css'
@@ -26,10 +27,12 @@ const ESTADOS_PRESUPUESTO = [
   { id: 'vencido', titulo: 'Vencidos' },
 ]
 
-function ModalPresupuestoDetalle({ presupuesto, onClose, onRecotizar, onGenerarPedido }) {
+/* ---------- Modal de detalle del presupuesto (rediseñado) ---------- */
+function ModalPresupuestoDetalle({ presupuesto, onClose, onRecotizar, onGenerarPedido, avisar }) {
   const [detalle, setDetalle] = useState(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
+  const [pdfCargando, setPdfCargando] = useState(false)
 
   const [prevPresupuestoId, setPrevPresupuestoId] = useState(presupuesto?.id)
   if (presupuesto?.id !== prevPresupuestoId) {
@@ -51,70 +54,214 @@ function ModalPresupuestoDetalle({ presupuesto, onClose, onRecotizar, onGenerarP
 
   if (!presupuesto) return null
 
+  const items = (detalle && detalle.items) || []
+  const disponibles = items.filter((i) => i.disponible)
+  const sinPrecio = items.filter((i) => !i.disponible)
+  const total = disponibles.reduce((s, it) => s + Number(it.subtotal || 0), 0)
+
+  async function handleGenerarPdf() {
+    if (!detalle) return
+    setPdfCargando(true)
+    try {
+      await generarPresupuestoPDF({ detalle })
+      avisar('PDF del presupuesto generado correctamente.')
+    } catch (err) {
+      avisar(err?.response?.data?.error || 'No se pudo generar el PDF', 'error')
+    } finally {
+      setPdfCargando(false)
+    }
+  }
+
+  const estiloCabecera = {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+    gap: 16, marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid #e5e7eb',
+  }
+  const estiloNumero = {
+    display: 'flex', flexDirection: 'column', gap: 4,
+  }
+  const estiloMeta = { textAlign: 'right', display: 'flex', flexDirection: 'column', gap: 6 }
+  const estiloCliente = {
+    display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px',
+    background: '#f8fafc', borderRadius: 8, border: '1px solid #e5e7eb', marginBottom: 16,
+  }
+  const estiloAvatar = {
+    width: 36, height: 36, borderRadius: '50%', background: '#e2e8f0',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontWeight: 700, fontSize: 18, color: '#475569', flexShrink: 0,
+  }
+  const estiloDivider = { border: 0, borderTop: '1px solid #e5e7eb', margin: '16px 0' }
+  const estiloTabla = { border: '1px solid #e5e7eb', borderRadius: 8, overflow: 'hidden' }
+  const estiloFilaCabecera = {
+    display: 'grid', gridTemplateColumns: '1fr 60px 110px 110px',
+    padding: '8px 12px', background: '#f1f5f9', fontSize: '0.8rem', fontWeight: 700,
+    color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em',
+  }
+  const estiloFila = {
+    display: 'grid', gridTemplateColumns: '1fr 60px 110px 110px',
+    padding: '10px 12px', borderBottom: '1px solid #f1f5f9', fontSize: '0.95rem',
+    alignItems: 'center',
+  }
+  const estiloFilaSinPrecio = { color: '#94a3b8', fontStyle: 'italic' }
+  const estiloVacio = { padding: '20px 12px', textAlign: 'center', color: '#94a3b8' }
+  const estiloTotal = {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    padding: '14px 18px', background: '#f8fafc', border: '1px solid #e5e7eb',
+    borderRadius: 8, marginTop: 8,
+  }
+  const estiloAcciones = {
+    display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20,
+    paddingTop: 16, borderTop: '1px solid #e5e7eb',
+  }
+  const estiloBtnBase = {
+    padding: '8px 16px', borderRadius: 6, fontSize: '0.9rem', fontWeight: 600,
+    cursor: 'pointer', border: '1px solid transparent', transition: 'all 0.2s',
+  }
+  const estiloBtnOutline = { ...estiloBtnBase, background: '#fff', color: '#475569', borderColor: '#cbd5e1' }
+  const estiloBtnPrimary = { ...estiloBtnBase, background: '#0052DC', color: '#fff' }
+  const estiloBtnPdf = { ...estiloBtnPrimary, background: '#0052DC' }
+  const estiloBtnDeshabilitado = { ...estiloBtnPdf, opacity: 0.55, cursor: 'not-allowed' }
+
   return (
-    <StaffModal titulo={`Presupuesto #${presupuesto.numero || presupuesto.id}`} ancho="sm" onCerrar={onClose}>
-      <div className="odm-header">
-        <div>
-          <p className="odm-fecha">{formatFecha(presupuesto.fecha_creacion)}</p>
-        </div>
-        <span className="odm-badge" style={{
-          background: presupuesto.estado === 'vigente' ? '#d1fae5' : '#f3f4f6',
-          color: presupuesto.estado === 'vigente' ? '#059669' : '#6b7280',
-        }}>{presupuesto.estado}</span>
-      </div>
-
-      {presupuesto.usuario && (
-        <div className="odm-cliente">
-          <div className="odm-cliente-avatar">{(presupuesto.usuario.nombre || '?').trim().charAt(0).toUpperCase()}</div>
-          <div className="odm-cliente-info">
-            <strong>{presupuesto.usuario.nombre}</strong>
-            <span>{presupuesto.usuario.email}</span>
-          </div>
-        </div>
-      )}
-
-      <div className="odm-divider" />
-
-      {error && <p className="kb-error">{error}</p>}
-      {cargando ? (
-        <StaffEstado tipo="cargando" filas={2} />
-      ) : detalle ? (
-        <>
-          <div className="odm-section">
-            <p className="odm-section-title">Productos</p>
-            {(detalle.items || []).map((item, i) => (
-              <div key={i} className="odm-item">
-                <div className="odm-item-body">
-                  <p className="odm-item-nombre">{item.nombre_comercial} × {item.cantidad}</p>
-                  <p className="odm-item-cantidad">
-                    {item.disponible
-                      ? `$${formatUSD(item.precio_unitario)} · Subtotal $${formatUSD(item.subtotal)}`
-                      : 'Sin precio disponible'}
+    <StaffModal
+      titulo={`Presupuesto #${presupuesto.numero || presupuesto.id}`}
+      ancho="lg"
+      onCerrar={onClose}
+    >
+      <div style={{ padding: 0 }}>
+        {error && (
+          <p style={{ color: '#dc2626', margin: '0 0 12px 0', fontSize: '0.9rem' }}>{error}</p>
+        )}
+        {cargando ? (
+          <StaffEstado tipo="cargando" filas={3} />
+        ) : (
+          <>
+            <div style={estiloCabecera}>
+              <div style={estiloNumero}>
+                <span style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Presupuesto N.º
+                </span>
+                <span style={{ fontSize: 1.75rem, fontWeight: 800, color: '#0f172a' }}>
+                  {presupuesto.numero || presupuesto.id}
+                </span>
+              </div>
+              <div style={estiloMeta}>
+                <span
+                  style={{
+                    display: 'inline-block', padding: '2px 10px', borderRadius: 20, fontSize: '0.8rem',
+                    fontWeight: 700,
+                    background: presupuesto.estado === 'vigente' ? '#dcfce7' : '#f1f5f9',
+                    color: presupuesto.estado === 'vigente' ? '#15803d' : '#64748b',
+                  }}
+                >
+                  {presupuesto.estado}
+                </span>
+                <p style={{ margin: 0, fontSize: '0.9rem', color: '#475569' }}>
+                  <strong>Emitido:</strong> {formatFecha(presupuesto.fecha_creacion)}
+                </p>
+                {presupuesto.fecha_expiracion && (
+                  <p style={{ margin: 0, fontSize: '0.9rem', color: '#475569' }}>
+                    <strong>Válido hasta:</strong> {formatFecha(presupuesto.fecha_expiracion)}
                   </p>
+                )}
+              </div>
+            </div>
+
+            {presupuesto.usuario && (
+              <div style={estiloCliente}>
+                <div style={estiloAvatar}>
+                  {(presupuesto.usuario.nombre || '?').trim().charAt(0).toUpperCase()}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <strong style={{ fontSize: '1rem', color: '#0f172a' }}>{presupuesto.usuario.nombre}</strong>
+                  <span style={{ fontSize: '0.85rem', color: '#64748b' }}>{presupuesto.usuario.email}</span>
                 </div>
               </div>
-            ))}
-          </div>
-          {detalle.vencido && presupuesto.estado === 'vigente' && (
-            <p className="odm-notas" style={{ color: '#dc2626' }}>Vencido — recotiza antes de generar pedido.</p>
-          )}
-          <div className="odm-totales">
-            <div className="odm-total-final">
-              <span>Total</span>
-              <span className="odm-total-valor">{formatearUSD(detalle.total_usd)}</span>
-            </div>
-          </div>
-        </>
-      ) : null}
+            )}
 
-      <div className="kb-modal-acciones" style={{ marginTop: 12 }}>
-        <button className="kb-btn-rechazar" onClick={() => { onClose(); onRecotizar(presupuesto.id) }}>Recotizar</button>
-        <button className="kb-btn-responder" onClick={() => { onClose(); onGenerarPedido(presupuesto.id) }}>Generar pedido</button>
+            <hr style={estiloDivider} />
+
+            <div style={estiloTabla}>
+              <div style={estiloFilaCabecera}>
+                <span>Producto</span>
+                <span style={{ textAlign: 'center' }}>Cant.</span>
+                <span style={{ textAlign: 'right' }}>P. unitario</span>
+                <span style={{ textAlign: 'right' }}>Subtotal</span>
+              </div>
+              {disponibles.map((item, i) => (
+                <div key={i} style={estiloFila}>
+                  <span
+                    style={{ color: '#0f172a', fontWeight: 500 }}
+                    title={item.nombre_comercial}
+                  >
+                    {item.nombre_comercial} × {item.cantidad}
+                  </span>
+                  <span style={{ textAlign: 'center', color: '#475569' }}>{item.cantidad}</span>
+                  <span style={{ textAlign: 'right', color: '#475569' }}$${formatUSD(item.precio_unitario)}</span>
+                  <span style={{ textAlign: 'right', fontWeight: 700, color: '#0f172a' }}$${formatUSD(item.subtotal)}</span>
+                </div>
+              ))}
+              {sinPrecio.map((item, i) => (
+                <div key={`sin-${i}`} style={{ ...estiloFila, ...estiloFilaSinPrecio }}>
+                  <span>{item.nombre_comercial} × {item.cantidad}</span>
+                  <span style={{ textAlign: 'center' }}>—</span>
+                  <span style={{ textAlign: 'right' }}>Sin precio</span>
+                  <span style={{ textAlign: 'right' }}>Fuera del total</span>
+                </div>
+              ))}
+              {items.length === 0 && <div style={estiloVacio}>Sin productos.</div>}
+            </div>
+
+            {sinPrecio.length > 0 && (
+              <p style={{ margin: '8px 0 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>
+                Los productos sin precio no se incluyen en el total.
+              </p>
+            )}
+
+            <div style={estiloTotal}>
+              <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 600 }}>
+                Total del presupuesto
+              </span>
+              <span style={{ fontSize: 1.5rem, fontWeight: 800, color: '#0052DC' }}>
+                {formatearUSD(total)}
+              </span>
+            </div>
+
+            <p style={{ margin: '8px 0 0 0', fontSize: '0.85rem', color: '#64748b' }}>
+              Suma de {disponibles.length} línea{disponibles.length === 1 ? '' : 's'} con precio.
+            </p>
+          </>
+        )}
+      </div>
+
+      <div style={estiloAcciones}>
+        <button
+          className="spd-btn spd-btn--outline"
+          style={estiloBtnOutline}
+          onClick={() => { onClose(); onRecotizar(presupuesto.id) }}
+        >
+          Recotizar
+        </button>
+        <button
+          className="spd-btn spd-btn--primary"
+          style={estiloBtnPrimary}
+          onClick={() => { onClose(); onGenerarPedido(presupuesto.id) }}
+        >
+          Generar pedido
+        </button>
+        <button
+          className={`spd-btn spd-btn--pdf ${!detalle || pdfCargando ? 'spd-btn--deshabilitado' : ''}`}
+          style={detalle && !pdfCargando ? estiloBtnPdf : estiloBtnDeshabilitado}
+          onClick={handleGenerarPdf}
+          disabled={!detalle || pdfCargando}
+        >
+          {pdfCargando ? 'Generando PDF…' : 'Generar PDF'}
+        </button>
       </div>
     </StaffModal>
   )
 }
 
+/* ---------- Página de listado ---------- */
 function StaffPresupuestos({ departamento = 'comercial', activo = 'presupuestos', titulo = 'Presupuestos' }) {
   const { confirmar, avisar } = useStaffUI()
   const [estado, setEstado] = useState('')
@@ -240,6 +387,7 @@ function StaffPresupuestos({ departamento = 'comercial', activo = 'presupuestos'
         onClose={() => setModal(null)}
         onRecotizar={recotizar}
         onGenerarPedido={generarPedido}
+        avisar={avisar}
       />
       {crearModal && (
         <ModalCrearPresupuesto
