@@ -165,7 +165,8 @@ function PresupuestoModal({ presupuestoId, onClose, onRecotizado }) {
   async function exportarPDF() {
     if (!detalle) return
     const { default: generarPresupuestoPDF } = await import('../utils/generarPresupuestoPDF')
-    await generarPresupuestoPDF({ detalle })
+
+await generarPresupuestoPDF({ detalle, cliente: user })
   }
 
   // El modal se monta en <body> con un portal: `LayoutPaginaPrincipal` aplica
