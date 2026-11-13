@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
-import { FlaskConical, Package } from 'lucide-react'
+import { FlaskConical, Pill } from 'lucide-react'
 import api from '../api/axios'
 import ProductCard from '../components/ProductCard'
 import ProductCardSkeleton from '../components/Productcardskeleton'
@@ -26,6 +26,14 @@ const ORDENES = [
   { value: 'precio_asc', label: 'Precio: menor a mayor' },
   { value: 'precio_desc', label: 'Precio: mayor a menor' },
 ]
+
+// A partir de cierta longitud un nombre de laboratorio no cabe en un chip tipo
+// píldora: se le da una fila completa y el texto se envuelve en varias líneas.
+const LARGO_NOMBRE_LAB = 26
+
+function esNombreLargo(nombre = '') {
+  return nombre.length > LARGO_NOMBRE_LAB
+}
 
 function generarSeed() {
   return Math.random().toString(36).slice(2, 10)
@@ -139,6 +147,28 @@ useEffect(() => {
   window.addEventListener('resize', handleResize)
   return () => window.removeEventListener('resize', handleResize)
 }, [])
+
+// El bottom sheet de filtros es un overlay a pantalla completa: hay que bloquear
+// el scroll del fondo mientras está abierto (si no, en móvil el dedo sigue
+// desplazando la página de atrás). Se guarda y restaura el valor previo.
+useEffect(() => {
+  if (!filtrosAbiertos) return
+  const previo = document.body.style.overflow
+  document.body.style.overflow = 'hidden'
+  return () => {
+    document.body.style.overflow = previo
+  }
+}, [filtrosAbiertos])
+
+// Cerrar el sheet con la tecla Escape (accesibilidad de teclado).
+useEffect(() => {
+  if (!filtrosAbiertos) return
+  function handleKey(e) {
+    if (e.key === 'Escape') setFiltrosAbiertos(false)
+  }
+  window.addEventListener('keydown', handleKey)
+  return () => window.removeEventListener('keydown', handleKey)
+}, [filtrosAbiertos])
 
 useEffect(() => {
   const t = setTimeout(() => setMoleculaActiva(moleculaInput.trim()), 400)
@@ -392,7 +422,7 @@ useEffect(() => {
             className="catalogo-filtros-btn"
             onClick={() => setFiltrosAbiertos(true)}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <line x1="4" y1="6" x2="20" y2="6"></line>
               <circle cx="9" cy="6" r="2" fill="currentColor" stroke="none"></circle>
               <line x1="4" y1="12" x2="20" y2="12"></line>
@@ -400,7 +430,10 @@ useEffect(() => {
               <line x1="4" y1="18" x2="20" y2="18"></line>
               <circle cx="11" cy="18" r="2" fill="currentColor" stroke="none"></circle>
             </svg>
-            Más filtros
+            Filtros
+            {totalFiltrosActivos > 0 && (
+              <span className="catalogo-filtros-btn__contador">{totalFiltrosActivos}</span>
+            )}
           </button>
         )}
 
@@ -486,10 +519,12 @@ useEffect(() => {
                   {laboratoriosTop.slice(0, labsVisibles).map((lab) => (
                     <button
                       key={lab.nombre}
-                      className={`filtro-pill ${laboratoriosActivos.includes(lab.nombre) ? 'active' : ''}`}
+                      className={`filtro-pill ${laboratoriosActivos.includes(lab.nombre) ? 'active' : ''}${esNombreLargo(lab.nombre) ? ' filtro-pill--largo' : ''}`}
                       onClick={() => toggleEnArray(lab.nombre, laboratoriosActivos, setLaboratoriosActivos)}
+                      title={lab.nombre}
                     >
-                      {lab.nombre} <span className="filtro-pill__count">{lab.total}</span>
+                      <span className="filtro-pill__texto">{lab.nombre}</span>
+                      <span className="filtro-pill__count">{lab.total}</span>
                     </button>
                   ))}
                   {labsVisibles < laboratoriosTop.length && (
@@ -622,7 +657,7 @@ useEffect(() => {
                         onClick={() => toggleEnArray(lab.nombre, laboratoriosActivos, setLaboratoriosActivos)}
                       >
                         <FlaskConical className="cfm-chip-inline__icono" size={14} strokeWidth={1.5} />
-                        {lab.nombre}
+                        <span className="cfm-chip-inline__texto">{lab.nombre}</span>
                       </button>
                     ))}
                     {laboratoriosTop.length > 8 && (
@@ -653,7 +688,7 @@ useEffect(() => {
                         className={`cfm-chip-inline ${formasActivas.includes(forma) ? 'cfm-chip-inline--activo' : ''}`}
                         onClick={() => toggleEnArray(forma, formasActivas, setFormasActivas)}
                       >
-                        <Package className="cfm-chip-inline__icono" size={14} strokeWidth={1.5} />
+                        <Pill className="cfm-chip-inline__icono" size={14} strokeWidth={1.5} />
                         {forma}
                       </button>
                     ))}
@@ -769,11 +804,13 @@ useEffect(() => {
                         <button
                           key={lab.nombre}
                           type="button"
-                          className={`cfm-chip ${laboratoriosActivos.includes(lab.nombre) ? 'cfm-chip--activo' : ''}`}
+                          className={`cfm-chip ${laboratoriosActivos.includes(lab.nombre) ? 'cfm-chip--activo' : ''}${esNombreLargo(lab.nombre) ? ' cfm-chip--largo' : ''}`}
                           onClick={() => toggleEnArray(lab.nombre, laboratoriosActivos, setLaboratoriosActivos)}
+                          title={lab.nombre}
                         >
                           <FlaskConical size={14} strokeWidth={1.5} className="cfm-chip__icono" />
-                          {lab.nombre} <span className="cfm-chip__count">{lab.total}</span>
+                          <span className="cfm-chip__texto">{lab.nombre}</span>
+                          <span className="cfm-chip__count">{lab.total}</span>
                         </button>
                       ))}
                     </div>
@@ -798,7 +835,7 @@ useEffect(() => {
                   aria-expanded={seccionesAbiertas.forma}
                 >
                   <span className="cfm-seccion__label">
-                    <Package size={16} strokeWidth={1.5} className="cfm-seccion__icono" />
+                    <Pill size={16} strokeWidth={1.5} className="cfm-seccion__icono" />
                     Forma
                     {formasActivas.length > 0 && (
                       <span className="cfm-seccion__contador">{formasActivas.length}</span>
@@ -824,7 +861,7 @@ useEffect(() => {
                           className={`cfm-chip ${formasActivas.includes(forma) ? 'cfm-chip--activo' : ''}`}
                           onClick={() => toggleEnArray(forma, formasActivas, setFormasActivas)}
                         >
-                          <Package size={14} strokeWidth={1.5} className="cfm-chip__icono" />
+                          <Pill size={14} strokeWidth={1.5} className="cfm-chip__icono" />
                           {forma}
                         </button>
                       ))}

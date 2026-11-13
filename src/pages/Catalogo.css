@@ -223,6 +223,10 @@
 }
 
 .filtro-pill {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-width: 0;
   background: #ffffff;
   border: 1px solid #74767c;
   border-radius: 999px;
@@ -232,6 +236,25 @@
   color: #1a1a1a;
   cursor: pointer;
   transition: all 0.2s;
+}
+
+.filtro-pill__texto {
+  min-width: 0;
+  text-align: left;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
+}
+
+/* Nombres de laboratorio largos: ocupan una fila completa y con esquinas menos
+   redondeadas para que el texto envuelto se lea bien (una píldora de 2+ líneas
+   con radio 999px se ve deforme). */
+.filtro-pill--largo {
+  flex: 1 1 100%;
+  border-radius: 12px;
+}
+
+.filtro-pill--largo .filtro-pill__count {
+  margin-left: auto;
 }
 
 .filtro-pill:hover,
@@ -511,25 +534,42 @@
     display: none;
   }
 
-  /* Botón Filtros en header mobile */
+  /* Botón Filtros en header mobile — entrada al bottom sheet */
   .catalogo-filtros-btn {
     display: flex;
     align-items: center;
     gap: 6px;
     flex-shrink: 0;
-    background: #FFFFFF;
-    border: 1px solid #c7cbd6;
+    background: #1B4B8F;
+    border: 1px solid #1B4B8F;
     border-radius: 999px;
-    padding: 8px 14px;
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: #14182A;
+    padding: 9px 16px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #FFFFFF;
     cursor: pointer;
+    box-shadow: 0 4px 12px rgba(27, 75, 143, 0.25);
+    transition: background 0.15s ease, box-shadow 0.15s ease;
   }
 
-  .catalogo-filtros-btn:hover {
-    border-color: #1B4B8F;
-    background: #F4F6F8;
+  .catalogo-filtros-btn:active {
+    background: #163c72;
+    box-shadow: 0 2px 6px rgba(27, 75, 143, 0.25);
+  }
+
+  .catalogo-filtros-btn__contador {
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #FFFFFF;
+    color: #1B4B8F;
+    font-size: 0.72rem;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   /* Sidebar se oculta en mobile (ahora es modal) */
@@ -575,11 +615,17 @@
 }
 
 /* ----------
-   Botón Filtros (hidden on desktop, CSS is above in mobile block)
+   Botón Filtros — oculto en desktop (los filtros viven en el sidebar).
+   OJO: esta regla NO puede quedar sin media query DESPUÉS del bloque
+   `@media (max-width: 768px)`: al tener la misma especificidad ganaba por orden
+   y dejaba el botón invisible también en móvil (el sheet de filtros quedaba
+   inaccesible). Por eso el ocultado va acotado a desktop.
    ---------- */
 
-.catalogo-filtros-btn {
-  display: none;
+@media (min-width: 769px) {
+  .catalogo-filtros-btn {
+    display: none;
+  }
 }
 
 /* ----------
@@ -635,7 +681,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 4px 20px 12px;
+    padding: 4px 20px 14px;
+    border-bottom: 1px solid #EEF0F3;
   }
 
   .cfm-sheet__titulo {
@@ -682,7 +729,7 @@
   .cfm-sheet__body {
     flex: 1 1 auto;
     overflow-y: auto;
-    padding: 0 20px 16px;
+    padding: 16px 20px;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -692,6 +739,7 @@
   /* Tarjeta de sección */
   .cfm-seccion {
     background: #F6F8FB;
+    border: 1px solid #EDF0F5;
     border-radius: 16px;
     padding: 14px;
   }
@@ -856,6 +904,10 @@
   }
 
   .cfm-chip {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    min-width: 0;
     padding: 9px 14px;
     border-radius: 999px;
     border: 1.5px solid #D7DBE3;
@@ -865,6 +917,23 @@
     color: #232B45;
     cursor: pointer;
     transition: all 0.15s ease;
+  }
+
+  .cfm-chip__texto {
+    min-width: 0;
+    text-align: left;
+    overflow-wrap: anywhere;
+    line-height: 1.25;
+  }
+
+  /* Laboratorios con nombre largo: fila completa y texto envuelto. */
+  .cfm-chip--largo {
+    flex: 1 1 100%;
+    border-radius: 14px;
+  }
+
+  .cfm-chip--largo .cfm-chip__count {
+    margin-left: auto;
   }
 
   .cfm-chip--activo {
@@ -1139,6 +1208,16 @@
     flex: 0 0 auto;
     margin-right: 4px;
     color: inherit;
+  }
+
+  /* Nombre dentro del chip inline: si es muy largo se recorta con "…" en vez
+     de estirar el carrusel horizontal. */
+  .cfm-chip-inline__texto {
+    min-width: 0;
+    max-width: 62vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .cfm-chip-inline--activo .cfm-chip-inline__icono {
