@@ -447,7 +447,6 @@ export default async function generarPresupuestoPDF({ detalle, cliente = null })
     Math.max(anchoNota, 50)
   )
   doc.text(disclaimer, PAG.margen, y + 8.4)
-  y += hCaja + 10
 
   /* ===== Pie en todas las páginas ===== */
   const paginas = doc.internal.getNumberOfPages()

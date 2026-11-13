@@ -5,6 +5,7 @@ import {
   Plus, X, ShoppingCart, FileDown, RefreshCw, ArrowUp, ArrowDown, Calendar,
 } from 'lucide-react'
 import api from '../api/axios'
+import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 import { toaster } from '../components/ui/toaster'
 import LayoutPaginaPrincipal from '../components/paginas-principales/Layoutpaginaprincipal'
@@ -82,6 +83,7 @@ function PresupuestoModal({ presupuestoId, onClose, onRecotizado }) {
   const [agregados, setAgregados] = useState(new Set())
   const [recotizando, setRecotizando] = useState(false)
   const { addItem } = useCart()
+  const { user } = useAuth()
 
   // Bloquea el scroll del fondo mientras el modal está abierto (overlay que
   // cubre pantalla: sin esto en móvil el dedo sigue desplazando la página de
@@ -164,9 +166,13 @@ function PresupuestoModal({ presupuestoId, onClose, onRecotizado }) {
 
   async function exportarPDF() {
     if (!detalle) return
-    const { default: generarPresupuestoPDF } = await import('../utils/generarPresupuestoPDF')
-
-await generarPresupuestoPDF({ detalle, cliente: user })
+    try {
+      const { default: generarPresupuestoPDF } = await import('../utils/generarPresupuestoPDF')
+      await generarPresupuestoPDF({ detalle, cliente: user })
+    } catch (err) {
+      console.error('Error al generar el PDF del presupuesto', err)
+      toaster.create({ title: 'No se pudo generar el PDF', type: 'error' })
+    }
   }
 
   // El modal se monta en <body> con un portal: `LayoutPaginaPrincipal` aplica
