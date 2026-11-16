@@ -1,0 +1,192 @@
+/* ============================================================
+   LaboratoriosCarruselCatalogo — carrusel de logos de /catalogo.
+   Tarjetas cuadradas (logo + nombre) que filtran la grilla en vivo
+   al tocarlas, con flechas en tablet/desktop y una tarjeta final
+   "Buscar más laboratorios". Mismo lenguaje visual que
+   ExploraCarrusel (Home) + flechas de CategoriasCarruselCatalogo.
+   ============================================================ */
+
+.lcc {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0 12px;
+}
+
+.lcc__fila {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scroll-behavior: smooth;
+  padding: 4px 2px;
+  flex: 1;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.lcc__fila::-webkit-scrollbar {
+  display: none;
+}
+
+/* ---------- Tarjeta ---------- */
+.lcc__card {
+  flex: 0 0 96px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.lcc__card:hover {
+  transform: translateY(-2px);
+}
+
+.lcc__card:focus-visible {
+  outline: 2px solid #1B4B8F;
+  outline-offset: 2px;
+  border-radius: 14px;
+}
+
+.lcc__tile {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #FFFFFF;
+  border: 1px solid #F0F1F3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10%;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.lcc__card:hover .lcc__tile {
+  border-color: #DFE9F6;
+}
+
+.lcc__card--activo .lcc__tile {
+  border-color: #1B4B8F;
+  box-shadow: 0 0 0 2px #1B4B8F;
+}
+
+/* Tarjeta "Buscar más laboratorios" */
+.lcc__tile--mas {
+  background: #EFF4FB;
+  border-style: dashed;
+  border-color: #B9C9E4;
+}
+
+.lcc__card--mas:hover .lcc__tile {
+  border-color: #1B4B8F;
+}
+
+/* ---------- Logo ---------- */
+.lcc__logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.lcc__logo--listo {
+  opacity: 1;
+}
+
+.lcc__icono {
+  width: 34px;
+  height: 34px;
+  color: #1B4B8F;
+}
+
+.lcc__card--mas .lcc__icono {
+  width: 26px;
+  height: 26px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lcc__logo {
+    transition: none;
+  }
+}
+
+/* ---------- Nombre ---------- */
+.lcc__nombre {
+  font-family: 'Figtree', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #14182A;
+  text-align: center;
+  line-height: 1.2;
+  max-width: 100%;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.lcc__card--activo .lcc__nombre {
+  color: #1B4B8F;
+  font-weight: 700;
+}
+
+/* ---------- Flechas (tablet/desktop) ---------- */
+.lcc__flecha {
+  display: none;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #e3e4e5;
+  background: #FFFFFF;
+  color: #14182A;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.lcc__flecha:hover {
+  background: #EFF4FB;
+  border-color: #1B4B8F;
+  color: #1B4B8F;
+}
+
+/* ---------- Tablet ---------- */
+@media (min-width: 768px) {
+  .lcc__flecha {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .lcc__card {
+    flex: 0 0 118px;
+  }
+
+  .lcc__tile {
+    padding: 12%;
+  }
+
+  .lcc__nombre {
+    font-size: 0.78rem;
+  }
+}
+
+/* ---------- Desktop ---------- */
+@media (min-width: 1200px) {
+  .lcc__card {
+    flex: 0 0 136px;
+  }
+}

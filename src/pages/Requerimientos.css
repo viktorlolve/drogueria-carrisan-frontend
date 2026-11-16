@@ -30,6 +30,26 @@
   cursor: pointer;
 }
 
+/* El header de LayoutPaginaPrincipal (donde va la prop "acciones") se oculta
+   en <1024px, así que el botón "Nueva solicitud" se repite dentro de la página
+   para que se pueda crear una solicitud desde el móvil. */
+.req-mobile-acciones {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .req-mobile-acciones {
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  .req-mobile-acciones .req-nueva-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 11px 16px;
+  }
+}
+
 /* --- Formulario de nueva solicitud --- */
 .req-nueva {
   background: var(--req-surface);
@@ -60,6 +80,22 @@
   background: var(--req-brand);
   border-color: var(--req-brand);
   color: #fff;
+}
+
+.req-nueva__cancelar {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--req-text-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 2px;
+}
+
+.req-nueva__cancelar:hover {
+  color: var(--req-text);
+  text-decoration: underline;
 }
 
 .req-form__filas {
@@ -179,6 +215,41 @@
 
 .req-card__estado--pendiente { background: #eaf0ff; color: var(--req-brand); }
 .req-card__estado--respondido { background: #dcfce7; color: #15803d; }
+.req-card__estado--vencida { background: #fee2e2; color: #b91c1c; }
+
+.req-card__nota {
+  margin: -4px 0 12px;
+  font-size: 0.8rem;
+  color: var(--req-text-muted);
+}
+
+.req-card__nota--vencida {
+  color: #b91c1c;
+}
+
+.req-card__footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--req-border);
+}
+
+.req-card__repetir {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--req-brand);
+  background: #fff;
+  color: var(--req-brand);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.req-card__repetir:hover {
+  background: var(--req-brand);
+  color: #fff;
+}
 
 .req-card__items {
   display: flex;
@@ -224,6 +295,7 @@
 
 .req-item__badge--pendiente { background: #f1f0eb; color: var(--req-text-muted); }
 .req-item__badge--rechazado { background: #fee2e2; color: #dc2626; }
+.req-item__badge--vencido { background: #f1f0eb; color: #b91c1c; }
 
 .req-item__btn {
   padding: 7px 14px;

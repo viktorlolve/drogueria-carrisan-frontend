@@ -230,16 +230,16 @@ function TabRequerimientos() {
 }
 
 function StaffSolicitudes({ departamento = 'comercial', activo = 'solicitudes', titulo = 'Solicitudes' }) {
-  const [tab, setTab] = useState('cotizaciones')
+  const [tab, setTab] = useState('requerimientos')
   const tabs = [
-    { id: 'cotizaciones', texto: 'Cotizaciones' },
     { id: 'requerimientos', texto: 'Requerimientos' },
+    { id: 'cotizaciones', texto: 'Cotizaciones' },
   ]
   return (
     <LayoutDepartamento departamento={departamento} activo={activo} titulo={titulo}>
       <StaffTabs tabs={tabs} activo={tab} onChange={setTab} />
       <div style={{ paddingTop: 16 }}>
-        {tab === 'cotizaciones' ? <TabCotizaciones /> : <TabRequerimientos />}
+        {tab === 'requerimientos' ? <TabRequerimientos /> : <TabCotizaciones />}
       </div>
     </LayoutDepartamento>
   )

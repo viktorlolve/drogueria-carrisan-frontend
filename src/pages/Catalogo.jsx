@@ -8,6 +8,7 @@ import BottomNav from '../components/BottomNav'
 import InfiniteScrollLoader from '../components/InfiniteScrollLoader'
 import Footer from '../components/Footer'
 import CategoriasCarruselCatalogo from '../components/CategoriasCarruselCatalogo'
+import LaboratoriosCarruselCatalogo from '../components/LaboratoriosCarruselCatalogo'
 import './Catalogo.css'
 
 const PAGE_SIZE = 24
@@ -328,6 +329,18 @@ useEffect(() => {
     )
   }
 
+  // "Buscar más laboratorios" del carrusel de logos: en móvil abre el bottom
+  // sheet con el acordeón de laboratorios desplegado; en desktop despliega el
+  // acordeón equivalente del sidebar (ahí vive la lista completa + "Cargar más").
+  function abrirMasLaboratorios() {
+    if (esDesktop) {
+      setSeccionesAbiertas((prev) => (prev.laboratorio ? prev : { ...prev, laboratorio: true }))
+      return
+    }
+    setFiltrosAbiertos(true)
+    setSeccionesAbiertas((prev) => ({ ...prev, laboratorio: true }))
+  }
+
   function quitarBusqueda() {
     const params = new URLSearchParams(searchParams)
     params.delete('search')
@@ -640,63 +653,16 @@ useEffect(() => {
             </div>
           )}
 
-          {/* Filtros inline en móvil — carruseles de chips que se aplican al tocar.
-               Categoría va en el carrusel superior; aquí van Laboratorio y Forma. */}
-          {!esDesktop && (
-            <div className="cfm-filtros-inline">
-              {/* Laboratorio */}
-              {laboratoriosTop.length > 0 && (
-                <section className="cfm-filtro-inline">
-                  <span className="cfm-filtro-inline__titulo">Laboratorio</span>
-                  <div className="cfm-carrousel">
-                    {laboratoriosTop.slice(0, 8).map((lab) => (
-                      <button
-                        key={lab.nombre}
-                        type="button"
-                        className={`cfm-chip-inline ${laboratoriosActivos.includes(lab.nombre) ? 'cfm-chip-inline--activo' : ''}`}
-                        onClick={() => toggleEnArray(lab.nombre, laboratoriosActivos, setLaboratoriosActivos)}
-                      >
-                        <FlaskConical className="cfm-chip-inline__icono" size={14} strokeWidth={1.5} />
-                        <span className="cfm-chip-inline__texto">{lab.nombre}</span>
-                      </button>
-                    ))}
-                    {laboratoriosTop.length > 8 && (
-                      <button
-                        type="button"
-                        className="cfm-chip-inline cfm-chip-inline--mas"
-                        onClick={() => {
-                          setFiltrosAbiertos(true)
-                          setSeccionesAbiertas((prev) => ({ ...prev, laboratorio: true, forma: true }))
-                        }}
-                      >
-                        +{laboratoriosTop.length - 8} más
-                      </button>
-                    )}
-                  </div>
-                </section>
-              )}
-
-              {/* Forma */}
-              {formasDisponibles.length > 0 && (
-                <section className="cfm-filtro-inline">
-                  <span className="cfm-filtro-inline__titulo">Forma</span>
-                  <div className="cfm-carrousel">
-                    {formasDisponibles.map((forma) => (
-                      <button
-                        key={forma}
-                        type="button"
-                        className={`cfm-chip-inline ${formasActivas.includes(forma) ? 'cfm-chip-inline--activo' : ''}`}
-                        onClick={() => toggleEnArray(forma, formasActivas, setFormasActivas)}
-                      >
-                        <Pill className="cfm-chip-inline__icono" size={14} strokeWidth={1.5} />
-                        {forma}
-                      </button>
-                    ))}
-                  </div>
-                </section>
-              )}
-            </div>
-          )}
+          {/* Carrusel de laboratorios — logos que filtran la grilla en vivo.
+               Visible en todos los tamaños; la última tarjeta ("Buscar más
+               laboratorios") abre el acordeón de laboratorios del panel de
+               filtros (bottom sheet en móvil, sidebar en desktop). */}
+          <LaboratoriosCarruselCatalogo
+            laboratorios={laboratoriosTop}
+            activos={laboratoriosActivos}
+            onToggle={(n) => toggleEnArray(n, laboratoriosActivos, setLaboratoriosActivos)}
+            onBuscarMas={abrirMasLaboratorios}
+          />
 
           {cargando ? (
             <div className="product-grid">

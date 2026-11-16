@@ -1,136 +1,46 @@
-import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import api from '../api/axios'
-import { useCart } from '../context/CartContext'
 import LayoutPaginaPrincipal from '../components/paginas-principales/Layoutpaginaprincipal'
 import { NAV_UNIFICADO } from '../components/paginas-principales/NavUnificado'
 import './Cotizaciones.css'
 
-function formatUSD(valor) {
-  return Number(valor).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
-
-function tiempoRestante(fechaExpiracion) {
-  const ms = new Date(fechaExpiracion) - new Date()
-  if (ms <= 0) return null
-  const horas = Math.floor(ms / (1000 * 60 * 60))
-  const minutos = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60))
-  return `${horas}h ${minutos}m`
-}
-
-function CotizacionCard({ cotizacion, onAgregar, yaEnCarrito }) {
-  const { producto } = cotizacion
-  const vencida = cotizacion.estado === 'cotizada' &&
-    new Date(cotizacion.fecha_expiracion) < new Date()
-
-  return (
-    <div className="cotizacion-card">
-      <div className="cotizacion-card__media">
-        {producto?.foto_url ? (
-          <img src={producto.foto_url} alt={producto.nombre_comercial} />
-        ) : (
-          <div className="cotizacion-card__media-placeholder">Sin imagen</div>
-        )}
-      </div>
-
-      <div className="cotizacion-card__body">
-        <h3 className="cotizacion-card__nombre">
-          <Link to={`/producto/${producto?.id}`}>{producto?.nombre_comercial}</Link>
-        </h3>
-
-        {cotizacion.estado === 'pendiente' && (
-          <p className="cotizacion-card__estado cotizacion-card__estado--pendiente">
-            Esperando respuesta del administrador
-          </p>
-        )}
-
-        {cotizacion.estado === 'rechazada' && (
-          <p className="cotizacion-card__estado cotizacion-card__estado--rechazada">
-            No fue posible cotizar este producto
-            {cotizacion.nota_admin && <span className="cotizacion-card__nota"> — {cotizacion.nota_admin}</span>}
-          </p>
-        )}
-
-        {cotizacion.estado === 'cotizada' && !vencida && (
-          <>
-            <p className="cotizacion-card__precio">${formatUSD(cotizacion.precio_unitario)}</p>
-            <p className="cotizacion-card__vigencia">
-              Vence en {tiempoRestante(cotizacion.fecha_expiracion)}
-            </p>
-            <button
-              className="cotizacion-card__btn"
-              onClick={() => onAgregar(cotizacion)}
-              disabled={yaEnCarrito || producto?.disponible === false}
-            >
-              {producto?.disponible === false
-                ? 'Producto no disponible'
-                : (yaEnCarrito ? '✓ En el carrito' : 'Agregar al carrito')}
-            </button>
-          </>
-        )}
-
-        {cotizacion.estado === 'cotizada' && vencida && (
-          <p className="cotizacion-card__estado cotizacion-card__estado--vencida">
-            Cotización vencida — vuelve al producto para solicitar de nuevo
-          </p>
-        )}
-      </div>
-    </div>
-  )
-}
-
 function Cotizaciones() {
-  const [cotizaciones, setCotizaciones] = useState([])
-  const [cargando, setCargando] = useState(true)
-  const { items, addItemCotizado } = useCart()
-
-  const cargar = useCallback(async () => {
-    try {
-      const { data } = await api.get('/cotizaciones/mias')
-      setCotizaciones(data)
-    } catch (err) {
-      console.error('Error al cargar cotizaciones', err)
-    } finally {
-      setCargando(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    async function iniciar() {
-      await cargar()
-    }
-    iniciar()
-  }, [cargar])
-
-  function handleAgregar(cotizacion) {
-    addItemCotizado(cotizacion.producto, cotizacion)
-  }
-
   return (
-  <LayoutPaginaPrincipal activo="cotizaciones" titulo="Cotizaciones" nav={NAV_UNIFICADO}>
-    <div className="cot-page">
-      {cargando ? (
-        <div className="cot-loading">Cargando tus cotizaciones...</div>
-      ) : cotizaciones.length === 0 ? (
-        <div className="cot-vacio">
-          <p>Todavía no has solicitado ninguna cotización.</p>
-          <Link to="/catalogo">Ir al catálogo</Link>
+    <LayoutPaginaPrincipal activo="cotizaciones" titulo="Cotizaciones" nav={NAV_UNIFICADO}>
+      <div className="cot-coming">
+        <div className="cot-coming__badge">En construcción</div>
+
+        <div className="cot-coming__icon" aria-hidden="true">
+          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="56" height="40" x="4" y="12" rx="10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M10 32 h44" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+            <circle cx="20" cy="46" r="3" fill="currentColor" />
+            <circle cx="44" cy="46" r="3" fill="currentColor" />
+            <path d="M28 14 v10 l6 6" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </div>
-      ) : (
-        <div className="cot-grid">
-          {cotizaciones.map((c) => (
-            <CotizacionCard
-              key={c.id}
-              cotizacion={c}
-              onAgregar={handleAgregar}
-              yaEnCarrito={items.some((item) => item.producto.id === c.producto?.id)}
-            />
-          ))}
+
+        <h1 className="cot-coming__titulo">Cotizaciones</h1>
+        <p className="cot-coming__subtitulo">
+          Esta función se está preparando con mucho cuidado para que puedas solicitar
+          precios y recibir cotizaciones de los productos que necesitas.
+        </p>
+
+        <p className="cot-coming__aviso">
+          <strong>Pronto estará disponible.</strong> Mientras tanto, puedes explorar el
+          catálogo y usar los requerimientos para consultar lo que buscas.
+        </p>
+
+        <div className="cot-coming__acciones">
+          <Link to="/catalogo" className="cot-coming__btn cot-coming__btn--primario">
+            Ir al catálogo
+          </Link>
+          <Link to="/mis-solicitudes/requerimientos" className="cot-coming__btn cot-coming__btn--secundario">
+            Ver requerimientos
+          </Link>
         </div>
-      )}
-    </div>
-  </LayoutPaginaPrincipal>
-)
+      </div>
+    </LayoutPaginaPrincipal>
+  )
 }
 
 export default Cotizaciones
