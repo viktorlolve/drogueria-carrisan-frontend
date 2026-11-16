@@ -337,3 +337,235 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Modal "Volver a solicitar" (mismo patrón que ModalPoliticaDevolucion) */
+.req-modal__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 24, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+  animation: reqModalFadeIn 0.18s ease-out;
+}
+
+@keyframes reqModalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.req-modal {
+  background: #fff;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 64px rgba(20, 24, 42, 0.28);
+  animation: reqModalSlideUp 0.22s ease-out;
+}
+
+@keyframes reqModalSlideUp {
+  from { transform: translateY(24px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.req-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--req-border);
+}
+
+.req-modal__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--req-text);
+}
+
+.req-modal__desc {
+  margin: 6px 0 0;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: var(--req-text-muted);
+}
+
+.req-modal__close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--req-text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+  display: inline-flex;
+}
+
+.req-modal__close:hover {
+  background: #f3f3f0;
+  color: var(--req-text);
+}
+
+.req-modal__body {
+  padding: 16px 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.req-modal__fila {
+  border: 1px solid var(--req-border);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #fafaf8;
+}
+
+.req-modal__fila-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.req-modal__input {
+  border: 1px solid #DCDCDC;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 0.88rem;
+  font-family: inherit;
+  color: var(--req-text);
+  background: #fff;
+  min-width: 0;
+}
+
+.req-modal__input--nombre {
+  flex: 1 1 180px;
+}
+
+.req-modal__input--nota {
+  width: 100%;
+}
+
+.req-modal__stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #DCDCDC;
+  border-radius: 999px;
+  padding: 4px 6px;
+  background: #fff;
+}
+
+.req-modal__step {
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: #f3f4f8;
+  color: var(--req-text);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.req-modal__step:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.req-modal__qty {
+  min-width: 24px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.req-modal__quitar {
+  background: none;
+  border: none;
+  color: var(--req-text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  display: inline-flex;
+}
+
+.req-modal__quitar:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.req-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px 18px;
+  border-top: 1px solid var(--req-border);
+}
+
+.req-modal__btn-sec,
+.req-modal__btn-pri {
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.req-modal__btn-sec {
+  background: #fff;
+  border: 1px solid #DCDCDC;
+  color: var(--req-text);
+}
+
+.req-modal__btn-pri {
+  background: var(--req-brand);
+  border: none;
+  color: #fff;
+}
+
+.req-modal__btn-pri:disabled,
+.req-modal__btn-sec:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 767px) {
+  .req-modal__overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .req-modal {
+    max-width: 100%;
+    border-radius: 18px 18px 0 0;
+    max-height: 92vh;
+    animation: reqModalSheetUp 0.22s ease-out;
+  }
+
+  @keyframes reqModalSheetUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .req-modal__footer {
+    flex-direction: column-reverse;
+  }
+
+  .req-modal__btn-sec,
+  .req-modal__btn-pri {
+    width: 100%;
+  }
+}

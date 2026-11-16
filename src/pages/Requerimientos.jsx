@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useSearchParams } from 'react-router-dom'
 import api from '../api/axios'
 import { useCart } from '../context/CartContext'
 import LayoutPaginaPrincipal from '../components/paginas-principales/Layoutpaginaprincipal'
 import { NAV_UNIFICADO } from '../components/paginas-principales/NavUnificado'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Minus, X } from 'lucide-react'
 import './Requerimientos.css'
 
 // Un requerimiento respondido con precio queda vigente 48 horas (mismo plazo
@@ -196,7 +197,7 @@ function RequerimientoCard({ requerimiento, onAgregar, onRepetir, yaEnCarrito })
                   <span className="req-item__precio">${formatUSD(item.productos.precio_usd)}</span>
                 </div>
                 {vencido ? (
-                  <span className="req-item__badge req-item__badge--vencido">Precio vencido</span>
+                  <span className="req-item__badge req-item__badge--vencido">Vencido</span>
                 ) : (
                   <button
                     className="req-item__btn"
@@ -225,14 +226,175 @@ function RequerimientoCard({ requerimiento, onAgregar, onRepetir, yaEnCarrito })
   )
 }
 
+function filasDesdeRequerimiento(requerimiento) {
+  return (requerimiento.requerimiento_items || []).map((item) => {
+    const formaLab = [item.productos?.forma, item.productos?.laboratorio].filter(Boolean).join(' · ')
+    return {
+      nombre_solicitado: item.productos?.nombre_comercial || item.nombre_solicitado || '',
+      cantidad: item.cantidad || 1,
+      nota_usuario: formaLab || '',
+    }
+  })
+}
+
+function ModalRepetirRequerimiento({ requerimiento, onCerrar, onEnviado }) {
+  const [filas, setFilas] = useState(() => {
+    const base = filasDesdeRequerimiento(requerimiento)
+    return base.length > 0 ? base : [filaVacia()]
+  })
+  const [enviando, setEnviando] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    const previo = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const manejarEscape = (e) => {
+      if (e.key === 'Escape') onCerrar()
+    }
+    document.addEventListener('keydown', manejarEscape)
+    return () => {
+      document.body.style.overflow = previo
+      document.removeEventListener('keydown', manejarEscape)
+    }
+  }, [onCerrar])
+
+  function actualizarFila(i, campo, valor) {
+    setFilas((prev) => prev.map((f, idx) => (idx === i ? { ...f, [campo]: valor } : f)))
+  }
+
+  function cambiarCantidad(i, delta) {
+    setFilas((prev) => prev.map((f, idx) => {
+      if (idx !== i) return f
+      const actual = Number(f.cantidad) || 1
+      return { ...f, cantidad: Math.max(1, actual + delta) }
+    }))
+  }
+
+  function quitarFila(i) {
+    setFilas((prev) => prev.filter((_, idx) => idx !== i))
+  }
+
+  async function handleEnviar() {
+    const filasValidas = filas
+      .filter((f) => f.nombre_solicitado.trim())
+      .map((f) => ({
+        nombre_solicitado: f.nombre_solicitado.trim(),
+        cantidad: Math.max(1, Number(f.cantidad) || 1),
+        nota_usuario: f.nota_usuario?.trim() || '',
+      }))
+    if (filasValidas.length === 0) {
+      setError('Agrega al menos un producto con nombre')
+      return
+    }
+    setEnviando(true)
+    setError('')
+    try {
+      await api.post('/requerimientos', { items: filasValidas })
+      onEnviado()
+    } catch (err) {
+      setError(err.response?.data?.error || 'Error al enviar la solicitud')
+    } finally {
+      setEnviando(false)
+    }
+  }
+
+  return createPortal(
+    <div className="req-modal__overlay" onClick={onCerrar} role="presentation">
+      <div
+        className="req-modal"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Volver a solicitar"
+      >
+        <div className="req-modal__header">
+          <div>
+            <h2 className="req-modal__title">Volver a solicitar</h2>
+            <p className="req-modal__desc">
+              Un requerimiento es una solicitud para que te consigamos un producto y te confirmemos su precio y disponibilidad.
+            </p>
+          </div>
+          <button type="button" className="req-modal__close" onClick={onCerrar} aria-label="Cerrar">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="req-modal__body">
+          {filas.map((fila, i) => (
+            <div className="req-modal__fila" key={i}>
+              <div className="req-modal__fila-top">
+                <input
+                  type="text"
+                  className="req-modal__input req-modal__input--nombre"
+                  placeholder="Nombre del producto"
+                  value={fila.nombre_solicitado}
+                  onChange={(e) => actualizarFila(i, 'nombre_solicitado', e.target.value)}
+                />
+                <div className="req-modal__stepper" aria-label="Cantidad">
+                  <button
+                    type="button"
+                    className="req-modal__step"
+                    onClick={() => cambiarCantidad(i, -1)}
+                    disabled={(Number(fila.cantidad) || 1) <= 1}
+                    aria-label="Disminuir cantidad"
+                  >
+                    <Minus size={16} />
+                  </button>
+                  <span className="req-modal__qty">{fila.cantidad || 1}</span>
+                  <button
+                    type="button"
+                    className="req-modal__step"
+                    onClick={() => cambiarCantidad(i, 1)}
+                    aria-label="Aumentar cantidad"
+                  >
+                    <Plus size={16} />
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  className="req-modal__quitar"
+                  onClick={() => quitarFila(i)}
+                  disabled={filas.length === 1}
+                  aria-label="Quitar producto"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+              <input
+                type="text"
+                className="req-modal__input req-modal__input--nota"
+                placeholder="Nota (opcional: forma, laboratorio u otra indicación)"
+                value={fila.nota_usuario}
+                onChange={(e) => actualizarFila(i, 'nota_usuario', e.target.value)}
+              />
+            </div>
+          ))}
+
+          {error && <p className="req-error">{error}</p>}
+        </div>
+
+        <div className="req-modal__footer">
+          <button type="button" className="req-modal__btn-sec" onClick={onCerrar} disabled={enviando}>
+            Cancelar
+          </button>
+          <button type="button" className="req-modal__btn-pri" onClick={handleEnviar} disabled={enviando}>
+            {enviando ? 'Enviando...' : 'Enviar solicitud'}
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  )
+}
+
 function Requerimientos() {
   const [requerimientos, setRequerimientos] = useState([])
   const [cargando, setCargando] = useState(true)
   const [searchParams] = useSearchParams()
   const productoInicial = searchParams.get('producto') || null
   const [mostrarForm, setMostrarForm] = useState(Boolean(productoInicial))
-  const [prefill, setPrefill] = useState(null)
   const [formKey, setFormKey] = useState(0)
+  const [modalReq, setModalReq] = useState(null)
   const { items, addItem } = useCart()
 
   const cargar = useCallback(async () => {
@@ -253,29 +415,31 @@ function Requerimientos() {
     iniciar()
   }, [cargar])
 
-  function abrirForm(productosParaRepetir = null) {
-    setPrefill(productosParaRepetir)
+  function abrirForm() {
     setFormKey((k) => k + 1)
     setMostrarForm(true)
   }
 
   function cerrarForm() {
     setMostrarForm(false)
-    setPrefill(null)
   }
 
   function handleEnviado() {
     setMostrarForm(false)
-    setPrefill(null)
     cargar()
   }
 
-  function repetirRequerimiento(requerimiento) {
-    const productosParaRepetir = (requerimiento.requerimiento_items || []).map((item) => ({
-      nombre_solicitado: item.productos?.nombre_comercial || item.nombre_solicitado,
-      cantidad: item.cantidad || 1,
-    }))
-    abrirForm(productosParaRepetir.length > 0 ? productosParaRepetir : null)
+  const repetirRequerimiento = useCallback((requerimiento) => {
+    setModalReq(requerimiento)
+  }, [])
+
+  const cerrarModal = useCallback(() => {
+    setModalReq(null)
+  }, [])
+
+  function handleEnviadoModal() {
+    setModalReq(null)
+    cargar()
   }
 
   function yaEnCarrito(productoId) {
@@ -283,7 +447,7 @@ function Requerimientos() {
   }
 
   const botonNueva = (
-    <button type="button" className="req-nueva-btn" onClick={() => abrirForm()}>
+    <button type="button" className="req-nueva-btn" onClick={abrirForm}>
       <Plus size={16} /> Nueva solicitud
     </button>
   )
@@ -315,7 +479,6 @@ function Requerimientos() {
               key={formKey}
               onEnviado={handleEnviado}
               productoInicial={productoInicial}
-              productosIniciales={prefill}
             />
           </div>
         )}
@@ -341,6 +504,14 @@ function Requerimientos() {
           </div>
         )}
       </div>
+
+      {modalReq && (
+        <ModalRepetirRequerimiento
+          requerimiento={modalReq}
+          onCerrar={cerrarModal}
+          onEnviado={handleEnviadoModal}
+        />
+      )}
     </LayoutPaginaPrincipal>
   )
 }
