@@ -10,6 +10,11 @@ import './LaboratoriosCarruselCatalogo.css'
 // la agrega/quita de `activos`). Al final va una tarjeta "Buscar más
 // laboratorios" que abre el acordeón de laboratorios del panel de filtros.
 // El padre ya cargó /products/metadata, así que recibe `laboratorios` como prop.
+//
+// Se muestran como máximo MAX_LABS laboratorios; el resto se alcanza por el
+// acordeón del panel de filtros (la tarjeta "Buscar más laboratorios" lo abre).
+const MAX_LABS = 25
+
 function LaboratoriosCarruselCatalogo({
   laboratorios = [],
   activos = [],
@@ -24,6 +29,8 @@ function LaboratoriosCarruselCatalogo({
 
   if (!laboratorios.length) return null
 
+  const visibles = laboratorios.slice(0, MAX_LABS)
+
   return (
     <section className="lcc" aria-label="Laboratorios del catálogo">
       <button
@@ -36,7 +43,7 @@ function LaboratoriosCarruselCatalogo({
       </button>
 
       <div className="lcc__fila" ref={filaRef}>
-        {laboratorios.map((lab) => {
+        {visibles.map((lab) => {
           const valor = lab.nombre
           const match = logoParaLaboratorio(valor)
           const activo = activos.includes(valor)
