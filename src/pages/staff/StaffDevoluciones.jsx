@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { Loader2, RefreshCw } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import ColaOrdenes, { etiquetaEnvio } from '../../components/staff/ColaOrdenes'
 import { useColaStaff } from '../../hooks/useColaStaff'
-import staffApi from '../../services/staffApi'
+import staffApi from '../../api/staffAxios'
 import './StaffComercial.css'
 
 const RANGOS = [

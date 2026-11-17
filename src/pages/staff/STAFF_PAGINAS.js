@@ -19,6 +19,7 @@ const StaffPedidosPreparar = lazy(() => import('./StaffPedidosPreparar'))
 const StaffPedidosRetiros = lazy(() => import('./StaffPedidosRetiros'))
 const StaffPedidosIncidencias = lazy(() => import('./StaffPedidosIncidencias'))
 const StaffPedidosCompletadas = lazy(() => import('./StaffPedidosCompletadas'))
+const StaffDevoluciones = lazy(() => import('./StaffDevoluciones'))
 const StaffEnvios = lazy(() => import('./StaffEnvios'))
 const StaffDelivery = lazy(() => import('./StaffDelivery'))
 const StaffOrdenes = lazy(() => import('./StaffOrdenes'))
@@ -50,6 +51,7 @@ export const STAFF_PAGINAS = {
   retiros: StaffPedidosRetiros,
   incidencias: StaffPedidosIncidencias,
   completadas: StaffPedidosCompletadas,
+  devoluciones: StaffDevoluciones,
   envios: StaffEnvios,
   delivery: StaffDelivery,
   ordenes: StaffOrdenes,

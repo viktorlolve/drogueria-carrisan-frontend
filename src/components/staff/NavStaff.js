@@ -13,7 +13,7 @@ import {
   Landmark, TrendingUp, Truck, Receipt, Banknote, CalendarX2,
   Inbox, FileText, Megaphone, MapPin, BadgeDollarSign, Users,
   Shield, BarChart3, MessageSquare, Gift, Tag, AlertTriangle,
-  CheckCircle2, Images, Scooter, Building2, ClipboardList, Link
+  CheckCircle2, Images, Scooter, Building2, ClipboardList, Link, Undo2
 } from 'lucide-react'
 
 const ROLES_TODOS = ['vendedor', 'despachador', 'almacenista', 'contabilidad', 'administrador', 'director', 'admin']
@@ -297,6 +297,14 @@ export const MODULOS = {
           texto: 'Órdenes Completadas',
           desc: 'Historial de pedidos entregados y retirados',
           roles: ['almacenista', 'administrador', 'director', 'admin'],
+        },
+        {
+          id: 'devoluciones',
+          to: '/staff/pedidos/devoluciones',
+          icono: Undo2,
+          texto: 'Devoluciones',
+          desc: 'Ajusta items y totales de órdenes entregadas o retiradas (solo admin/director)',
+          roles: ['administrador', 'director', 'admin'],
         },
       ],
     },
