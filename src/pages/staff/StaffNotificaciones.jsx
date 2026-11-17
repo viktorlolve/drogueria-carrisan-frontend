@@ -435,6 +435,9 @@ function PanelPush() {
     desactivar,
   } = usePushStaff()
 
+  const [testResult, setTestResult] = useState('')
+  const [testLoading, setTestLoading] = useState(false)
+
   const activo = soportado && !!suscrito && preferenciaActiva && permiso === 'granted'
 
   let estado = ''
@@ -442,6 +445,19 @@ function PanelPush() {
   else if (permiso === 'denied') estado = 'Las notificaciones están bloqueadas en la configuración del navegador.'
   else if (!suscrito && preferenciaActiva) estado = 'Tu dispositivo todavía no está registrado para recibir avisos.'
   else if (suscrito && !preferenciaActiva) estado = 'El dispositivo está registrado, pero las alertas de staff están desactivadas en el servidor.'
+
+  async function probarPush() {
+    setTestLoading(true)
+    setTestResult('')
+    try {
+      const { data } = await staffApi.get('/staff/push/test')
+      setTestResult(data?.mensaje || 'Push de prueba enviado.')
+    } catch (err) {
+      setTestResult(err?.response?.data?.error || 'No se pudo enviar el push de prueba.')
+    } finally {
+      setTestLoading(false)
+    }
+  }
 
   return (
     <div className="snt-push">
@@ -470,6 +486,22 @@ function PanelPush() {
                 : 'Activar'}
         </span>
       </button>
+      {soportado && (
+        <button
+          type="button"
+          className="snt-push__btn snt-push__btn--test"
+          onClick={probarPush}
+          disabled={testLoading}
+        >
+          <Bell size={14} />
+          <span>{testLoading ? 'Enviando…' : 'Probar push'}</span>
+        </button>
+      )}
+      {testResult && (
+        <p className={`snt-push__resultado ${testResult.startsWith('Error') ? 'snt-push__error' : ''}`}>
+          {testResult}
+        </p>
+      )}
       {error && <p className="snt-push__error">{error}</p>}
     </div>
   )

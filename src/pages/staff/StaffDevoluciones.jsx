@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
-import ColaOrdenes, { etiquetaEnvio } from '../../components/staff/ColaOrdenes'
+import ColaOrdenes, { etiquetaEnvio, formatUSD } from '../../components/staff/ColaOrdenes'
 import { useColaStaff } from '../../hooks/useColaStaff'
 import staffApi from '../../api/staffAxios'
-import './StaffComercial.css'
+import './StaffDevoluciones.css'
 
 const RANGOS = [
   { id: '7', texto: 'Últimos 7 días', dias: 7 },
@@ -32,6 +32,26 @@ export default function StaffDevoluciones() {
   const [guardando, setGuardando] = useState(false)
   const [msg, setMsg] = useState(null)
 
+  // Bloquear el scroll del fondo mientras el modal está abierto, restaurando
+  // el valor previo (no '': puede haber otro overlay debajo).
+  useEffect(() => {
+    if (!ordenEditando) return undefined
+    const previo = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = previo }
+  }, [ordenEditando])
+
+  const items = ordenEditando?.ordenes_items || []
+  const cambios = items
+    .filter((it) => (cantidades[it.id] ?? it.cantidad) !== it.cantidad)
+    .map((it) => ({ id: it.id, cantidad: Number(cantidades[it.id] ?? it.cantidad) }))
+  const quitados = items.filter((it) => (cantidades[it.id] ?? it.cantidad) === 0)
+  // Misma fórmula del backend: items no anulados + costo de envío, redondeado a 2 decimales.
+  const totalPrevisto = Math.round((items.reduce(
+    (sum, it) => it.anulado ? sum : sum + Number(it.precio_unitario || 0) * (cantidades[it.id] ?? it.cantidad),
+    0,
+  ) + Number(ordenEditando?.costo_envio_usd || 0)) * 100) / 100
+
   function cambiarRango(e) {
     const id = e.target.value
     setRango(id)
@@ -39,47 +59,47 @@ export default function StaffDevoluciones() {
   }
 
   function abrirEditor(orden) {
-    setOrdenEditando(orden)
     const map = {}
-    ;(orden.ordenes_items || []).forEach(it => { map[it.id] = it.cantidad })
+    ;(orden.ordenes_items || []).forEach((it) => { map[it.id] = it.cantidad })
+    setOrdenEditando(orden)
     setCantidades(map)
     setMsg(null)
   }
 
-  function cerrarEditor() {
+  // forzar = cierre tras guardar con éxito (no debe preguntar "cambios sin guardar").
+  function cerrarEditor(forzar = false) {
+    if (!forzar && cambios.length > 0 &&
+        !window.confirm('Hay cambios sin guardar. ¿Cerrar de todos modos?')) return
     setOrdenEditando(null)
     setCantidades({})
     setMsg(null)
   }
 
+  function cambiarCantidad(it, valor) {
+    const n = parseInt(valor, 10)
+    const nueva = Number.isFinite(n) ? Math.min(Math.max(n, 0), it.cantidad) : 0
+    setCantidades((prev) => ({ ...prev, [it.id]: nueva }))
+  }
+
   async function guardarDevolucion() {
     if (!ordenEditando) return
-    const cambios = []
-    ;(ordenEditando.ordenes_items || []).forEach(it => {
-      const nueva = Number(cantidades[it.id])
-      if (!Number.isFinite(nueva) || nueva < 0) return
-      if (nueva !== it.cantidad) cambios.push({ id: it.id, cantidad: nueva })
-    })
     if (cambios.length === 0) {
       setMsg({ tipo: 'error', texto: 'No hay cambios para guardar.' })
       return
     }
-    // Validar que no aumenten y que al menos quede 1 item
-    const itemsRestantes = (ordenEditando.ordenes_items || []).map(it => {
-      const nueva = cambios.find(c => c.id === it.id)?.cantidad ?? it.cantidad
-      return nueva
-    }).filter(q => q > 0)
-    if (itemsRestantes.length === 0) {
-      setMsg({ tipo: 'error', texto: 'La orden debe tener al menos un item.' })
+    const conItems = items.filter((it) => (cantidades[it.id] ?? it.cantidad) > 0)
+    if (conItems.length === 0) {
+      setMsg({ tipo: 'error', texto: 'La orden debe tener al menos un item. Quita solo parte de los items.' })
       return
     }
+    if (!window.confirm('¿Aplicar la devolución? El total del pedido se ajustará y el cliente lo verá corregido.')) return
+
     setGuardando(true)
     setMsg(null)
     try {
       await staffApi.patch(`/staff/logistica/${ordenEditando.id}/devolucion`, { items: cambios })
-      setMsg({ tipo: 'ok', texto: 'Devolución aplicada. El cliente verá el total corregido.' })
       await recargar()
-      setTimeout(() => cerrarEditor(), 1200)
+      cerrarEditor(true)
     } catch (err) {
       setMsg({ tipo: 'error', texto: err.response?.data?.error || 'No se pudo guardar.' })
     } finally {
@@ -89,9 +109,12 @@ export default function StaffDevoluciones() {
 
   return (
     <LayoutDepartamento departamento="logistica" activo="devoluciones" titulo="Devoluciones">
-      <div className="sp-header">
-        <p className="sp-meta">Órdenes entregadas/retiradas. Ajusta cantidades o elimina items (no se pueden agregar). Solo admin/director.</p>
-        <select className="sp-select--rango" value={rango} onChange={cambiarRango} aria-label="Período">
+      <div className="sd-header">
+        <p className="sd-header__texto">
+          Órdenes entregadas o retiradas. Ajusta cantidades o quita items (no se pueden agregar
+          productos ni aumentar cantidades). Solo administrador, director o admin.
+        </p>
+        <select className="sd-select" value={rango} onChange={cambiarRango} aria-label="Período">
           {RANGOS.map((r) => (
             <option key={r.id} value={r.id}>{r.texto}</option>
           ))}
@@ -99,39 +122,109 @@ export default function StaffDevoluciones() {
       </div>
 
       {ordenEditando && (
-        <div className="sc-modal-overlay" onClick={cerrarEditor}>
-          <div className="sc-modal" onClick={e => e.stopPropagation()}>
-            <h3>Devolución — Orden #{ordenEditando.id}</h3>
-            <p className="sc-modal-sub">Cliente: {ordenEditando.users?.nombre || '—'} · Estado: {ordenEditando.estado}</p>
-            <div className="sc-modal-body">
-              {(ordenEditando.ordenes_items || []).map(it => (
-                <div key={it.id} className="sc-fila-item" style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
-                  <span style={{ flex: 1 }}>{it.productos?.nombre_comercial || `Producto #${it.producto_id}`}</span>
-                  <span style={{ color: '#666' }}>cant. original: {it.cantidad}</span>
-                  <input
-                    type="number"
-                    min={0}
-                    max={it.cantidad}
-                    value={cantidades[it.id] ?? it.cantidad}
-                    onChange={e => setCantidades(prev => ({ ...prev, [it.id]: parseInt(e.target.value, 10) || 0 }))}
-                    style={{ width: 70 }}
-                  />
-                  <button
-                    type="button"
-                    className="sc-btn sc-btn--ghost"
-                    onClick={() => setCantidades(prev => ({ ...prev, [it.id]: 0 }))}
-                    title="Quitar item"
-                  >
-                    Quitar
-                  </button>
-                </div>
-              ))}
+        <div className="sd-overlay" onClick={() => cerrarEditor()}>
+          <div
+            className="sd-modal"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Devolución de la orden ${ordenEditando.id}`}
+          >
+            <div className="sd-modal__head">
+              <div>
+                <h3>Devolución — Orden #{ordenEditando.id}</h3>
+                <p className="sd-modal__sub">
+                  Cliente: {ordenEditando.users?.nombre || '—'} · Estado: {ordenEditando.estado}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="sd-cerrar"
+                onClick={() => cerrarEditor()}
+                disabled={guardando}
+                aria-label="Cerrar"
+              >
+                ×
+              </button>
             </div>
-            {msg && <p className={`sc-msg sc-msg--${msg.tipo}`}>{msg.texto}</p>}
-            <div className="sc-modal-actions">
-              <button type="button" className="sc-btn sc-btn--ghost" onClick={cerrarEditor} disabled={guardando}>Cancelar</button>
-              <button type="button" className="sc-btn sc-btn--primary" onClick={guardarDevolucion} disabled={guardando}>
-                {guardando ? <Loader2 size={16} className="spin" /> : 'Guardar devolución'}
+
+            <div className="sd-modal__body">
+              <p className="sd-ayuda">
+                Modifica la cantidad entregada de cada item. Poner 0 lo quita del pedido.
+              </p>
+
+              <div className="sd-items">
+                {items.map((it) => {
+                  const nueva = cantidades[it.id] ?? it.cantidad
+                  return (
+                    <div key={it.id} className={`sd-item ${nueva === 0 ? 'sd-item--quitado' : ''}`}>
+                      <div className="sd-item__nombre">
+                        {it.productos?.nombre_comercial || `Producto #${it.producto_id}`}
+                        {it.anulado && <span className="sd-chip">anulado</span>}
+                        {nueva === 0 && <span className="sd-chip sd-chip--quitado">Quitado</span>}
+                        <small>{formatUSD(it.precio_unitario)} c/u · original {it.cantidad}</small>
+                      </div>
+                      <input
+                        className="sd-item__input"
+                        type="number"
+                        min={0}
+                        max={it.cantidad}
+                        value={nueva}
+                        disabled={guardando}
+                        onChange={(e) => cambiarCantidad(it, e.target.value)}
+                        aria-label={`Cantidad de ${it.productos?.nombre_comercial || it.id}`}
+                      />
+                      <button
+                        type="button"
+                        className="sd-btn sd-btn--ghost"
+                        disabled={guardando}
+                        onClick={() => setCantidades((prev) => ({ ...prev, [it.id]: nueva === 0 ? it.cantidad : 0 }))}
+                      >
+                        {nueva === 0 ? 'Restaurar' : 'Quitar'}
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {quitados.length > 0 && (
+                <div className="sd-quitados">
+                  <h4>Quitados ({quitados.length})</h4>
+                  <ul>
+                    {quitados.map((it) => (
+                      <li key={it.id}>
+                        {it.productos?.nombre_comercial || `Producto #${it.producto_id}`}
+                        <span>{it.cantidad} × {formatUSD(it.precio_unitario)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className="sd-preview">
+                <div className="sd-preview__caja">
+                  <span>Total actual</span>
+                  <strong>{formatUSD(ordenEditando.total_usd)}</strong>
+                </div>
+                <div className="sd-preview__caja sd-preview__caja--nuevo">
+                  <span>Total previsto</span>
+                  <strong>{formatUSD(totalPrevisto)}</strong>
+                </div>
+                <div className="sd-preview__caja">
+                  <span>Diferencia</span>
+                  <strong>{formatUSD(totalPrevisto - Number(ordenEditando.total_usd || 0))}</strong>
+                </div>
+              </div>
+
+              {msg && <p className={`sd-msg sd-msg--${msg.tipo}`}>{msg.texto}</p>}
+            </div>
+
+            <div className="sd-modal__foot">
+              <button type="button" className="sd-btn sd-btn--ghost" onClick={() => cerrarEditor()} disabled={guardando}>
+                Cancelar
+              </button>
+              <button type="button" className="sd-btn sd-btn--primary" onClick={guardarDevolucion} disabled={guardando}>
+                {guardando ? <Loader2 size={16} className="sd-spin" /> : 'Confirmar devolución'}
               </button>
             </div>
           </div>
@@ -145,8 +238,8 @@ export default function StaffDevoluciones() {
         onReintentar={recargar}
         vacio={`Sin órdenes completadas en los últimos ${dias} días.`}
         badge={(orden) => <span className="sp-badge sp-badge--entregado">{etiquetaEnvio(orden)}</span>}
-        acciones={(orden) => (
-          <button type="button" className="sc-btn sc-btn--sm" onClick={() => abrirEditor(orden)}>
+        renderAcciones={(orden) => (
+          <button type="button" className="sd-btn sd-btn--sm" onClick={() => abrirEditor(orden)}>
             Ajustar items
           </button>
         )}
