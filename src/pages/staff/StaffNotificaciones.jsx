@@ -441,6 +441,7 @@ function PanelPush() {
   if (!soportado) estado = 'Tu navegador no soporta notificaciones push.'
   else if (permiso === 'denied') estado = 'Las notificaciones están bloqueadas en la configuración del navegador.'
   else if (!suscrito && preferenciaActiva) estado = 'Tu dispositivo todavía no está registrado para recibir avisos.'
+  else if (suscrito && !preferenciaActiva) estado = 'El dispositivo está registrado, pero las alertas de staff están desactivadas en el servidor.'
 
   return (
     <div className="snt-push">

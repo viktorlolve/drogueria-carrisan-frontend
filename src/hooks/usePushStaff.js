@@ -141,6 +141,15 @@ export function usePushStaff() {
           return
         }
         if (claveDeSuscripcionCoincide(sub)) {
+          // Asegurar que el endpoint del navegador esté vinculado al staff actual.
+          // El backend hace upsert por endpoint y solo escribe staff_id, así que
+          // esto es seguro incluso si el cliente ya se suscribió antes en este
+          // dispositivo (ambas columnas pueden convivir en la misma fila).
+          try {
+            await staffApi.post('/staff/push/subscribe', sub.toJSON())
+          } catch {
+            // No bloquea el montaje si falla la asociación.
+          }
           if (!cancelado) setSuscrito(true)
           return
         }
