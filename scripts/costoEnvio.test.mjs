@@ -14,9 +14,15 @@ import {
 
 // Lo que devuelve GET /delivery-tarifas/activas (ciudad asc).
 const TARIFAS = [
-  { ciudad: 'Guacara', costo: 8 },
-  { ciudad: 'Naguanagua', costo: 5 },
-  { ciudad: 'Valencia', costo: 3 },
+  { ciudad: 'Valencia Norte', costo: 1.99 },
+  { ciudad: 'Valencia Centro', costo: 2.99 },
+  { ciudad: 'Valencia Sur', costo: 2.99 },
+  { ciudad: 'Naguanagua', costo: 2.99 },
+  { ciudad: 'San Diego', costo: 4.99 },
+  { ciudad: 'Guacara', costo: 7.99 },
+  { ciudad: 'Los Guayos', costo: 4.99 },
+  { ciudad: 'Flor Amarillo', costo: 5.99 },
+  { ciudad: 'Tocuyito', costo: 7.99 },
 ]
 
 test('usa la tarifa exacta de la ciudad', () => {
