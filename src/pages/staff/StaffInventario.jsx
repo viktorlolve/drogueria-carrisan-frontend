@@ -1072,7 +1072,7 @@ function StaffInventario() {
               className="si-btn si-btn--filtros"
               onClick={() => setFiltrosAbiertos(true)}
             >
-              Filtros{filtrosActivos > 0 ? ` (${filtrosActivos})` : ''}
+              Buscar producto{filtrosActivos > 0 ? ` (${filtrosActivos})` : ''}
             </button>
           </div>
         ) : (
