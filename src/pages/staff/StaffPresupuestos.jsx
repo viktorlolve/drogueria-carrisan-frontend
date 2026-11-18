@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { Download, RotateCcw } from 'lucide-react'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import { ModalCrearPresupuesto } from '../../components/staff/StaffComercialModals'
@@ -72,188 +73,118 @@ function ModalPresupuestoDetalle({ presupuesto, onClose, onRecotizar, onGenerarP
     }
   }
 
-  const estiloCabecera = {
-    display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
-    gap: 16, marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid #e5e7eb',
-  }
-  const estiloNumero = {
-    display: 'flex', flexDirection: 'column', gap: 4,
-  }
-  const estiloMeta = { textAlign: 'right', display: 'flex', flexDirection: 'column', gap: 6 }
-  const estiloCliente = {
-    display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px',
-    background: '#f8fafc', borderRadius: 8, border: '1px solid #e5e7eb', marginBottom: 16,
-  }
-  const estiloAvatar = {
-    width: 36, height: 36, borderRadius: '50%', background: '#e2e8f0',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontWeight: 700, fontSize: 18, color: '#475569', flexShrink: 0,
-  }
-  const estiloDivider = { border: 0, borderTop: '1px solid #e5e7eb', margin: '16px 0' }
-  const estiloTabla = { border: '1px solid #e5e7eb', borderRadius: 8, overflow: 'hidden' }
-  const estiloFilaCabecera = {
-    display: 'grid', gridTemplateColumns: '1fr 60px 110px 110px',
-    padding: '8px 12px', background: '#f1f5f9', fontSize: '0.8rem', fontWeight: 700,
-    color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em',
-  }
-  const estiloFila = {
-    display: 'grid', gridTemplateColumns: '1fr 60px 110px 110px',
-    padding: '10px 12px', borderBottom: '1px solid #f1f5f9', fontSize: '0.95rem',
-    alignItems: 'center',
-  }
-  const estiloFilaSinPrecio = { color: '#94a3b8', fontStyle: 'italic' }
-  const estiloVacio = { padding: '20px 12px', textAlign: 'center', color: '#94a3b8' }
-  const estiloTotal = {
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    padding: '14px 18px', background: '#f8fafc', border: '1px solid #e5e7eb',
-    borderRadius: 8, marginTop: 8,
-  }
-  const estiloAcciones = {
-    display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20,
-    paddingTop: 16, borderTop: '1px solid #e5e7eb',
-  }
-  const estiloBtnBase = {
-    padding: '8px 16px', borderRadius: 6, fontSize: '0.9rem', fontWeight: 600,
-    cursor: 'pointer', border: '1px solid transparent', transition: 'all 0.2s',
-  }
-  const estiloBtnOutline = { ...estiloBtnBase, background: '#fff', color: '#475569', borderColor: '#cbd5e1' }
-  const estiloBtnPrimary = { ...estiloBtnBase, background: '#0052DC', color: '#fff' }
-  const estiloBtnPdf = { ...estiloBtnPrimary, background: '#0052DC' }
-  const estiloBtnDeshabilitado = { ...estiloBtnPdf, opacity: 0.55, cursor: 'not-allowed' }
-
   return (
     <StaffModal
       titulo={`Presupuesto #${presupuesto.numero || presupuesto.id}`}
       ancho="lg"
       onCerrar={onClose}
     >
-      <div style={{ padding: 0 }}>
-        {error && (
-          <p style={{ color: '#dc2626', margin: '0 0 12px 0', fontSize: '0.9rem' }}>{error}</p>
-        )}
-        {cargando ? (
-          <StaffEstado tipo="cargando" filas={3} />
-        ) : (
-          <>
-            <div style={estiloCabecera}>
-              <div style={estiloNumero}>
-                <span style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  Presupuesto N.º
-                </span>
-                <span style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0f172a' }}>
-                  {presupuesto.numero || presupuesto.id}
-                </span>
-              </div>
-              <div style={estiloMeta}>
-                <span
-                  style={{
-                    display: 'inline-block', padding: '2px 10px', borderRadius: 20, fontSize: '0.8rem',
-                    fontWeight: 700,
-                    background: presupuesto.estado === 'vigente' ? '#dcfce7' : '#f1f5f9',
-                    color: presupuesto.estado === 'vigente' ? '#15803d' : '#64748b',
-                  }}
-                >
-                  {presupuesto.estado}
-                </span>
-                <p style={{ margin: 0, fontSize: '0.9rem', color: '#475569' }}>
-                  <strong>Emitido:</strong> {formatFecha(presupuesto.fecha_creacion)}
-                </p>
-                {presupuesto.fecha_expiracion && (
-                  <p style={{ margin: 0, fontSize: '0.9rem', color: '#475569' }}>
-                    <strong>Válido hasta:</strong> {formatFecha(presupuesto.fecha_expiracion)}
-                  </p>
-                )}
-              </div>
+      {error && <p className="spd-error">{error}</p>}
+
+      {cargando ? (
+        <StaffEstado tipo="cargando" filas={3} />
+      ) : (
+        <>
+          <div className="spd-cabecera">
+            <div className="spd-numero">
+              <span className="spd-numero-label">Presupuesto N.º</span>
+              <span className="spd-numero-valor">{presupuesto.numero || presupuesto.id}</span>
             </div>
-
-            {presupuesto.usuario && (
-              <div style={estiloCliente}>
-                <div style={estiloAvatar}>
-                  {(presupuesto.usuario.nombre || '?').trim().charAt(0).toUpperCase()}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <strong style={{ fontSize: '1rem', color: '#0f172a' }}>{presupuesto.usuario.nombre}</strong>
-                  <span style={{ fontSize: '0.85rem', color: '#64748b' }}>{presupuesto.usuario.email}</span>
-                </div>
-              </div>
-            )}
-
-            <hr style={estiloDivider} />
-
-            <div style={estiloTabla}>
-              <div style={estiloFilaCabecera}>
-                <span>Producto</span>
-                <span style={{ textAlign: 'center' }}>Cant.</span>
-                <span style={{ textAlign: 'right' }}>P. unitario</span>
-                <span style={{ textAlign: 'right' }}>Subtotal</span>
-              </div>
-              {disponibles.map((item, i) => (
-                <div key={i} style={estiloFila}>
-                  <span
-                    style={{ color: '#0f172a', fontWeight: 500 }}
-                    title={item.nombre_comercial}
-                  >
-                    {item.nombre_comercial} × {item.cantidad}
-                  </span>
-                  <span style={{ textAlign: 'center', color: '#475569' }}>{item.cantidad}</span>
-                  <span style={{ textAlign: 'right', color: '#475569' }}>{`$${formatUSD(item.precio_unitario)}`}</span>
-                  <span style={{ textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>{`$${formatUSD(item.subtotal)}`}</span>
-                </div>
-              ))}
-              {sinPrecio.map((item, i) => (
-                <div key={`sin-${i}`} style={{ ...estiloFila, ...estiloFilaSinPrecio }}>
-                  <span>{item.nombre_comercial} × {item.cantidad}</span>
-                  <span style={{ textAlign: 'center' }}>—</span>
-                  <span style={{ textAlign: 'right' }}>Sin precio</span>
-                  <span style={{ textAlign: 'right' }}>Fuera del total</span>
-                </div>
-              ))}
-              {items.length === 0 && <div style={estiloVacio}>Sin productos.</div>}
-            </div>
-
-            {sinPrecio.length > 0 && (
-              <p style={{ margin: '8px 0 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>
-                Los productos sin precio no se incluyen en el total.
-              </p>
-            )}
-
-            <div style={estiloTotal}>
-              <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 600 }}>
-                Total del presupuesto
+            <div className="spd-meta">
+              <span className={`spd-badge ${presupuesto.estado === 'vigente' ? 'spd-badge--vigente' : ''}`}>
+                {presupuesto.estado}
               </span>
-              <span style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0052DC' }}>
-                {formatearUSD(total)}
+              <p><strong>Emitido:</strong> {formatFecha(presupuesto.fecha_creacion)}</p>
+              {presupuesto.fecha_expiracion && (
+                <p><strong>Válido hasta:</strong> {formatFecha(presupuesto.fecha_expiracion)}</p>
+              )}
+            </div>
+          </div>
+
+          {presupuesto.usuario && (
+            <div className="spd-cliente">
+              <span className="spd-cliente-avatar">
+                {(presupuesto.usuario.nombre || '?').trim().charAt(0).toUpperCase()}
+              </span>
+              <span className="spd-cliente-info">
+                <strong>{presupuesto.usuario.nombre}</strong>
+                <span>{presupuesto.usuario.email}</span>
               </span>
             </div>
+          )}
 
-            <p style={{ margin: '8px 0 0 0', fontSize: '0.85rem', color: '#64748b' }}>
-              Suma de {disponibles.length} línea{disponibles.length === 1 ? '' : 's'} con precio.
-            </p>
-          </>
-        )}
-      </div>
+          <hr className="spd-divisor" />
 
-      <div style={estiloAcciones}>
+          <div className="spd-tabla">
+            <div className="spd-fila spd-fila--cabecera">
+              <span>Producto</span>
+              <span className="spd-col-cant">Cant.</span>
+              <span className="spd-col-precio">P. unitario</span>
+              <span className="spd-col-subtotal">Subtotal</span>
+            </div>
+            {disponibles.map((item, i) => (
+              <div key={i} className="spd-fila">
+                <span className="spd-fila-nombre" title={item.nombre_comercial}>
+                  {item.nombre_comercial}
+                  <span className="spd-fila-nombre-cant">× {item.cantidad}</span>
+                </span>
+                <span className="spd-col-cant spd-fila-dato">{item.cantidad}</span>
+                <span className="spd-col-precio spd-fila-dato">${formatUSD(item.precio_unitario)}</span>
+                <span className="spd-col-subtotal spd-fila-subtotal">${formatUSD(item.subtotal)}</span>
+              </div>
+            ))}
+            {sinPrecio.map((item, i) => (
+              <div key={`sin-${i}`} className="spd-fila spd-fila--sinprecio">
+                <span className="spd-fila-nombre">
+                  {item.nombre_comercial}
+                  <span className="spd-fila-nombre-cant">× {item.cantidad}</span>
+                </span>
+                <span className="spd-col-cant spd-fila-dato">—</span>
+                <span className="spd-col-precio spd-fila-dato">Sin precio</span>
+                <span className="spd-col-subtotal spd-fila-dato">Fuera del total</span>
+              </div>
+            ))}
+            {items.length === 0 && <div className="spd-vacio">Sin productos.</div>}
+          </div>
+
+          {sinPrecio.length > 0 && (
+            <p className="spd-nota">Los productos sin precio no se incluyen en el total.</p>
+          )}
+
+          <div className="spd-total">
+            <span>Total del presupuesto</span>
+            <span>{formatearUSD(total)}</span>
+          </div>
+
+          <p className="spd-nota">
+            Suma de {disponibles.length} línea{disponibles.length === 1 ? '' : 's'} con precio.
+          </p>
+        </>
+      )}
+
+      <div className="spd-acciones">
         <button
+          type="button"
           className="spd-btn spd-btn--outline"
-          style={estiloBtnOutline}
           onClick={() => { onClose(); onRecotizar(presupuesto.id) }}
         >
+          <RotateCcw size={15} />
           Recotizar
         </button>
         <button
+          type="button"
           className="spd-btn spd-btn--primary"
-          style={estiloBtnPrimary}
           onClick={() => { onClose(); onGenerarPedido(presupuesto.id) }}
         >
           Generar pedido
         </button>
         <button
-          className={`spd-btn spd-btn--pdf ${!detalle || pdfCargando ? 'spd-btn--deshabilitado' : ''}`}
-          style={detalle && !pdfCargando ? estiloBtnPdf : estiloBtnDeshabilitado}
+          type="button"
+          className="spd-btn spd-btn--pdf"
           onClick={handleGenerarPdf}
           disabled={!detalle || pdfCargando}
         >
+          <Download size={15} />
           {pdfCargando ? 'Generando PDF…' : 'Generar PDF'}
         </button>
       </div>

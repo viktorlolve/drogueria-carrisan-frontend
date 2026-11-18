@@ -1,0 +1,362 @@
+/* ============================================================
+   Modal "Crear presupuesto" (prefijo pcp-). Vive dentro de
+   StaffModal (portal a document.body), así que usa los tokens
+   --stf-* definidos en :root; no depende de LayoutDepartamento
+   (este modal se abre tanto desde /staff/presupuestos como desde la
+   ficha de cliente, dos páginas con layouts distintos).
+   ============================================================ */
+
+.pcp-raiz {
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--stf-indigo, #1A1A3A);
+}
+.pcp-raiz *, .pcp-raiz *::before, .pcp-raiz *::after { box-sizing: border-box; }
+
+.pcp-paso {
+  margin-bottom: 4px;
+}
+.pcp-paso-label {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--stf-apagado, #5B6178);
+}
+
+.pcp-buscador {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1.5px solid var(--stf-borde, #E6E8F0);
+  border-radius: 12px;
+  padding: 0 12px;
+  background: #F9FAFC;
+  color: #9CA3AF;
+  transition: border-color 0.15s ease;
+}
+.pcp-buscador:focus-within {
+  border-color: var(--stf-azul, #0052DC);
+  background: #fff;
+}
+.pcp-buscador input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  padding: 11px 0;
+  font-size: 15px;
+  color: var(--stf-indigo, #1A1A3A);
+  outline: none;
+  font-family: inherit;
+}
+
+.pcp-aviso {
+  color: #9ca3af;
+  font-size: 13px;
+  margin: 8px 0 0;
+}
+
+.pcp-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  padding: 22px 12px 16px;
+  color: #9ca3af;
+  font-size: 13px;
+}
+.pcp-vacio svg { opacity: 0.55; }
+.pcp-vacio p { margin: 0; }
+
+.pcp-lista {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.pcp-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: #F9FAFC;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.pcp-item:hover {
+  border-color: var(--stf-azul, #0052DC);
+  background: var(--stf-azul-suave, #EAF1FF);
+}
+
+.pcp-item-flecha { flex-shrink: 0; color: #c3c8d4; }
+
+.pcp-avatar {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--stf-azul, #0052DC);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pcp-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.pcp-item-nombre {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--stf-indigo, #1A1A3A);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pcp-item-sub {
+  font-size: 12px;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pcp-item-precio {
+  flex-shrink: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--stf-azul-fuerte, #0043B3);
+}
+.pcp-item-agregar {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--stf-azul-suave, #EAF1FF);
+  color: var(--stf-azul-fuerte, #0043B3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Chip de cliente ya elegido */
+.pcp-cliente-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  background: var(--stf-azul-suave, #EAF1FF);
+  border: 1px solid rgba(0, 82, 220, 0.18);
+  border-radius: 12px;
+}
+.pcp-cliente-chip-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 12.5px;
+}
+.pcp-cliente-chip-info strong {
+  font-size: 13.5px;
+  color: var(--stf-indigo, #1A1A3A);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pcp-cliente-chip-info span {
+  color: #5B6178;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pcp-link-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--stf-azul-fuerte, #0043B3);
+  font-weight: 700;
+  font-size: 12.5px;
+  cursor: pointer;
+  padding: 4px;
+}
+.pcp-link-btn:hover { text-decoration: underline; }
+
+/* Productos agregados */
+.pcp-filas {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pcp-fila {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #F9FAFC;
+  border: 1px solid var(--stf-borde, #E6E8F0);
+  border-radius: 12px;
+  padding: 9px 10px;
+}
+.pcp-fila-info { flex: 1; min-width: 0; }
+.pcp-fila-nombre {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--stf-indigo, #1A1A3A);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pcp-fila-precio {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  color: #6b7280;
+}
+
+.pcp-fila-cantidad {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pcp-fila-cantidad button {
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--stf-borde, #E6E8F0);
+  border-radius: 7px;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pcp-fila-cantidad button:hover { border-color: var(--stf-azul, #0052DC); }
+.pcp-fila-cantidad span {
+  min-width: 18px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.pcp-fila-subtotal {
+  flex-shrink: 0;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--stf-indigo, #1A1A3A);
+  min-width: 62px;
+  text-align: right;
+}
+
+.pcp-fila-quitar {
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  color: var(--stf-apagado, #9ca3af);
+  cursor: pointer;
+  display: flex;
+  padding: 3px;
+}
+.pcp-fila-quitar:hover { color: var(--stf-error, #B3261E); }
+
+.pcp-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+  padding: 12px 14px;
+  background: var(--stf-azul-suave, #EAF1FF);
+  border-radius: 12px;
+}
+.pcp-total span:first-child {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--stf-azul-fuerte, #0043B3);
+}
+.pcp-total span:last-child {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--stf-azul-fuerte, #0043B3);
+}
+
+.pcp-error {
+  color: var(--stf-error, #B3261E);
+  font-size: 13px;
+  font-weight: 600;
+  margin: 14px 0 0;
+}
+
+.pcp-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--stf-borde, #E6E8F0);
+}
+
+.pcp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+.pcp-btn--outline {
+  border: 1.5px solid var(--stf-borde, #E6E8F0);
+  background: white;
+  color: #374151;
+}
+.pcp-btn--outline:hover:not(:disabled) { background: #f8fafc; }
+.pcp-btn--primario {
+  border: none;
+  background: var(--stf-azul, #0052DC);
+  color: white;
+}
+.pcp-btn--primario:hover:not(:disabled) { background: var(--stf-azul-fuerte, #0043B3); }
+.pcp-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+@media (max-width: 640px) {
+  /* La fila de un producto agregado pasa de 1 línea apretada a 2 — nombre
+     arriba a todo el ancho, cantidad/subtotal/quitar abajo — porque con
+     4 elementos fijos en una sola fila apenas quedaba espacio para el
+     nombre en un celular angosto. */
+  .pcp-fila {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+  .pcp-fila-info { flex-basis: 100%; }
+
+  /* Botones +/- más grandes para el dedo. */
+  .pcp-fila-cantidad button { width: 32px; height: 32px; }
+
+  /* Footer (Cancelar / Crear) apilado a todo el ancho: con el monto en el
+     botón ("Crear · USD 1,234.56") los dos lado a lado no entraban. */
+  .pcp-footer { flex-direction: column-reverse; }
+  .pcp-btn { width: 100%; justify-content: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pcp-buscador, .pcp-item, .pcp-fila-cantidad button, .pcp-btn { transition: none; }
+}

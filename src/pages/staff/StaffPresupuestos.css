@@ -6,3 +6,268 @@
   flex-wrap: wrap;
   margin-bottom: 4px;
 }
+
+/* ============================================================
+   Modal de detalle del presupuesto (ModalPresupuestoDetalle,
+   prefijo spd-). Vive dentro de StaffModal (portal), usa los
+   tokens --stf-* globales.
+   ============================================================ */
+.spd-error {
+  color: var(--stf-error, #dc2626);
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.spd-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--stf-borde, #e5e7eb);
+}
+
+.spd-numero {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.spd-numero-label {
+  font-size: 0.85rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.spd-numero-valor {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--stf-indigo, #0f172a);
+}
+
+.spd-meta {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.spd-meta p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.spd-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #64748b;
+}
+.spd-badge--vigente {
+  background: var(--stf-teal-suave, #dcfce7);
+  color: var(--stf-exito, #15803d);
+}
+
+.spd-cliente {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid var(--stf-borde, #e5e7eb);
+  margin-bottom: 16px;
+}
+.spd-cliente-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  color: #475569;
+  flex-shrink: 0;
+}
+.spd-cliente-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.spd-cliente-info strong {
+  font-size: 1rem;
+  color: var(--stf-indigo, #0f172a);
+}
+.spd-cliente-info span {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.spd-divisor {
+  border: 0;
+  border-top: 1px solid var(--stf-borde, #e5e7eb);
+  margin: 16px 0;
+}
+
+.spd-tabla {
+  border: 1px solid var(--stf-borde, #e5e7eb);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Grid de 4 columnas en desktop/tablet. En móvil angosto (ver abajo) pasa
+   a 2 líneas: antes era un grid fijo sin ningún @media, así que un nombre
+   de producto largo quedaba truncado a pocas letras en un celular. */
+.spd-fila {
+  display: grid;
+  grid-template-columns: 1fr 60px 110px 110px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.95rem;
+  align-items: center;
+  column-gap: 8px;
+}
+.spd-fila:last-child { border-bottom: none; }
+
+.spd-fila--cabecera {
+  background: #f1f5f9;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 8px 12px;
+}
+
+.spd-fila--sinprecio {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.spd-fila-nombre {
+  color: var(--stf-indigo, #0f172a);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.spd-fila-nombre-cant {
+  display: none;
+}
+
+.spd-col-cant { text-align: center; }
+.spd-col-precio, .spd-col-subtotal { text-align: right; }
+.spd-fila-dato { color: #475569; }
+.spd-fila-subtotal { font-weight: 700; color: var(--stf-indigo, #0f172a); }
+
+.spd-vacio {
+  padding: 20px 12px;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.spd-nota {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.spd-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background: #f8fafc;
+  border: 1px solid var(--stf-borde, #e5e7eb);
+  border-radius: 8px;
+  margin-top: 8px;
+}
+.spd-total span:first-child {
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 600;
+}
+.spd-total span:last-child {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--stf-azul, #0052DC);
+}
+
+.spd-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--stf-borde, #e5e7eb);
+}
+
+.spd-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  font-family: inherit;
+}
+.spd-btn--outline {
+  background: #fff;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+.spd-btn--outline:hover { background: #f8fafc; }
+.spd-btn--primary, .spd-btn--pdf {
+  background: var(--stf-azul, #0052DC);
+  color: #fff;
+}
+.spd-btn--primary:hover, .spd-btn--pdf:hover:not(:disabled) {
+  background: var(--stf-azul-fuerte, #0043B3);
+}
+.spd-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* Móvil angosto: el grid de 4 columnas fijas no deja espacio para el
+   nombre del producto, así que pasa a 2 líneas — nombre arriba a todo el
+   ancho (con "× cantidad" al lado, ya que la columna Cant. se oculta),
+   precio unitario y subtotal abajo. La cabecera de columnas se oculta
+   porque ya no hay columnas que titular. */
+@media (max-width: 560px) {
+  .spd-fila {
+    grid-template-columns: 1fr auto;
+    row-gap: 2px;
+  }
+  .spd-fila--cabecera { display: none; }
+
+  .spd-fila-nombre {
+    grid-column: 1 / -1;
+    white-space: normal;
+  }
+  .spd-fila-nombre-cant {
+    display: inline;
+    color: #94a3b8;
+    font-weight: 400;
+  }
+
+  .spd-col-cant { display: none; }
+  .spd-col-precio {
+    grid-column: 1;
+    text-align: left;
+    font-size: 0.82rem;
+  }
+  .spd-col-subtotal { grid-column: 2; }
+
+  .spd-acciones { flex-direction: column-reverse; }
+  .spd-btn { width: 100%; justify-content: center; }
+}

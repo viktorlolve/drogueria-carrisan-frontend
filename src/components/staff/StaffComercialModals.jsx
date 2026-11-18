@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Search, Plus, Minus, X } from 'lucide-react'
+import { Search, Plus, Minus, X, CheckCircle2, ChevronRight } from 'lucide-react'
 import staffApi from '../../api/staffAxios'
 import StaffModal from './StaffModal'
 import { Pill, Package, Banknote, ClipboardList } from 'lucide-react'
+import './StaffComercialModals.css'
+import { formatearUSD } from '../../utils/formato'
 
 function formatUSD(v) {
   return Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -370,6 +372,10 @@ export function ModalCrearPresupuesto({ clienteId, onClose, onCreado }) {
   const [query, setQuery] = useState('')
   const [resultados, setResultados] = useState([])
   const [buscando, setBuscando] = useState(false)
+  // { producto_id, nombre, precio_usd, cantidad } — precio_usd es el que
+  // devuelve /staff/productos al momento de agregar (el backend vuelve a
+  // tomar el precio vigente al crear el presupuesto; esto es solo para que
+  // el vendedor vea cuánto va quedando mientras arma la lista).
   const [filas, setFilas] = useState([])
   const [creando, setCreando] = useState(false)
   const [error, setError] = useState('')
@@ -402,6 +408,7 @@ export function ModalCrearPresupuesto({ clienteId, onClose, onCreado }) {
 
   const clientesVisibles = clienteId || queryCliente.trim().length < 2 ? [] : resultadosClientes
   const productosVisibles = query.trim().length < 1 ? [] : resultados
+  const total = filas.reduce((acc, f) => acc + Number(f.precio_usd || 0) * f.cantidad, 0)
 
   function seleccionarCliente(c) {
     setCliente(c)
@@ -413,7 +420,7 @@ export function ModalCrearPresupuesto({ clienteId, onClose, onCreado }) {
     setFilas((prev) => {
       const ex = prev.find((f) => f.producto_id === p.id)
       if (ex) return prev.map((f) => f.producto_id === p.id ? { ...f, cantidad: f.cantidad + 1 } : f)
-      return [...prev, { producto_id: p.id, nombre: p.nombre_comercial, cantidad: 1 }]
+      return [...prev, { producto_id: p.id, nombre: p.nombre_comercial, precio_usd: p.precio_usd, cantidad: 1 }]
     })
     setQuery('')
     setResultados([])
@@ -442,81 +449,139 @@ export function ModalCrearPresupuesto({ clienteId, onClose, onCreado }) {
   }
 
   return (
-    <StaffModal titulo={`Crear presupuesto`} ancho="md" onCerrar={onClose}>
-
-      {!cliente && (
-        <>
-          <div className="sc-modal-buscador">
-            <Search size={16} />
-            <input type="text" placeholder="Buscar cliente (nombre, email, RIF)..." value={queryCliente} onChange={(e) => setQueryCliente(e.target.value)} autoFocus />
-          </div>
-          {buscandoClientes && <p style={{ fontSize: '0.85rem', color: '#6b7280' }}>Buscando...</p>}
-          <div>
-            {clientesVisibles.slice(0, 6).map((c) => (
-              <div key={c.id} className="sc-modal-item">
-                <div className="sc-modal-item-info">
-                  <div className="sc-modal-item-nombre">{c.nombre}</div>
-                  <div className="sc-modal-item-lab">{c.email} · {c.rif_cedula || ''}</div>
-                </div>
-                <button className="sc-modal-item-add" onClick={() => seleccionarCliente(c)}>Elegir</button>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {cliente && (
-        <>
-          <div className="sc-modal-item" style={{ marginBottom: 8, cursor: 'default' }}>
-            <div className="sc-modal-item-info">
-              <div className="sc-modal-item-nombre">{cliente.nombre || `Cliente #${cliente.id}`}</div>
-              {cliente.email && <div className="sc-modal-item-lab">{cliente.email}</div>}
+    <StaffModal titulo="Crear presupuesto" ancho="md" onCerrar={onClose} bloqueado={creando}>
+      <div className="pcp-raiz">
+        {!cliente ? (
+          <div className="pcp-paso">
+            <p className="pcp-paso-label">1 · Cliente</p>
+            <div className="pcp-buscador">
+              <Search size={16} />
+              <input
+                type="text"
+                placeholder="Buscar cliente (nombre, email, RIF)..."
+                value={queryCliente}
+                onChange={(e) => setQueryCliente(e.target.value)}
+                autoFocus
+              />
             </div>
-            {!clienteId && (
-              <button className="sc-modal-item-add" onClick={() => setCliente(null)}>Cambiar</button>
+            {buscandoClientes && <p className="pcp-aviso">Buscando...</p>}
+            {!buscandoClientes && queryCliente.trim().length >= 2 && clientesVisibles.length === 0 && (
+              <p className="pcp-aviso">Sin clientes que coincidan</p>
+            )}
+            {clientesVisibles.length > 0 && (
+              <div className="pcp-lista">
+                {clientesVisibles.slice(0, 6).map((c) => (
+                  <button key={c.id} type="button" className="pcp-item" onClick={() => seleccionarCliente(c)}>
+                    <span className="pcp-avatar">{(c.nombre?.trim()?.[0] || 'C').toUpperCase()}</span>
+                    <span className="pcp-item-info">
+                      <span className="pcp-item-nombre">{c.nombre || 'Sin nombre'}</span>
+                      <span className="pcp-item-sub">{c.email}{c.rif_cedula ? ` · ${c.rif_cedula}` : ''}</span>
+                    </span>
+                    <ChevronRight size={15} className="pcp-item-flecha" />
+                  </button>
+                ))}
+              </div>
             )}
           </div>
-          <div className="sc-modal-buscador">
-            <Search size={16} />
-            <input type="text" placeholder="Buscar producto..." value={query} onChange={(e) => setQuery(e.target.value)} autoFocus />
-          </div>
-          {buscando && <p style={{ fontSize: '0.85rem', color: '#6b7280' }}>Buscando...</p>}
-          {productosVisibles.map((p) => (
-            <div key={p.id} className="sc-modal-item">
-              <div className="sc-modal-item-info">
-                <div className="sc-modal-item-nombre">{p.nombre_comercial}</div>
-                <div className="sc-modal-item-lab">{p.laboratorio || ''}</div>
-              </div>
-              <button className="sc-modal-item-add" onClick={() => agregarProducto(p)}>
-                <Plus size={14} /> Agregar
-              </button>
+        ) : (
+          <>
+            <div className="pcp-cliente-chip">
+              <span className="pcp-avatar">{(cliente.nombre?.trim()?.[0] || 'C').toUpperCase()}</span>
+              <span className="pcp-cliente-chip-info">
+                <strong>{cliente.nombre || `Cliente #${cliente.id}`}</strong>
+                {cliente.email && <span>{cliente.email}</span>}
+              </span>
+              {!clienteId && (
+                <button type="button" className="pcp-link-btn" onClick={() => setCliente(null)}>Cambiar</button>
+              )}
             </div>
-          ))}
-          {filas.length > 0 && (
-            <div className="sc-modal-filas">
-              {filas.map((f) => (
-                <div key={f.producto_id} className="sc-modal-fila">
-                  <span className="sc-modal-fila-nombre">{f.nombre}</span>
-                  <div className="sc-modal-fila-cantidad">
-                    <button onClick={() => cambiarCantidad(f.producto_id, -1)}><Minus size={12} /></button>
-                    <span>{f.cantidad}</span>
-                    <button onClick={() => cambiarCantidad(f.producto_id, 1)}><Plus size={12} /></button>
-                  </div>
-                  <button onClick={() => setFilas((prev) => prev.filter((x) => x.producto_id !== f.producto_id))}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af' }}><X size={14} /></button>
-                </div>
-              ))}
-            </div>
-          )}
-        </>
-      )}
 
-      {error && <p className="sc-modal-error">{error}</p>}
-      <div className="sc-modal-footer">
-        <button className="sc-btn sc-btn--outline" onClick={onClose}>Cancelar</button>
-        <button className="sc-btn sc-btn--primary" onClick={crear} disabled={creando || !cliente || filas.length === 0}>
-          {creando ? 'Creando...' : `Crear (${filas.length} items)`}
-        </button>
+            <div className="pcp-paso">
+              <p className="pcp-paso-label">2 · Productos</p>
+              <div className="pcp-buscador">
+                <Search size={16} />
+                <input
+                  type="text"
+                  placeholder="Buscar producto..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              {buscando && <p className="pcp-aviso">Buscando...</p>}
+
+              {productosVisibles.length > 0 && (
+                <div className="pcp-lista">
+                  {productosVisibles.map((p) => (
+                    <button key={p.id} type="button" className="pcp-item" onClick={() => agregarProducto(p)}>
+                      <span className="pcp-item-info">
+                        <span className="pcp-item-nombre">{p.nombre_comercial}</span>
+                        <span className="pcp-item-sub">{p.laboratorio || ''}</span>
+                      </span>
+                      <span className="pcp-item-precio">${formatUSD(p.precio_usd)}</span>
+                      <span className="pcp-item-agregar"><Plus size={14} /></span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {filas.length === 0 ? (
+                <div className="pcp-vacio">
+                  <ClipboardList size={24} />
+                  <p>Busca productos para armar el presupuesto</p>
+                </div>
+              ) : (
+                <div className="pcp-filas">
+                  {filas.map((f) => (
+                    <div key={f.producto_id} className="pcp-fila">
+                      <div className="pcp-fila-info">
+                        <p className="pcp-fila-nombre">{f.nombre}</p>
+                        <p className="pcp-fila-precio">${formatUSD(f.precio_usd)} c/u</p>
+                      </div>
+                      <div className="pcp-fila-cantidad">
+                        <button type="button" onClick={() => cambiarCantidad(f.producto_id, -1)} aria-label="Quitar uno"><Minus size={12} /></button>
+                        <span>{f.cantidad}</span>
+                        <button type="button" onClick={() => cambiarCantidad(f.producto_id, 1)} aria-label="Agregar uno"><Plus size={12} /></button>
+                      </div>
+                      <span className="pcp-fila-subtotal">${formatUSD(f.precio_usd * f.cantidad)}</span>
+                      <button
+                        type="button"
+                        className="pcp-fila-quitar"
+                        onClick={() => setFilas((prev) => prev.filter((x) => x.producto_id !== f.producto_id))}
+                        aria-label="Quitar producto"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+
+                  <div className="pcp-total">
+                    <span>Total del presupuesto</span>
+                    <span>{formatearUSD(total)}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {error && <p className="pcp-error">{error}</p>}
+
+        <div className="pcp-footer">
+          <button type="button" className="pcp-btn pcp-btn--outline" onClick={onClose} disabled={creando}>Cancelar</button>
+          <button type="button" className="pcp-btn pcp-btn--primario" onClick={crear} disabled={creando || !cliente || filas.length === 0}>
+            {creando ? (
+              'Creando...'
+            ) : filas.length === 0 ? (
+              'Crear presupuesto'
+            ) : (
+              <>
+                <CheckCircle2 size={15} />
+                Crear · {formatearUSD(total)}
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </StaffModal>
   )
