@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { Search, Check } from 'lucide-react'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import './StaffEnlazarProductos.css'
@@ -12,17 +14,32 @@ const PROVEEDORES = [
 ]
 
 export default function StaffEnlazarProductos() {
-  const [provSel, setProvSel] = useState('cobeca')
+  const [searchParams] = useSearchParams()
+  // Si se llega desde "Proveedores" (?proveedor=cobeca), arranca ya con ese
+  // proveedor elegido en vez del primero de la lista.
+  const proveedorInicial = searchParams.get('proveedor')
+  const [provSel, setProvSel] = useState(
+    PROVEEDORES.some((p) => p.id === proveedorInicial) ? proveedorInicial : 'cobeca'
+  )
   const [buscar, setBuscar] = useState('')
   const [filas, setFilas] = useState([])
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState('')
-  // Resultado de búsqueda de productos del catálogo por fila: { [filaIdx]: [{ id, nombre_comercial, laboratorio, sku }] }
+  // Texto escrito en el buscador de CADA fila: { [filaIdx]: 'texto' }
+  const [queryPorFila, setQueryPorFila] = useState({})
+  // Resultado de búsqueda de productos del catálogo por fila:
+  // { [filaIdx]: undefined (sin buscar aún) | null (buscando) | [] (sin resultados) | [{ id, nombre_comercial, laboratorio, sku }] }
   const [resultadosBusqueda, setResultadosBusqueda] = useState({})
   // Producto elegido por fila: { [filaIdx]: { id, nombre_comercial } }
   const [elegido, setElegido] = useState({})
   // Filas en proceso de enlace (para deshabilitar botón)
   const [enlazando, setEnlazando] = useState({})
+
+  // Un timer de debounce por fila, para no pegarle al backend en cada tecla.
+  const timersRef = useRef({})
+  useEffect(() => () => {
+    Object.values(timersRef.current).forEach(clearTimeout)
+  }, [])
 
   const cargar = useCallback(() => {
     setCargando(true)
@@ -34,6 +51,7 @@ export default function StaffEnlazarProductos() {
         setFilas(r.data.filas || [])
         setElegido({})
         setResultadosBusqueda({})
+        setQueryPorFila({})
       })
       .catch(e => setError(e.response?.data?.mensaje || 'Error al cargar sin enlazar'))
       .finally(() => setCargando(false))
@@ -48,23 +66,43 @@ export default function StaffEnlazarProductos() {
     return () => { activo = false }
   }, [cargar])
 
-  function buscarProductos(idx, fila) {
-    const term = (fila.descripcion || '').trim()
-    if (!term) return
-    setResultadosBusqueda({ ...resultadosBusqueda, [idx]: null }) // cargando
-    staffApi.get('/staff/precios/productos', {
-      params: { search: term, limit: 10 },
-    })
-      .then(r => {
-        const data = r.data?.productos || r.data || []
-        setResultadosBusqueda({ ...resultadosBusqueda, [idx]: data })
-      })
-      .catch(() => setResultadosBusqueda({ ...resultadosBusqueda, [idx]: [] }))
+  function buscarProductos(idx, term) {
+    if (timersRef.current[idx]) clearTimeout(timersRef.current[idx])
+
+    const limpio = (term || '').trim()
+    if (!limpio) {
+      setResultadosBusqueda((prev) => ({ ...prev, [idx]: undefined }))
+      return
+    }
+
+    timersRef.current[idx] = setTimeout(() => {
+      setResultadosBusqueda((prev) => ({ ...prev, [idx]: null })) // cargando
+      staffApi.get('/staff/precios/productos', { params: { search: limpio, limit: 10 } })
+        .then(r => {
+          const data = r.data?.productos || r.data || []
+          setResultadosBusqueda((prev) => ({ ...prev, [idx]: data }))
+        })
+        .catch(() => setResultadosBusqueda((prev) => ({ ...prev, [idx]: [] })))
+    }, 280)
+  }
+
+  function onCambiarQuery(idx, valor) {
+    setQueryPorFila((prev) => ({ ...prev, [idx]: valor }))
+    buscarProductos(idx, valor)
   }
 
   function seleccionarProducto(idx, producto) {
-    setElegido({ ...elegido, [idx]: producto })
-    setResultadosBusqueda({ ...resultadosBusqueda, [idx]: [] })
+    setElegido((prev) => ({ ...prev, [idx]: producto }))
+    setResultadosBusqueda((prev) => ({ ...prev, [idx]: undefined }))
+    setQueryPorFila((prev) => ({ ...prev, [idx]: '' }))
+  }
+
+  function cambiarEleccion(idx) {
+    setElegido((prev) => {
+      const siguiente = { ...prev }
+      delete siguiente[idx]
+      return siguiente
+    })
   }
 
   async function enlazar(idx, fila) {
@@ -83,6 +121,7 @@ export default function StaffEnlazarProductos() {
       setFilas(filas.filter((_, i) => i !== idx))
       setElegido(Object.fromEntries(Object.entries(elegido).filter(([k]) => Number(k) !== idx)))
       setResultadosBusqueda(Object.fromEntries(Object.entries(resultadosBusqueda).filter(([k]) => Number(k) !== idx)))
+      setQueryPorFila(Object.fromEntries(Object.entries(queryPorFila).filter(([k]) => Number(k) !== idx)))
     } catch (e) {
       setError(e.response?.data?.mensaje || 'Error al enlazar')
     } finally {
@@ -93,96 +132,113 @@ export default function StaffEnlazarProductos() {
   return (
     <LayoutDepartamento departamento="logistica" activo="enlazar-productos" titulo="Enlazar productos del proveedor">
       <div className="sep-page">
-        <div className="sep-toolbar">
-          <select className="sep-select" value={provSel} onChange={e => { setProvSel(e.target.value); setBuscar('') }}>
-            {PROVEEDORES.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-          </select>
-          <input
-            className="sep-input"
-            placeholder="Buscar descripción…"
-            value={buscar}
-            onChange={e => setBuscar(e.target.value)}
-          />
-          <button className="sep-btn sep-btn--primary" onClick={cargar} disabled={cargando}>
-            {cargando ? 'Cargando…' : 'Buscar'}
-          </button>
-          {error && <span className="sep-error">{error}</span>}
+        <p className="sep-label">Proveedor</p>
+        <div className="sep-chips">
+          {PROVEEDORES.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              className={`sep-chip ${provSel === p.id ? 'sep-chip--activo' : ''}`}
+              onClick={() => { setProvSel(p.id); setBuscar('') }}
+            >
+              {p.nombre}
+            </button>
+          ))}
         </div>
 
+        <div className="sep-toolbar">
+          <div className="sep-buscador-global">
+            <Search size={15} />
+            <input
+              placeholder="Buscar por descripción del Excel..."
+              value={buscar}
+              onChange={e => setBuscar(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') cargar() }}
+            />
+          </div>
+          <button type="button" className="sep-btn-buscar" onClick={cargar} disabled={cargando}>
+            {cargando ? 'Buscando...' : 'Buscar'}
+          </button>
+        </div>
+        {error && <p className="sep-error">{error}</p>}
+
         {cargando ? (
-          <div className="sep-vacio">Cargando filas sin enlazar…</div>
+          <div className="sep-vacio">Cargando filas sin enlazar...</div>
         ) : filas.length === 0 ? (
           <div className="sep-vacio">No hay filas sin enlazar para este proveedor.</div>
         ) : (
-          <table className="sep-table">
-            <thead>
-              <tr>
-                <th>Descripción (Excel)</th>
-                <th>Laboratorio</th>
-                <th>Costo USD</th>
-                <th>Pack</th>
-                <th>Enlazar a producto del catálogo</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filas.map((fila, idx) => {
-                const prod = elegido[idx]
-                const res = resultadosBusqueda[idx]
-                const cargandoRes = res === null
-                return (
-                  <tr key={idx}>
-                    <td className="sep-desc">{fila.descripcion || '-'}</td>
-                    <td>{fila.laboratorio || '-'}</td>
-                    <td>{fila.costo_usd != null ? `$${Number(fila.costo_usd).toFixed(2)}` : '-'}</td>
-                    <td>{fila.pack != null ? fila.pack : '-'}</td>
-                    <td className="sep-accion">
-                      <div className="sep-buscar">
+          <div className="sep-lista">
+            {filas.map((fila, idx) => {
+              const prod = elegido[idx]
+              const res = resultadosBusqueda[idx]
+              const cargandoRes = res === null
+              const sinResultados = Array.isArray(res) && res.length === 0 && (queryPorFila[idx] || '').trim()
+
+              return (
+                <div key={idx} className="sep-card">
+                  <p className="sep-card-desc">{fila.descripcion || 'Sin descripción'}</p>
+                  <div className="sep-card-meta">
+                    {fila.laboratorio && <span>{fila.laboratorio}</span>}
+                    <span>{fila.costo_usd != null ? `$${Number(fila.costo_usd).toFixed(2)}` : 'Sin costo'}</span>
+                    {fila.pack != null && <span>Pack {fila.pack}</span>}
+                  </div>
+
+                  {!prod ? (
+                    <div className="sep-buscador-fila">
+                      <div className="sep-buscador">
+                        <Search size={15} />
                         <input
-                          className="sep-input sep-input--sm"
-                          placeholder="Buscar producto…"
-                          onChange={e => buscarProductos(idx, { ...fila, descripcion: e.target.value })}
+                          placeholder="Buscar producto del catálogo..."
+                          value={queryPorFila[idx] || ''}
+                          onChange={e => onCambiarQuery(idx, e.target.value)}
                         />
-                        {cargandoRes && <span className="sep-badge sep-badge--cargando">Buscando…</span>}
                       </div>
-                      {res && res.length > 0 && (
+
+                      {cargandoRes && <p className="sep-aviso">Buscando...</p>}
+                      {sinResultados && <p className="sep-aviso">Sin productos que coincidan</p>}
+
+                      {Array.isArray(res) && res.length > 0 && (
                         <div className="sep-opciones">
                           {res.map(p => (
                             <button
                               key={p.id}
-                              className={`sep-opcion ${elegido[idx]?.id === p.id ? 'sep-opcion--sel' : ''}`}
+                              type="button"
+                              className="sep-opcion"
                               onClick={() => seleccionarProducto(idx, p)}
                             >
-                              {p.nombre_comercial} {p.sku ? `(${p.sku})` : ''}
+                              <span className="sep-opcion-nombre">{p.nombre_comercial}</span>
+                              {p.sku && <span className="sep-opcion-sku">{p.sku}</span>}
                             </button>
                           ))}
                         </div>
                       )}
-                      {!prod ? (
-                        <button
-                          className="sep-btn sep-btn--xs"
-                          disabled={!fila.descripcion}
-                          onClick={() => buscarProductos(idx, fila)}
-                        >
-                          Buscar producto
-                        </button>
-                      ) : (
-                        <div className="sep-elegido">
-                          <span className="sep-badge sep-badge--ok">Elegido: {prod.nombre_comercial}</span>
-                          <button
-                            className="sep-btn sep-btn--xs sep-btn--primary"
-                            disabled={enlazando[idx]}
-                            onClick={() => enlazar(idx, fila)}
-                          >
-                            {enlazando[idx] ? 'Enlazando…' : 'Enlazar'}
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+                    </div>
+                  ) : (
+                    <div className="sep-elegido">
+                      <span className="sep-badge sep-badge--ok">
+                        <Check size={13} />
+                        {prod.nombre_comercial}
+                      </span>
+                      <button type="button" className="sep-link-btn" onClick={() => cambiarEleccion(idx)}>
+                        Cambiar
+                      </button>
+                    </div>
+                  )}
+
+                  {prod && (
+                    <button
+                      type="button"
+                      className="sep-btn-enlazar"
+                      disabled={enlazando[idx]}
+                      onClick={() => enlazar(idx, fila)}
+                    >
+                      {enlazando[idx] ? 'Enlazando...' : 'Enlazar'}
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+          </div>
         )}
       </div>
     </LayoutDepartamento>

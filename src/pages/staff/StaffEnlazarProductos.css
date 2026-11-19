@@ -1,173 +1,301 @@
-/* StaffEnlazarProductos — módulo Logística > Catálogo > Enlazar productos */
+/* ============================================================
+   Enlazar productos del proveedor (prefijo sep-). Vive dentro de
+   LayoutDepartamento (.ldep-main), departamento "logistica" →
+   hereda --ldep-color/-fuerte/-suave (ámbar) y los tokens --stf-*
+   globales.
+   ============================================================ */
 
 .sep-page {
-  padding: 16px;
+  font-family: 'Figtree', 'Inter', system-ui, sans-serif;
+  color: var(--stf-indigo, #1A1A3A);
+}
+.sep-page *, .sep-page *::before, .sep-page *::after { box-sizing: border-box; }
+
+.sep-label {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--stf-apagado, #5B6178);
 }
 
-.sep-toolbar {
+/* -----------------------------------------------------------------
+   Chips de proveedor
+   ----------------------------------------------------------------- */
+.sep-chips {
   display: flex;
-  gap: 10px;
-  align-items: center;
   flex-wrap: wrap;
+  gap: 8px;
   margin-bottom: 16px;
 }
 
-.sep-select {
-  padding: 8px 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  background: #fff;
-  font-size: 14px;
-  min-width: 170px;
-}
-
-.sep-input {
-  padding: 8px 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 14px;
-  min-width: 220px;
-}
-
-.sep-input--sm {
-  min-width: 160px;
-  padding: 6px 8px;
-}
-
-.sep-btn {
+.sep-chip {
+  border: 1.5px solid var(--stf-borde, #E6E8F0);
+  background: #F9FAFC;
+  border-radius: 999px;
   padding: 8px 14px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.sep-chip:hover { border-color: var(--ldep-color, #D97706); }
+.sep-chip--activo {
+  border-color: var(--ldep-color, #D97706);
+  background: var(--ldep-color-soft, #FFF4E0);
+  color: var(--ldep-color-strong, #B45309);
+}
+
+/* -----------------------------------------------------------------
+   Toolbar: búsqueda global por descripción
+   ----------------------------------------------------------------- */
+.sep-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.sep-buscador-global {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1.5px solid var(--stf-borde, #E6E8F0);
+  border-radius: 12px;
+  padding: 0 12px;
   background: #fff;
+  color: #9CA3AF;
+}
+.sep-buscador-global:focus-within { border-color: var(--ldep-color, #D97706); }
+.sep-buscador-global input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  padding: 11px 0;
+  font-size: 14.5px;
+  color: var(--stf-indigo, #1A1A3A);
+  outline: none;
+  font-family: inherit;
+}
+
+.sep-btn-buscar {
+  flex-shrink: 0;
+  border: none;
+  border-radius: 12px;
+  padding: 0 18px;
+  background: var(--ldep-color, #D97706);
+  color: #fff;
   font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
   cursor: pointer;
 }
-
-.sep-btn--primary {
-  background: #0052DC;
-  color: #fff;
-  border-color: #0052DC;
-}
-
-.sep-btn--xs {
-  padding: 4px 10px;
-  font-size: 13px;
-}
-
-.sep-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+.sep-btn-buscar:hover:not(:disabled) { background: var(--ldep-color-strong, #B45309); }
+.sep-btn-buscar:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .sep-error {
-  color: #b30000;
+  color: var(--stf-error, #B3261E);
   font-size: 13px;
-  margin-left: 8px;
-}
-
-.sep-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #fff;
-}
-
-.sep-table th,
-.sep-table td {
-  border: 1px solid #ddd;
-  padding: 8px 10px;
-  text-align: left;
-  font-size: 14px;
-}
-
-.sep-table th {
-  background: #f5f5f5;
   font-weight: 600;
+  margin: 0 0 14px;
 }
 
-.sep-desc {
-  max-width: 300px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.sep-vacio {
+  padding: 32px 16px;
+  color: #6b7280;
+  font-size: 14px;
+  text-align: center;
+  background: #F9FAFC;
+  border: 1px dashed var(--stf-borde, #E6E8F0);
+  border-radius: 14px;
 }
 
-.sep-accion {
+/* -----------------------------------------------------------------
+   Lista de tarjetas (reemplaza el <table> original)
+   ----------------------------------------------------------------- */
+.sep-lista {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
 }
 
-.sep-buscar {
+.sep-card {
+  background: #fff;
+  border: 1px solid var(--stf-borde, #E6E8F0);
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.sep-card-desc {
+  margin: 0 0 4px;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--stf-indigo, #1A1A3A);
+  line-height: 1.35;
+  /* A propósito SIN truncar: esta descripción del Excel es justo el dato
+     que hay que leer completo para saber a qué producto corresponde. */
+}
+
+.sep-card-meta {
   display: flex;
-  gap: 6px;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin: 0 0 12px;
+  font-size: 12.5px;
+  color: #6b7280;
+}
+.sep-card-meta span:not(:last-child)::after {
+  content: '·';
+  margin-left: 10px;
+  color: #cbd5e1;
+}
+
+/* -----------------------------------------------------------------
+   Buscador de producto por fila
+   ----------------------------------------------------------------- */
+.sep-buscador-fila {
+  position: relative;
+}
+
+.sep-buscador {
+  display: flex;
   align-items: center;
+  gap: 8px;
+  border: 1.5px solid var(--stf-borde, #E6E8F0);
+  border-radius: 10px;
+  padding: 0 11px;
+  background: #F9FAFC;
+  color: #9CA3AF;
+}
+.sep-buscador:focus-within {
+  border-color: var(--ldep-color, #D97706);
+  background: #fff;
+}
+.sep-buscador input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  padding: 10px 0;
+  /* 16px: por debajo de eso iOS hace zoom automático al enfocar el campo. */
+  font-size: 16px;
+  color: var(--stf-indigo, #1A1A3A);
+  outline: none;
+  font-family: inherit;
+}
+
+.sep-aviso {
+  margin: 7px 2px 0;
+  font-size: 12.5px;
+  color: #9ca3af;
 }
 
 .sep-opciones {
   position: absolute;
   z-index: 10;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  width: auto;
+  max-width: 100%;
   background: #fff;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  max-height: 240px;
+  border: 1px solid var(--stf-borde, #E6E8F0);
+  border-radius: 10px;
+  max-height: 220px;
   overflow-y: auto;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  width: 260px;
-  margin-top: 4px;
+  box-shadow: 0 10px 24px -8px rgba(15, 23, 42, 0.25);
 }
 
 .sep-opcion {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
   width: 100%;
   text-align: left;
-  padding: 8px 10px;
+  padding: 9px 11px;
   background: transparent;
   border: none;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #f1f5f9;
   cursor: pointer;
-  font-size: 13px;
-  text-align: left;
+  font-family: inherit;
 }
+.sep-opcion:last-child { border-bottom: none; }
+.sep-opcion:hover { background: var(--ldep-color-soft, #FFF4E0); }
 
-.sep-opcion:last-child {
-  border-bottom: none;
-}
-
-.sep-opcion:hover {
-  background: #f0f7ff;
-}
-
-.sep-opcion--sel {
-  background: #e7f0ff;
+.sep-opcion-nombre {
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
   font-weight: 600;
+  color: var(--stf-indigo, #1A1A3A);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sep-opcion-sku {
+  flex-shrink: 0;
+  font-size: 11.5px;
+  color: #9ca3af;
 }
 
+/* -----------------------------------------------------------------
+   Producto elegido / acción de enlazar
+   ----------------------------------------------------------------- */
 .sep-elegido {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .sep-badge {
-  display: inline-block;
-  padding: 3px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 700;
 }
-
 .sep-badge--ok {
-  background: #e7f7ee;
-  color: #0e8577;
+  background: var(--stf-teal-suave, #E6F6F3);
+  color: var(--stf-teal-fuerte, #0E8577);
 }
 
-.sep-badge--cargando {
-  background: #fff6e6;
-  color: #b45309;
+.sep-link-btn {
+  border: none;
+  background: none;
+  color: var(--ldep-color-strong, #B45309);
+  font-weight: 700;
+  font-size: 12.5px;
+  cursor: pointer;
+  padding: 4px;
 }
+.sep-link-btn:hover { text-decoration: underline; }
 
-.sep-vacio {
-  padding: 24px;
-  color: #666;
-  font-size: 14px;
-  text-align: center;
+.sep-btn-enlazar {
+  width: 100%;
+  margin-top: 10px;
+  background: var(--stf-azul, #0052DC);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 11px;
+  font-size: 13.5px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+.sep-btn-enlazar:hover:not(:disabled) { background: var(--stf-azul-fuerte, #0043B3); }
+.sep-btn-enlazar:disabled { opacity: 0.6; cursor: not-allowed; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sep-chip, .sep-buscador-global, .sep-buscador, .sep-btn-buscar, .sep-btn-enlazar { transition: none; }
 }
