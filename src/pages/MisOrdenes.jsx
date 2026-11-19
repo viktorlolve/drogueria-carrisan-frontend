@@ -14,6 +14,7 @@ import {
   Store,
   CheckCircle,
   XCircle,
+  RefreshCw,
 } from 'lucide-react'
 import LayoutPaginaPrincipal from '../components/paginas-principales/Layoutpaginaprincipal'
 import { OrdenCard, OrdenCardSkeleton } from '../components/OrdenCard'
@@ -59,6 +60,7 @@ const GRUPOS = [
 function MisOrdenes() {
   const [ordenes, setOrdenes] = useState([])
   const [cargando, setCargando] = useState(true)
+  const [actualizando, setActualizando] = useState(false)
   const [error, setError] = useState('')
   const [grupo, setGrupo] = useState('activos')
   const [filtro, setFiltro] = useState('todos')
@@ -80,6 +82,20 @@ function MisOrdenes() {
 
     cargarOrdenes()
   }, [])
+
+  // Refetch manual: recoge los ajustes que el almacén haya hecho desde que se
+  // abrió la página, sin recargar el navegador ni mostrar los skeletons de nuevo.
+  function actualizarOrdenes() {
+    setActualizando(true)
+    api
+      .get('/orders')
+      .then(({ data }) => setOrdenes(data))
+      .catch((err) => {
+        setError('No se pudieron actualizar las órdenes')
+        console.error(err)
+      })
+      .finally(() => setActualizando(false))
+  }
 
   // Cambiar de grupo resetea el filtro — cada tab trae sus propias pills.
   function cambiarGrupo(g) {
@@ -146,6 +162,22 @@ function MisOrdenes() {
           </div>
         ) : (
           <>
+            <div className="mo-actualizar-fila">
+              <button
+                type="button"
+                className="mo-actualizar"
+                onClick={actualizarOrdenes}
+                disabled={actualizando}
+              >
+                <RefreshCw
+                  size={14}
+                  className={actualizando ? 'mo-actualizar__icono--girando' : ''}
+                  aria-hidden="true"
+                />
+                {actualizando ? 'Actualizando...' : 'Actualizar'}
+              </button>
+            </div>
+
             <div className="mo-grupos">
               {GRUPOS.map((g) => {
                 const conteo = ordenes.filter(g.esDeGrupo).length

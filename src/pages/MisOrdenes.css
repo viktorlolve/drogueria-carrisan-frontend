@@ -55,6 +55,48 @@
   white-space: nowrap;
 }
 
+/* --- Refetch manual de la lista --- */
+.mo-actualizar-fila {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.mo-actualizar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--mo-border);
+  border-radius: 8px;
+  background: var(--mo-surface);
+  color: var(--mo-text-muted);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mo-actualizar:hover:not(:disabled) {
+  border-color: var(--mo-brand);
+  color: var(--mo-brand);
+}
+
+.mo-actualizar:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.mo-actualizar__icono--girando {
+  animation: mo-giro 0.9s linear infinite;
+}
+
+@keyframes mo-giro {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* --- Pestañas principales: Activos / Historial --- */
 .mo-grupos {
   display: flex;

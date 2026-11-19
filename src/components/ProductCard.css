@@ -81,8 +81,21 @@
   order: 2;
 }
 
-/* La imagen cubre todo el área con un ligero zoom (no contain) */
+/* Imagen/placeholder: siempre contenido dentro del cuadro (.pcard__media) */
+.pcard__image {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
 
+/* El placeholder (div) debe llenar el cuadro para mostrar fondo e icono centrado */
+.pcard__image.placeholder-icono {
+  width: 100%;
+  height: 100%;
+}
 
 /* Badge de descuento montado sobre la imagen — visible en desktop.
    En mobile se oculta y se usa la pastilla de arriba (.pcard__badge-descuento-pill).

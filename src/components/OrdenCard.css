@@ -140,6 +140,17 @@
   vertical-align: -1px;
 }
 
+/* El almacén ajustó cantidades/anuló agotados al aprobar. */
+.orden-card__ajuste {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #b45309;
+  font-size: 0.68rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 /* --- 3 · dinero -------------------------------------------------- */
 /* Sin margin-top:auto a propósito: el monto va pegado a los hechos y solo la
    banda se empuja al fondo. Así el bloque Facts→Monto se lee como una unidad

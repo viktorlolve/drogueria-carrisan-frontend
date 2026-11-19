@@ -20,8 +20,12 @@ export function OrdenCard({ orden, aviso = null }) {
 
   const fechaCreacion = formatearFechaCorta(orden.created_at)
 
-  // Los ítems anulados no cuentan para la orden.
-  const items = (orden.ordenes_items || []).filter((item) => item.anulado !== true)
+  // Los ítems anulados no cuentan para la orden. El almacén los marca con
+  // anulado=true al aprobar con ajustes: es la huella visible de que el pedido
+  // fue modificado (un cambio puro de cantidad solo se ve en el total).
+  const todosLosItems = orden.ordenes_items || []
+  const items = todosLosItems.filter((item) => item.anulado !== true)
+  const hayAjustes = todosLosItems.some((item) => item.anulado === true)
   const itemsTexto = items.length === 1 ? '1 artículo' : `${items.length} artículos`
 
   const comprador = orden.sub_usuarios?.nombre
@@ -55,6 +59,7 @@ export function OrdenCard({ orden, aviso = null }) {
 
       {/* 2 · hechos */}
       <div className="orden-card__facts">
+        {hayAjustes && <span className="orden-card__ajuste">Ajustada</span>}
         {items.length > 0 && <span>{itemsTexto}</span>}
         {comprador && <span>Realizado por: {comprador}</span>}
       </div>

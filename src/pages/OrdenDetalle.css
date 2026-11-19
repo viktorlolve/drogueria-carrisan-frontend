@@ -267,6 +267,30 @@
   flex-shrink: 0;
 }
 
+/* Los anulados (agotados) se conservan visibles pero tachados, con su nota y
+   $0.00 para que coincidan con el total que recalculó el almacén. */
+.od-item--anulado .od-item__nombre,
+.od-item--anulado .od-item__cantidad,
+.od-item--anulado .od-item__subtotal {
+  text-decoration: line-through;
+  color: #9ca3af;
+}
+
+.od-item__nota {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #b45309;
+  margin: 3px 0 0;
+}
+
+.od-seccion__nota {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #b45309;
+}
+
 /* ---------- Totales ---------- */
 .od-total-final {
   display: flex;

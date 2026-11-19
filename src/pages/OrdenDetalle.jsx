@@ -100,7 +100,8 @@ function OrdenDetalle() {
   async function volverAPedir() {
     if (!orden) return
     setPidiendoDeNuevo(true)
-    const items = orden.ordenes_items || []
+    // Los anulados son agotados: no se pueden volver a pedir.
+    const items = (orden.ordenes_items || []).filter((item) => item.anulado !== true)
     let fallidos = 0
 
     for (const item of items) {
@@ -154,6 +155,7 @@ function OrdenDetalle() {
   const estadoConfig = getEstadoConfig(estadoNormalizado) || { color: '#64748b', bg: '#f1f5f9' }
   const estadoLabel = getLabelEstado(estadoNormalizado, { rol: 'cliente', fulfillmentMethod: fulfillmentDeOrden })
   const items = orden.ordenes_items || []
+  const itemsAnulados = items.filter((item) => item.anulado === true)
   const historial = orden.historial || []
 
   return (
@@ -194,10 +196,18 @@ function OrdenDetalle() {
 
         {/* Productos */}
         <section className="od-seccion">
-          <h2 className="od-seccion__titulo">Productos ({items.length})</h2>
+          <h2 className="od-seccion__titulo">
+            Productos ({items.length - itemsAnulados.length})
+            {itemsAnulados.length > 0 && (
+              <span className="od-seccion__nota"> · {itemsAnulados.length} no disponible(s)</span>
+            )}
+          </h2>
           <div className="od-items">
             {items.map((item, index) => (
-              <div key={item.id || index} className="od-item">
+              <div
+                key={item.id || index}
+                className={`od-item${item.anulado ? ' od-item--anulado' : ''}`}
+              >
                 <div className="od-item__body">
                   <p className="od-item__nombre">
                     {item.productos?.nombre_comercial || item.producto?.nombre_comercial || `Producto #${item.producto_id}`}
@@ -205,8 +215,15 @@ function OrdenDetalle() {
                   <p className="od-item__cantidad">
                     {item.cantidad} × ${formatUSD(item.precio_unitario)}
                   </p>
+                  {item.anulado && (
+                    <p className="od-item__nota">
+                      No disponible{item.nota_anulacion ? `: ${item.nota_anulacion}` : ''}
+                    </p>
+                  )}
                 </div>
-                <p className="od-item__subtotal">${formatUSD(item.cantidad * item.precio_unitario)}</p>
+                <p className="od-item__subtotal">
+                  ${formatUSD(item.anulado ? 0 : item.cantidad * item.precio_unitario)}
+                </p>
               </div>
             ))}
           </div>
