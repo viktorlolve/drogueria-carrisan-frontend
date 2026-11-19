@@ -738,6 +738,38 @@ useEffect(() => {
             </div>
 
             <div className="cfm-sheet__body">
+              {/* Principio activo */}
+              <section className="cfm-seccion">
+                <button
+                  type="button"
+                  className="cfm-seccion__head"
+                  onClick={() => toggleSeccion('molecula')}
+                  aria-expanded={seccionesAbiertas.molecula}
+                >
+                  <span className="cfm-seccion__label">
+                    Principio activo
+                    {moleculaActiva !== '' && <span className="cfm-seccion__contador">1</span>}
+                  </span>
+                  <svg
+                    className={`cfm-seccion__chevron${seccionesAbiertas.molecula ? ' cfm-seccion__chevron--abierto' : ''}`}
+                    width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                  >
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+                {seccionesAbiertas.molecula && (
+                  <div className="cfm-seccion__contenido">
+                    <input
+                      type="text"
+                      placeholder="Ej. Paracetamol, Ibuprofeno..."
+                      value={moleculaInput}
+                      onChange={(e) => setMoleculaInput(e.target.value)}
+                      className="cfm-input"
+                    />
+                  </div>
+                )}
+              </section>
+
               {/* Laboratorio — accesible directo desde arriba */}
               <section className="cfm-seccion">
                 <button
@@ -873,38 +905,6 @@ useEffect(() => {
                     </button>
                   )}
                 </div>
-              </section>
-
-              {/* Principio activo */}
-              <section className="cfm-seccion">
-                <button
-                  type="button"
-                  className="cfm-seccion__head"
-                  onClick={() => toggleSeccion('molecula')}
-                  aria-expanded={seccionesAbiertas.molecula}
-                >
-                  <span className="cfm-seccion__label">
-                    Principio activo
-                    {moleculaActiva !== '' && <span className="cfm-seccion__contador">1</span>}
-                  </span>
-                  <svg
-                    className={`cfm-seccion__chevron${seccionesAbiertas.molecula ? ' cfm-seccion__chevron--abierto' : ''}`}
-                    width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                  >
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                </button>
-                {seccionesAbiertas.molecula && (
-                  <div className="cfm-seccion__contenido">
-                    <input
-                      type="text"
-                      placeholder="Ej. Paracetamol, Ibuprofeno..."
-                      value={moleculaInput}
-                      onChange={(e) => setMoleculaInput(e.target.value)}
-                      className="cfm-input"
-                    />
-                  </div>
-                )}
               </section>
 
               {/* Disponibilidad — switch */}

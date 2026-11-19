@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../api/axios'
 import { iconoParaCategoria } from '../config/categoriasIconos'
@@ -7,6 +7,15 @@ import './ExploraCarrusel.css'
 import './CategoriasCarrusel.css'
 
 const ITEM_TODOS = { id: 'todos', nombre: 'Todo', icono: 'LayoutGrid' }
+
+function shuffle(array) {
+  const copia = array.slice()
+  for (let i = copia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[copia[i], copia[j]] = [copia[j], copia[i]]
+  }
+  return copia
+}
 
 // Carrusel de categorías de la tienda (mismas 16 categorías de categorias_tienda).
 // Dos modos:
@@ -47,7 +56,11 @@ function CategoriasCarrusel({
 
   const esSeleccion = typeof onSeleccionar === 'function'
   const fuente = categorias !== undefined ? categorias : categoriasCargadas
-  const lista = [ITEM_TODOS, ...fuente]
+  // "Todo" se mantiene primero; el resto se baraja en cada carga del carrusel.
+  const lista = useMemo(
+    () => [ITEM_TODOS, ...shuffle(fuente)],
+    [fuente]
+  )
 
   return (
     <section className="explora-carrusel">

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { FlaskConical } from 'lucide-react'
 import api from '../api/axios'
@@ -8,6 +8,15 @@ import './ExploraCarrusel.css'
 import './LaboratoriosCarrusel.css'
 
 const MAX_TILES = 20
+
+function shuffle(array) {
+  const copia = array.slice()
+  for (let i = copia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[copia[i], copia[j]] = [copia[j], copia[i]]
+  }
+  return copia
+}
 
 // Carrusel "Explorá por laboratorio": mismo comportamiento visual que
 // CategoriasCarrusel pero con logos de marca (mapa en laboratoriosLogos.js).
@@ -42,7 +51,12 @@ function LaboratoriosCarrusel({
   }
 
   const fuente = laboratoriosTop !== undefined ? laboratoriosTop : cargados
-  const lista = (fuente || []).slice(0, MAX_TILES)
+  // Muestra aleatoria de laboratorios en cada carga (useMemo evita que bailen
+  // en re-renders intermedios, p. ej. al abrir el drawer o hacer scroll).
+  const lista = useMemo(
+    () => shuffle(fuente || []).slice(0, MAX_TILES),
+    [fuente]
+  )
 
   if (!lista.length) return null
 

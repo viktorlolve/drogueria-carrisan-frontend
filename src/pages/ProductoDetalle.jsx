@@ -59,25 +59,27 @@ function elegirCarruseles(producto, otrosActivos, relacionadosPorMolecula) {
     }
   }
 
-  const mismaLinea = otrosActivos.filter((p) => p.linea && p.linea === producto.linea && !usados.has(p.id))
+  // Todos los carruseles se arman con una muestra aleatoria: barajar antes de
+  // slice evita que siempre aparezcan los mismos 12 primeros de cada grupo.
+  const mismaLinea = barajar(otrosActivos.filter((p) => p.linea && p.linea === producto.linea && !usados.has(p.id)))
   if (mismaLinea.length >= MINIMO_POR_CARRUSEL) {
     mismaLinea.slice(0, 12).forEach((p) => usados.add(p.id))
     pool.push({ titulo: `Mas de ${producto.linea}`, productos: mismaLinea.slice(0, 12) })
   }
 
-  const mismoLaboratorio = otrosActivos.filter((p) => p.laboratorio && p.laboratorio === producto.laboratorio && !usados.has(p.id))
+  const mismoLaboratorio = barajar(otrosActivos.filter((p) => p.laboratorio && p.laboratorio === producto.laboratorio && !usados.has(p.id)))
   if (mismoLaboratorio.length >= MINIMO_POR_CARRUSEL) {
     mismoLaboratorio.slice(0, 12).forEach((p) => usados.add(p.id))
     pool.push({ titulo: `Mas de ${producto.laboratorio}`, productos: mismoLaboratorio.slice(0, 12) })
   }
 
-  const ofertas = otrosActivos.filter((p) => p.descuento_activo && !usados.has(p.id))
+  const ofertas = barajar(otrosActivos.filter((p) => p.descuento_activo && !usados.has(p.id)))
   if (ofertas.length >= MINIMO_POR_CARRUSEL) {
     ofertas.slice(0, 12).forEach((p) => usados.add(p.id))
     pool.push({ titulo: 'Ofertas destacadas', productos: ofertas.slice(0, 12) })
   }
 
-  const restantes = otrosActivos.filter((p) => !usados.has(p.id))
+  const restantes = barajar(otrosActivos.filter((p) => !usados.has(p.id)))
   if (restantes.length >= MINIMO_POR_CARRUSEL * 2) {
     restantes.slice(0, 12).forEach((p) => usados.add(p.id))
     pool.push({ titulo: 'Tambien te puede interesar', productos: restantes.slice(0, 12) })
@@ -85,7 +87,7 @@ function elegirCarruseles(producto, otrosActivos, relacionadosPorMolecula) {
 
   const seccionesPorLinea = agruparPorLinea(otrosActivos.filter((p) => !usados.has(p.id))).map((s) => ({
     titulo: s.titulo,
-    productos: s.productos,
+    productos: barajar(s.productos),
     verTodoTo: s.verTodoTo,
   }))
   pool.push(...seccionesPorLinea)

@@ -18,6 +18,19 @@ function formatVES(valor) {
   return valor.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
+// Muestra al azar de `n` productos (no muta la original) para el carrusel de
+// ofertas: cada carga del carrito debe mostrar ofertas distintas, no siempre
+// las primeras 12.
+function muestraAleatoria(lista, n) {
+  const arr = [...lista]
+  const m = Math.min(n, arr.length)
+  for (let i = arr.length - 1; i >= arr.length - m; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[arr[i], arr[j]] = [arr[j], arr[i]]
+  }
+  return arr.slice(arr.length - m)
+}
+
 function CartLine({ item, tasaVes, onUpdateCantidad, onRemove }) {
   const { producto, cantidad } = item
   const subtotalUsd = producto.precio_usd * cantidad
@@ -585,7 +598,7 @@ function Carrito() {
       .get('/products')
       .then((res) => {
         const activos = res.data.filter((p) => p.activo)
-        setOfertas(activos.filter((p) => p.descuento_activo).slice(0, 12))
+        setOfertas(muestraAleatoria(activos.filter((p) => p.descuento_activo), 12))
         setProductosRecientes(activos.slice(0, 12))
       })
       .catch(() => {})

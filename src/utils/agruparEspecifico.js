@@ -32,7 +32,9 @@ export function agruparEspecifico(productos, maxSecciones = 10, minimoProductos 
     id: `${parametro}-${clave}`,
     titulo: clave,
     verTodoTo: `/catalogo?${parametro}=${encodeURIComponent(clave)}`,
-    productos: items.slice(0, 4),
+    // No solo el orden de las secciones: también los 4 productos de cada una
+    // se eligen al azar para que la columna no muestre siempre los mismos.
+    productos: shuffle(items).slice(0, 4),
   })
 
   const seccionesMol = shuffle(

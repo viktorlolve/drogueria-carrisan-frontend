@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/axios'
 import HeroCarrusel from '../components/HeroCarrusel'
@@ -165,7 +165,14 @@ function Home() {
   const [cargandoMas, setCargandoMas] = useState(false)
   const [seccionesDinamicas, setSeccionesDinamicas] = useState([])
 
-  const productosIniciales = todosProductos.slice(0, PRODUCTOS_POR_CARGA)
+  // "Recomendados para ti" (y el fallback de las secciones promocionales)
+  // muestran una muestra aleatoria del catálogo en cada carga, en vez de
+  // siempre los mismos 12 primeros. useMemo evita que los productos bailen en
+  // cada re-render (por ejemplo al scrollear o abrir un modal).
+  const productosIniciales = useMemo(
+    () => sampleAleatorio(todosProductos, PRODUCTOS_POR_CARGA),
+    [todosProductos]
+  )
   const labSuperior = seccionesLab[0]
   const labInferior = seccionesLab[1]
 
@@ -249,7 +256,7 @@ function Home() {
         const lista = Array.isArray(res.data) ? res.data : (res.data.productos || [])
         const activos = lista.filter((p) => p.activo)
         setTodosProductos(activos)
-        setOfertas(activos.filter((p) => p.descuento_activo).slice(0, 12))
+        setOfertas(sampleAleatorio(activos.filter((p) => p.descuento_activo), 12))
         const rollback1 = agruparEspecifico(activos)
         setSecciones(rollback1)
         const idsRollback1 = new Set(rollback1.flatMap((s) => s.productos.map((p) => p.id)))
@@ -331,9 +338,10 @@ function Home() {
                 : '/catalogo'
       const labPromo = carga.promo?.laboratorio
       const productosPromo = labPromo
-        ? activos
-            .filter((p) => p.laboratorio && p.laboratorio.toUpperCase().includes(labPromo.toUpperCase()))
-            .slice(0, PRODUCTOS_POR_CARGA)
+        ? sampleAleatorio(
+            activos.filter((p) => p.laboratorio && p.laboratorio.toUpperCase().includes(labPromo.toUpperCase())),
+            PRODUCTOS_POR_CARGA
+          )
         : []
       const verTodoPromo = labPromo
         ? `${verTodoCategoria}&laboratorio=${encodeURIComponent(labPromo)}`
