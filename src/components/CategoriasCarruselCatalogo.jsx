@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useMemo } from 'react'
 import { iconoParaCategoria } from '../config/categoriasIconos'
 import { imagenParaCategoria } from '../config/categoriasImagenes'
 import './CategoriasCarruselCatalogo.css'
@@ -8,6 +8,18 @@ import './CategoriasCarruselCatalogo.css'
 // "Ver todo" ni enlace a /catalogo (ya estamos ahí): cada item es un chip que
 // filtra la grilla en vivo y el primer chip ("Todo") deselecciona la categoría.
 // El padre ya cargó /products/metadata, así que recibe `categorias` como prop.
+//
+// El carrusel es promocional: se carga en orden aleatorio siempre (excepto el
+// chip "Todo", que se mantiene primero por ser el filtro por defecto).
+function shuffleArray(array) {
+  const copia = array.slice()
+  for (let i = copia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[copia[i], copia[j]] = [copia[j], copia[i]]
+  }
+  return copia
+}
+
 function CategoriasCarruselCatalogo({ categorias = [], activoId = 'todos', onSeleccionar }) {
   const filaRef = useRef(null)
 
@@ -15,7 +27,13 @@ function CategoriasCarruselCatalogo({ categorias = [], activoId = 'todos', onSel
     filaRef.current?.scrollBy({ left: direccion * 220, behavior: 'smooth' })
   }
 
-  const lista = [{ id: 'todos', nombre: 'Todo', icono: 'LayoutGrid' }, ...categorias]
+  // 'Todo' se mantiene primero; el resto se baraja cada vez que se recarga el
+  // catálogo para que el carrusel promocional cargue aleatoriamente siempre.
+  const lista = useMemo(() => {
+    const base = [{ id: 'todos', nombre: 'Todo', icono: 'LayoutGrid' }, ...categorias]
+    const [primero, ...resto] = base
+    return [primero, ...shuffleArray(resto)]
+  }, [categorias])
 
   return (
     <section className="ccc" aria-label="Categorías del catálogo">
