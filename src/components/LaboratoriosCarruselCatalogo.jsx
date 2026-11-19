@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react'
+import { useRef } from 'react'
 import { FlaskConical, Search } from 'lucide-react'
 import { logoParaLaboratorio, nombreVisible } from '../config/laboratoriosLogos'
 import LogoTile from './LaboratoriosLogoTile'
@@ -14,18 +14,9 @@ import './LaboratoriosCarruselCatalogo.css'
 // Se muestran como máximo MAX_LABS laboratorios; el resto se alcanza por el
 // acordeón del panel de filtros (la tarjeta "Buscar más laboratorios" lo abre).
 //
-// El carrusel se carga en orden aleatorio siempre (excepto la tarjeta "Buscar
-// más laboratorios", que se mantiene al final).
+// El orden sigue el de `laboratorios` recibido (mayor cantidad de productos
+// primero), que es el mismo que se usa en los filtros del catálogo.
 const MAX_LABS = 25
-
-function shuffleArray(array) {
-  const copia = array.slice()
-  for (let i = copia.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[copia[i], copia[j]] = [copia[j], copia[i]]
-  }
-  return copia
-}
 
 function LaboratoriosCarruselCatalogo({
   laboratorios = [],
@@ -39,14 +30,9 @@ function LaboratoriosCarruselCatalogo({
     filaRef.current?.scrollBy({ left: direccion * 260, behavior: 'smooth' })
   }
 
-  // Baraja los laboratorios cada vez que se recarga el catálogo para que el
-  // carrusel cargue aleatoriamente siempre. "Buscar más laboratorios" se
-  // mantiene al final.
-  const mezclados = useMemo(() => shuffleArray(laboratorios), [laboratorios])
+  if (!laboratorios.length) return null
 
-  if (!mezclados.length) return null
-
-  const visibles = mezclados.slice(0, MAX_LABS)
+  const visibles = laboratorios.slice(0, MAX_LABS)
 
   return (
     <section className="lcc" aria-label="Laboratorios del catálogo">
