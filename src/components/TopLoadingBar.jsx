@@ -3,6 +3,12 @@ import { useLocation } from 'react-router-dom'
 import { useLoadingBar } from '../context/LoadingBarContext'
 import './TopLoadingBar.css'
 
+// Breakpoint desktop: igual que StaffNavbar / Navbar (sidebar aparece >=1024px).
+// En desktop el navbar es sticky (no baja al scrollear), así que el loading
+// se ancla justo debajo de él y queda pegado ahí al scrollear.
+// En móvil/tablet (o sin navbar) siempre carga en la parte superior del viewport.
+const DESKTOP_BREAKPOINT = 1024
+
 function TopLoadingBar() {
   const { isLoading, notifyNavigation } = useLoadingBar()
   const [navMounted, setNavMounted] = useState(false)
@@ -17,17 +23,27 @@ function TopLoadingBar() {
   }, [location.pathname, notifyNavigation])
 
   useLayoutEffect(() => {
-    // Desktop = fila principal + barra secundaria; móvil/tablet solo la principal.
-    // La barra SOLO se muestra donde existe el navbar (login, registro y el
-    // módulo staff no tienen navbar → nunca se pinta). Re-medir en cada cambio
-    // de ruta porque el navbar aparece/desaparece y las alturas difieren.
     function medirNavbar() {
-      const main = document.querySelector('.navbar__main')
-      if (!main) {
-        setNavMounted(false)
+      const desktop = window.innerWidth >= DESKTOP_BREAKPOINT
+
+      // Móvil/tablet (o desktop sin navbar): la barra va en la parte
+      // superior del viewport (top: 0), nunca debajo de nada.
+      if (!desktop) {
         setNavHeight(0)
+        setNavMounted(true)
         return
       }
+
+      // Desktop: mide la navbar que exista. Cliente usa .navbar__main +
+      // .navbar__secondary; staff usa .snb (StaffNavbar). Solo una de las
+      // dos existe según la ruta activa.
+      const main = document.querySelector('.navbar__main') || document.querySelector('.snb')
+      if (!main) {
+        setNavHeight(0)
+        setNavMounted(true)
+        return
+      }
+
       const secondary = document.querySelector('.navbar__secondary')
       setNavHeight(main.offsetHeight + (secondary ? secondary.offsetHeight : 0))
       setNavMounted(true)
@@ -40,6 +56,7 @@ function TopLoadingBar() {
     const targets = [
       document.querySelector('.navbar__main'),
       document.querySelector('.navbar__secondary'),
+      document.querySelector('.snb'),
     ].filter(Boolean)
     targets.forEach((el) => observer.observe(el))
 
