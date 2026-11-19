@@ -60,6 +60,9 @@ export const LOGOS_LABORATORIOS = {
   distrilab:        { logo: `${BASE_IMG}/logos/distrilab.jpg`,        nombre: 'DISTRILAB' },
   bioglass:         { logo: `${BASE_IMG}/logos/bioglass.png`,         nombre: 'BIOGLASS' },
   angelus:          { logo: `${BASE_IMG}/logos/angelus.jpg`,          nombre: 'ANGELUS' },
+  'bc group medical':          { logo: `${BASE_IMG}/logos/bcgroup.jpg`,          nombre: 'BC GROUP MEDICAL' },
+  SM:          { logo: `${BASE_IMG}/logos/sm.jpg`,          nombre: 'SM PHARMA' },
+  bioquimica:          { logo: `${BASE_IMG}/logos/bioquimica.jpg`,          nombre: 'BIOQUIMICA' },
 }
 
 // Normaliza un nombre para la búsqueda de tokens (minúsculas + sin acentos).
