@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { X } from 'lucide-react'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import './StaffPendientesInventario.css'
@@ -11,8 +13,24 @@ const TABS = [
   { id: 'precios_viejos', label: 'Precios viejos' },
 ]
 
+// Mismos 5 proveedores que StaffPreciosProveedores.jsx — solo para mostrar
+// el nombre bonito del chip de filtro ("Filtrando: COBECA"), no se llama a
+// esa página desde aquí así que se repite la lista en vez de acoplarlas.
+const NOMBRES_PROVEEDOR = {
+  cobeca: 'COBECA',
+  drovencentro: 'Drovencentro',
+  bioglass: 'BIOGLASS',
+  'bc-group': 'BC GROUP',
+  'med-importados': 'MED IMPORTADOS',
+}
+
 export default function StaffPendientesInventario() {
-  const [tab, setTab] = useState('sin_enlazar')
+  const [searchParams, setSearchParams] = useSearchParams()
+  // Si se llega desde "Proveedores" (p. ej. ?tipo=sin_enlazar&proveedor=cobeca),
+  // arranca ya en esa pestaña y con ese proveedor filtrado.
+  const tipoInicial = searchParams.get('tipo')
+  const [tab, setTab] = useState(TABS.some(t => t.id === tipoInicial) ? tipoInicial : 'sin_enlazar')
+  const [proveedorFiltro, setProveedorFiltro] = useState(searchParams.get('proveedor') || '')
   const [filas, setFilas] = useState([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
@@ -23,7 +41,7 @@ export default function StaffPendientesInventario() {
   function cargar() {
     setCargando(true)
     setError('')
-    staffApi.get('/staff/proveedores/pendientes', { params: { tipo: tab, buscar, pagina } })
+    staffApi.get('/staff/proveedores/pendientes', { params: { tipo: tab, proveedor: proveedorFiltro || undefined, buscar, pagina } })
       .then(r => { setFilas(r.data.filas || []) })
       .catch(e => setError(e.response?.data?.mensaje || 'Error al cargar pendientes'))
       .finally(() => setCargando(false))
@@ -35,13 +53,21 @@ export default function StaffPendientesInventario() {
       if (!activo) return
       setCargando(true)
       setError('')
-      staffApi.get('/staff/proveedores/pendientes', { params: { tipo: tab, buscar, pagina } })
+      staffApi.get('/staff/proveedores/pendientes', { params: { tipo: tab, proveedor: proveedorFiltro || undefined, buscar, pagina } })
         .then(r => { if (activo) { setFilas(r.data.filas || []) } })
         .catch(e => { if (activo) setError(e.response?.data?.mensaje || 'Error al cargar pendientes') })
         .finally(() => { if (activo) setCargando(false) })
     })
     return () => { activo = false }
-  }, [tab, pagina, buscar])
+  }, [tab, proveedorFiltro, pagina, buscar])
+
+  function quitarFiltroProveedor() {
+    setProveedorFiltro('')
+    setPagina(1)
+    const params = new URLSearchParams(searchParams)
+    params.delete('proveedor')
+    setSearchParams(params)
+  }
 
   function buscarAhora(e) {
     e.preventDefault()
@@ -68,6 +94,14 @@ export default function StaffPendientesInventario() {
         <div className="spi-tabs">
           {TABS.map(t => <button key={t.id} className={`spi-tab ${tab === t.id ? 'spi-tab--active' : ''}`} onClick={() => { setTab(t.id); setPagina(1) }}>{t.label}</button>)}
         </div>
+        {proveedorFiltro && (
+          <div className="spi-filtro-proveedor">
+            Filtrando: {NOMBRES_PROVEEDOR[proveedorFiltro] || proveedorFiltro}
+            <button type="button" onClick={quitarFiltroProveedor} aria-label="Quitar filtro de proveedor">
+              <X size={13} />
+            </button>
+          </div>
+        )}
         <form className="spi-toolbar" onSubmit={buscarAhora}>
           <input className="spi-input" value={buscar} onChange={e => setBuscar(e.target.value)} placeholder="Buscar..." />
           <button className="spi-btn">Buscar</button>

@@ -1,7 +1,9 @@
 .spi-page { padding: 16px; }
 .spi-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
 .spi-tab { border: 1px solid #d1d5db; background: #fff; border-radius: 8px; padding: 6px 12px; }
-.spi-tab--active { background: #1B4B8F; color: #fff; border-color: #1B4B8F; }
+.spi-tab--active { background: var(--stf-logistica, #D97706); color: #fff; border-color: var(--stf-logistica, #D97706); }
+.spi-filtro-proveedor { display: inline-flex; align-items: center; gap: 6px; background: var(--stf-logistica-suave, #FFF4E0); color: var(--stf-logistica-fuerte, #B45309); border-radius: 999px; padding: 5px 11px; font-size: 12px; font-weight: 700; margin-bottom: 12px; }
+.spi-filtro-proveedor button { border: none; background: none; color: inherit; cursor: pointer; display: flex; padding: 0; }
 .spi-toolbar { display: flex; gap: 8px; margin-bottom: 12px; }
 .spi-input { border: 1px solid #d1d5db; border-radius: 8px; padding: 6px 10px; }
 .spi-input--sm { padding: 4px 8px; }

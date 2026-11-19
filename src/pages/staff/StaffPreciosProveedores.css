@@ -1,20 +1,374 @@
-.spp-page { padding: 16px; }
-.spp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.spp-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
-.spp-card__titulo { font-weight: 600; margin-bottom: 12px; }
-.spp-fila { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-.spp-select, .spp-file { border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 10px; background: #fff; }
-.spp-file input { display: none; }
-.spp-btn { border: 1px solid #d1d5db; background: #fff; border-radius: 8px; padding: 8px 12px; cursor: pointer; }
-.spp-btn--primary { background: #1B4B8F; color: #fff; border-color: #1B4B8F; }
-.spp-hint { color: #6b7280; font-size: 12px; margin-top: 8px; }
-.spp-error { color: #dc2626; margin-top: 8px; }
-.spp-recibo { margin-top: 12px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; background: #f9fafb; }
-.spp-recibo__titulo { font-weight: 600; margin-bottom: 8px; }
-.spp-recibo__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-.spp-recibo__grid > div { display: flex; flex-direction: column; }
-.spp-recibo__grid span { color: #6b7280; font-size: 12px; }
-.spp-table { width: 100%; border-collapse: collapse; }
-.spp-table th, .spp-table td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; text-align: left; }
-.spp-totales { display: flex; gap: 16px; align-items: center; margin-top: 12px; }
-@media (max-width: 1024px) { .spp-grid { grid-template-columns: 1fr; } .spp-recibo__grid { grid-template-columns: repeat(2, 1fr); } }
+/* ============================================================
+   Actualización de precios por proveedor (prefijo spp-). Vive
+   dentro de LayoutDepartamento (.ldep-main), departamento
+   "logistica" → hereda --ldep-color/-fuerte/-suave (ámbar) y los
+   tokens --stf-* globales.
+   ============================================================ */
+
+.spp-page {
+  font-family: 'Figtree', 'Inter', system-ui, sans-serif;
+  color: var(--stf-indigo, #1A1A3A);
+}
+.spp-page *, .spp-page *::before, .spp-page *::after { box-sizing: border-box; }
+
+.spp-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .spp-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.spp-card {
+  background: #fff;
+  border: 1px solid var(--stf-borde, #E6E8F0);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.spp-card__titulo {
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.spp-label {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--stf-apagado, #5B6178);
+}
+
+/* -----------------------------------------------------------------
+   Chips de proveedor (selector de subida)
+   ----------------------------------------------------------------- */
+.spp-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.spp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1.5px solid var(--stf-borde, #E6E8F0);
+  background: #F9FAFC;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.spp-chip:hover { border-color: var(--ldep-color, #D97706); }
+.spp-chip--activo {
+  border-color: var(--ldep-color, #D97706);
+  background: var(--ldep-color-soft, #FFF4E0);
+  color: var(--ldep-color-strong, #B45309);
+}
+
+.spp-chip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #cbd5e1;
+}
+.spp-chip-dot--reciente { background: var(--stf-teal, #12A594); }
+.spp-chip-dot--media { background: #94a3b8; }
+.spp-chip-dot--vieja, .spp-chip-dot--nunca { background: var(--stf-aviso, #B45309); }
+
+.spp-sel-aviso {
+  margin: 10px 0 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #6b7280;
+}
+.spp-sel-aviso--vieja, .spp-sel-aviso--nunca { color: var(--stf-aviso, #B45309); }
+.spp-sel-aviso--reciente { color: var(--stf-teal-fuerte, #0E8577); }
+
+/* -----------------------------------------------------------------
+   Dropzone de archivo
+   ----------------------------------------------------------------- */
+.spp-dropzone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1.5px dashed var(--stf-borde, #E6E8F0);
+  border-radius: 12px;
+  padding: 16px;
+  background: #F9FAFC;
+  color: #6b7280;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.spp-dropzone:hover { border-color: var(--ldep-color, #D97706); }
+.spp-dropzone--con-archivo {
+  border-style: solid;
+  border-color: var(--stf-teal, #12A594);
+  background: var(--stf-teal-suave, #E6F6F3);
+  color: var(--stf-teal-fuerte, #0E8577);
+}
+.spp-dropzone input { display: none; }
+
+.spp-dropzone-nombre {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spp-dropzone-quitar {
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  color: var(--stf-teal-fuerte, #0E8577);
+  cursor: pointer;
+  display: flex;
+  padding: 2px;
+}
+
+.spp-btn-importar {
+  width: 100%;
+  margin-top: 12px;
+  background: var(--ldep-color, #D97706);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 13px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.spp-btn-importar:hover:not(:disabled) { background: var(--ldep-color-strong, #B45309); }
+.spp-btn-importar:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.spp-hint {
+  color: #6b7280;
+  font-size: 12px;
+  margin: 10px 0 0;
+}
+.spp-error {
+  color: var(--stf-error, #B3261E);
+  font-weight: 600;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+/* -----------------------------------------------------------------
+   Recibo de importación
+   ----------------------------------------------------------------- */
+.spp-recibo {
+  margin-top: 16px;
+  border: 1px solid var(--stf-borde, #E6E8F0);
+  border-radius: 12px;
+  padding: 14px;
+  background: #F9FAFC;
+}
+.spp-recibo__titulo {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--stf-indigo, #1A1A3A);
+}
+.spp-recibo__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+@media (max-width: 480px) {
+  .spp-recibo__grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.spp-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  background: #fff;
+  border: 1px solid var(--stf-borde, #E6E8F0);
+  border-radius: 10px;
+  padding: 9px 10px;
+  font-family: inherit;
+  text-align: left;
+}
+.spp-stat--accion {
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+.spp-stat--accion:hover:not(:disabled) { border-color: var(--stf-aviso, #B45309); }
+.spp-stat--accion:disabled { cursor: default; opacity: 0.6; }
+
+.spp-stat-icono {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2px;
+}
+.spp-stat-icono--neutral { background: #eef1f6; color: #64748b; }
+.spp-stat-icono--ok { background: var(--stf-teal-suave, #E6F6F3); color: var(--stf-teal-fuerte, #0E8577); }
+.spp-stat-icono--aviso { background: var(--stf-aviso-suave, #FFF4E0); color: var(--stf-aviso, #B45309); }
+.spp-stat-icono--error { background: var(--stf-error-suave, #FDECEC); color: var(--stf-error, #B3261E); }
+
+.spp-stat-valor {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--stf-indigo, #1A1A3A);
+}
+.spp-stat-label {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+/* -----------------------------------------------------------------
+   Estado por proveedor (tarjetas — reemplaza el <table> original)
+   ----------------------------------------------------------------- */
+.spp-proveedores {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.spp-prov-card {
+  border: 1px solid var(--stf-borde, #E6E8F0);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #F9FAFC;
+}
+
+.spp-prov-cabecera {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+.spp-prov-nombre {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--stf-indigo, #1A1A3A);
+}
+.spp-prov-frescura {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  white-space: nowrap;
+}
+.spp-prov-frescura--vieja, .spp-prov-frescura--nunca { color: var(--stf-aviso, #B45309); }
+.spp-prov-frescura--reciente { color: var(--stf-teal-fuerte, #0E8577); }
+
+.spp-prov-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.spp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+.spp-badge--ok {
+  background: var(--stf-teal-suave, #E6F6F3);
+  color: var(--stf-teal-fuerte, #0E8577);
+}
+.spp-badge--aviso {
+  background: var(--stf-aviso-suave, #FFF4E0);
+  color: var(--stf-aviso, #B45309);
+}
+.spp-badge--error {
+  background: var(--stf-error-suave, #FDECEC);
+  color: var(--stf-error, #B3261E);
+}
+.spp-badge:hover { filter: brightness(0.96); }
+
+.spp-prov-flecha {
+  margin-left: auto;
+  color: #c3c8d4;
+  flex-shrink: 0;
+}
+
+/* -----------------------------------------------------------------
+   Totales
+   ----------------------------------------------------------------- */
+.spp-totales {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--stf-borde, #E6E8F0);
+}
+
+.spp-total-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.spp-total-chip span {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 600;
+}
+.spp-total-chip strong {
+  font-size: 16px;
+  color: var(--stf-indigo, #1A1A3A);
+}
+
+.spp-btn {
+  margin-left: auto;
+  border: 1.5px solid var(--stf-borde, #E6E8F0);
+  background: #fff;
+  border-radius: 10px;
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+  font-family: inherit;
+  cursor: pointer;
+}
+.spp-btn:hover { background: #f8fafc; }
+
+@media (max-width: 480px) {
+  .spp-totales { flex-direction: column; align-items: stretch; }
+  .spp-btn { margin-left: 0; width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spp-chip, .spp-dropzone, .spp-btn-importar, .spp-stat--accion { transition: none; }
+}

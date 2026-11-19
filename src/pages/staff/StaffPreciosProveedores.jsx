@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import {
+  Upload, FileSpreadsheet, X, CheckCircle2, AlertTriangle,
+  ChevronRight, ArrowUp, ArrowDown, Minus, Ban, Link2Off,
+} from 'lucide-react'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import './StaffPreciosProveedores.css'
@@ -14,14 +18,20 @@ const PROVEEDORES = [
   { id: 'med-importados', nombre: 'MED IMPORTADOS' },
 ]
 
-function formatoFecha(f) {
-  if (!f) return '-'
-  try {
-    const d = new Date(f)
-    return d.toLocaleString()
-  } catch {
-    return f
-  }
+// Frescura de la ÚLTIMA SUBIDA del proveedor (no confundir con "precios
+// viejos", que cuenta líneas de costo individuales con más de 60 días).
+function frescura(dias) {
+  if (dias == null) return 'nunca'
+  if (dias <= 7) return 'reciente'
+  if (dias <= 30) return 'media'
+  return 'vieja'
+}
+
+function textoRelativo(dias) {
+  if (dias == null) return 'Nunca se ha subido'
+  if (dias === 0) return 'Hoy'
+  if (dias === 1) return 'Ayer'
+  return `Hace ${dias} días`
 }
 
 export default function StaffPreciosProveedores() {
@@ -81,67 +91,187 @@ export default function StaffPreciosProveedores() {
     }
   }
 
+  function irAPendientes(tipo, proveedorId) {
+    const params = new URLSearchParams({ tipo })
+    if (proveedorId) params.set('proveedor', proveedorId)
+    navigate(`/staff/pendientes-inventario?${params.toString()}`)
+  }
+
+  function porId(id) {
+    return (resumen.proveedores || []).find((p) => p.proveedor === id)
+  }
+
+  const infoSel = porId(provSel)
+
+  function onElegirArchivo(e) {
+    const f = e.target.files?.[0] || null
+    setArchivo(f)
+    setResultado(null)
+    setError('')
+  }
+
   return (
     <LayoutDepartamento departamento="logistica" activo="precios-proveedores" titulo="Actualización de precios por proveedor">
       <div className="spp-page">
         <div className="spp-grid">
+          {/* -------- Subir archivo -------- */}
           <div className="spp-card">
-            <div className="spp-card__titulo">Subir archivo</div>
-            <div className="spp-fila">
-              <select className="spp-select" value={provSel} onChange={e => setProvSel(e.target.value)}>
-                {PROVEEDORES.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-              </select>
-              <label className="spp-file">
-                {archivo ? archivo.name : 'Elegir archivo (.xlsx/.xls/.csv)'}
-                <input type="file" accept=".xlsx,.xls,.csv" onChange={e => setArchivo(e.target.files?.[0] || null)} />
-              </label>
-              <button className="spp-btn spp-btn--primary" onClick={importar} disabled={subiendo}>{subiendo ? 'Importando...' : 'Importar'}</button>
+            <h2 className="spp-card__titulo">Subir archivo</h2>
+
+            <p className="spp-label">Proveedor</p>
+            <div className="spp-chips">
+              {PROVEEDORES.map((p) => {
+                const info = porId(p.id)
+                const estado = frescura(info?.ultimaSubida?.dias)
+                const activo = provSel === p.id
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    className={`spp-chip ${activo ? 'spp-chip--activo' : ''}`}
+                    onClick={() => { setProvSel(p.id); setResultado(null); setError('') }}
+                  >
+                    <span className={`spp-chip-dot spp-chip-dot--${estado}`} />
+                    {p.nombre}
+                  </button>
+                )
+              })}
             </div>
-            <div className="spp-hint">Solo se actualizan precios/costos. No se crean productos nuevos. Los sin enlazar van a Pendientes.</div>
+
+            {infoSel && (
+              <p className={`spp-sel-aviso spp-sel-aviso--${frescura(infoSel.ultimaSubida?.dias)}`}>
+                Última subida: {textoRelativo(infoSel.ultimaSubida?.dias)}
+              </p>
+            )}
+
+            <label className={`spp-dropzone ${archivo ? 'spp-dropzone--con-archivo' : ''}`}>
+              <input type="file" accept=".xlsx,.xls,.csv" onChange={onElegirArchivo} />
+              {archivo ? (
+                <>
+                  <FileSpreadsheet size={22} />
+                  <span className="spp-dropzone-nombre">{archivo.name}</span>
+                  <button
+                    type="button"
+                    className="spp-dropzone-quitar"
+                    onClick={(e) => { e.preventDefault(); setArchivo(null) }}
+                    aria-label="Quitar archivo"
+                  >
+                    <X size={16} />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Upload size={22} />
+                  <span>Elegir archivo (.xlsx, .xls o .csv)</span>
+                </>
+              )}
+            </label>
+
+            <button className="spp-btn-importar" onClick={importar} disabled={subiendo || !archivo}>
+              {subiendo ? 'Importando...' : `Importar precios de ${PROVEEDORES.find(p => p.id === provSel)?.nombre}`}
+            </button>
+
+            <p className="spp-hint">Solo se actualizan precios/costos. No se crean productos nuevos. Los sin enlazar van a Pendientes.</p>
             {error && <p className="spp-error">{error}</p>}
+
             {resultado && (
               <div className="spp-recibo">
-                <div className="spp-recibo__titulo">Recibo de importación</div>
+                <p className="spp-recibo__titulo">Recibo de importación — {resultado.total || 0} filas leídas</p>
                 <div className="spp-recibo__grid">
-                  <div><span>Filas leídas</span><strong>{resultado.total || 0}</strong></div>
-                  <div><span>Actualizados</span><strong>{resultado.actualizados || 0}</strong></div>
-                  <div><span>Subieron</span><strong>{resultado.subieron || 0}</strong></div>
-                  <div><span>Bajaron</span><strong>{resultado.bajaron || 0}</strong></div>
-                  <div><span>Iguales</span><strong>{resultado.iguales || 0}</strong></div>
-                  <div><span>Puestos en 0</span><strong>{resultado.puestosEnCero || 0}</strong></div>
-                  <div><span>Sin enlazar</span><strong>{resultado.sin_enlazar || 0}</strong></div>
+                  <div className="spp-stat">
+                    <span className="spp-stat-icono spp-stat-icono--neutral"><CheckCircle2 size={14} /></span>
+                    <span className="spp-stat-valor">{resultado.actualizados || 0}</span>
+                    <span className="spp-stat-label">Actualizados</span>
+                  </div>
+                  <div className="spp-stat">
+                    <span className="spp-stat-icono spp-stat-icono--ok"><ArrowUp size={14} /></span>
+                    <span className="spp-stat-valor">{resultado.subieron || 0}</span>
+                    <span className="spp-stat-label">Subieron</span>
+                  </div>
+                  <div className="spp-stat">
+                    <span className="spp-stat-icono spp-stat-icono--aviso"><ArrowDown size={14} /></span>
+                    <span className="spp-stat-valor">{resultado.bajaron || 0}</span>
+                    <span className="spp-stat-label">Bajaron</span>
+                  </div>
+                  <div className="spp-stat">
+                    <span className="spp-stat-icono spp-stat-icono--neutral"><Minus size={14} /></span>
+                    <span className="spp-stat-valor">{resultado.iguales || 0}</span>
+                    <span className="spp-stat-label">Iguales</span>
+                  </div>
+                  <div className="spp-stat">
+                    <span className="spp-stat-icono spp-stat-icono--error"><Ban size={14} /></span>
+                    <span className="spp-stat-valor">{resultado.puestosEnCero || 0}</span>
+                    <span className="spp-stat-label">Puestos en 0</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="spp-stat spp-stat--accion"
+                    onClick={() => irAPendientes('sin_enlazar', provSel)}
+                    disabled={!resultado.sin_enlazar}
+                  >
+                    <span className="spp-stat-icono spp-stat-icono--aviso"><Link2Off size={14} /></span>
+                    <span className="spp-stat-valor">{resultado.sin_enlazar || 0}</span>
+                    <span className="spp-stat-label">Sin enlazar</span>
+                  </button>
                 </div>
               </div>
             )}
           </div>
+
+          {/* -------- Estado por proveedor -------- */}
           <div className="spp-card">
-            <div className="spp-card__titulo">Estado por proveedor</div>
+            <h2 className="spp-card__titulo">Estado por proveedor</h2>
+
             {cargando ? <StaffEstado tipo="cargando" filas={5} /> : (
-              <table className="spp-table">
-                <thead>
-                  <tr>
-                    <th>Proveedor</th>
-                    <th>Última subida</th>
-                    <th>Sin enlazar</th>
-                    <th>Precios viejos (&gt;60d)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(resumen.proveedores || []).map(p => (
-                    <tr key={p.proveedor}>
-                      <td>{p.nombre}</td>
-                      <td>{p.ultimaSubida ? `${formatoFecha(p.ultimaSubida.fecha)} (${p.ultimaSubida.dias}d)` : '-'}</td>
-                      <td>{p.sinEnlazar || 0}</td>
-                      <td>{p.preciosViejos || 0}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="spp-proveedores">
+                {(resumen.proveedores || []).map((p) => {
+                  const estado = frescura(p.ultimaSubida?.dias)
+                  return (
+                    <div key={p.proveedor} className="spp-prov-card">
+                      <div className="spp-prov-cabecera">
+                        <span className="spp-prov-nombre">{p.nombre}</span>
+                        <span className={`spp-prov-frescura spp-prov-frescura--${estado}`}>
+                          {estado === 'vieja' && <AlertTriangle size={12} />}
+                          {textoRelativo(p.ultimaSubida?.dias)}
+                        </span>
+                      </div>
+                      <div className="spp-prov-badges">
+                        <button
+                          type="button"
+                          className={`spp-badge ${p.sinEnlazar > 0 ? 'spp-badge--aviso' : 'spp-badge--ok'}`}
+                          onClick={() => irAPendientes('sin_enlazar', p.proveedor)}
+                        >
+                          {p.sinEnlazar > 0 ? <Link2Off size={13} /> : <CheckCircle2 size={13} />}
+                          {p.sinEnlazar || 0} sin enlazar
+                        </button>
+                        <button
+                          type="button"
+                          className={`spp-badge ${p.preciosViejos > 0 ? 'spp-badge--error' : 'spp-badge--ok'}`}
+                          onClick={() => irAPendientes('precios_viejos', p.proveedor)}
+                        >
+                          {p.preciosViejos > 0 ? <AlertTriangle size={13} /> : <CheckCircle2 size={13} />}
+                          {p.preciosViejos || 0} precios viejos (&gt;60d)
+                        </button>
+                        <ChevronRight size={16} className="spp-prov-flecha" />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             )}
+
             <div className="spp-totales">
-              <span>Sin proveedor: <strong>{resumen.totales?.sinProveedor || 0}</strong></span>
-              <span>Sin enlazar total: <strong>{resumen.totales?.sinEnlazarTotal || 0}</strong></span>
-              <button className="spp-btn" onClick={() => navigate('/staff/pendientes-inventario')}>Ver pendientes</button>
+              <div className="spp-total-chip">
+                <span>Sin proveedor</span>
+                <strong>{resumen.totales?.sinProveedor || 0}</strong>
+              </div>
+              <div className="spp-total-chip">
+                <span>Sin enlazar (todos)</span>
+                <strong>{resumen.totales?.sinEnlazarTotal || 0}</strong>
+              </div>
+              <button className="spp-btn" onClick={() => navigate('/staff/pendientes-inventario')}>
+                Ver todos los pendientes
+              </button>
             </div>
           </div>
         </div>
