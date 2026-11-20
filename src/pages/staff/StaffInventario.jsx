@@ -241,7 +241,15 @@ function BarraFiltros({ filtros, cambiarFiltro, opciones, onLimpiar }) {
               key={lab.corto}
               type="button"
               className={`si-labs-fast__btn ${activo ? 'si-labs-fast__btn--on' : ''}`}
-              onClick={() => cambiarFiltro('laboratorio', valorBD)}
+              onClick={() => {
+                // Toggle: si ya está activado, se desactiva (limpia el filtro)
+                // en vez de tener que ir al botón "Limpiar".
+                if (activo) {
+                  cambiarFiltro('laboratorio', '')
+                } else {
+                  cambiarFiltro('laboratorio', valorBD)
+                }
+              }}
               title={valorBD}
               aria-pressed={activo}
             >
