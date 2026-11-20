@@ -215,18 +215,34 @@ function BarraFiltros({ filtros, cambiarFiltro, opciones, onLimpiar }) {
         ))}
       </select>
 
-      {/* Botones rápidos de laboratorio (acceso directo al filtro más usado). */}
+      {/* Botones rápidos de laboratorio (acceso directo al filtro más usado).
+         El valor del filtro se toma de `opciones.laboratorios` (lo que el
+         backend realmente tiene) para que siempre coincida con el filtro del
+         servidor. Se compara por nombre corto (LETI, CALOX…) para dar con la
+         fila correcta de opciones. Si el lab no está en las opciones, el botón
+         se oculta para no enviar un filtro que el servidor no entiende. */}
       <div className="si-labs-fast">
         <span className="si-labs-fast__titulo">Laboratorios rápidos</span>
         {LABS_FRECUENTES.map((lab) => {
-          const activo = filtros.laboratorio === lab.largo
+          const valorBD =
+            (opciones?.laboratorios || []).find(
+              (l) =>
+                l.trim().toUpperCase().includes(lab.corto.trim().toUpperCase())
+            ) || lab.largo
+          const activo =
+            filtros.laboratorio.trim().toUpperCase() ===
+            valorBD.trim().toUpperCase()
+          const existeEnOpciones = (opciones?.laboratorios || []).some(
+            (l) => l.trim().toUpperCase() === valorBD.trim().toUpperCase()
+          )
+          if (!existeEnOpciones) return null
           return (
             <button
               key={lab.corto}
               type="button"
               className={`si-labs-fast__btn ${activo ? 'si-labs-fast__btn--on' : ''}`}
-              onClick={() => cambiarFiltro('laboratorio', lab.largo)}
-              title={lab.largo}
+              onClick={() => cambiarFiltro('laboratorio', valorBD)}
+              title={valorBD}
               aria-pressed={activo}
             >
               {lab.corto}
