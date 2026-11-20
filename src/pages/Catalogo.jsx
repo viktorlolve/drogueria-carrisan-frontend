@@ -36,6 +36,50 @@ function esNombreLargo(nombre = '') {
   return nombre.length > LARGO_NOMBRE_LAB
 }
 
+// Orden prioritario del filtro "Forma": se muestran primero (~10) los más usados
+// en este orden específico; el resto queda detrás de "Cargar más".
+// Palabras clave normalizadas (sin acentos, minúsculas). Las más específicas
+// van antes que las genéricas para evitar coincidencias ambiguas (p. ej.
+// "solución oral" antes que "solución", "inyectable" antes que "solución").
+const FORMAS_PRIORIDAD = [
+  'solucion oral',
+  'inyectable',
+  'oftalmic',      // cubre oftálmica / oftalmológico(a)
+  'jarabe',
+  'suspension',
+  'capsula',
+  'tableta',
+  'comprimido',
+  'crema',
+  'solucion',
+]
+
+const FORMAS_VISIBLES_INICIAL = 10
+
+function normalizarForma(nombre = '') {
+  return nombre
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+}
+
+function indicePrioridadForma(nombre = '') {
+  const n = normalizarForma(nombre)
+  const idx = FORMAS_PRIORIDAD.findIndex((clave) => n.includes(clave))
+  return idx === -1 ? FORMAS_PRIORIDAD.length : idx
+}
+
+function ordenarFormas(formas = []) {
+  return [...formas].sort((a, b) => {
+    const pa = indicePrioridadForma(a)
+    const pb = indicePrioridadForma(b)
+    if (pa !== pb) return pa - pb
+    // Dentro de la misma prioridad (o ambas sin prioridad), orden alfabético.
+    return a.localeCompare(b, 'es', { sensitivity: 'base' })
+  })
+}
+
 function generarSeed() {
   return Math.random().toString(36).slice(2, 10)
 }
@@ -106,12 +150,19 @@ const [moleculaActiva, setMoleculaActiva] = useState(moleculaParam)
   const [laboratoriosTop, setLaboratoriosTop] = useState([])
   const [labsVisibles, setLabsVisibles] = useState(20)
   const [formasDisponibles, setFormasDisponibles] = useState([])
+  const [formasVisibles, setFormasVisibles] = useState(FORMAS_VISIBLES_INICIAL)
   const [categoriasDisponibles, setCategoriasDisponibles] = useState([])
 
   // Lista de pills: "Todo" + las categorías reales desde /products/metadata
   const categoriasLista = useMemo(
     () => [{ id: 'todos', nombre: 'Todo', icono: 'LayoutGrid' }, ...categoriasDisponibles],
     [categoriasDisponibles]
+  )
+
+  // Formas en orden prioritario (más usadas primero) para el filtro "Forma".
+  const formasOrdenadas = useMemo(
+    () => ordenarFormas(formasDisponibles),
+    [formasDisponibles]
   )
   const nombreCategoriaActiva =
     categoriasLista.find((c) => c.id === categoriaActiva)?.nombre || categoriaActiva
@@ -563,10 +614,10 @@ useEffect(() => {
               </button>
               {seccionesAbiertas.forma && (
                 <div className="filtro-content">
-                  {formasDisponibles.length === 0 && (
+                  {formasOrdenadas.length === 0 && (
                     <p className="filtro-vacio">Sin datos aún</p>
                   )}
-                  {formasDisponibles.map((forma) => (
+                  {formasOrdenadas.slice(0, formasVisibles).map((forma) => (
                     <button
                       key={forma}
                       className={`filtro-pill ${formasActivas.includes(forma) ? 'active' : ''}`}
@@ -575,6 +626,14 @@ useEffect(() => {
                       {forma}
                     </button>
                   ))}
+                  {formasVisibles < formasOrdenadas.length && (
+                    <button
+                      className="filtro-ver-mas"
+                      onClick={() => setFormasVisibles((v) => v + 10)}
+                    >
+                      Cargar más ({formasOrdenadas.length - formasVisibles} restantes)
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -848,11 +907,11 @@ useEffect(() => {
                 </button>
                 {seccionesAbiertas.forma && (
                   <div className="cfm-seccion__contenido">
-                    {formasDisponibles.length === 0 && (
+                    {formasOrdenadas.length === 0 && (
                       <p className="cfm-seccion__vacio">Sin datos aún</p>
                     )}
                     <div className="cfm-chips">
-                      {formasDisponibles.map((forma) => (
+                      {formasOrdenadas.slice(0, formasVisibles).map((forma) => (
                         <button
                           key={forma}
                           type="button"
@@ -864,6 +923,14 @@ useEffect(() => {
                         </button>
                       ))}
                     </div>
+                    {formasVisibles < formasOrdenadas.length && (
+                      <button
+                        className="cfm-ver-mas"
+                        onClick={() => setFormasVisibles((v) => v + 10)}
+                      >
+                        Cargar más ({formasOrdenadas.length - formasVisibles} restantes)
+                      </button>
+                    )}
                   </div>
                 )}
               </section>
