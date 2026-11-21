@@ -22,6 +22,16 @@ const TABS = [
   { id: 'egresos', texto: 'Egresos' },
 ]
 
+// Mismos colores que los tokens --stf-azul / --stf-finanzas / --stf-aviso /
+// --stf-error (src/styles/staff-tokens.css). Recharts aplica fill/stroke
+// como atributos SVG, no como CSS, así que var(--token) no se resolvería
+// ahí — se deja el valor literal, igual al token, en vez de los hex sueltos
+// (#2563EB, #0D9373, #D97706, #dc2626, #ea580c, #16a34a) que traía antes.
+const COLOR_AZUL = '#0052DC'
+const COLOR_FINANZAS = '#0E8577'
+const COLOR_AVISO = '#B45309'
+const COLOR_ERROR = '#B3261E'
+
 function hoy() {
   return new Date().toISOString().slice(0, 10)
 }
@@ -158,12 +168,14 @@ export default function StaffReportesFinancieros() {
 
         <div className="srf-periodo-toggle">
           <button
+            type="button"
             className={`srf-toggle-btn ${modoPeriodo === 'mes' ? 'srf-toggle-btn--activo' : ''}`}
             onClick={() => setModoPeriodo('mes')}
           >
             Por mes
           </button>
           <button
+            type="button"
             className={`srf-toggle-btn ${modoPeriodo === 'rango' ? 'srf-toggle-btn--activo' : ''}`}
             onClick={() => setModoPeriodo('rango')}
           >
@@ -193,8 +205,8 @@ export default function StaffReportesFinancieros() {
 
         {datos && (
           <div className="srf-acciones">
-            <button className="stf-btn stf-btn--primary" onClick={exportarPDF}>Informe PDF</button>
-            <button className="stf-btn" onClick={exportarCSV}>Exportar CSV</button>
+            <button type="button" className="stf-btn stf-btn--primary" onClick={exportarPDF}>Informe PDF</button>
+            <button type="button" className="stf-btn" onClick={exportarCSV}>Exportar CSV</button>
           </div>
         )}
       </div>
@@ -202,9 +214,9 @@ export default function StaffReportesFinancieros() {
       <StaffTabs tabs={TABS} activo={tab} onChange={setTab} />
 
       {cargando ? (
-        <div style={{ marginTop: 16 }}><StaffEstado tipo="cargando" filas={3} /></div>
+        <div className="srf-seccion"><StaffEstado tipo="cargando" filas={3} /></div>
       ) : error ? (
-        <div style={{ marginTop: 16 }}><StaffEstado tipo="error" mensaje={error} onReintentar={reintentar} /></div>
+        <div className="srf-seccion"><StaffEstado tipo="error" mensaje={error} onReintentar={reintentar} /></div>
       ) : (
         <>
           {/* ═══ PANEL (vista general) ═══ */}
@@ -214,16 +226,14 @@ export default function StaffReportesFinancieros() {
                 <KPI label="Ventas totales" value={formatearUSD(datos.ventas.total_usd)} />
                 <KPI label="Ticket promedio" value={formatearUSD(datos.ventas.ticket_promedio)} />
                 <KPI label="Crédito aprobado" value={formatearUSD(datos.credito_aprobado.total_usd)} />
-                <KPI label="Crédito vencido" value={formatearUSD(datos.credito_vencido.total_usd)} color={datos.credito_vencido.total_usd > 0 ? '#dc2626' : undefined} />
+                <KPI label="Crédito vencido" value={formatearUSD(datos.credito_vencido.total_usd)} tono={datos.credito_vencido.total_usd > 0 ? 'negativo' : undefined} />
                 <KPI label="Cobros" value={formatearUSD(datos.cobros.total_usd)} />
                 <KPI label="Facturado" value={formatearUSD(datos.facturado_vs_cobrado.facturado_usd)} />
-                <KPI label="Egresos totales" value={formatearUSD(datos.egresos.total_usd)} color="#dc2626" />
+                <KPI label="Egresos totales" value={formatearUSD(datos.egresos.total_usd)} tono="negativo" />
                 <KPI
                   label="Resultado de caja (cobros − egresos)"
                   value={formatearUSD(datos.cobros.total_usd - datos.egresos.total_usd)}
-                  color={
-                    (datos.cobros.total_usd - datos.egresos.total_usd) >= 0 ? '#16a34a' : '#dc2626'
-                  }
+                  tono={(datos.cobros.total_usd - datos.egresos.total_usd) >= 0 ? 'positivo' : 'negativo'}
                 />
               </div>
 
@@ -238,8 +248,8 @@ export default function StaffReportesFinancieros() {
                         <YAxis fontSize={11} tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
                         <Tooltip formatter={v => formatearUSD(v)} />
                         <Legend />
-                        <Bar dataKey="contado" name="Contado" fill="#2563EB" stackId="a" />
-                        <Bar dataKey="credito" name="Crédito" fill="#0D9373" stackId="a" />
+                        <Bar dataKey="contado" name="Contado" fill={COLOR_AZUL} stackId="a" />
+                        <Bar dataKey="credito" name="Crédito" fill={COLOR_FINANZAS} stackId="a" />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -256,7 +266,7 @@ export default function StaffReportesFinancieros() {
                         <XAxis dataKey="bucket" fontSize={11} />
                         <YAxis fontSize={11} tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
                         <Tooltip formatter={v => formatearUSD(v)} />
-                        <Bar dataKey="total" name="Monto vencido" fill="#dc2626" />
+                        <Bar dataKey="total" name="Monto vencido" fill={COLOR_ERROR} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -287,8 +297,8 @@ export default function StaffReportesFinancieros() {
                         <YAxis fontSize={11} tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
                         <Tooltip formatter={v => formatearUSD(v)} />
                         <Legend />
-                        <Bar dataKey="contado" name="Contado" fill="#2563EB" stackId="a" />
-                        <Bar dataKey="credito" name="Crédito" fill="#0D9373" stackId="a" />
+                        <Bar dataKey="contado" name="Contado" fill={COLOR_AZUL} stackId="a" />
+                        <Bar dataKey="credito" name="Crédito" fill={COLOR_FINANZAS} stackId="a" />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -305,7 +315,7 @@ export default function StaffReportesFinancieros() {
                         <XAxis dataKey="fecha" fontSize={11} />
                         <YAxis fontSize={11} />
                         <Tooltip />
-                        <Line type="monotone" dataKey="ordenes" name="Órdenes" stroke="#D97706" strokeWidth={2} dot={{ r: 3 }} />
+                        <Line type="monotone" dataKey="ordenes" name="Órdenes" stroke={COLOR_AVISO} strokeWidth={2} dot={{ r: 3 }} />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
@@ -320,7 +330,7 @@ export default function StaffReportesFinancieros() {
               <div className="st-resumen-cards">
                 <KPI label="Crédito aprobado (período)" value={formatearUSD(datos.credito_aprobado.total_usd)} />
                 <KPI label="Órdenes aprobadas" value={datos.credito_aprobado.cantidad_ordenes} />
-                <KPI label="Crédito vencido (al cierre)" value={formatearUSD(datos.credito_vencido.total_usd)} color={datos.credito_vencido.total_usd > 0 ? '#dc2626' : undefined} />
+                <KPI label="Crédito vencido (al cierre)" value={formatearUSD(datos.credito_vencido.total_usd)} tono={datos.credito_vencido.total_usd > 0 ? 'negativo' : undefined} />
                 <KPI label="Órdenes vencidas" value={datos.credito_vencido.cantidad_ordenes} />
               </div>
 
@@ -334,7 +344,7 @@ export default function StaffReportesFinancieros() {
                         <XAxis dataKey="fecha" fontSize={11} />
                         <YAxis fontSize={11} tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
                         <Tooltip formatter={v => formatearUSD(v)} />
-                        <Bar dataKey="total" name="Crédito aprobado" fill="#0D9373" />
+                        <Bar dataKey="total" name="Crédito aprobado" fill={COLOR_FINANZAS} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -344,37 +354,37 @@ export default function StaffReportesFinancieros() {
               {datos.credito_vencido.total_usd > 0 && (
                 <>
                   <h4 className="stf-subtitulo">Aging de deuda vencida al cierre del período</h4>
-                  <div className="stf-tabla-wrap">
-                    <table className="stf-tabla">
-                      <thead>
-                        <tr>
-                          <th>0–30 días</th>
-                          <th>31–60 días</th>
-                          <th>61–90 días</th>
-                          <th>90+ días</th>
-                          <th style={{ textAlign: 'right' }}>Total vencido</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td>{formatearUSD(datos.credito_vencido.buckets['0-30'])}</td>
-                          <td>{formatearUSD(datos.credito_vencido.buckets['31-60'])}</td>
-                          <td>{formatearUSD(datos.credito_vencido.buckets['61-90'])}</td>
-                          <td className="st-saldo-negativo">{formatearUSD(datos.credito_vencido.buckets['90+'])}</td>
-                          <td style={{ textAlign: 'right' }} className="st-saldo-negativo">{formatearUSD(datos.credito_vencido.total_usd)}</td>
-                        </tr>
-                      </tbody>
-                    </table>
+                  <div className="srf-aging-grid">
+                    <div className="srf-aging-card">
+                      <span className="srf-aging-label">0–30 días</span>
+                      <span className="srf-aging-valor">{formatearUSD(datos.credito_vencido.buckets['0-30'])}</span>
+                    </div>
+                    <div className="srf-aging-card">
+                      <span className="srf-aging-label">31–60 días</span>
+                      <span className="srf-aging-valor">{formatearUSD(datos.credito_vencido.buckets['31-60'])}</span>
+                    </div>
+                    <div className="srf-aging-card">
+                      <span className="srf-aging-label">61–90 días</span>
+                      <span className="srf-aging-valor">{formatearUSD(datos.credito_vencido.buckets['61-90'])}</span>
+                    </div>
+                    <div className="srf-aging-card srf-aging-card--critico">
+                      <span className="srf-aging-label">90+ días</span>
+                      <span className="srf-aging-valor">{formatearUSD(datos.credito_vencido.buckets['90+'])}</span>
+                    </div>
+                    <div className="srf-aging-card srf-aging-card--total">
+                      <span className="srf-aging-label">Total vencido</span>
+                      <span className="srf-aging-valor">{formatearUSD(datos.credito_vencido.total_usd)}</span>
+                    </div>
                   </div>
 
-                  <div className="srf-chart-container" style={{ marginTop: 16 }}>
+                  <div className="srf-chart-container">
                     <ResponsiveContainer width="100%" height={200}>
                       <BarChart data={Object.entries(datos.credito_vencido.buckets).map(([bucket, total]) => ({ bucket, total }))}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
                         <XAxis dataKey="bucket" fontSize={11} />
                         <YAxis fontSize={11} tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
                         <Tooltip formatter={v => formatearUSD(v)} />
-                        <Bar dataKey="total" name="Monto vencido" fill="#dc2626" />
+                        <Bar dataKey="total" name="Monto vencido" fill={COLOR_ERROR} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -393,11 +403,11 @@ export default function StaffReportesFinancieros() {
                 <KPI
                   label="Diferencia (facturado − cobrado)"
                   value={formatearUSD(datos.facturado_vs_cobrado.diferencia)}
-                  color={datos.facturado_vs_cobrado.diferencia >= 0 ? '#16a34a' : '#dc2626'}
+                  tono={datos.facturado_vs_cobrado.diferencia >= 0 ? 'positivo' : 'negativo'}
                 />
               </div>
 
-              <div className="srf-chart-container" style={{ marginTop: 16 }}>
+              <div className="srf-chart-container">
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart
                     data={[
@@ -409,7 +419,7 @@ export default function StaffReportesFinancieros() {
                     <XAxis dataKey="concepto" fontSize={11} />
                     <YAxis fontSize={11} tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
                     <Tooltip formatter={v => formatearUSD(v)} />
-                    <Bar dataKey="valor" name="USD" fill="#2563EB" />
+                    <Bar dataKey="valor" name="USD" fill={COLOR_AZUL} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -422,10 +432,10 @@ export default function StaffReportesFinancieros() {
               <div className="st-resumen-cards">
                 <KPI label="Egresos operativos" value={formatearUSD(datos.egresos.operativos_usd)} />
                 <KPI label="Salidas internas" value={formatearUSD(datos.egresos.salidas_internas_usd)} />
-                <KPI label="Egresos totales" value={formatearUSD(datos.egresos.total_usd)} color="#dc2626" />
+                <KPI label="Egresos totales" value={formatearUSD(datos.egresos.total_usd)} tono="negativo" />
               </div>
 
-              <div className="srf-chart-container" style={{ marginTop: 16 }}>
+              <div className="srf-chart-container">
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart
                     data={[
@@ -437,7 +447,7 @@ export default function StaffReportesFinancieros() {
                     <XAxis dataKey="tipo" fontSize={11} />
                     <YAxis fontSize={11} tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
                     <Tooltip formatter={v => formatearUSD(v)} />
-                    <Bar dataKey="total" name="USD" fill="#ea580c" />
+                    <Bar dataKey="total" name="USD" fill={COLOR_AVISO} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -449,11 +459,13 @@ export default function StaffReportesFinancieros() {
   )
 }
 
-function KPI({ label, value, color }) {
+function KPI({ label, value, tono }) {
   return (
-    <div className="st-resumen-card">
+    <div className={`st-resumen-card ${tono ? `st-resumen-card--${tono}` : ''}`}>
       <div className="st-resumen-card__label">{label}</div>
-      <div className="st-resumen-card__valor" style={color ? { color } : undefined}>{value}</div>
+      <div className={`st-resumen-card__valor ${tono === 'negativo' ? 'st-resumen-card__valor--negativo' : tono === 'positivo' ? 'st-resumen-card__valor--positivo' : ''}`}>
+        {value}
+      </div>
     </div>
   )
 }

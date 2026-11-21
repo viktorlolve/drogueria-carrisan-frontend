@@ -1,5 +1,6 @@
 // StaffTesoreria.jsx
 import { useState, useEffect, useCallback } from 'react'
+import { ArrowDownCircle, ArrowUpCircle, Wallet, TrendingDown, X } from 'lucide-react'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import StaffTabs from '../../components/staff/StaffTabs'
 import staffApi from '../../api/staffAxios'
@@ -78,26 +79,15 @@ export default function StaffTesoreria() {
     }
   }, [desde, hasta])
 
+  // Antes este efecto repetía la misma llamada que cargarResumen en vez de
+  // reusarla; con cargarResumen como única fuente, un cambio de rango de
+  // fechas y un "Reintentar" tras error pasan por el mismo camino. El
+  // Promise.resolve().then() difiere la llamada a una microtarea (mismo
+  // patrón que el resto del staff) para no disparar setState síncrono
+  // dentro del efecto.
   useEffect(() => {
-    let activo = true
-    Promise.all([
-      staffApi.get('/staff/tesoreria/resumen', { params: { desde, hasta } }),
-      staffApi.get('/staff/tesoreria/movimientos', { params: { desde, hasta } }),
-    ])
-      .then(([resumenRes, movRes]) => {
-        if (!activo) return
-        setResumen(resumenRes.data)
-        setMovimientos(movRes.data)
-        setError('')
-      })
-      .catch((e) => {
-        if (!activo) return
-        console.error('Error cargando tesorería:', e)
-        setError(e.response?.data?.error || 'No se pudo cargar la tesorería')
-      })
-      .finally(() => { if (activo) setCargando(false) })
-    return () => { activo = false }
-  }, [desde, hasta])
+    Promise.resolve().then(() => cargarResumen())
+  }, [cargarResumen])
 
   const categoriasForm = form.tipo === 'salida_interna' ? CATEGORIAS_SALIDA_INTERNA : CATEGORIAS_EGRESO
 
@@ -174,212 +164,222 @@ export default function StaffTesoreria() {
 
   return (
     <LayoutDepartamento departamento="finanzas" activo="tesoreria" titulo="Tesorería">
-      <h3 className="stf-subtitulo">Flujo de caja del período</h3>
+      <div className="st-page">
+        <p className="stf-subtitulo">Flujo de caja del período</p>
 
-      <StaffTabs tabs={TABS} activo={tab} onChange={setTab} />
+        <StaffTabs tabs={TABS} activo={tab} onChange={setTab} />
 
-      {tab === 'resumen' && (
-        <div style={{ marginTop: 16 }}>
-          <div className="st-filtros-fecha">
-            <label>
-              Desde
-              <input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} />
-            </label>
-            <label>
-              Hasta
-              <input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} />
-            </label>
-          </div>
+        {tab === 'resumen' && (
+          <div className="st-seccion">
+            <div className="st-filtros-fecha">
+              <label>
+                Desde
+                <input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} />
+              </label>
+              <label>
+                Hasta
+                <input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} />
+              </label>
+            </div>
 
-          {cargando ? (
-            <StaffEstado tipo="cargando" filas={3} />
-          ) : error ? (
-            <StaffEstado tipo="error" mensaje={error} onReintentar={cargarResumen} />
-          ) : (
-            resumen && (
-              <>
-                <div style={{ display: 'flex', gap: 8, margin: '12px 0' }}>
-                  <button className="stf-btn stf-btn--primary" onClick={exportarPDF}>Exportar PDF</button>
-                  <button className="stf-btn" onClick={exportarCSV}>Exportar CSV</button>
-                </div>
-
-                <div className="st-resumen-cards">
-                  <div className="st-resumen-card">
-                    <div className="st-resumen-card__label">Ingresos (pagos)</div>
-                    <div className="st-resumen-card__valor">{formatearUSD(resumen.ingresos)}</div>
+            {cargando ? (
+              <StaffEstado tipo="cargando" filas={3} />
+            ) : error ? (
+              <StaffEstado tipo="error" mensaje={error} onReintentar={cargarResumen} />
+            ) : (
+              resumen && (
+                <>
+                  <div className="st-exportar">
+                    <button type="button" className="stf-btn stf-btn--primary" onClick={exportarPDF}>Exportar PDF</button>
+                    <button type="button" className="stf-btn" onClick={exportarCSV}>Exportar CSV</button>
                   </div>
-                  <div className="st-resumen-card">
-                    <div className="st-resumen-card__label">Egresos operativos</div>
-                    <div className="st-resumen-card__valor" style={{ color: '#dc2626' }}>{formatearUSD(resumen.egresos)}</div>
-                  </div>
-                  <div className="st-resumen-card">
-                    <div className="st-resumen-card__label">Salidas internas</div>
-                    <div className="st-resumen-card__valor" style={{ color: '#ea580c' }}>{formatearUSD(resumen.salidas_internas)}</div>
-                  </div>
-                  <div className="st-resumen-card">
-                    <div className="st-resumen-card__label">Saldo del período</div>
-                    <div className={`st-resumen-card__valor ${resumen.saldo < 0 ? 'st-resumen-card__valor--negativo' : ''}`}>
-                      {formatearUSD(resumen.saldo)}
+
+                  <div className="st-resumen-cards">
+                    <div className="st-resumen-card">
+                      <span className="st-resumen-card__icono st-resumen-card__icono--ok"><ArrowUpCircle size={16} /></span>
+                      <div className="st-resumen-card__label">Ingresos (pagos)</div>
+                      <div className="st-resumen-card__valor">{formatearUSD(resumen.ingresos)}</div>
+                    </div>
+                    <div className="st-resumen-card">
+                      <span className="st-resumen-card__icono st-resumen-card__icono--aviso"><ArrowDownCircle size={16} /></span>
+                      <div className="st-resumen-card__label">Egresos operativos</div>
+                      <div className="st-resumen-card__valor st-resumen-card__valor--aviso">{formatearUSD(resumen.egresos)}</div>
+                    </div>
+                    <div className="st-resumen-card">
+                      <span className="st-resumen-card__icono st-resumen-card__icono--aviso"><TrendingDown size={16} /></span>
+                      <div className="st-resumen-card__label">Salidas internas</div>
+                      <div className="st-resumen-card__valor st-resumen-card__valor--aviso">{formatearUSD(resumen.salidas_internas)}</div>
+                    </div>
+                    <div className="st-resumen-card st-resumen-card--saldo">
+                      <span className="st-resumen-card__icono"><Wallet size={16} /></span>
+                      <div className="st-resumen-card__label">Saldo del período</div>
+                      <div className={`st-resumen-card__valor ${resumen.saldo < 0 ? 'st-resumen-card__valor--negativo' : ''}`}>
+                        {formatearUSD(resumen.saldo)}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {resumen.por_tercero.length > 0 && (
-                  <>
-                    <h4 className="stf-subtitulo">Por tercero</h4>
-                    <div className="stf-tabla-wrap">
-                      <table className="stf-tabla">
-                        <thead>
-                          <tr>
-                            <th>Tercero</th>
-                            <th>Tipo</th>
-                            <th style={{ textAlign: 'right' }}>Total</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {resumen.por_tercero.map((t) => (
-                            <tr key={t.tercero}>
-                              <td>{t.tercero}</td>
-                              <td>{t.tipo}</td>
-                              <td style={{ textAlign: 'right' }} className={t.total >= 0 ? 'st-saldo-positivo' : 'st-saldo-negativo'}>
-                                {t.total >= 0 ? formatearUSD(t.total) : `−${formatearUSD(Math.abs(t.total))}`}
-                              </td>
+                  {resumen.por_tercero.length > 0 && (
+                    <>
+                      <h4 className="stf-subtitulo">Por tercero</h4>
+                      <div className="stf-tabla-wrap">
+                        <table className="stf-tabla">
+                          <thead>
+                            <tr>
+                              <th>Tercero</th>
+                              <th>Tipo</th>
+                              <th className="st-col-derecha">Total</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody>
+                            {resumen.por_tercero.map((t) => (
+                              <tr key={t.tercero}>
+                                <td>{t.tercero}</td>
+                                <td>{t.tipo}</td>
+                                <td className={`st-col-derecha ${t.total >= 0 ? 'st-saldo-positivo' : 'st-saldo-negativo'}`}>
+                                  {t.total >= 0 ? formatearUSD(t.total) : `−${formatearUSD(Math.abs(t.total))}`}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  )}
+
+                  {resumen.movimientos_por_dia.length > 0 && (
+                    <>
+                      <h4 className="stf-subtitulo">Movimientos por día</h4>
+                      <div className="st-tabla-dia-wrap">
+                        <table className="st-tabla-dia">
+                          <thead>
+                            <tr>
+                              <th>Fecha</th>
+                              <th className="st-col-derecha">Ingresos</th>
+                              <th className="st-col-derecha">Egresos</th>
+                              <th className="st-col-derecha">Saldo del día</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {resumen.movimientos_por_dia.map((d) => (
+                              <tr key={d.fecha}>
+                                <td>{new Date(d.fecha + 'T12:00:00').toLocaleDateString('es-VE')}</td>
+                                <td className="st-col-derecha st-saldo-positivo">{formatearUSD(d.ingresos)}</td>
+                                <td className="st-col-derecha st-saldo-negativo">{formatearUSD(d.egresos)}</td>
+                                <td className={`st-col-derecha ${d.saldo >= 0 ? 'st-saldo-positivo' : 'st-saldo-negativo'}`}>
+                                  {formatearUSD(d.saldo)}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  )}
+
+                  {resumen.movimientos_por_dia.length === 0 && (
+                    <p className="st-vacio-nota">No hay movimientos en este período.</p>
+                  )}
+                </>
+              )
+            )}
+          </div>
+        )}
+
+        {tab === 'egresos' && (
+          <div className="st-seccion">
+            <form className="st-form-egreso" onSubmit={crearEgreso}>
+              <label>
+                Tipo
+                <select
+                  value={form.tipo}
+                  onChange={(e) => {
+                    const tipo = e.target.value
+                    setForm({ ...form, tipo, categoria: tipo === 'salida_interna' ? CATEGORIAS_SALIDA_INTERNA[0] : CATEGORIAS_EGRESO[0] })
+                  }}
+                >
+                  <option value="egreso">Egreso operativo</option>
+                  <option value="salida_interna">Salida interna</option>
+                </select>
+              </label>
+              <label>
+                Categoría
+                <select value={form.categoria} onChange={(e) => setForm({ ...form, categoria: e.target.value })}>
+                  {categoriasForm.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </label>
+              <label>
+                Concepto
+                <input
+                  type="text"
+                  placeholder="Descripción del gasto..."
+                  value={form.concepto}
+                  onChange={(e) => setForm({ ...form, concepto: e.target.value })}
+                  required
+                />
+              </label>
+              <label>
+                Monto ($)
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  placeholder="0.00"
+                  value={form.monto}
+                  onChange={(e) => setForm({ ...form, monto: e.target.value })}
+                  required
+                />
+              </label>
+              <label>
+                Tercero (proveedor/cliente, opcional)
+                <input
+                  type="text"
+                  placeholder="Nombre del tercero..."
+                  value={form.tercero}
+                  onChange={(e) => setForm({ ...form, tercero: e.target.value })}
+                />
+              </label>
+              <label>
+                Fecha
+                <input
+                  type="date"
+                  value={form.fecha}
+                  onChange={(e) => setForm({ ...form, fecha: e.target.value })}
+                />
+              </label>
+              <button type="submit" className="stf-btn stf-btn--primary st-form-egreso__submit">
+                {form.tipo === 'salida_interna' ? 'Registrar salida interna' : 'Registrar egreso'}
+              </button>
+            </form>
+
+            <h4 className="stf-subtitulo st-subtitulo-chico">Movimientos del período</h4>
+
+            {!movimientos || movimientos.length === 0 ? (
+              <p className="st-vacio-nota">No hay movimientos registrados en este período.</p>
+            ) : (
+              <div className="st-egresos-lista">
+                {movimientos
+                  .filter((m) => m.tipo !== 'ingreso')
+                  .map((e) => (
+                    <div key={e.id} className="st-egreso-item">
+                      <div className="st-egreso-item__datos">
+                        <div className="st-egreso-item__categoria">{e.tipo === 'salida_interna' ? `Salida interna · ${e.categoria}` : e.categoria}</div>
+                        <div className="st-egreso-item__concepto">{e.concepto} {e.tercero ? `· ${e.tercero}` : ''}</div>
+                        <div className="st-egreso-item__fecha">
+                          {new Date(e.fecha + 'T12:00:00').toLocaleDateString('es-VE')}
+                        </div>
+                      </div>
+                      <div className="st-egreso-item__monto">−{formatearUSD(e.monto)}</div>
+                      <button type="button" className="st-egreso-item__borrar" onClick={() => eliminarEgreso(e.id)} aria-label="Eliminar movimiento">
+                        <X size={15} />
+                      </button>
                     </div>
-                  </>
-                )}
-
-                {resumen.movimientos_por_dia.length > 0 && (
-                  <>
-                    <h4 className="stf-subtitulo">Movimientos por día</h4>
-                    <table className="st-tabla-dia">
-                      <thead>
-                        <tr>
-                          <th>Fecha</th>
-                          <th style={{ textAlign: 'right' }}>Ingresos</th>
-                          <th style={{ textAlign: 'right' }}>Egresos</th>
-                          <th style={{ textAlign: 'right' }}>Saldo del día</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {resumen.movimientos_por_dia.map((d) => (
-                          <tr key={d.fecha}>
-                            <td>{new Date(d.fecha + 'T12:00:00').toLocaleDateString('es-VE')}</td>
-                            <td style={{ textAlign: 'right' }} className="st-saldo-positivo">{formatearUSD(d.ingresos)}</td>
-                            <td style={{ textAlign: 'right' }} className="st-saldo-negativo">{formatearUSD(d.egresos)}</td>
-                            <td style={{ textAlign: 'right' }} className={d.saldo >= 0 ? 'st-saldo-positivo' : 'st-saldo-negativo'}>
-                              {formatearUSD(d.saldo)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </>
-                )}
-
-                {resumen.movimientos_por_dia.length === 0 && !cargando && (
-                  <p style={{ color: '#6b7280', marginTop: 16 }}>No hay movimientos en este período.</p>
-                )}
-              </>
-            )
-          )}
-        </div>
-      )}
-
-      {tab === 'egresos' && (
-        <div style={{ marginTop: 16 }}>
-          <form className="st-form-egreso" onSubmit={crearEgreso}>
-            <label>
-              Tipo
-              <select
-                value={form.tipo}
-                onChange={(e) => {
-                  const tipo = e.target.value
-                  setForm({ ...form, tipo, categoria: tipo === 'salida_interna' ? CATEGORIAS_SALIDA_INTERNA[0] : CATEGORIAS_EGRESO[0] })
-                }}
-              >
-                <option value="egreso">Egreso operativo</option>
-                <option value="salida_interna">Salida interna</option>
-              </select>
-            </label>
-            <label>
-              Categoría
-              <select value={form.categoria} onChange={(e) => setForm({ ...form, categoria: e.target.value })}>
-                {categoriasForm.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </label>
-            <label>
-              Concepto
-              <input
-                type="text"
-                placeholder="Descripción del gasto..."
-                value={form.concepto}
-                onChange={(e) => setForm({ ...form, concepto: e.target.value })}
-                required
-              />
-            </label>
-            <label>
-              Monto ($)
-              <input
-                type="number"
-                step="0.01"
-                min="0.01"
-                placeholder="0.00"
-                value={form.monto}
-                onChange={(e) => setForm({ ...form, monto: e.target.value })}
-                required
-              />
-            </label>
-            <label>
-              Tercero (proveedor/cliente, opcional)
-              <input
-                type="text"
-                placeholder="Nombre del tercero..."
-                value={form.tercero}
-                onChange={(e) => setForm({ ...form, tercero: e.target.value })}
-              />
-            </label>
-            <label>
-              Fecha
-              <input
-                type="date"
-                value={form.fecha}
-                onChange={(e) => setForm({ ...form, fecha: e.target.value })}
-              />
-            </label>
-            <button type="submit" className="stf-btn stf-btn--primary">
-              {form.tipo === 'salida_interna' ? 'Registrar salida interna' : 'Registrar egreso'}
-            </button>
-          </form>
-
-          <h4 className="stf-subtitulo" style={{ fontSize: 14 }}>Movimientos del período</h4>
-
-          {!movimientos || movimientos.length === 0 ? (
-            <p style={{ color: '#6b7280' }}>No hay movimientos registrados en este período.</p>
-          ) : (
-            movimientos
-              .filter((m) => m.tipo !== 'ingreso')
-              .map((e) => (
-                <div key={e.id} className="st-egreso-item">
-                  <div className="st-egreso-item__datos">
-                    <div className="st-egreso-item__categoria">{e.tipo === 'salida_interna' ? `Salida interna · ${e.categoria}` : e.categoria}</div>
-                    <div className="st-egreso-item__concepto">{e.concepto} {e.tercero ? `· ${e.tercero}` : ''}</div>
-                    <div className="st-egreso-item__fecha">
-                      {new Date(e.fecha + 'T12:00:00').toLocaleDateString('es-VE')}
-                    </div>
-                  </div>
-                  <div className="st-egreso-item__monto">−{formatearUSD(e.monto)}</div>
-                  <button className="st-egreso-item__borrar" onClick={() => eliminarEgreso(e.id)} title="Eliminar">
-                    ×
-                  </button>
-                </div>
-              ))
-          )}
-        </div>
-      )}
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </LayoutDepartamento>
   )
 }

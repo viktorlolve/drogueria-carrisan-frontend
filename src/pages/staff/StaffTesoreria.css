@@ -1,130 +1,232 @@
-/* StaffTesoreria.css — estilos del módulo tesorería (prefijo .st-) */
+/* StaffTesoreria.css — módulo tesorería (prefijo st-). Vive dentro de
+   LayoutDepartamento, departamento "finanzas" → hereda --ldep-color/
+   -fuerte/-suave y los tokens --stf-* globales. */
 
-/* Resumen cards */
+.st-page {
+  font-family: 'Figtree', 'Inter', system-ui, sans-serif;
+  color: var(--stf-indigo, #1A1A3A);
+}
+.st-page *, .st-page *::before, .st-page *::after { box-sizing: border-box; }
+
+.st-seccion { margin-top: 16px; }
+.st-subtitulo-chico { font-size: 14px; }
+
+.st-vacio-nota {
+  color: var(--stf-apagado, #5B6178);
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+.st-col-derecha { text-align: right; }
+
+.st-exportar {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+
+/* ---------- Tarjetas de resumen ---------- */
 .st-resumen-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
   margin-bottom: 24px;
 }
 .st-resumen-card {
-  background: var(--ldep-color-soft, #f0fdf4);
-  border-radius: 10px;
-  padding: 16px;
-  text-align: center;
+  background: #fff;
+  border: 1px solid var(--stf-borde, #E6E8F0);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
+.st-resumen-card--saldo {
+  background: var(--stf-indigo, #1A1A3A);
+  border-color: var(--stf-indigo, #1A1A3A);
+}
+.st-resumen-card--saldo .st-resumen-card__label { color: rgba(255,255,255,0.65); }
+.st-resumen-card--saldo .st-resumen-card__valor { color: #fff; }
+.st-resumen-card--saldo .st-resumen-card__icono { background: rgba(255,255,255,0.12); color: #fff; }
+
+.st-resumen-card__icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #eef1f6;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+.st-resumen-card__icono--ok { background: var(--stf-teal-suave, #E6F6F3); color: var(--stf-teal-fuerte, #0E8577); }
+.st-resumen-card__icono--aviso { background: var(--stf-aviso-suave, #FFF4E0); color: var(--stf-aviso, #B45309); }
+
 .st-resumen-card__label {
-  font-size: 0.8rem;
-  color: #6b7280;
+  font-size: 12px;
+  color: var(--stf-apagado, #5B6178);
+  font-weight: 600;
   margin-bottom: 4px;
 }
 .st-resumen-card__valor {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--ldep-color-strong, #065f46);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--stf-indigo, #1A1A3A);
 }
-.st-resumen-card__valor--negativo {
-  color: #dc2626;
-}
+.st-resumen-card__valor--aviso { color: var(--stf-aviso, #B45309); }
+.st-resumen-card__valor--negativo { color: var(--stf-error, #B3261E); }
+.st-resumen-card__valor--positivo { color: var(--stf-teal-fuerte, #0E8577); }
 
-/* Tabla día por día */
+/* ---------- Tabla "por tercero" (usa .stf-tabla-wrap/.stf-tabla
+   compartidas, que ya traen overflow-x:auto) ---------- */
+.st-saldo-positivo { color: var(--stf-teal-fuerte, #0E8577); font-weight: 700; }
+.st-saldo-negativo { color: var(--stf-error, #B3261E); font-weight: 700; }
+
+/* ---------- Tabla "movimientos por día" — antes sin ningún wrapper
+   responsive; ahora con scroll horizontal contenido como el resto de
+   tablas de la plataforma. ---------- */
+.st-tabla-dia-wrap {
+  background: #fff;
+  border: 1px solid var(--stf-borde, #E6E8F0);
+  border-radius: 12px;
+  overflow-x: auto;
+}
 .st-tabla-dia {
   width: 100%;
+  min-width: 440px;
   border-collapse: collapse;
-  font-size: 0.88rem;
+  font-size: 13.5px;
 }
 .st-tabla-dia th {
   text-align: left;
-  padding: 8px 12px;
-  border-bottom: 2px solid var(--ldep-color, #0D9373);
-  font-weight: 600;
+  padding: 10px 14px;
+  background: #f8f9fb;
+  color: var(--stf-apagado, #5B6178);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid var(--stf-borde, #E6E8F0);
+  white-space: nowrap;
 }
 .st-tabla-dia td {
-  padding: 8px 12px;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 10px 14px;
+  border-bottom: 1px solid #f0f1f4;
+  white-space: nowrap;
 }
-.st-tabla-dia tr:hover {
-  background: var(--ldep-color-soft, #f0fdf4);
-}
-.st-saldo-positivo { color: #065f46; font-weight: 600; }
-.st-saldo-negativo { color: #dc2626; font-weight: 600; }
+.st-tabla-dia tr:last-child td { border-bottom: 0; }
+.st-tabla-dia tr:hover td { background: var(--ldep-color-soft, #FFF4E0); }
 
-/* Formulario egreso */
+/* ---------- Formulario de egreso ---------- */
 .st-form-egreso {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
   align-items: flex-end;
-  margin-bottom: 24px;
-  background: #f9fafb;
+  margin-bottom: 20px;
+  background: #fff;
+  border: 1px solid var(--stf-borde, #E6E8F0);
   padding: 16px;
-  border-radius: 10px;
+  border-radius: 14px;
 }
 .st-form-egreso label {
   display: flex;
   flex-direction: column;
-  font-size: 0.8rem;
-  font-weight: 500;
+  font-size: 12.5px;
+  font-weight: 700;
   color: #374151;
   flex: 1;
   min-width: 140px;
+  gap: 4px;
 }
 .st-form-egreso input,
 .st-form-egreso select {
-  margin-top: 4px;
-  padding: 8px 10px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 0.88rem;
+  padding: 10px 11px;
+  border: 1.5px solid var(--stf-borde, #E6E8F0);
+  border-radius: 9px;
+  /* 16px: por debajo de eso iOS hace zoom automático al enfocar el campo. */
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--stf-indigo, #1A1A3A);
+}
+.st-form-egreso input:focus, .st-form-egreso select:focus {
+  outline: none;
+  border-color: var(--ldep-color, #D97706);
+}
+.st-form-egreso__submit {
+  flex: 0 0 auto;
 }
 
-/* Lista de egresos */
+@media (max-width: 560px) {
+  .st-form-egreso__submit { width: 100%; }
+}
+
+/* ---------- Lista de egresos (tarjetas) ---------- */
+.st-egresos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .st-egreso-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 10px 12px;
-  border-bottom: 1px solid #f3f4f6;
-}
-.st-egreso-item:nth-child(even) {
-  background: #f9fafb;
+  gap: 10px;
+  padding: 11px 14px;
+  background: #fff;
+  border: 1px solid var(--stf-borde, #E6E8F0);
+  border-radius: 12px;
 }
 .st-egreso-item__datos {
   flex: 1;
+  min-width: 0;
 }
 .st-egreso-item__categoria {
-  font-size: 0.75rem;
-  color: #6b7280;
+  font-size: 11px;
+  color: var(--stf-apagado, #5B6178);
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
 }
 .st-egreso-item__concepto {
-  font-weight: 500;
-}
-.st-egreso-item__monto {
-  font-weight: 700;
-  color: #dc2626;
-  white-space: nowrap;
-  margin-left: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--stf-indigo, #1A1A3A);
+  margin-top: 1px;
 }
 .st-egreso-item__fecha {
-  font-size: 0.78rem;
-  color: #9ca3af;
+  font-size: 12px;
+  color: var(--stf-apagado, #5B6178);
+  margin-top: 2px;
+}
+.st-egreso-item__monto {
+  flex-shrink: 0;
+  font-weight: 800;
+  font-size: 14.5px;
+  color: var(--stf-error, #B3261E);
+  white-space: nowrap;
 }
 .st-egreso-item__borrar {
+  flex-shrink: 0;
   background: none;
   border: none;
-  color: #dc2626;
+  color: var(--stf-apagado, #9ca3af);
   cursor: pointer;
-  font-size: 1.1rem;
-  padding: 0 6px;
-  opacity: 0.6;
+  display: flex;
+  padding: 4px;
 }
-.st-egreso-item__borrar:hover {
-  opacity: 1;
+.st-egreso-item__borrar:hover { color: var(--stf-error, #B3261E); }
+
+@media (max-width: 480px) {
+  .st-egreso-item {
+    flex-wrap: wrap;
+  }
+  .st-egreso-item__monto {
+    margin-left: auto;
+  }
 }
 
-/* Filtros fecha */
+/* ---------- Filtros de fecha ---------- */
 .st-filtros-fecha {
   display: flex;
   gap: 12px;
@@ -133,13 +235,16 @@
   flex-wrap: wrap;
 }
 .st-filtros-fecha label {
-  font-size: 0.8rem;
+  font-size: 12.5px;
   color: #374151;
-  font-weight: 500;
+  font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 .st-filtros-fecha input {
-  padding: 6px 8px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 0.85rem;
+  padding: 9px 10px;
+  border: 1.5px solid var(--stf-borde, #E6E8F0);
+  border-radius: 9px;
+  font-size: 14px;
 }

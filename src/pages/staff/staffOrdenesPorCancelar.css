@@ -1,0 +1,99 @@
+/* ============================================================
+   En espera de pago (prefijo sopc-). Vive dentro de
+   LayoutDepartamento (.ldep-main), departamento "finanzas" →
+   hereda --ldep-color/-fuerte/-suave y los tokens --stf-*
+   globales. Reemplaza el <table> de 6 columnas por tarjetas.
+   ============================================================ */
+
+.sopc-page {
+  font-family: 'Figtree', 'Inter', system-ui, sans-serif;
+  color: var(--stf-indigo, #1A1A3A);
+}
+.sopc-page *, .sopc-page *::before, .sopc-page *::after { box-sizing: border-box; }
+
+.sopc-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sopc-card {
+  background: #fff;
+  border: 1px solid var(--stf-borde, #E6E8F0);
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.sopc-card-cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.sopc-orden-id {
+  font-weight: 800;
+  color: var(--stf-apagado, #5B6178);
+  margin-right: 8px;
+}
+
+.sopc-cliente {
+  font-weight: 700;
+  font-size: 14.5px;
+}
+
+.sopc-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.sopc-badge--espera {
+  background: #eef1f6;
+  color: #64748b;
+}
+.sopc-badge--reportado {
+  background: var(--stf-aviso-suave, #FFF4E0);
+  color: var(--stf-aviso, #B45309);
+}
+
+.sopc-card-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed var(--stf-borde, #E6E8F0);
+}
+
+.sopc-monto {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--stf-indigo, #1A1A3A);
+}
+
+.sopc-fecha {
+  font-size: 12.5px;
+  color: var(--stf-apagado, #5B6178);
+}
+
+.sopc-acciones {
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 480px) {
+  .sopc-acciones {
+    flex-direction: column;
+  }
+  .sopc-acciones .stf-btn {
+    width: 100%;
+  }
+}
