@@ -4,6 +4,8 @@ import {
   AlertTriangle,
   ArrowDownRight,
   ArrowUpRight,
+  Bell,
+  BellOff,
   ChevronDown,
   ChevronRight,
   DollarSign,
@@ -16,6 +18,7 @@ import {
 } from 'lucide-react'
 import { useStaffAuth } from '../../context/StaffAuthContext'
 import { useStaffBadges } from '../../context/StaffBadgesContext'
+import { usePushStaff } from '../../hooks/usePushStaff'
 import { DEPARTAMENTOS, MODULOS } from '../../components/staff/NavStaff'
 import StaffNavbar from '../../components/staff/StaffNavbar'
 import staffApi from '../../api/staffAxios'
@@ -386,6 +389,87 @@ function GrupoDepto({ depto, indice, abierto, onAlternar, conteos }) {
 }
 
 // ---------------------------------------------------------------
+// Activación de push del staff directamente en el dashboard. Usa el MISMO hook
+// que el panel completo de /staff/notificaciones: `activar()` vincula el
+// endpoint del navegador a la sesión staff (sin exigir sesión de cliente)
+// y enciende `push_activo` en el servidor. `desactivar()` solo pausa al staff,
+// NO desuscribe la PWA compartida con la sesión de cliente.
+// ---------------------------------------------------------------
+function TarjetaPush() {
+  const {
+    soportado,
+    suscrito,
+    permiso,
+    preferenciaActiva,
+    pidiendoPermiso,
+    error,
+    activar,
+    desactivar,
+  } = usePushStaff()
+
+  const detectando = soportado && suscrito === null
+  const activo = soportado && suscrito === true && preferenciaActiva && permiso === 'granted'
+  const bloqueado = soportado && permiso === 'denied'
+  const pausado = !!suscrito && !preferenciaActiva
+
+  let estado = 'Activá las alertas para enterarte de nuevos pedidos aunque no tengas la app abierta.'
+  if (!soportado) estado = 'Este navegador no admite notificaciones push.'
+  else if (detectando) estado = 'Comprobando el estado de este dispositivo…'
+  else if (bloqueado) estado = 'El navegador tiene bloqueadas las notificaciones. Habilitalas en su configuración.'
+  else if (pausado) estado = 'El dispositivo está registrado, pero las alertas están pausadas.'
+  else if (activo) estado = 'Recibirás avisos aunque tengas la app cerrada.'
+
+  const deshabilitado = !soportado || detectando || bloqueado || pidiendoPermiso
+  const etiqueta = !soportado
+    ? 'No disponible'
+    : detectando
+      ? 'Detectando…'
+      : bloqueado
+        ? 'Bloqueada'
+        : pidiendoPermiso
+          ? 'Guardando…'
+          : activo
+            ? 'Desactivar'
+            : pausado
+              ? 'Reactivar'
+              : 'Activar'
+
+  const IconoBoton = activo ? BellOff : Bell
+
+  return (
+    <section className="sd-seccion" aria-labelledby="sd-t-push">
+      <h2 id="sd-t-push" className="sd-seccion__titulo">Notificaciones</h2>
+      <div className={`sd-push${activo ? ' sd-push--activa' : ''}`}>
+        <span className="sd-push__icono">
+          <Bell size={20} aria-hidden="true" />
+        </span>
+        <div className="sd-push__texto">
+          <strong className="sd-push__titulo">
+            {activo ? 'Alertas activadas en este dispositivo' : 'Activá las alertas del personal'}
+          </strong>
+          <span className="sd-push__estado">{estado}</span>
+          {error && <span className="sd-push__error">{error}</span>}
+        </div>
+        <div className="sd-push__acciones">
+          <button
+            type="button"
+            className={`sd-push__btn${activo ? ' sd-push__btn--activa' : ''}`}
+            onClick={activo ? desactivar : activar}
+            disabled={deshabilitado}
+          >
+            <IconoBoton size={16} aria-hidden="true" />
+            {etiqueta}
+          </button>
+          <Link className="sd-push__link" to="/staff/notificaciones">
+            Ver notificaciones <ChevronRight size={14} aria-hidden="true" />
+          </Link>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ---------------------------------------------------------------
 // Página
 // ---------------------------------------------------------------
 function StaffDashboard() {
@@ -453,6 +537,8 @@ function StaffDashboard() {
 
       <main className="sd-main">
         <PulsoNegocio rol={rol} conteos={conteos} />
+
+        <TarjetaPush />
 
         {accionesRapidas.length > 0 && (
           <section className="sd-seccion" aria-labelledby="sd-t-acciones">

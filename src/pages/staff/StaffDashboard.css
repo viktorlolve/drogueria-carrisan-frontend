@@ -765,3 +765,121 @@ a.sd-tile--claro {
   font-size: 0.72rem;
   color: var(--sd-text-muted);
 }
+
+/* -----------------------------------------------------------------
+   Activación de push del staff en el dashboard.
+   Misma semántica que el panel completo (/staff/notificaciones):
+   "Desactivar" pausa al staff en el servidor, NO desuscribe el navegador
+   (la PWA es compartida con la sesión de cliente en el mismo dispositivo).
+   ----------------------------------------------------------------- */
+.sd-push {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--sd-border);
+  border-radius: 16px;
+  background: var(--sd-surface);
+  box-shadow: 0 1px 2px rgba(26, 26, 58, 0.04);
+}
+
+.sd-push--activa {
+  border-color: rgba(18, 165, 148, 0.4);
+  background: linear-gradient(90deg, rgba(18, 165, 148, 0.07), transparent 55%);
+}
+
+.sd-push__icono {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(0, 82, 220, 0.08);
+  color: var(--sd-azul);
+}
+
+.sd-push--activa .sd-push__icono {
+  background: rgba(18, 165, 148, 0.13);
+  color: var(--sd-teal);
+}
+
+.sd-push__texto {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.sd-push__titulo {
+  font-size: 0.92rem;
+  color: var(--sd-indigo);
+}
+
+.sd-push__estado {
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--sd-text-muted);
+}
+
+.sd-push__error {
+  font-size: 0.75rem;
+  color: #B3261E;
+}
+
+.sd-push__acciones {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.sd-push__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--sd-azul);
+  color: #fff;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.sd-push__btn:hover:not(:disabled) { background: #0046C4; }
+.sd-push__btn:active:not(:disabled) { transform: scale(0.97); }
+.sd-push__btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.sd-push__btn--activa { background: var(--sd-teal); }
+.sd-push__btn--activa:hover:not(:disabled) { background: #0B8577; }
+
+.sd-push__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--sd-azul);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.sd-push__link:hover { text-decoration: underline; }
+
+@media (max-width: 640px) {
+  .sd-push {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    padding: 14px;
+  }
+
+  .sd-push__acciones {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
