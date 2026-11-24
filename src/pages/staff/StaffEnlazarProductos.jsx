@@ -30,6 +30,8 @@ export default function StaffEnlazarProductos() {
   // Resultado de búsqueda de productos del catálogo por fila:
   // { [filaIdx]: undefined (sin buscar aún) | null (buscando) | [] (sin resultados) | [{ id, nombre_comercial, laboratorio, sku }] }
   const [resultadosBusqueda, setResultadosBusqueda] = useState({})
+  // Error de la búsqueda por fila: un 403/500 NO es lo mismo que "sin coincidencias".
+  const [errorBusqueda, setErrorBusqueda] = useState({})
   // Producto elegido por fila: { [filaIdx]: { id, nombre_comercial } }
   const [elegido, setElegido] = useState({})
   // Filas en proceso de enlace (para deshabilitar botón)
@@ -51,6 +53,7 @@ export default function StaffEnlazarProductos() {
         setFilas(r.data.filas || [])
         setElegido({})
         setResultadosBusqueda({})
+        setErrorBusqueda({})
         setQueryPorFila({})
       })
       .catch(e => setError(e.response?.data?.mensaje || 'Error al cargar sin enlazar'))
@@ -72,17 +75,25 @@ export default function StaffEnlazarProductos() {
     const limpio = (term || '').trim()
     if (!limpio) {
       setResultadosBusqueda((prev) => ({ ...prev, [idx]: undefined }))
+      setErrorBusqueda((prev) => ({ ...prev, [idx]: '' }))
       return
     }
 
     timersRef.current[idx] = setTimeout(() => {
       setResultadosBusqueda((prev) => ({ ...prev, [idx]: null })) // cargando
-      staffApi.get('/staff/precios/productos', { params: { search: limpio, limit: 10 } })
+      setErrorBusqueda((prev) => ({ ...prev, [idx]: '' }))
+      // El buscador real del catálogo es GET /staff/precios (sin `page` → array plano).
+      // /staff/precios/productos no existe: caía en el catch y parecía "sin resultados".
+      staffApi.get('/staff/precios', { params: { search: limpio, limit: 10 } })
         .then(r => {
           const data = r.data?.productos || r.data || []
           setResultadosBusqueda((prev) => ({ ...prev, [idx]: data }))
         })
-        .catch(() => setResultadosBusqueda((prev) => ({ ...prev, [idx]: [] })))
+        .catch(e => {
+          const mensaje = e.response?.data?.error || e.response?.data?.mensaje || 'No se pudo buscar en el catálogo'
+          setErrorBusqueda((prev) => ({ ...prev, [idx]: mensaje }))
+          setResultadosBusqueda((prev) => ({ ...prev, [idx]: undefined }))
+        })
     }, 280)
   }
 
@@ -94,6 +105,7 @@ export default function StaffEnlazarProductos() {
   function seleccionarProducto(idx, producto) {
     setElegido((prev) => ({ ...prev, [idx]: producto }))
     setResultadosBusqueda((prev) => ({ ...prev, [idx]: undefined }))
+    setErrorBusqueda((prev) => ({ ...prev, [idx]: '' }))
     setQueryPorFila((prev) => ({ ...prev, [idx]: '' }))
   }
 
@@ -114,13 +126,15 @@ export default function StaffEnlazarProductos() {
         proveedor: provSel,
         producto_id: prod.id,
         costo_usd: fila.costo_usd,
-        subida_id: fila.subida_id,
+        // id de la fila de subidas_sin_enlazar: borrar SOLO esta, no toda la subida.
+        fila_id: fila.id,
         descripcion: fila.descripcion,
       })
       // Quitar la fila enlazada de la lista local
       setFilas(filas.filter((_, i) => i !== idx))
       setElegido(Object.fromEntries(Object.entries(elegido).filter(([k]) => Number(k) !== idx)))
       setResultadosBusqueda(Object.fromEntries(Object.entries(resultadosBusqueda).filter(([k]) => Number(k) !== idx)))
+      setErrorBusqueda(Object.fromEntries(Object.entries(errorBusqueda).filter(([k]) => Number(k) !== idx)))
       setQueryPorFila(Object.fromEntries(Object.entries(queryPorFila).filter(([k]) => Number(k) !== idx)))
     } catch (e) {
       setError(e.response?.data?.mensaje || 'Error al enlazar')
@@ -171,8 +185,9 @@ export default function StaffEnlazarProductos() {
             {filas.map((fila, idx) => {
               const prod = elegido[idx]
               const res = resultadosBusqueda[idx]
+              const errorRes = errorBusqueda[idx]
               const cargandoRes = res === null
-              const sinResultados = Array.isArray(res) && res.length === 0 && (queryPorFila[idx] || '').trim()
+              const sinResultados = Array.isArray(res) && res.length === 0 && !errorRes && (queryPorFila[idx] || '').trim()
 
               return (
                 <div key={idx} className="sep-card">
@@ -196,6 +211,7 @@ export default function StaffEnlazarProductos() {
 
                       {cargandoRes && <p className="sep-aviso">Buscando...</p>}
                       {sinResultados && <p className="sep-aviso">Sin productos que coincidan</p>}
+                      {errorRes && <p className="sep-error sep-error--fila">Error al buscar: {errorRes}</p>}
 
                       {Array.isArray(res) && res.length > 0 && (
                         <div className="sep-opciones">

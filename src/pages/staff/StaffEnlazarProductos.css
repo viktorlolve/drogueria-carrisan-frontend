@@ -105,6 +105,12 @@
   margin: 0 0 14px;
 }
 
+/* Error de búsqueda dentro de una fila: no desplaza el buscador */
+.sep-error--fila {
+  margin: 8px 0 0;
+  font-weight: 500;
+}
+
 .sep-vacio {
   padding: 32px 16px;
   color: #6b7280;

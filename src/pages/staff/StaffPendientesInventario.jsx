@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { X } from 'lucide-react'
 import staffApi from '../../api/staffAxios'
@@ -24,6 +24,22 @@ const NOMBRES_PROVEEDOR = {
   'med-importados': 'MED IMPORTADOS',
 }
 
+// Nombre del producto de forma totalmente defensiva. El backend devuelve
+// `producto` como objeto completo ({ id, nombre_comercial, ... }) o null cuando
+// no se encuentra en el mapa. Renderizar ese objeto directamente dispara el
+// error #130 de React ("Objects are not valid as a React child").
+function nombreProducto(fila) {
+  const p = fila && fila.producto
+  if (!p) return String((fila && fila.producto_id) ?? '-')
+  if (typeof p === 'string') return p || '-'
+  if (typeof p === 'object') {
+    if (Array.isArray(p)) return p.map(nombreProducto).join(', ') || '-'
+    const nombre = p.nombre_comercial ?? p.nombre ?? p.id
+    return nombre != null ? String(nombre) : '-'
+  }
+  return String(p)
+}
+
 export default function StaffPendientesInventario() {
   const [searchParams, setSearchParams] = useSearchParams()
   // Si se llega desde "Proveedores" (p. ej. ?tipo=sin_enlazar&proveedor=cobeca),
@@ -38,28 +54,25 @@ export default function StaffPendientesInventario() {
   const [pagina, setPagina] = useState(1)
   const [costoEdit, setCostoEdit] = useState({ id: null, valor: '' })
 
-  function cargar() {
+  const cargar = useCallback(() => {
     setCargando(true)
     setError('')
     staffApi.get('/staff/proveedores/pendientes', { params: { tipo: tab, proveedor: proveedorFiltro || undefined, buscar, pagina } })
-      .then(r => { setFilas(r.data.filas || []) })
+      .then(r => { setFilas(Array.isArray(r.data?.filas) ? r.data.filas : []) })
       .catch(e => setError(e.response?.data?.mensaje || 'Error al cargar pendientes'))
       .finally(() => setCargando(false))
-  }
+  }, [tab, proveedorFiltro, buscar, pagina])
 
+  // El fetch se dispara desde un microtask con guarda de cancelación para no
+  // tocar setState directamente dentro del body del efecto (regla
+  // react-hooks/set-state-in-effect) y evitar carreras al cambiar de tab.
   useEffect(() => {
-    let activo = true
+    let cancelado = false
     Promise.resolve().then(() => {
-      if (!activo) return
-      setCargando(true)
-      setError('')
-      staffApi.get('/staff/proveedores/pendientes', { params: { tipo: tab, proveedor: proveedorFiltro || undefined, buscar, pagina } })
-        .then(r => { if (activo) { setFilas(r.data.filas || []) } })
-        .catch(e => { if (activo) setError(e.response?.data?.mensaje || 'Error al cargar pendientes') })
-        .finally(() => { if (activo) setCargando(false) })
+      if (!cancelado) cargar()
     })
-    return () => { activo = false }
-  }, [tab, proveedorFiltro, pagina, buscar])
+    return () => { cancelado = true }
+  }, [cargar])
 
   function quitarFiltroProveedor() {
     setProveedorFiltro('')
@@ -144,8 +157,8 @@ export default function StaffPendientesInventario() {
                 </tr>
               ))}
               {tab === 'precios_viejos' && filas.map((f, i) => (
-                <tr key={i}>
-                  <td>{String(f.producto?.nombre_comercial ?? f.producto_id ?? '-')}</td>
+                <tr key={f.producto_id || String(f.fecha) || i}>
+                  <td>{nombreProducto(f)}</td>
                   <td>{String(f.proveedor ?? '-')}</td>
                   <td>{f.costo_usd != null ? `$${Number(f.costo_usd).toFixed(2)}` : '-'}</td>
                   <td>{f.dias != null ? String(f.dias) : '-'}</td>
