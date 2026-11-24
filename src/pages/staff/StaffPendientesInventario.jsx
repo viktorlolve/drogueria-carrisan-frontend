@@ -157,11 +157,11 @@ export default function StaffPendientesInventario() {
                 </tr>
               ))}
               {tab === 'precios_viejos' && filas.map((f, i) => (
-                <tr key={f.producto_id || String(f.fecha) || i}>
+                <tr key={String(f.producto_id ?? f.fecha ?? i)}>
                   <td>{nombreProducto(f)}</td>
                   <td>{String(f.proveedor ?? '-')}</td>
-                  <td>{f.costo_usd != null ? `$${Number(f.costo_usd).toFixed(2)}` : '-'}</td>
-                  <td>{f.dias != null ? String(f.dias) : '-'}</td>
+                  <td>{f && f.costo_usd != null ? `$${Number(f.costo_usd).toFixed(2)}` : '-'}</td>
+                  <td>{f && f.dias != null ? String(f.dias) : '-'}</td>
                   <td>
                     <Tooltip label="Crear producto deshabilitado" placement="top">
                       <button className="spi-btn spi-btn--xs" disabled>Crear producto</button>
