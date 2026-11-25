@@ -77,7 +77,7 @@ export const MODULOS = {
           to: '/staff/cuentas-por-cobrar',
           icono: Banknote,
           texto: 'Cuentas por cobrar',
-          desc: 'Clientes con línea de crédito y su estado de cuenta',
+          desc: 'Clientes con línea de crédito: aging, bloqueo, órdenes, facturas, pagos y notas de cobranza',
           roles: ['contabilidad', 'administrador', 'director', 'admin'],
         },
         {
@@ -93,7 +93,7 @@ export const MODULOS = {
           to: '/staff/credito',
           icono: Shield,
           texto: 'Crédito y cobranza',
-          desc: 'Línea de crédito de todos los clientes: cobros, reportes por verificar, aging y cobranza',
+          desc: 'Línea de crédito de todos los clientes, cobros y reportes de pago por verificar',
           roles: ['contabilidad', 'administrador', 'director', 'admin'],
         },
         {

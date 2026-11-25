@@ -1,9 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { ExternalLink, ArrowRight } from 'lucide-react'
 import staffApi from '../../api/staffAxios'
 import LayoutDepartamento from '../../components/staff/LayoutDepartamento'
 import StaffTabs from '../../components/staff/StaffTabs'
+import BuscadorCliente from '../../components/staff/BuscadorCliente'
 import './StaffFinanzas.css'
-import { useStaffUI } from '../../hooks/useStaffUI'
+import './StaffTesoreria.css'
+import './StaffCredito.css'
 import { formatearUSD, formatearVES } from '../../utils/formato'
 import StaffEstado from '../../components/staff/StaffEstado'
 import StaffModal from '../../components/staff/StaffModal'
@@ -21,61 +25,57 @@ const TIPOS_NOTA = [
   { id: 'otro', texto: 'Otro' },
 ]
 
+// La pestaña "Clientes" (aging + bloqueo + detalle) se fusionó con
+// StaffCuentasPorCobrar.jsx — ahí vive una sola ficha de cliente en vez de
+// dos pantallas separadas. Aquí quedan las 4 pestañas restantes.
 const TABS = [
-  { id: 'clientes', texto: 'Clientes' },
   { id: 'linea', texto: 'Línea de crédito' },
   { id: 'cobros', texto: 'Cobros' },
   { id: 'por-verificar', texto: 'Por verificar' },
   { id: 'notas', texto: 'Notas de cobranza' },
 ]
 
-function AgingBadge({ monto, label }) {
-  if (!monto) return null
-  let color = '#16A34A'
-  if (label === '31-60') color = '#CA8A04'
-  else if (label === '61-90') color = '#EA580C'
-  else if (label === '90+') color = '#DC2626'
-  return (
-    <span className="scr-aging-badge" style={{ background: color + '18', color, borderColor: color }}>
-      {label}d: {formatearUSD(monto)}
-    </span>
-  )
-}
-
 // ------------------------------------------------------------------
-// Tab: Cobros (registrar abono + historial) — migrado de StaffPagos
+// Tab: Cobros (registrar abono + historial)
 // ------------------------------------------------------------------
 function TabCobros() {
   const [pagos, setPagos] = useState([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
-  const [nuevo, setNuevo] = useState({ usuario_id: '', monto: '', tipo: 'abono', detalle: '' })
+  const [cliente, setCliente] = useState(null)
+  const [monto, setMonto] = useState('')
+  const [tipo, setTipo] = useState('abono')
+  const [detalleTexto, setDetalleTexto] = useState('')
   const [guardando, setGuardando] = useState(false)
 
-  async function cargarPagos() {
-    try {
-      const { data } = await staffApi.get('/staff/contabilidad/pagos')
-      setPagos(data)
-    } catch (err) {
-      setError(err.response?.data?.error || 'No se pudieron cargar los pagos')
-    } finally {
-      setCargando(false)
-    }
-  }
+  const cargarPagos = useCallback(() => {
+    staffApi.get('/staff/contabilidad/pagos')
+      .then(({ data }) => { setPagos(data); setError('') })
+      .catch((err) => setError(err.response?.data?.error || 'No se pudieron cargar los pagos'))
+      .finally(() => setCargando(false))
+  }, [])
+
+  useEffect(() => {
+    Promise.resolve().then(cargarPagos)
+  }, [cargarPagos])
 
   async function registrarPago(e) {
     e.preventDefault()
+    if (!cliente || !monto) return
     setError('')
     setGuardando(true)
     try {
       await staffApi.post('/staff/contabilidad/pagos', {
-        usuario_id: nuevo.usuario_id,
-        monto: Number(nuevo.monto),
-        tipo: nuevo.tipo,
-        detalle: nuevo.detalle || undefined,
+        usuario_id: cliente.id,
+        monto: Number(monto),
+        tipo,
+        detalle: detalleTexto.trim() || undefined,
       })
-      setNuevo({ usuario_id: '', monto: '', tipo: 'abono', detalle: '' })
-      await cargarPagos()
+      setCliente(null)
+      setMonto('')
+      setTipo('abono')
+      setDetalleTexto('')
+      cargarPagos()
     } catch (err) {
       setError(err.response?.data?.error || 'No se pudo registrar el pago')
     } finally {
@@ -83,85 +83,54 @@ function TabCobros() {
     }
   }
 
-  useEffect(() => {
-    let activo = true
-    staffApi.get('/staff/contabilidad/pagos')
-      .then(({ data }) => { if (activo) setPagos(data) })
-      .catch((err) => { if (activo) setError(err.response?.data?.error || 'No se pudieron cargar los pagos') })
-      .finally(() => { if (activo) setCargando(false) })
-    return () => { activo = false }
-  }, [])
-
   return (
-    <div>
+    <div className="scr-seccion">
       <h3 className="stf-subtitulo">Registrar abono</h3>
-      <form className="stf-form" onSubmit={registrarPago}>
-        <div className="stf-form-row">
+      <form className="scr-form-card" onSubmit={registrarPago}>
+        <BuscadorCliente value={cliente} onSeleccionar={setCliente} />
+        <div className="scr-form-fila">
           <input
-            className="stf-input"
-            placeholder="ID del cliente (usuario)"
-            value={nuevo.usuario_id}
-            onChange={(e) => setNuevo({ ...nuevo, usuario_id: e.target.value })}
-            required
-          />
-          <input
-            className="stf-input"
-            placeholder="Monto USD"
             type="number"
             step="0.01"
-            value={nuevo.monto}
-            onChange={(e) => setNuevo({ ...nuevo, monto: e.target.value })}
+            min="0.01"
+            placeholder="Monto USD"
+            value={monto}
+            onChange={(e) => setMonto(e.target.value)}
             required
           />
-          <select className="stf-input" value={nuevo.tipo} onChange={(e) => setNuevo({ ...nuevo, tipo: e.target.value })}>
+          <select value={tipo} onChange={(e) => setTipo(e.target.value)}>
             <option value="abono">Abono</option>
             <option value="contado">Contado</option>
             <option value="reporte_cliente">Reporte de cliente</option>
           </select>
-          <input
-            className="stf-input"
-            placeholder="Detalle (opcional)"
-            value={nuevo.detalle}
-            onChange={(e) => setNuevo({ ...nuevo, detalle: e.target.value })}
-          />
-          <button className="stf-btn stf-btn--primary" type="submit" disabled={guardando}>
-            {guardando ? 'Guardando...' : 'Registrar'}
-          </button>
         </div>
+        <input
+          type="text"
+          placeholder="Detalle (opcional)"
+          value={detalleTexto}
+          onChange={(e) => setDetalleTexto(e.target.value)}
+        />
+        <button type="submit" className="stf-btn stf-btn--primary" disabled={guardando || !cliente || !monto}>
+          {guardando ? 'Guardando...' : 'Registrar abono'}
+        </button>
       </form>
 
       {error && <p className="stf-error" role="alert">{error}</p>}
 
       <h3 className="stf-subtitulo">Historial de pagos</h3>
       {cargando && <StaffEstado tipo="cargando" />}
-      {!cargando && (
-        <div className="stf-tabla-wrap">
-          <table className="stf-tabla">
-            <thead>
-              <tr>
-                <th>Cliente</th>
-                <th>Monto</th>
-                <th>Tipo</th>
-                <th>Detalle</th>
-                <th>Fecha</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pagos.length === 0 ? (
-                <tr><td colSpan="5">Sin pagos registrados</td></tr>
-              ) : (
-                pagos.map((p) => (
-                  <tr key={p.id}>
-                    <td>{p.users?.nombre || `#${p.usuario_id}`}</td>
-                    <td>{formatearUSD(p.monto)}</td>
-                    <td>{p.tipo}</td>
-                    <td>{p.detalle || '—'}</td>
-                    <td>{formatFecha(p.created_at)}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {!cargando && pagos.length === 0 && <p className="st-vacio-nota">Sin pagos registrados.</p>}
+      {!cargando && pagos.length > 0 && (
+        <div className="scr-lista">
+          {pagos.map((p) => (
+            <div key={p.id} className="scr-item">
+              <div className="scr-item-info">
+                <span className="scr-item-titulo">{p.users?.nombre || `Cliente #${p.usuario_id}`}</span>
+                <span className="scr-item-sub">{p.tipo}{p.detalle ? ` · ${p.detalle}` : ''} · {formatFecha(p.created_at)}</span>
+              </div>
+              <span className="scr-item-monto scr-item-monto--positivo">{formatearUSD(p.monto)}</span>
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -169,7 +138,7 @@ function TabCobros() {
 }
 
 // ------------------------------------------------------------------
-// Tab: Por verificar (reportes de pago pendientes) — migrado de StaffPagos
+// Tab: Por verificar (reportes de pago pendientes)
 // ------------------------------------------------------------------
 function TabPorVerificar() {
   const [reportes, setReportes] = useState([])
@@ -180,29 +149,16 @@ function TabPorVerificar() {
   const [notaRechazo, setNotaRechazo] = useState('')
   const [procesando, setProcesando] = useState(false)
 
-  async function cargarReportes() {
-    try {
-      const { data } = await staffApi.get('/staff/contabilidad/reportes-pago', {
-        params: { estado: 'pendiente_verificacion' },
-      })
-      setReportes(data)
-    } catch (err) {
-      setError(err.response?.data?.error || 'No se pudieron cargar los reportes')
-    } finally {
-      setCargando(false)
-    }
-  }
+  const cargarReportes = useCallback(() => {
+    staffApi.get('/staff/contabilidad/reportes-pago', { params: { estado: 'pendiente_verificacion' } })
+      .then(({ data }) => { setReportes(data); setError('') })
+      .catch((err) => setError(err.response?.data?.error || 'No se pudieron cargar los reportes'))
+      .finally(() => setCargando(false))
+  }, [])
 
   useEffect(() => {
-    let activo = true
-    staffApi.get('/staff/contabilidad/reportes-pago', {
-      params: { estado: 'pendiente_verificacion' },
-    })
-      .then(({ data }) => { if (activo) setReportes(data) })
-      .catch((err) => { if (activo) setError(err.response?.data?.error || 'No se pudieron cargar los reportes') })
-      .finally(() => { if (activo) setCargando(false) })
-    return () => { activo = false }
-  }, [])
+    Promise.resolve().then(cargarReportes)
+  }, [cargarReportes])
 
   function abrirVerificar(r) { setReporteAbierto(r); setAccion('verificar') }
   function abrirRechazar(r) { setReporteAbierto(r); setAccion('rechazar'); setNotaRechazo('') }
@@ -213,7 +169,7 @@ function TabPorVerificar() {
     try {
       await staffApi.patch(`/staff/contabilidad/reportes-pago/${reporteAbierto.id}/verificar`)
       cerrar()
-      await cargarReportes()
+      cargarReportes()
     } catch (err) {
       setError(err.response?.data?.error || 'No se pudo verificar el pago')
     } finally {
@@ -228,7 +184,7 @@ function TabPorVerificar() {
         nota_rechazo: notaRechazo.trim() || undefined,
       })
       cerrar()
-      await cargarReportes()
+      cargarReportes()
     } catch (err) {
       setError(err.response?.data?.error || 'No se pudo rechazar el pago')
     } finally {
@@ -237,47 +193,34 @@ function TabPorVerificar() {
   }
 
   return (
-    <div>
+    <div className="scr-seccion">
       {error && <p className="stf-error" role="alert">{error}</p>}
       {cargando && <StaffEstado tipo="cargando" />}
-      {!cargando && reportes.length === 0 && <p>No hay reportes de pago pendientes de verificar.</p>}
+      {!cargando && reportes.length === 0 && <p className="st-vacio-nota">No hay reportes de pago pendientes de verificar.</p>}
       {!cargando && reportes.length > 0 && (
-        <div className="stf-tabla-wrap">
-          <table className="stf-tabla">
-            <thead>
-              <tr>
-                <th>Cliente</th>
-                <th>Órdenes</th>
-                <th>Monto</th>
-                <th>Monto Bs</th>
-                <th>Fecha</th>
-                <th>Comprobante</th>
-                <th>Acción</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reportes.map((r) => (
-                <tr key={r.id}>
-                  <td>{r.users?.nombre || `#${r.usuario_id}`}</td>
-                  <td>{(r.reporte_pago_ordenes || []).map((v) => `#${v.orden_id}`).join(', ')}</td>
-                  <td>{formatearUSD(r.monto_usd)}</td>
-                  <td>{formatearVES(r.monto_bs)}</td>
-                  <td>{formatFecha(r.created_at)}</td>
-                  <td>
-                    {r.url_comprobante ? (
-                      <a href={r.url_comprobante} target="_blank" rel="noreferrer">Ver</a>
-                    ) : '—'}
-                  </td>
-                  <td>
-                    <div className="stf-acciones">
-                      <button className="stf-btn stf-btn--small stf-btn--primary" onClick={() => abrirVerificar(r)}>Verificar</button>
-                      <button className="stf-btn stf-btn--small stf-btn--danger" onClick={() => abrirRechazar(r)}>Rechazar</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="scr-lista">
+          {reportes.map((r) => (
+            <div key={r.id} className="scr-card">
+              <div className="scr-card-cabecera">
+                <span className="scr-card-titulo">{r.users?.nombre || `Cliente #${r.usuario_id}`}</span>
+                <span className="scr-item-monto">{formatearUSD(r.monto_usd)}</span>
+              </div>
+              <div className="scr-card-meta">
+                <span>Órdenes: {(r.reporte_pago_ordenes || []).map((v) => `#${v.orden_id}`).join(', ') || '—'}</span>
+                <span>{formatearVES(r.monto_bs)}</span>
+                <span>{formatFecha(r.created_at)}</span>
+                {r.url_comprobante && (
+                  <a href={r.url_comprobante} target="_blank" rel="noreferrer" className="scr-link">
+                    <ExternalLink size={12} /> Comprobante
+                  </a>
+                )}
+              </div>
+              <div className="stf-acciones">
+                <button type="button" className="stf-btn stf-btn--small stf-btn--primary" onClick={() => abrirVerificar(r)}>Verificar</button>
+                <button type="button" className="stf-btn stf-btn--small stf-btn--danger" onClick={() => abrirRechazar(r)}>Rechazar</button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -289,9 +232,9 @@ function TabPorVerificar() {
               de cobro se genera aparte en Facturación.
             </p>
             {error && <p className="stf-error" role="alert">{error}</p>}
-            <div className="stf-acciones" style={{ marginTop: 14 }}>
-              <button className="stf-btn" onClick={cerrar} disabled={procesando}>Cancelar</button>
-              <button className="stf-btn stf-btn--primary" onClick={confirmarVerificar} disabled={procesando}>
+            <div className="stf-acciones scr-modal-acciones">
+              <button type="button" className="stf-btn" onClick={cerrar} disabled={procesando}>Cancelar</button>
+              <button type="button" className="stf-btn stf-btn--primary" onClick={confirmarVerificar} disabled={procesando}>
                 {procesando ? 'Verificando...' : 'Confirmar pago'}
               </button>
             </div>
@@ -310,9 +253,9 @@ function TabPorVerificar() {
               rows={3}
             />
             {error && <p className="stf-error" role="alert">{error}</p>}
-            <div className="stf-acciones" style={{ marginTop: 14 }}>
-              <button className="stf-btn" onClick={cerrar} disabled={procesando}>Cancelar</button>
-              <button className="stf-btn stf-btn--danger" onClick={confirmarRechazar} disabled={procesando}>
+            <div className="stf-acciones scr-modal-acciones">
+              <button type="button" className="stf-btn" onClick={cerrar} disabled={procesando}>Cancelar</button>
+              <button type="button" className="stf-btn stf-btn--danger" onClick={confirmarRechazar} disabled={procesando}>
                 {procesando ? 'Rechazando...' : 'Confirmar rechazo'}
               </button>
             </div>
@@ -336,25 +279,16 @@ function TabLinea() {
   const [motivo, setMotivo] = useState('')
   const [guardando, setGuardando] = useState(false)
 
-  async function cargar() {
-    try {
-      const { data } = await staffApi.get('/staff/credito/linea/clientes')
-      setClientes(data)
-    } catch (err) {
-      setError(err.response?.data?.error || 'No se pudieron cargar los clientes')
-    } finally {
-      setCargando(false)
-    }
-  }
+  const cargar = useCallback(() => {
+    staffApi.get('/staff/credito/linea/clientes')
+      .then(({ data }) => { setClientes(data); setError('') })
+      .catch((err) => setError(err.response?.data?.error || 'No se pudieron cargar los clientes'))
+      .finally(() => setCargando(false))
+  }, [])
 
   useEffect(() => {
-    let activo = true
-    staffApi.get('/staff/credito/linea/clientes')
-      .then(({ data }) => { if (activo) setClientes(data) })
-      .catch((err) => { if (activo) setError(err.response?.data?.error || 'No se pudieron cargar los clientes') })
-      .finally(() => { if (activo) setCargando(false) })
-    return () => { activo = false }
-  }, [])
+    Promise.resolve().then(cargar)
+  }, [cargar])
 
   const filtrados = clientes.filter((c) => {
     const q = buscar.trim().toLowerCase()
@@ -388,7 +322,7 @@ function TabLinea() {
         motivo: motivo.trim() || undefined,
       })
       setEditando(null)
-      await cargar()
+      cargar()
     } catch (err) {
       setError(err.response?.data?.error || 'No se pudo guardar la línea de crédito')
     } finally {
@@ -397,10 +331,10 @@ function TabLinea() {
   }
 
   return (
-    <div>
-      <div className="scr-form-row" style={{ marginBottom: 12 }}>
+    <div className="scr-seccion">
+      <div className="scr-buscador-texto">
         <input
-          className="stf-input"
+          type="text"
           placeholder="Buscar por nombre, email o RIF/CI..."
           value={buscar}
           onChange={(e) => setBuscar(e.target.value)}
@@ -409,87 +343,60 @@ function TabLinea() {
 
       {error && <p className="stf-error" role="alert">{error}</p>}
       {cargando && <StaffEstado tipo="cargando" />}
-      {!cargando && (
-        <div className="stf-tabla-wrap">
-          <table className="stf-tabla">
-            <thead>
-              <tr>
-                <th>Cliente</th>
-                <th>Línea actual</th>
-                <th>Deuda total</th>
-                <th>Saldo disponible</th>
-                <th>Estado</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtrados.length === 0 ? (
-                <tr><td colSpan="6">Sin clientes</td></tr>
-              ) : (
-                filtrados.map((c) => (
-                  <tr key={c.id}>
-                    <td>
-                      <div className="stf-cliente-cell">
-                        <strong>{c.nombre}</strong>
-                        <span>{c.email}</span>
-                      </div>
-                    </td>
-                    <td>{formatearUSD(c.linea_credito)}</td>
-                    <td style={{ color: c.deuda_total > 0 ? '#DC2626' : 'inherit' }}>
-                      {formatearUSD(c.deuda_total)}
-                    </td>
-                    <td>{formatearUSD(c.saldo_disponible)}</td>
-                    <td>
-                      {c.credito_bloqueado
-                        ? <span style={{ color: '#DC2626', fontWeight: 600 }}>Bloqueado</span>
-                        : c.linea_credito > 0
-                          ? <span style={{ color: '#16A34A' }}>Activo</span>
-                          : <span style={{ color: '#6B7280' }}>Sin línea</span>
-                      }
-                    </td>
-                    <td>
-                      <button className="stf-btn stf-btn--small" onClick={() => abrirEditar(c)}>
-                        Editar línea
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {!cargando && filtrados.length === 0 && <p className="st-vacio-nota">Sin clientes.</p>}
+      {!cargando && filtrados.length > 0 && (
+        <div className="scr-lista">
+          {filtrados.map((c) => (
+            <div key={c.id} className="scr-card">
+              <div className="scr-card-cabecera">
+                <span className="scr-card-titulo">{c.nombre}</span>
+                {c.credito_bloqueado ? (
+                  <span className="scr-estado scr-estado--bloqueado">Bloqueado</span>
+                ) : c.linea_credito > 0 ? (
+                  <span className="scr-estado scr-estado--activo">Activo</span>
+                ) : (
+                  <span className="scr-estado">Sin línea</span>
+                )}
+              </div>
+              <div className="scr-card-meta">
+                <span>{c.email}</span>
+                <span>Línea {formatearUSD(c.linea_credito)}</span>
+                <span className={c.deuda_total > 0 ? 'scr-texto-negativo' : ''}>Deuda {formatearUSD(c.deuda_total)}</span>
+                <span>Saldo {formatearUSD(c.saldo_disponible)}</span>
+              </div>
+              <div className="stf-acciones">
+                <button type="button" className="stf-btn stf-btn--small" onClick={() => abrirEditar(c)}>Editar línea</button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
       {editando && (
         <StaffModal titulo={`Línea de crédito — ${editando.nombre}`} ancho="sm" onCerrar={() => setEditando(null)} bloqueado={guardando}>
           <div className="stf-modal-content">
-            <p style={{ margin: '8px 0 4px' }}>Línea actual: {formatearUSD(editando.linea_credito)} · Deuda: {formatearUSD(editando.deuda_total)}</p>
-            <form onSubmit={guardar}>
-              <div className="stf-form-row" style={{ marginTop: 8 }}>
-                <input
-                  className="stf-input"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="Monto de la línea USD"
-                  value={monto}
-                  onChange={(e) => setMonto(e.target.value)}
-                  required
-                  autoFocus
-                />
-              </div>
+            <p className="scr-modal-info">Línea actual: {formatearUSD(editando.linea_credito)} · Deuda: {formatearUSD(editando.deuda_total)}</p>
+            <form onSubmit={guardar} className="scr-form-card">
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="Monto de la línea USD"
+                value={monto}
+                onChange={(e) => setMonto(e.target.value)}
+                required
+                autoFocus
+              />
               <textarea
-                className="stf-input"
                 placeholder="Motivo (opcional)"
                 value={motivo}
                 onChange={(e) => setMotivo(e.target.value)}
                 rows={2}
-                style={{ marginTop: 8, width: '100%' }}
               />
               {error && <p className="stf-error" role="alert">{error}</p>}
-              <div className="stf-acciones" style={{ marginTop: 14 }}>
-                <button className="stf-btn" onClick={() => setEditando(null)} disabled={guardando}>Cancelar</button>
-                <button className="stf-btn stf-btn--primary" type="submit" disabled={guardando}>
+              <div className="stf-acciones scr-modal-acciones">
+                <button type="button" className="stf-btn" onClick={() => setEditando(null)} disabled={guardando}>Cancelar</button>
+                <button type="submit" className="stf-btn stf-btn--primary" disabled={guardando}>
                   {guardando ? 'Guardando...' : 'Guardar línea'}
                 </button>
               </div>
@@ -501,463 +408,146 @@ function TabLinea() {
   )
 }
 
-function StaffCredito() {
-  const { avisar, pedirTexto } = useStaffUI()
-  const [tab, setTab] = useState('clientes')
-  const [aging, setAging] = useState([])
+// ------------------------------------------------------------------
+// Tab: Notas de cobranza (listado global + formulario + próximos seguimientos)
+// ------------------------------------------------------------------
+function TabNotas() {
+  const navigate = useNavigate()
+  const [notas, setNotas] = useState([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
+  const [cliente, setCliente] = useState(null)
+  const [tipo, setTipo] = useState('llamada')
+  const [nota, setNota] = useState('')
+  const [fechaSeguimiento, setFechaSeguimiento] = useState('')
+  const [enviando, setEnviando] = useState(false)
 
-  // Detalle de cliente
-  const [clienteId, setClienteId] = useState(null)
-  const [detalle, setDetalle] = useState(null)
-
-  // Notas
-  const [notas, setNotas] = useState([])
-  const [formNota, setFormNota] = useState({ usuario_id: '', tipo: 'llamada', nota: '', fecha_seguimiento: '' })
-  const [enviandoNota, setEnviandoNota] = useState(false)
-
-  // Recordatorio
-  const [formRec, setFormRec] = useState({ usuario_id: '', mensaje: '' })
-  const [enviandoRec, setEnviandoRec] = useState(false)
-
-  // Cargar aging
-  const cargarAging = useCallback(async () => {
-    try {
-      const { data } = await staffApi.get('/staff/credito/aging')
-      setAging(data)
-    } catch (err) {
-      setError(err.response?.data?.error || 'Error al cargar datos')
-    } finally {
-      setCargando(false)
-    }
-  }, [])
-
-  // Cargar detalle cliente
-  const cargarDetalle = useCallback(async (id) => {
-    setClienteId(id)
-    setDetalle(null)
-    try {
-      const { data } = await staffApi.get(`/staff/credito/clientes/${id}`)
-      setDetalle(data)
-    } catch (err) {
-      setError(err.response?.data?.error || 'Error al cargar detalle')
-    }
-  }, [])
-
-  // Cargar todas las notas
-  const cargarNotas = useCallback(async () => {
-    try {
-      const { data } = await staffApi.get('/staff/credito/notas')
-      setNotas(data)
-    } catch (err) {
-      setError(err.response?.data?.error || 'Error al cargar notas')
-    }
+  const cargarNotas = useCallback(() => {
+    staffApi.get('/staff/credito/notas')
+      .then(({ data }) => { setNotas(data); setError('') })
+      .catch((err) => setError(err.response?.data?.error || 'No se pudieron cargar las notas'))
+      .finally(() => setCargando(false))
   }, [])
 
   useEffect(() => {
-    let activo = true
-    staffApi.get('/staff/credito/aging')
-      .then(({ data }) => { if (activo) setAging(data) })
-      .catch((err) => { if (activo) setError(err.response?.data?.error || 'Error al cargar datos') })
-      .finally(() => { if (activo) setCargando(false) })
-    staffApi.get('/staff/credito/notas')
-      .then(({ data }) => { if (activo) setNotas(data) })
-      .catch((err) => { if (activo) setError(err.response?.data?.error || 'Error al cargar notas') })
-    return () => { activo = false }
-  }, [])
+    Promise.resolve().then(cargarNotas)
+  }, [cargarNotas])
 
-  // Crear nota
   async function crearNota(e) {
     e.preventDefault()
-    if (!formNota.usuario_id || !formNota.nota) return
-    setEnviandoNota(true)
+    if (!cliente || !nota.trim()) return
+    setEnviando(true)
     try {
       await staffApi.post('/staff/credito/notas', {
-        usuario_id: Number(formNota.usuario_id),
-        tipo: formNota.tipo,
-        nota: formNota.nota,
-        fecha_seguimiento: formNota.fecha_seguimiento || null,
+        usuario_id: cliente.id,
+        tipo,
+        nota: nota.trim(),
+        fecha_seguimiento: fechaSeguimiento || null,
       })
-      setFormNota({ usuario_id: '', tipo: 'llamada', nota: '', fecha_seguimiento: '' })
+      setCliente(null)
+      setTipo('llamada')
+      setNota('')
+      setFechaSeguimiento('')
       cargarNotas()
-      if (clienteId) cargarDetalle(clienteId)
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al crear nota')
+      setError(err.response?.data?.error || 'No se pudo guardar la nota')
     } finally {
-      setEnviandoNota(false)
+      setEnviando(false)
     }
   }
 
-  // Enviar recordatorio
-  async function enviarRecordatorio(e) {
-    e.preventDefault()
-    if (!formRec.usuario_id || !formRec.mensaje) return
-    setEnviandoRec(true)
-    try {
-      await staffApi.post('/staff/credito/recordatorio', {
-        usuario_id: Number(formRec.usuario_id),
-        mensaje: formRec.mensaje,
-      })
-      setFormRec({ usuario_id: '', mensaje: '' })
-      avisar('Recordatorio enviado')
-    } catch (err) {
-      setError(err.response?.data?.error || 'Error al enviar recordatorio')
-    } finally {
-      setEnviandoRec(false)
-    }
+  function verCliente(usuarioId) {
+    if (usuarioId) navigate(`/staff/cuentas-por-cobrar?cliente=${usuarioId}`)
   }
 
-  // Toggle bloqueo
-  async function toggleBloqueo(cliente) {
-    const accion = cliente.credito_bloqueado ? 'desbloquear' : 'bloquear'
-    let motivo = null
-    if (accion === 'bloquear') {
-      motivo = await pedirTexto({
-        titulo: `Bloquear el crédito de ${cliente.nombre || 'este cliente'}`,
-        etiqueta: 'Motivo del bloqueo (opcional)',
-        textoConfirmar: 'Bloquear',
-        peligro: true,
-      })
-      if (motivo === null) return // cancelado
-    }
+  const seguimientos = notas
+    .filter((n) => n.fecha_seguimiento)
+    .sort((a, b) => new Date(a.fecha_seguimiento) - new Date(b.fecha_seguimiento))
 
-    try {
-      await staffApi.patch(`/staff/credito/bloquear/${cliente.id}`, {
-        bloqueado: accion === 'bloquear',
-        motivo: motivo || undefined,
-      })
-      cargarAging()
-      if (detalle?.cliente?.id === cliente.id) cargarDetalle(cliente.id)
-    } catch (err) {
-      setError(err.response?.data?.error || 'Error al cambiar bloqueo')
-    }
-  }
-
-  // --- Vista detalle de cliente ---
-  if (clienteId && detalle) {
-    return (
-      <LayoutDepartamento departamento="finanzas" activo="credito" titulo="Crédito y cobranza">
-        <button className="stf-btn stf-btn--ghost" onClick={() => { setClienteId(null); setDetalle(null) }}>
-          ← Volver a lista
-        </button>
-
-        {error && <p className="stf-error" role="alert">{error}</p>}
-
-        <div className="scr-detalle-header">
-          <h3>{detalle.cliente.nombre}</h3>
-          <span>{detalle.cliente.email}</span>
-          {detalle.cliente.rif_cedula && <span>RIF/CI: {detalle.cliente.rif_cedula}</span>}
-        </div>
-
-        {/* Resumen */}
-        <div className="stf-grid-3">
-          <div className="stf-stat">
-            <span className="stf-stat-label">Línea de crédito</span>
-            <span className="stf-stat-valor">{formatearUSD(detalle.resumen.linea_credito)}</span>
-          </div>
-          <div className="stf-stat">
-            <span className="stf-stat-label">Deuda total</span>
-            <span className="stf-stat-valor" style={{ color: detalle.resumen.deuda_total > 0 ? '#DC2626' : 'inherit' }}>
-              {formatearUSD(detalle.resumen.deuda_total)}
-            </span>
-          </div>
-          <div className="stf-stat">
-            <span className="stf-stat-label">Saldo disponible</span>
-            <span className="stf-stat-valor">{formatearUSD(detalle.resumen.saldo)}</span>
-          </div>
-        </div>
-
-        {/* Bloqueo */}
-        <div className="scr-bloqueo-bar">
-          <span>
-            Estado: {detalle.resumen.credito_bloqueado
-              ? <strong style={{ color: '#DC2626' }}>BLOQUEADO</strong>
-              : <strong style={{ color: '#16A34A' }}>Activo</strong>
-            }
-            {detalle.resumen.credito_bloqueado_motivo && ` — ${detalle.resumen.credito_bloqueado_motivo}`}
-          </span>
-          <button
-            className={`stf-btn stf-btn--small ${detalle.resumen.credito_bloqueado ? 'stf-btn--success' : 'stf-btn--danger'}`}
-            onClick={() => toggleBloqueo({ id: clienteId, credito_bloqueado: detalle.resumen.credito_bloqueado })}
-          >
-            {detalle.resumen.credito_bloqueado ? 'Desbloquear crédito' : 'Bloquear crédito'}
-          </button>
-        </div>
-
-        {/* Aging buckets */}
-        <h4 className="stf-subtitulo">Deuda por antigüedad</h4>
-        <div className="scr-aging-row">
-          <AgingBadge monto={detalle.resumen.buckets['0-30']} label="0-30" />
-          <AgingBadge monto={detalle.resumen.buckets['31-60']} label="31-60" />
-          <AgingBadge monto={detalle.resumen.buckets['61-90']} label="61-90" />
-          <AgingBadge monto={detalle.resumen.buckets['90+']} label="90+" />
-        </div>
-
-        {/* Órdenes */}
-        <h4 className="stf-subtitulo">Órdenes con deuda</h4>
-        <div className="stf-tabla-wrap">
-          <table className="stf-tabla">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Total</th>
-                <th>Forma pago</th>
-                <th>Estado</th>
-                <th>Vencimiento</th>
-                <th>Días vencida</th>
-              </tr>
-            </thead>
-            <tbody>
-              {detalle.ordenes.length === 0 ? (
-                <tr><td colSpan="6">Sin órdenes con deuda</td></tr>
-              ) : (
-                detalle.ordenes.map((o) => (
-                  <tr key={o.id} style={{ opacity: o.vencida ? 1 : 0.7 }}>
-                    <td>#{o.id}</td>
-                    <td>{formatearUSD(o.total_usd)}</td>
-                    <td>{o.forma_pago}</td>
-                    <td>{o.estado}</td>
-                    <td>{o.fecha_vencimiento ? formatFecha(o.fecha_vencimiento) : '—'}</td>
-                    <td>{o.vencida ? `${o.dias_vencida}d` : '—'}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Recordatorio */}
-        <h4 className="stf-subtitulo">Enviar recordatorio</h4>
-        <form className="scr-form-recordatorio" onSubmit={enviarRecordatorio}>
-          <input type="hidden" value={clienteId} />
-          <textarea
-            placeholder="Mensaje para el cliente..."
-            value={formRec.mensaje}
-            onChange={(e) => setFormRec({ ...formRec, usuario_id: clienteId, mensaje: e.target.value })}
-            rows={2}
-          />
-          <button className="stf-btn stf-btn--primary" disabled={enviandoRec || !formRec.mensaje}>
-            {enviandoRec ? 'Enviando...' : 'Enviar recordatorio'}
-          </button>
-        </form>
-
-        {/* Notas de cobranza */}
-        <h4 className="stf-subtitulo">Notas de cobranza</h4>
-        <form className="scr-form-nota" onSubmit={crearNota}>
-          <select value={formNota.tipo} onChange={(e) => setFormNota({ ...formNota, tipo: e.target.value })}>
+  return (
+    <div className="scr-seccion">
+      <h3 className="stf-subtitulo">Nueva nota</h3>
+      <form className="scr-form-card" onSubmit={crearNota}>
+        <BuscadorCliente value={cliente} onSeleccionar={setCliente} />
+        <div className="scr-form-fila">
+          <select value={tipo} onChange={(e) => setTipo(e.target.value)}>
             {TIPOS_NOTA.map((t) => <option key={t.id} value={t.id}>{t.texto}</option>)}
           </select>
-          <textarea
-            placeholder="Nota..."
-            value={formNota.nota}
-            onChange={(e) => setFormNota({ ...formNota, usuario_id: clienteId, nota: e.target.value })}
-            rows={2}
-          />
           <input
             type="date"
-            value={formNota.fecha_seguimiento}
-            onChange={(e) => setFormNota({ ...formNota, fecha_seguimiento: e.target.value })}
+            value={fechaSeguimiento}
+            onChange={(e) => setFechaSeguimiento(e.target.value)}
             title="Fecha de seguimiento (opcional)"
           />
-          <button className="stf-btn stf-btn--primary" disabled={enviandoNota || !formNota.nota}>
-            {enviandoNota ? 'Guardando...' : 'Guardar nota'}
-          </button>
-        </form>
+        </div>
+        <textarea
+          placeholder="Nota de cobranza..."
+          value={nota}
+          onChange={(e) => setNota(e.target.value)}
+          rows={2}
+        />
+        <button type="submit" className="stf-btn stf-btn--primary" disabled={enviando || !cliente || !nota.trim()}>
+          {enviando ? 'Guardando...' : 'Guardar nota'}
+        </button>
+      </form>
 
-        <div className="scr-notas-lista">
-          {detalle.notas.map((n) => (
-            <div key={n.id} className="scr-nota-card">
+      {error && <p className="stf-error" role="alert">{error}</p>}
+
+      <h3 className="stf-subtitulo">Próximos seguimientos</h3>
+      {cargando && <StaffEstado tipo="cargando" />}
+      {!cargando && seguimientos.length === 0 && <p className="st-vacio-nota">Sin seguimientos pendientes.</p>}
+      {!cargando && seguimientos.length > 0 && (
+        <div className="scr-lista">
+          {seguimientos.map((n) => {
+            const vencido = new Date(n.fecha_seguimiento) < new Date()
+            return (
+              <button key={n.id} type="button" className="scr-seguimiento" onClick={() => verCliente(n.usuario_id)}>
+                <div className="scr-seguimiento-info">
+                  <span className="scr-card-titulo">{n.users?.nombre || `Cliente #${n.usuario_id}`}</span>
+                  <span className="scr-item-sub">{TIPOS_NOTA.find((t) => t.id === n.tipo)?.texto || n.tipo} · {n.nota}</span>
+                </div>
+                <span className={`scr-seguimiento-fecha ${vencido ? 'scr-texto-negativo' : ''}`}>
+                  {formatFecha(n.fecha_seguimiento)}
+                </span>
+                <ArrowRight size={15} className="scr-seguimiento-flecha" />
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      <h3 className="stf-subtitulo">Notas recientes</h3>
+      {!cargando && notas.length === 0 && <p className="st-vacio-nota">Sin notas de cobranza.</p>}
+      {!cargando && notas.length > 0 && (
+        <div className="scr-lista">
+          {notas.map((n) => (
+            <div key={n.id} className="scr-nota-card" onClick={() => verCliente(n.usuario_id)} role="button" tabIndex={0}>
               <div className="scr-nota-header">
-                <span className="scr-nota-tipo">{TIPOS_NOTA.find(t => t.id === n.tipo)?.texto || n.tipo}</span>
+                <span className="scr-nota-tipo">{TIPOS_NOTA.find((t) => t.id === n.tipo)?.texto || n.tipo}</span>
+                <span className="scr-nota-cliente">{n.users?.nombre || `Cliente #${n.usuario_id}`}</span>
                 <span className="scr-nota-fecha">{formatFecha(n.created_at)}</span>
               </div>
               <p>{n.nota}</p>
-              {n.fecha_seguimiento && (
-                <span className="scr-nota-seguimiento">Seguimiento: {formatFecha(n.fecha_seguimiento)}</span>
-              )}
-              {n.staff && <span className="scr-nota-staff">Por: {n.staff.nombre}</span>}
+              {n.fecha_seguimiento && <span className="scr-nota-seguimiento">Seguimiento: {formatFecha(n.fecha_seguimiento)}</span>}
             </div>
           ))}
-          {detalle.notas.length === 0 && <p style={{ color: '#6B7280' }}>Sin notas de cobranza</p>}
         </div>
-      </LayoutDepartamento>
-    )
-  }
+      )}
+    </div>
+  )
+}
 
-  // --- Vistas principales (tabs) ---
+function StaffCredito() {
+  const [tab, setTab] = useState('linea')
+
   return (
     <LayoutDepartamento departamento="finanzas" activo="credito" titulo="Crédito y cobranza">
       <StaffTabs tabs={TABS} activo={tab} onChange={setTab} />
 
-      {error && <p className="stf-error" role="alert">{error}</p>}
-
-      {/* Tab CLIENTES — Aging dashboard */}
-      {tab === 'clientes' && (
-        <>
-          {cargando && <StaffEstado tipo="cargando" />}
-          {!cargando && (
-            <div className="stf-tabla-wrap">
-              <table className="stf-tabla">
-                <thead>
-                  <tr>
-                    <th>Cliente</th>
-                    <th>Línea</th>
-                    <th>Deuda total</th>
-                    <th>Vencida</th>
-                    <th>0-30d</th>
-                    <th>31-60d</th>
-                    <th>61-90d</th>
-                    <th>90+d</th>
-                    <th>Estado</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {aging.length === 0 ? (
-                    <tr><td colSpan="10">No hay clientes con línea de crédito</td></tr>
-                  ) : (
-                    aging.map((c) => (
-                      <tr key={c.id} style={{ opacity: c.deuda_vencida > 0 ? 1 : 0.6 }}>
-                        <td>
-                          <div className="stf-cliente-cell">
-                            <strong>{c.nombre}</strong>
-                            <span>{c.email}</span>
-                          </div>
-                        </td>
-                        <td>{formatearUSD(c.linea_credito)}</td>
-                        <td>{formatearUSD(c.deuda_total)}</td>
-                        <td style={{ color: c.deuda_vencida > 0 ? '#DC2626' : 'inherit', fontWeight: c.deuda_vencida > 0 ? 600 : 400 }}>
-                          {formatearUSD(c.deuda_vencida)}
-                        </td>
-                        <td>{c.buckets['0-30'] > 0 ? formatearUSD(c.buckets['0-30']) : '—'}</td>
-                        <td>{c.buckets['31-60'] > 0 ? formatearUSD(c.buckets['31-60']) : '—'}</td>
-                        <td>{c.buckets['61-90'] > 0 ? formatearUSD(c.buckets['61-90']) : '—'}</td>
-                        <td>{c.buckets['90+'] > 0 ? formatearUSD(c.buckets['90+']) : '—'}</td>
-                        <td>
-                          {c.credito_bloqueado
-                            ? <span style={{ color: '#DC2626', fontWeight: 600 }}>Bloqueado</span>
-                            : <span style={{ color: '#16A34A' }}>Activo</span>
-                          }
-                        </td>
-                        <td>
-                          <div style={{ display: 'flex', gap: 4 }}>
-                            <button className="stf-btn stf-btn--small" onClick={() => cargarDetalle(c.id)}>Ver</button>
-                            <button
-                              className={`stf-btn stf-btn--small ${c.credito_bloqueado ? 'stf-btn--success' : 'stf-btn--danger'}`}
-                              onClick={() => toggleBloqueo(c)}
-                            >
-                              {c.credito_bloqueado ? 'Activar' : 'Bloquear'}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Tab LÍNEA DE CRÉDITO — aprobar/ajustar línea manualmente */}
       {tab === 'linea' && <TabLinea />}
-
-      {/* Tab COBROS — registrar abonos + historial */}
       {tab === 'cobros' && <TabCobros />}
-
-      {/* Tab POR VERIFICAR — reportes de pago pendientes */}
       {tab === 'por-verificar' && <TabPorVerificar />}
-
-      {/* Tab NOTAS — Listado global + formulario + próximos seguimientos */}
-      {tab === 'notas' && (
-        <>
-          <form className="scr-form-nota-global" onSubmit={crearNota}>
-            <div className="scr-form-row">
-              <input
-                type="number"
-                placeholder="ID cliente"
-                value={formNota.usuario_id}
-                onChange={(e) => setFormNota({ ...formNota, usuario_id: e.target.value })}
-                required
-              />
-              <select value={formNota.tipo} onChange={(e) => setFormNota({ ...formNota, tipo: e.target.value })}>
-                {TIPOS_NOTA.map((t) => <option key={t.id} value={t.id}>{t.texto}</option>)}
-              </select>
-              <input
-                type="date"
-                value={formNota.fecha_seguimiento}
-                onChange={(e) => setFormNota({ ...formNota, fecha_seguimiento: e.target.value })}
-                title="Fecha de seguimiento"
-              />
-            </div>
-            <textarea
-              placeholder="Nota de cobranza..."
-              value={formNota.nota}
-              onChange={(e) => setFormNota({ ...formNota, nota: e.target.value })}
-              rows={2}
-            />
-            <button className="stf-btn stf-btn--primary" disabled={enviandoNota || !formNota.usuario_id || !formNota.nota}>
-              {enviandoNota ? 'Guardando...' : 'Guardar nota'}
-            </button>
-          </form>
-
-          <div className="scr-notas-lista">
-            {notas.map((n) => (
-              <div key={n.id} className="scr-nota-card" style={{ cursor: 'pointer' }} onClick={() => n.usuario_id && cargarDetalle(n.usuario_id)}>
-                <div className="scr-nota-header">
-                  <span className="scr-nota-tipo">{TIPOS_NOTA.find(t => t.id === n.tipo)?.texto || n.tipo}</span>
-                  <span className="scr-nota-cliente">{n.users?.nombre || `Cliente #${n.usuario_id}`}</span>
-                  <span className="scr-nota-fecha">{formatFecha(n.created_at)}</span>
-                </div>
-                <p>{n.nota}</p>
-                {n.fecha_seguimiento && (
-                  <span className="scr-nota-seguimiento">Seguimiento: {formatFecha(n.fecha_seguimiento)}</span>
-                )}
-              </div>
-            ))}
-            {notas.length === 0 && <p style={{ color: '#6B7280' }}>Sin notas de cobranza</p>}
-          </div>
-
-          <h3 className="stf-subtitulo">Próximos seguimientos</h3>
-          <div className="stf-tabla-wrap">
-            <table className="stf-tabla">
-              <thead>
-                <tr>
-                  <th>Cliente</th>
-                  <th>Fecha seguimiento</th>
-                  <th>Tipo</th>
-                  <th>Nota</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {notas
-                  .filter((n) => n.fecha_seguimiento)
-                  .sort((a, b) => new Date(a.fecha_seguimiento) - new Date(b.fecha_seguimiento))
-                  .map((n) => (
-                    <tr key={n.id}>
-                      <td>{n.users?.nombre || `Cliente #${n.usuario_id}`}</td>
-                      <td style={{
-                        color: new Date(n.fecha_seguimiento) < new Date() ? '#DC2626' : 'inherit',
-                        fontWeight: new Date(n.fecha_seguimiento) < new Date() ? 600 : 400,
-                      }}>
-                        {formatFecha(n.fecha_seguimiento)}
-                      </td>
-                      <td>{TIPOS_NOTA.find(t => t.id === n.tipo)?.texto || n.tipo}</td>
-                      <td style={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.nota}</td>
-                      <td>
-                        <button className="stf-btn stf-btn--small" onClick={() => cargarDetalle(n.usuario_id)}>Ver cliente</button>
-                      </td>
-                    </tr>
-                  ))
-                }
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
+      {tab === 'notas' && <TabNotas />}
     </LayoutDepartamento>
   )
 }

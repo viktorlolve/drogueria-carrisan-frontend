@@ -1,0 +1,348 @@
+/* ============================================================
+   Cuentas por cobrar — lista + ficha de cliente fusionada
+   (prefijo scc-). Vive dentro de LayoutDepartamento, departamento
+   "finanzas" → hereda --ldep-color/-fuerte/-suave y los tokens
+   --stf-* globales. Reutiliza .st-resumen-cards/.st-vacio-nota de
+   StaffTesoreria.css y .stf-btn/.stf-error de StaffFinanzas.css.
+   ============================================================ */
+
+.scc-page {
+  font-family: 'Figtree', 'Inter', system-ui, sans-serif;
+  color: var(--stf-indigo, #1A1A3A);
+}
+.scc-page *, .scc-page *::before, .scc-page *::after { box-sizing: border-box; }
+
+.scc-page h2, .scc-page h3 { margin: 0; }
+.scc-page .stf-subtitulo { margin: 22px 0 10px; }
+
+/* ---------- Buscador (lista) ---------- */
+.scc-buscador {
+  margin-bottom: 14px;
+}
+.scc-buscador input {
+  width: 100%;
+  border: 1.5px solid var(--stf-borde, #E6E8F0);
+  border-radius: 10px;
+  padding: 11px 14px;
+  /* 16px: por debajo de eso iOS hace zoom automático al enfocar el campo. */
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--stf-indigo, #1A1A3A);
+}
+.scc-buscador input:focus {
+  outline: none;
+  border-color: var(--ldep-color, #0E8577);
+}
+
+/* ---------- Volver ---------- */
+.scc-volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: none;
+  color: var(--stf-apagado, #5B6178);
+  font-weight: 700;
+  font-size: 13.5px;
+  cursor: pointer;
+  padding: 6px 0;
+  margin-bottom: 10px;
+  font-family: inherit;
+}
+.scc-volver:hover { color: var(--stf-indigo, #1A1A3A); }
+
+/* ---------- Cabecera de ficha ---------- */
+.scc-ficha-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.scc-ficha-header p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--stf-apagado, #5B6178);
+}
+
+.scc-avatar {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--ldep-color, #0E8577);
+  color: #fff;
+  font-weight: 800;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.scc-avatar--sm {
+  width: 32px;
+  height: 32px;
+  font-size: 13px;
+}
+
+/* ---------- Bloqueo ---------- */
+.scc-bloqueo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  background: var(--stf-teal-suave, #E6F6F3);
+  border: 1px solid rgba(14, 133, 119, 0.25);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+.scc-bloqueo--bloqueado {
+  background: var(--stf-error-suave, #FDECEC);
+  border-color: rgba(179, 38, 30, 0.25);
+}
+.scc-bloqueo-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 700;
+  font-size: 13.5px;
+  color: var(--stf-teal-fuerte, #0E8577);
+}
+.scc-bloqueo--bloqueado .scc-bloqueo-info { color: var(--stf-error, #B3261E); }
+
+/* ---------- Aging badges ---------- */
+.scc-aging-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 0 0 16px;
+}
+.scc-aging-badge {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.scc-aging-badge--0-30 { background: var(--stf-teal-suave, #E6F6F3); color: var(--stf-teal-fuerte, #0E8577); }
+.scc-aging-badge--31-60 { background: var(--stf-aviso-suave, #FFF4E0); color: var(--stf-aviso, #B45309); }
+.scc-aging-badge--61-90 { background: #FFE8D6; color: #C2410C; }
+.scc-aging-badge--90\+ { background: var(--stf-error-suave, #FDECEC); color: var(--stf-error, #B3261E); }
+
+.scc-texto-negativo { color: var(--stf-error, #B3261E); }
+
+/* ---------- Listas de registros (órdenes/facturas/pagos) ---------- */
+.scc-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.scc-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 14px;
+  background: #fff;
+  border: 1px solid var(--stf-borde, #E6E8F0);
+  border-radius: 12px;
+}
+.scc-item--vencida {
+  border-color: rgba(179, 38, 30, 0.3);
+  background: var(--stf-error-suave, #FDECEC);
+}
+.scc-item-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.scc-item-titulo {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--stf-indigo, #1A1A3A);
+}
+.scc-item-sub {
+  font-size: 12px;
+  color: var(--stf-apagado, #5B6178);
+}
+.scc-item-monto {
+  flex-shrink: 0;
+  font-weight: 800;
+  font-size: 14.5px;
+  color: var(--stf-indigo, #1A1A3A);
+}
+.scc-item-monto--positivo {
+  color: var(--stf-teal-fuerte, #0E8577);
+}
+
+/* ---------- Tarjeta de cliente (lista) ---------- */
+.scc-cliente-card {
+  background: #fff;
+  border: 1px solid var(--stf-borde, #E6E8F0);
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+.scc-cliente-card__cabecera {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.scc-cliente-card__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.scc-cliente-card__info strong {
+  font-size: 14.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.scc-cliente-card__info span {
+  font-size: 12px;
+  color: var(--stf-apagado, #5B6178);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scc-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.scc-badge--bloqueado {
+  background: var(--stf-error-suave, #FDECEC);
+  color: var(--stf-error, #B3261E);
+}
+
+.scc-cliente-card__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 12.5px;
+  color: var(--stf-apagado, #5B6178);
+  margin-bottom: 10px;
+}
+.scc-cliente-card__stats strong {
+  color: var(--stf-indigo, #1A1A3A);
+  font-weight: 700;
+}
+
+.scc-cliente-card__acciones {
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 480px) {
+  .scc-cliente-card__acciones .stf-btn { width: 100%; }
+}
+
+/* ---------- Formularios (recordatorio / nota) ---------- */
+.scc-form-recordatorio,
+.scc-form-nota {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid var(--stf-borde, #E6E8F0);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+
+.scc-form-nota-fila {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.scc-form-nota-fila select,
+.scc-form-nota-fila input {
+  flex: 1;
+  min-width: 140px;
+}
+
+.scc-form-recordatorio textarea,
+.scc-form-nota textarea,
+.scc-form-nota-fila select,
+.scc-form-nota-fila input {
+  border: 1.5px solid var(--stf-borde, #E6E8F0);
+  border-radius: 9px;
+  padding: 9px 11px;
+  /* 16px: por debajo de eso iOS hace zoom automático al enfocar el campo. */
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--stf-indigo, #1A1A3A);
+  resize: vertical;
+}
+.scc-form-recordatorio textarea:focus,
+.scc-form-nota textarea:focus,
+.scc-form-nota-fila select:focus,
+.scc-form-nota-fila input:focus {
+  outline: none;
+  border-color: var(--ldep-color, #0E8577);
+}
+
+.scc-form-recordatorio .stf-btn,
+.scc-form-nota .stf-btn {
+  align-self: flex-start;
+}
+@media (max-width: 480px) {
+  .scc-form-recordatorio .stf-btn,
+  .scc-form-nota .stf-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ---------- Notas de cobranza ---------- */
+.scc-notas-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.scc-nota-card {
+  background: #fff;
+  border: 1px solid var(--stf-borde, #E6E8F0);
+  border-radius: 12px;
+  padding: 11px 14px;
+}
+.scc-nota-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+.scc-nota-tipo {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--ldep-color-strong, #0B6E63);
+}
+.scc-nota-fecha {
+  font-size: 12px;
+  color: var(--stf-apagado, #5B6178);
+}
+.scc-nota-card p {
+  margin: 0 0 6px;
+  font-size: 13.5px;
+  color: var(--stf-indigo, #1A1A3A);
+}
+.scc-nota-footer {
+  display: flex;
+  gap: 14px;
+  font-size: 11.5px;
+  color: var(--stf-apagado, #5B6178);
+}

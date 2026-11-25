@@ -1,0 +1,125 @@
+/* BuscadorCliente.css — widget reutilizable (prefijo bc-). Se apoya en los
+   tokens --stf-* globales; no depende de --ldep-* porque se usa en varias
+   páginas/departamentos. */
+
+.bc-raiz, .bc-chip {
+  font-family: 'Figtree', 'Inter', system-ui, sans-serif;
+}
+.bc-raiz *, .bc-raiz *::before, .bc-raiz *::after,
+.bc-chip *, .bc-chip *::before, .bc-chip *::after { box-sizing: border-box; }
+
+.bc-buscador {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1.5px solid var(--stf-borde, #E6E8F0);
+  border-radius: 10px;
+  padding: 0 11px;
+  background: #F9FAFC;
+  color: #9CA3AF;
+}
+.bc-buscador:focus-within {
+  border-color: var(--stf-azul, #0052DC);
+  background: #fff;
+}
+.bc-buscador input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  padding: 10px 0;
+  /* 16px: por debajo de eso iOS hace zoom automático al enfocar el campo. */
+  font-size: 16px;
+  color: var(--stf-indigo, #1A1A3A);
+  outline: none;
+  font-family: inherit;
+}
+
+.bc-aviso {
+  margin: 6px 2px 0;
+  font-size: 12.5px;
+  color: #9ca3af;
+}
+
+.bc-lista {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.bc-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  text-align: left;
+  background: #F9FAFC;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 8px 9px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.bc-item:hover {
+  border-color: var(--stf-azul, #0052DC);
+  background: var(--stf-azul-suave, #EAF1FF);
+}
+
+.bc-item-avatar, .bc-chip-avatar {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--stf-azul, #0052DC);
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bc-item-info, .bc-chip-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.bc-item-nombre, .bc-chip-info strong {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--stf-indigo, #1A1A3A);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bc-item-sub, .bc-chip-info span {
+  font-size: 12px;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bc-chip {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  background: var(--stf-azul-suave, #EAF1FF);
+  border: 1px solid rgba(0, 82, 220, 0.18);
+  border-radius: 10px;
+}
+.bc-chip-quitar {
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  color: var(--stf-azul-fuerte, #0043B3);
+  cursor: pointer;
+  display: flex;
+  padding: 3px;
+}
